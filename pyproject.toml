@@ -3,6 +3,7 @@ name = "rich-tables"
 version = "0.1.0"
 description = "Ready-made rich tables for various purposes"
 authors = ["Šarūnas Nejus <snejus@protonmail.com>"]
+packages = [{ from = "src", include = "rich_tables" }]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -10,13 +11,16 @@ rich = "^10.12.0"
 python-dateutil = "^2.8.2"
 rgbxy = "^0.5"
 
+[tool.poetry.group.dev.dependencies]
+flake8 = "^4.0.1"
+
 [tool.poetry.dev-dependencies]
 types-python-dateutil = "^2.8.3"
 types-six = "^1.16.2"
 mypy = "^0.910"
 
 [tool.poetry.scripts]
-table = "rich-tables:table.py"
+table = "rich_tables.table:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

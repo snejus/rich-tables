@@ -1,5 +1,3 @@
-#!/media/poetry/virtualenvs/snejus-scripts-pRoBlG0N-py3.8/bin/python
-
 import itertools as it
 import json
 import operator as op
@@ -7,15 +5,15 @@ import re
 import sys
 from datetime import datetime
 from difflib import SequenceMatcher
-from typing import Any, Dict, Iterable, List, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
-from music import make_albums_table, make_music_table, make_release_table
 from rich import box, print
 from rich.bar import Bar
 from rich.console import Console, ConsoleRenderable
-from rich.highlighter import RegexHighlighter
 from rich.panel import Panel
-from utils import (
+
+from .music import make_albums_table, make_music_table, make_release_table
+from .utils import (
     border_panel,
     colored_split,
     comment_panel,
@@ -31,6 +29,7 @@ from utils import (
     wrap,
 )
 
+console = Console(force_terminal=True, force_interactive=True)
 JSONDict = Dict[str, Any]
 GroupsDict = Dict[str, List]
 
@@ -61,6 +60,7 @@ def make_difftext(before: str, after: str) -> str:
 
 
 def make_diff_table(group_to_data: GroupsDict) -> None:
+    diff_table = new_table(expand=True)
     for group_name, item_lists in group_to_data.items():
         for items in item_lists:
             headers = list(items[0].keys())
@@ -75,18 +75,19 @@ def make_diff_table(group_to_data: GroupsDict) -> None:
                 item["diff"] = make_difftext(*op.itemgetter("before", "after")(item))
                 item.pop(group_name, None)
                 table.add_row(*map(lambda x: str(x) if x else " ", item.values()))
-            root.add_row(simple_panel(table, title=title, padding=1))
-        root.expand = True
+            diff_table.add_row(simple_panel(table, title=title, padding=1))
 
 
 def make_counts_table(data: List[JSONDict]) -> None:
     total_count = sum(map(op.methodcaller("get", "count", 0), data))
 
+    table = new_table()
+
     def add_bar(count: int, *args) -> None:
         rand1 = rand2 = rand3 = round(255 * float(count / total_count))
         color = "#{:0>2X}{:0>2X}{:0>2X}".format(rand1, rand2, rand3)
         bar = Bar(total_count, 0, count, color=color)
-        root.add_row(*args, str(count), bar)
+        table.add_row(*args, str(count), bar)
 
     keys = set(data[0].keys()) - {"count"}
     for item in data:
@@ -100,6 +101,8 @@ def make_time_table(data: List[JSONDict]) -> None:
     group_by = set(data[0].keys()).difference({"duration"}).pop()
     total_time = sum(map(op.methodcaller("get", "duration", 0), data))
 
+    table = new_table()
+
     def add_duration_bar(duration: int, categories: str) -> None:
         color = predictably_random_color(
             categories
@@ -108,7 +111,7 @@ def make_time_table(data: List[JSONDict]) -> None:
         if categories == "total":
             catstr = wrap(catstr, "dim")
         bar = Bar(total_time, 0, duration, color=color)
-        root.add_row(catstr, bar)
+        table.add_row(catstr, bar)
 
     data.append({group_by: "total", "duration": total_time})
     for duration, categories in map(op.itemgetter("duration", group_by), data):
@@ -127,8 +130,10 @@ def make_pulls_table(data: List[JSONDict]) -> None:
         " UNSEEN ": "bold black on red",
         " SEEN ": "bold black on green",
     }
+
+    table = new_table()
     for pr in data:
-        table = new_table(expand=True)
+        desc_table = new_table(expand=True)
         exclude = {
             "title",
             "body",
@@ -159,10 +164,10 @@ def make_pulls_table(data: List[JSONDict]) -> None:
         tree.add("")
         for file in pr["files"]:
             tree.add("{:<30}{:<26}{}".format(*file))
-        table.add_row(simple_panel(tree), md_panel(pr["body"], box=box.SIMPLE))
-        root.add_row(simple_panel(table))
-        table = new_table()
+        desc_table.add_row(simple_panel(tree), md_panel(pr["body"], box=box.SIMPLE))
+        table.add_row(simple_panel(desc_table))
 
+        reviews_table = new_table()
         reviews = pr.get("reviews") or []
         for review in reviews:
             state = review["state"]
@@ -171,33 +176,39 @@ def make_pulls_table(data: List[JSONDict]) -> None:
             color = state_map.get(state, "default")
             review["state"] = f"[b {color}]{state}[/b {color}]"
             review["body"] = re.sub(r"(^|\n)", "\\1> ", review["body"])
-            table.add_row(comment_panel(review))
+            reviews_table.add_row(comment_panel(review))
         if len(reviews):
-            root.add_row(simple_panel(table, title="[b]Reviews[/b]", title_align="left"))
+            table.add_row(
+                simple_panel(reviews_table, title="[b]Reviews[/b]", title_align="left")
+            )
 
         for thread in pr.get("reviewThreads") or []:
             thread_table = new_table()
-            diff_panel = None  # type: Panel
+            diff_panel = None  # type: Optional[Panel]
             comments_table = new_table()
-            for comment in thread.get("comments") or []:
+            comments = thread.get("comments")
+            for comment in comments:
                 if not diff_panel and "diffHunk" in comment:
                     diff_panel = syntax_panel(
-                        re.sub(r"[\[\]\\]", "", comment["diffHunk"]), "diff"
+                        re.sub(r"[\[\]\\]", "", comment["diffHunk"]),
+                        "diff",
+                        box=box.ROUNDED,
                     )
-                    diff_panel.box = box.ROUNDED
                 comments_table.add_row(comment_panel(comment))
 
-            thread_table.add_row(simple_panel(diff_panel), simple_panel(comments_table))
+            parts = filter(op.truth, [diff_panel, comments_table])
+            thread_table.add_row(*map(simple_panel, parts))
+
             file_line = thread.get("line")
             title = thread.get("path") + " " + wrap(file_line, "b") if file_line else ""
             style = "green" if thread.get("isResolved") else "red"
-            root.add_row(border_panel(thread_table, title=title, border_style=style))
+            table.add_row(border_panel(thread_table, title=title, border_style=style))
 
         comments = pr.get("comments") or []
         if len(comments):
-            root.add_row("[b]Comments[/b]")
+            table.add_row("[b]Comments[/b]")
             for comment in comments:
-                root.add_row(comment_panel(comment))
+                table.add_row(comment_panel(comment))
 
 
 def prepare_any_data(data: Union[JSONDict, List], ret: bool = False) -> Any:
@@ -326,39 +337,34 @@ def draw_data(title, data, groups={}):
     if groups:
         console.print(prepare_any_data(data))
     elif isinstance(data, dict):
-        if data_title == "Release":
+        if title == "Release":
             console.print(Panel(make_release_table(data, ret=True)))
-        elif data_title == "Tasks":
+        elif title == "Tasks":
             make_tasks_table(data)
         else:
             console.print(prepare_any_data(data))
     elif isinstance(data, list):
-        if data_title == "Pull Requests":
+        if title == "Pull Requests":
             make_pulls_table(data)
-        elif data_title == "JIRA Diff":
+        elif title == "JIRA Diff":
             make_diff_table(groups)
-        elif data_title == "Time Usage Report":
+        elif title == "Time Usage Report":
             make_time_table(data)
-        elif " count" in data_title.casefold():
+        elif " count" in title.casefold():
             make_counts_table(data)
-        elif data_title == "Hue lights":
+        elif title == "Hue lights":
             make_lights_table(data)
-        elif data_title == "Calendar":
+        elif title == "Calendar":
             make_calendar_table(data)
-        elif data_title == "Album":
+        elif title == "Album":
             make_albums_table(data)
-        elif "music" in data_title.casefold():
+        elif "music" in title.casefold():
             make_music_table(data)
         else:
             console.print(prepare_any_data(data))
-        console.print(root)
-    # print(prepare_any_data(data))
 
 
-if __name__ == "__main__":
-    console = Console(force_terminal=True, force_interactive=True)
-    root = new_table(style="light_steel_blue1")
-
+def main():
     data = load_data()
     groups: GroupsDict = {}
     values = data
@@ -373,3 +379,7 @@ if __name__ == "__main__":
     except Exception as exc:
         console.print_exception(extra_lines=8, show_locals=True)
         raise exc
+
+
+if __name__ == "__main__":
+    main()

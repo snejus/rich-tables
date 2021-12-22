@@ -9,7 +9,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
 
-from utils import (
+from .utils import (
     border_panel,
     colored_split,
     format_with_color,

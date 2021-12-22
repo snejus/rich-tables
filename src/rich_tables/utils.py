@@ -47,6 +47,7 @@ def new_table(*args: Any, **kwargs: Any) -> Table:
         highlight=True,
         row_styles=["white"],
         expand=False,
+        style="light_steel_blue1",
     )
     headers = []
     if len(args):
