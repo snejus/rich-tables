@@ -14,6 +14,7 @@ from rich.table import Table
 from .utils import (
     border_panel,
     format_with_color,
+    make_console,
     new_table,
     predictably_random_color,
     simple_panel,
@@ -48,7 +49,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     bpm=lambda x: wrap(x, "green" if x < 135 else "red" if x > 165 else "yellow"),
     style=format_with_color,
     genre=lambda x: "\n".join(map(format_with_color, x.split(", "))),
-    stats=lambda x: "[b on grey3][green] {:>2}[/green] [red]{:<2} [/red][/b on grey3]".format(
+    stats=lambda x: wrap("[green] {:>2}[/green] [red]{:<2} [/red]", "b on grey3").format(
         *map(lambda f: f or "", x)
     ),
 )
@@ -182,7 +183,6 @@ def detailed_album_panel(tracks: List[JSONDict]) -> Panel:
 
 
 def make_albums_table(all_tracks: List[JSONDict]) -> None:
-
     singles = list(filter(is_single, all_tracks))
     not_singles = list(it.filterfalse(is_single, all_tracks))
     for album_name, tracks in it.groupby(not_singles, lambda x: x.get("album") or ""):

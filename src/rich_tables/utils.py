@@ -1,14 +1,14 @@
 import random
 import re
-import time
 from datetime import datetime
-from functools import reduce
-from typing import Any, Dict, List, MutableMapping, Optional, TypeVar
+from difflib import SequenceMatcher
+from itertools import starmap
+from typing import Any, Dict, Iterable, List, MutableMapping, Optional, TypeVar
 
 from dateutil.relativedelta import relativedelta
 from rich import box
 from rich.align import Align
-from rich.console import Console, ConsoleRenderable
+from rich.console import Console, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
@@ -19,15 +19,50 @@ from rich.tree import Tree
 Renderable = TypeVar("Renderable")
 
 
-def timeint2human(timestamp: int) -> str:
-    timediff = relativedelta(seconds=timestamp)
-    return reduce(
-        lambda x, y: x + "{} {} ".format(int(y[1]), y[0])
-        if y[1] or len(x) and y[0] != "leapdays"
-        else x,
-        list(vars(timediff).items())[:7],
-        "",
+def fmtdiff(change: str, before: str, after: str) -> str:
+    retval = before
+    if change == "insert":
+        retval = wrap(after, "b green")
+    elif change == "delete":
+        retval = wrap(before, "b strike red")
+    elif change == "replace":
+        retval = wrap(before, "b strike red") + wrap(after, "b green")
+    return retval
+
+
+def make_difftext(before: str, after: str) -> str:
+    def preparse(value: str) -> str:
+        return value.strip().replace("[]", "~")
+
+    before = preparse(before)
+    after = preparse(after)
+
+    matcher = SequenceMatcher(isjunk=lambda x: x in r"\n ", a=before, b=after)
+    diff = ""
+    for code, a1, a2, b1, b2 in matcher.get_opcodes():
+        diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
+    return diff
+
+
+def time2human(timestamp: Optional[int], acc: int = 7) -> str:
+    if not timestamp:
+        return "-"
+
+    timediff = relativedelta(datetime.now(), datetime.fromtimestamp(timestamp))
+    nonzero_pairs = list(filter(lambda x: int(x[1]), list(vars(timediff).items())[:7]))
+    mapped_pairs = map(lambda x: (dur_map[x[0]], abs(x[1])), nonzero_pairs[:acc])
+
+    dur_map = dict(
+        minutes="min",
+        hours="h",
+        months="mo",
+        seconds="sec",
+        days="d",
     )
+    num_fmt = wrap("{1}", "b cyan")
+    dur_fmt = wrap("{0}", "b red" if nonzero_pairs[0][1] > 0 else "b green")
+
+    return "".join(starmap((num_fmt + dur_fmt).format, mapped_pairs))
 
 
 def make_console(**kwargs: Any) -> Console:
@@ -51,14 +86,17 @@ def new_table(*args: Any, **kwargs: Any) -> Table:
     )
     headers = []
     if len(args):
-        headers = list(map(lambda x: Column(str(x), justify="center") or "", args))
+        headers = list(map(lambda x: Column(str(x), justify="left") or "", args))
         default["header_style"] = "bold misty_rose1"
         default["box"] = box.SIMPLE_HEAVY
         default["show_header"] = True
+    rows = kwargs.pop("rows", [])
     table = Table(*headers, **{**default, **kwargs})
-    if "rows" in kwargs:
-        for row in kwargs["rows"]:
+    for row in rows:
+        if isinstance(row, Iterable):
             table.add_row(*row)
+        else:
+            table.add_row(row)
     return table
 
 
@@ -83,7 +121,7 @@ def format_with_color(name: str) -> str:
         return wrap(name, f"b i {predictably_random_color(name)}")
 
 
-def simple_panel(content: ConsoleRenderable, **kwargs: Any) -> Panel:
+def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
     align_content = None
     if kwargs.get("align", "") == "center":
         align_content = Align.center(content)
@@ -93,7 +131,7 @@ def simple_panel(content: ConsoleRenderable, **kwargs: Any) -> Panel:
     return Panel(align_content or content, **args)
 
 
-def border_panel(content: Renderable, **kwargs: Any) -> Panel:
+def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
     return simple_panel(content, **{**dict(box=box.ROUNDED), **kwargs})
 
 
@@ -135,13 +173,6 @@ def new_tree(values: List[str] = [], **kwargs) -> Tree:
 def colored_split(content: str) -> Align:
     parts = content.split(", ")
     return centered(Text.from_markup(" ~ ".join(map(format_with_color, sorted(parts)))))
-
-
-FIRST_PART = re.compile(r"^([0-9]+ [^ ]+).*")
-
-
-def time2human(value: int) -> str:
-    return FIRST_PART.sub(r"\1", timeint2human(int(time.time() - value))) + " ago"
 
 
 def tstamp2timedate(timestamp: Optional[str], fmt: str = "%F %H:%M") -> str:
