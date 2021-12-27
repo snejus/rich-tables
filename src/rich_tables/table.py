@@ -288,26 +288,38 @@ def make_calendar_table(events: List[JSONDict]) -> None:
 
 
 def make_tasks_table(task_groups: GroupsDict) -> None:
+    def getstr(data: JSONDict, key: str) -> str:
+        return str(data.get(key) or "")
+
     index = {}
+    status_map = {
+        "completed": "s green",
+        "deleted": "s red",
+        "active": "b",
+        "pending": "white",
+        "recurring": "i magenta",
+    }
     for group, tasks in task_groups.items():
         for task in tasks:
-            task["tags"] = " ~ ".join(task.get("tags") or [])
-            status = task["status"]
-            if status == "completed":
-                task["description"] = wrap(task["description"], "s green")
-            elif status == "deleted":
-                task["description"] = wrap(task["description"], "s red")
-            for key in ("entry", "modified", "end"):
+            recur = task.get("recur")
+            desc = task["description"] + " " + (f"({recur})" if recur else "")
+            task["description"] = wrap(desc, status_map[task["status"]])
+            task["id"] = str(task["id"])
+            task["urgency"] = str(round(task["urgency"], 1))
+            task["tags"] = " ".join(map(format_with_color, task.get("tags") or []))
+            index[task["uuid"]] = new_tree(title=task["description"])
+            for key in ("entry", "modified", "end", "due"):
                 val = task.get(key)
-                if val:
+                if not val:
+                    task[key] = ""
+                else:
                     date_time = datetime.strptime(val, "%Y%m%dT%H%M%SZ")
-                    task[key] = time2human(int(date_time.timestamp()))
-            task["title"] = f"{(task['id'] or ''):<3} {task['description']}"
-            index[task["uuid"]] = new_tree(title=task["title"])
+                    task[key] = time2human(int(date_time.timestamp()), short=True)
 
     for group, tasks in task_groups.items():
         color = predictably_random_color(group)
-        tree = new_tree(guide_style=color, highlight=True)
+        headers = ["id", "urgency", "description", "due", "tags"]
+        table = new_table(*headers)
         for task in tasks:
             task_tree = index[task["uuid"]]
             for uuid in task.get("depends") or []:
@@ -315,8 +327,9 @@ def make_tasks_table(task_groups: GroupsDict) -> None:
                 dep = index.get(uuid)
                 if dep:
                     task_tree.add(dep)
-            tree.add(task_tree)
-        console.print(border_panel(tree, title=group, border_style=color))
+            task["description"] = task_tree
+            table.add_row(*op.itemgetter(*headers)(task))
+        console.print(border_panel(table, title=wrap(group, "b"), style=color))
 
 
 def load_data() -> Any:

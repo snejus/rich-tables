@@ -1,9 +1,11 @@
 import itertools as it
 import operator as op
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from collections import defaultdict
+from functools import partial
+from typing import Any, Callable, Collection, Dict, Iterable, List, Tuple
 
-from rich import print
-from rich.align import Align
+from ordered_set import OrderedSet
+from rich import box, print
 from rich.console import Group
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -11,10 +13,8 @@ from rich.table import Table
 
 from .utils import (
     border_panel,
-    colored_split,
     format_with_color,
     new_table,
-    new_tree,
     predictably_random_color,
     simple_panel,
     time2human,
@@ -22,293 +22,195 @@ from .utils import (
 )
 
 JSONDict = Dict[str, Any]
-GroupsDict = Dict[str, List[JSONDict]]
-bpm_rules = [
-    (lambda bpm: bpm < 135, wrap("    🚀       ", "green")),
-    (lambda bpm: bpm > 165, wrap("  🚀🚀🚀     ", "red")),
-    (lambda bpm: True, wrap("   🚀🚀      ", "yellow")),
-]
+
+TRACK_DISPLAY_FIELDS = ["track", "artist", "title", "bpm", "stats", "last_played"]
+ALBUM_KEEP = {"last_played", "bpm", "stats"}
+ALBUM_IGNORE = {
+    "length",
+    "comments",
+    "album_color",
+    "albumartist_color",
+    "album",
+    "albumartist",
+    "albumtypes",
+    "album_title",
+    "plays",
+    "skips",
+}
+
+_first_date_part = partial(time2human, acc=1)
+FIELDS_MAP: Dict[str, Callable] = defaultdict(
+    lambda: str,
+    albumtype=lambda x: " ".join(map(format_with_color, x.split("; "))),
+    last_played=_first_date_part,
+    added=_first_date_part,
+    mtime=_first_date_part,
+    bpm=lambda x: wrap(x, "green" if x < 135 else "red" if x > 165 else "yellow"),
+    style=format_with_color,
+    genre=lambda x: "\n".join(map(format_with_color, x.split(", "))),
+    stats=lambda x: "[b on grey3][green] {:>2}[/green] [red]{:<2} [/red][/b on grey3]".format(
+        *map(lambda f: f or "", x)
+    ),
+)
+DISPLAY_HEADER: Dict[str, str] = {
+    "track": "#",
+    "bpm": "🚀",
+    "stats": FIELDS_MAP["stats"](("✔", "🞬 ")),
+    "last_played": "🎶 ⏰",
+    "mtime": "modified",
+}
 
 
-def format_bpm_plays_skips(data: JSONDict) -> JSONDict:
-    # add bpm and play / skip counts at the end
-    bpm: int = data.pop("bpm", 0)
-    for check, fmt in bpm_rules:
-        if check(bpm):
-            data[fmt] = bpm
-            break
-
-    key = "  {} / {}      ".format(wrap("✔", "green"), wrap("🞬", "red"))
-    data[key] = "{} / {}".format(data.pop("plays", "-"), data.pop("skips", "-"))
-    return data
+def is_single(track: JSONDict) -> bool:
+    album, albumtype = track.get("album"), track.get("albumtype")
+    return not album or not albumtype or albumtype == "single"
 
 
-def map_track_fields(track: JSONDict) -> JSONDict:
-    def pop(field: str, default: Any = "") -> Any:
-        return track.pop(field, default) or default
-
-    if "mtime" in track:
-        mtime = pop("mtime", 0)
-        track["modified"] = time2human(mtime) if mtime else "-"
-    if "added" in track:
-        added = pop("added", 0)
-        track["added"] = time2human(added) if added else "-"
-    if "last_played" in track:
-        last = pop("last_played", 0)
-        track["last_played_ts"] = last
-        track["last_played"] = time2human(last) if last else "-"
-    if "track" in track:
-        track["#"] = pop("track")
-    if "rating" in track:
-        track["rating"] = round(track["rating"], 4)
-    fields = ["albumdesc", "disctotal", "disc", "media", "bitdepth", "samplerate"]
-    fields.extend(["day", "month", "year", "comments"])
-    for field in fields:
-        pop(field)
-
-    return track
+def get_header(key: str) -> str:
+    return wrap(DISPLAY_HEADER.get(key, key), "b")
 
 
-def map_album_fields(album: JSONDict, tracks: List[JSONDict]) -> JSONDict:
-    def get(key: str, default: Any = "") -> Any:
-        return album.get(key) or default
-
-    def pop(field: str, default: Any = "") -> Any:
-        return album.pop(field, default) or default
-
-    def get_sum(field: str) -> int:
-        return sum(map(lambda x: x.get(field) or 0, tracks))
-
-    name = pop("album")
-    if " - " not in name:
-        name = " by ".join(map(format_with_color, [name, pop("albumartist")]))
-    new_album = {"title": name}
-    track_count = len(tracks)
-    for field in sorted(album.keys()):
-        value = get(field)
-        if value is None:
-            continue
-        new_album[field] = value
-
-        if field == "albumtype":
-            style = f"bold black on {predictably_random_color(value)}"
-            new_album[field] = wrap(f" {value} ", style)
-        elif field == "style":
-            new_album[field] = format_with_color(value)
-        elif field == "genre":
-            split_genre = value.split(", ")
-            genre = "{:<4}{}".format(format_with_color(split_genre[0]), "")
-            if len(split_genre) > 1:
-                genre += "\n" + "\n".join(
-                    map(
-                        "{:<13}{}".format,
-                        10 * [""],
-                        map(format_with_color, split_genre[1:]),
-                    )
-                )
-            new_album["genre"] = genre
-        elif field == "last_played":
-            new_album[field] = time2human(
-                max(map(op.itemgetter("last_played_ts"), tracks))
-            )
-        elif field in {"bpm", "rating"}:
-            new_album[field] = round(get_sum(field) / track_count, 2)
-        elif field in {"plays", "skips"}:
-            new_album[field] = str(get_sum(field))
-
-    return format_bpm_plays_skips(new_album)
+def get_val(track: JSONDict, field: str) -> str:
+    return FIELDS_MAP[field](track[field]) if track.get(field) else ""
 
 
-def make_release_table(data: JSONDict, ret: bool = False) -> Optional[Table]:
-    rows = []
-    for key, val in data.items():
-        if key in {"genre", "style"}:
-            content = colored_split(val)
-            content.align = "left"
-        elif key == "tracks":
-            headers = list(val[0].keys())
-            tracks_table = new_table(*headers)
-            for track in val:
-                tracks_table.add_row(*get_row(headers, track))
-            content = Panel(tracks_table)
-        else:
-            content = str(val)
-        rows.append([key, content])
-    if ret:
-        release_table = new_table()
-        for row in rows:
-            release_table.add_row(*row)
-        return release_table
-    # for row in rows:
-    #     root.add_row(*row)
-    # root.columns[0].style = "bold misty_rose1"
-    # console.print(root)
+def get_vals(fields: Collection[str], tracks: Iterable[JSONDict]) -> Iterable[Any]:
+    for track in tracks:
+        track["stats"] = track.pop("plays"), track.pop("skips")
+        if is_single(track):
+            track.pop("album")
+
+    return map(lambda t: map(lambda f: get_val(t, f), fields), tracks)
 
 
-def make_albums_table(albums: Iterable[JSONDict]) -> None:
-    tracks: Iterable[JSONDict]
-    singles: List[JSONDict] = []
+def tracks_table(tracks: List[JSONDict], **kwargs) -> Table:
+    fields = TRACK_DISPLAY_FIELDS.copy()
+    if len(tracks) > 1 and len(set(map(lambda x: x.get("artist"), tracks))) == 1:
+        fields.remove("artist")
 
-    get_stats = op.itemgetter("bpm", "plays", "skips")
-    h = "#", "artist", "title", "🚀", wrap("✔", "green"), wrap("🞬", "red"), "🎶 ⏰"
+    return new_table(
+        *map(lambda x: DISPLAY_HEADER.get(x, x), fields),
+        box=box.SIMPLE,
+        rows=get_vals(fields, tracks),
+        collapse_padding=True,
+        **kwargs,
+    )
 
-    def add_and_print(tracks: List[JSONDict], singles: bool = False) -> None:
-        skip = {"#", "title", "artist", "length", "rating"}
-        keep = {"plays", "skips", "last_played", "bpm"}
-        fields = set(first_track.keys()) - skip
-        # print(comments)
-        common = set(
-            filter(lambda x: len(set(map(op.itemgetter(x), tracks))) == 1, fields)
-        ).union(keep)
-        album = dict(zip(common, op.itemgetter(*common)(first_track)))
-        album = map_album_fields(album, tracks)
-        albumtable = new_table(title=album.pop("title"))
 
-        tree = new_tree(guide_style="red", highlight=True)
-        for field, value in album.items():
-            if field[0].isalpha():
-                fmt = "{:<20}{}"
-            else:
-                fmt = "{}{}"
-            tree.add(fmt.format(wrap(field, "b"), value))
+def album_stats(tracks: List[JSONDict]) -> JSONDict:
+    def agg(field: str) -> Iterable:
+        return map(lambda x: x.get(field) or 0, tracks)
 
-        tracklist = new_table(*h, border_style="red")
-        for track in tracks:
-            tracklist.add_row(
-                str(track.get("#") or ""),
-                track.get("artist", ""),
-                track.get("title", ""),
-                *map("{:2}".format, map(str, get_stats(track))),
-                str(track.get("last_played")),
-            )
-        for col_idx in (1, 2, -1):
-            tracklist.columns[col_idx].justify = "left"
+    return dict(
+        bpm=round(sum(agg("bpm")) / len(tracks), 1),
+        rating=round(sum(agg("rating")) / len(tracks), 2),
+        stats=(sum(agg("plays")) or "", sum(agg("skips")) or ""),
+        mtime=max(agg("mtime")),
+        last_played=max(agg("last_played")),
+    )
 
-        albumtable.title = wrap(albumtable.title, "b i magenta")
-        albumtable.add_row(
-            tree,
-            simple_panel(Group(Align.left(Markdown(comments)), tracklist)),
-        )
-        print(albumtable)
 
-    for album, tracks in it.groupby(albums, lambda x: x.get("album") or ""):
-        tracks = list(tracks)
-        comments = tracks[0].get("comments") or ""
-        tracks = list(map(map_track_fields, tracks))
-        first_track = tracks[0]
+def album_title(title: str) -> str:
+    return wrap(f"  {title}  ", "i white on grey3")
 
-        def get(key: str, default: Any = "") -> Any:
-            return first_track.get(key) or default
 
-        albumtype = get("albumtype")
-        if not album or not albumtype or albumtype == "single":
-            singles.extend(tracks)
-            continue
+def album_colors(album: JSONDict) -> JSONDict:
+    def _add_color(name: str) -> str:
+        color = album[f"{name}_color"]
+        return wrap(album[name], f"b i {color}")
 
-        add_and_print(tracks)
+    album.update(
+        album_color=predictably_random_color(album["album"] or ""),
+        albumartist_color=predictably_random_color(album["albumartist"] or ""),
+    )
+    album["album"] = _add_color("album")
+    album["albumartist"] = _add_color("albumartist")
+    title = album["album"]
+    if " - " not in title:
+        title += " by " + album["albumartist"]
+    album["album_title"] = album_title(title)
+    return album
+
+
+def album_info(tracks: List[JSONDict]) -> JSONDict:
+    first = tracks[0]
+    fields = set(first.keys()) - set(TRACK_DISPLAY_FIELDS)
+    get = first.get
+
+    album: JSONDict = {
+        **dict(zip(fields, op.itemgetter(*fields)(first))),
+        **album_stats(tracks),
+        "albumtype": get("albumtypes") or get("albumtype"),
+    }
+    album.update(**album_colors(album))
+
+    return album
+
+
+def album_info_panel(album: JSONDict) -> Panel:
+    def should_display(keyval: Tuple[str, Any]) -> bool:
+        return keyval[1] and (keyval[0] in ALBUM_KEEP or keyval[0] not in ALBUM_IGNORE)
+
+    fields = filter(should_display, sorted(album.items()))
+    rows = it.starmap(lambda k, v: (get_header(k), get_val(album, k)), fields)
+    return simple_panel(new_table(rows=rows))
+
+
+def album_comment_panel(comment: str) -> Panel:
+    return border_panel(Markdown(comment), box=box.HORIZONTALS, style="grey54")
+
+
+def detailed_album_panel(tracks: List[JSONDict]) -> Panel:
+    album = album_info(tracks)
+    comment = album.get("comments")
+    return border_panel(
+        new_table(
+            rows=[
+                [
+                    album_info_panel(album),
+                    Group(
+                        album_comment_panel(comment) if comment else "",
+                        tracks_table(tracks, border_style=album["album_color"]),
+                    ),
+                ]
+            ],
+            title=album["album_title"],
+            title_justify="left",
+        ),
+        style=album["albumartist_color"],
+    )
+
+
+def make_albums_table(all_tracks: List[JSONDict]) -> None:
+
+    singles = list(filter(is_single, all_tracks))
+    not_singles = list(it.filterfalse(is_single, all_tracks))
+    for album_name, tracks in it.groupby(not_singles, lambda x: x.get("album") or ""):
+        print(detailed_album_panel(list(tracks)))
+
     if singles:
-        tracklist = new_table(*h, border_style="red")
-        for track in singles:
-            tracklist.add_row(
-                str(track.get("#") or ""),
-                track.get("artist", ""),
-                track.get("title", ""),
-                *map("{:2}".format, map(str, get_stats(track))),
-                str(track.get("last_played")),
-            )
-        for col_idx in (1, 2, -1):
-            tracklist.columns[col_idx].justify = "left"
-        print(
-            border_panel(
-                tracklist,
-                title=wrap("Singles", "b blue"),
-                style="cyan",
-                title_align="center",
-            )
-        )
-        # add_and_print(singles, singles=True)
-
-    # else:
-    #     title = albumartist + " - " + album
-
-    # add_and_print(items, title)
-    # if len(singles):
-    # add_and_print(singles, "Singles")
+        table = tracks_table(singles, title_justify="left", border_style="white")
+        print(border_panel(table, title=album_title(wrap("Singles", "b"))))
 
 
-def make_music_table(data: List[JSONDict], data_title: str="") -> None:
-    data = list(map(map_track_fields, data))
-    headers = list(filter(lambda x: x not in {"album", "albumartist"}, data[0].keys()))
-
-    def with_colors(item):
-        # type: (JSONDict) -> Tuple[Iterable[str], Optional[str]]
-        row: Iterable[str]
-        if "playlist" in item or "genre" or "style" in item:
-            row = []
-            for header in headers:
-                if header in {"playlist", "genre", "style"}:
-                    row.append(" ".join(map(format_with_color, item[header].split(", "))))
-                elif header in {"artist", "title"}:
-                    row.append(wrap(item[header], "b"))
-                else:
-                    row.append(str(item[header]))
-            return row, None
-
-        row = get_row(headers, item)
-        plays, skips = int(item.get("plays") or 0), int(item.get("skips") or 0)
-        if skips > plays:
-            return map(lambda x: wrap(x, "b black"), row), "on red"
-        elif plays >= 10 and skips < 2:
-            return map(lambda x: wrap(x, "b black"), row), "on green"
-        else:
-            return row, None
-
-    def add_and_print(
-        items: Iterable[JSONDict], title: str, add_headers: bool = False
-    ) -> None:
-        if add_headers:
-            table = new_table(*headers)
-        else:
-            table = new_table()
-        for item in items:
-            row, style = with_colors(item)
-            table.add_row(*row, style=style)
-
-        if title:
-            table.title = format_with_color(title)
-            table.title_justify = "left"
-
-        return table
-
-    singles: List[JSONDict] = []
-    if "album" not in data[0]:
-        title = ""
-        add_headers = False
-        if "group" in data_title.casefold():
-            add_headers = True
-        else:
-            title = "tracks not groupped by album"
-        print(add_and_print(data, title, add_headers=add_headers))
-    else:
-        for album, items in it.groupby(
-            sorted(data, key=op.itemgetter("album")), op.itemgetter("album")
-        ):
-            first_item = next(items)
-            items = it.chain([first_item], items)
-            albumtype = first_item.get("albumtype", "")
-            album = first_item.pop("album", "")
-            albumartist = first_item.pop("albumartist", "")
-            if not album or not albumtype or albumtype == "single":
-                singles.extend(items)
-                continue
-            else:
-                title = albumartist + " - " + album
-
-            print(
-                border_panel(
-                    add_and_print(items, None),
-                    title=wrap("   " + format_with_color(title) + "   ", "on grey3"),
-                )
-            )
-        if len(singles):
-            print(simple_panel(add_and_print(singles, "Singles")))
+def make_music_table(all_tracks: List[JSONDict]) -> None:
+    skip = {
+        "rating",
+        "released",
+        "country",
+        "albumtypes",
+        "catalognum",
+        "albumartist",
+        "plays",
+        "skips",
+    }
+    fields = OrderedSet(all_tracks[0].keys()).difference(skip)
+    fields.update({"stats"})
+    print(
+        new_table(
+            *map(get_header, fields),
+            rows=get_vals(fields, all_tracks),
+            collapse_padding=True,
+            style="black",
+        ),
+    )
