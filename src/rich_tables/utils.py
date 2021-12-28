@@ -1,11 +1,10 @@
+import itertools as it
 import random
 import re
 from datetime import datetime
 from difflib import SequenceMatcher
-from itertools import starmap
-from typing import Any, Dict, Iterable, List, MutableMapping, Optional, TypeVar
+from typing import Any, Dict, Iterable, List, MutableMapping, Optional, Tuple, TypeVar
 
-from dateutil.relativedelta import relativedelta
 from rich import box
 from rich.align import Align
 from rich.console import Console, RenderableType
@@ -37,32 +36,25 @@ def make_difftext(before: str, after: str) -> str:
     before = preparse(before)
     after = preparse(after)
 
-    matcher = SequenceMatcher(isjunk=lambda x: x in r"\n ", a=before, b=after)
+    matcher = SequenceMatcher(lambda x: x in " ", a=before, b=after)
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
     return diff
 
 
-def time2human(timestamp: Optional[int], acc: int = 7) -> str:
+def time2human(timestamp: Optional[int], acc: int = 1) -> str:
     if not timestamp:
         return "-"
-
-    timediff = relativedelta(datetime.now(), datetime.fromtimestamp(timestamp))
-    nonzero_pairs = list(filter(lambda x: int(x[1]), list(vars(timediff).items())[:7]))
-    mapped_pairs = map(lambda x: (dur_map[x[0]], abs(x[1])), nonzero_pairs[:acc])
-
-    dur_map = dict(
-        minutes="min",
-        hours="h",
-        months="mo",
-        seconds="sec",
-        days="d",
-    )
-    num_fmt = wrap("{1}", "b cyan")
-    dur_fmt = wrap("{0}", "b red" if nonzero_pairs[0][1] > 0 else "b green")
-
-    return "".join(starmap((num_fmt + dur_fmt).format, mapped_pairs))
+    diff = datetime.now() - datetime.fromtimestamp(timestamp)
+    opts: List[Tuple[int, str]] = [
+        (diff.days, "d"),
+        (diff.seconds // 3600, "h"),
+        (diff.seconds % 3600 // 60, "min"),
+        (diff.seconds % 60, "s"),
+    ]
+    parts = it.starmap("[b cyan]{}[/b cyan]{}".format, filter(lambda x: x[0], opts))
+    return " ".join(it.islice(parts, acc)) + " ago"
 
 
 def make_console(**kwargs: Any) -> Console:

@@ -83,7 +83,7 @@ def make_time_table(data: List[JSONDict]) -> Table:
         color = predictably_random_color(
             categories
         )  # , ratio=float(duration / total_time))
-        catstr = "{:<27}{}".format(categories, time2human(duration))
+        catstr = "{:<27}{}".format(categories, time2human(duration, 2))
         if categories == "total":
             catstr = wrap(catstr, "dim")
         bar = Bar(total_time, 0, duration, color=color)
