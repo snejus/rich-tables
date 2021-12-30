@@ -13,7 +13,7 @@ from rich.columns import Columns
 from rich.console import Console, RenderableType, ConsoleRenderable
 from rich.table import Table
 
-from .music import make_albums_table, make_music_table
+from .music import make_albums_table, make_tracks_table
 from .utils import (
     border_panel,
     colored_split,
@@ -376,7 +376,7 @@ def draw_data(title, data, groups={}):
         elif title == "Album":
             make_albums_table(data)
         elif title == "Music":
-            make_music_table(data)
+            make_tracks_table(data)
         else:
             console.print(make_generic_table(data))
 
