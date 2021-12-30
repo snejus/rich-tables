@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable, List, Type, Union
 from rich import box, print
 from rich.bar import Bar
 from rich.columns import Columns
-from rich.console import Console, RenderableType, ConsoleRenderable
+from rich.console import Console, ConsoleRenderable, RenderableType
 from rich.table import Table
 
 from .music import make_albums_table, make_tracks_table
@@ -18,6 +18,7 @@ from .utils import (
     border_panel,
     colored_split,
     comment_panel,
+    duration2human,
     format_with_color,
     make_difftext,
     md_panel,
@@ -80,14 +81,12 @@ def make_time_table(data: List[JSONDict]) -> Table:
     table = new_table()
 
     def add_duration_bar(duration: int, categories: str) -> None:
-        color = predictably_random_color(
-            categories
-        )  # , ratio=float(duration / total_time))
-        catstr = "{:<27}{}".format(categories, time2human(duration, 2))
+        color = predictably_random_color(categories)
+        catstr = categories
         if categories == "total":
             catstr = wrap(catstr, "dim")
         bar = Bar(total_time, 0, duration, color=color)
-        table.add_row(catstr, bar)
+        table.add_row(catstr, duration2human(duration), bar)
 
     data.append({group_by: "total", "duration": total_time})
     for duration, categories in map(op.itemgetter("duration", group_by), data):

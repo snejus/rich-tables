@@ -1,7 +1,7 @@
 import itertools as it
 import random
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from typing import Any, Dict, Iterable, List, MutableMapping, Optional, Tuple, TypeVar
 
@@ -43,18 +43,26 @@ def make_difftext(before: str, after: str) -> str:
     return diff
 
 
-def time2human(timestamp: Optional[int], acc: int = 1) -> str:
-    if not timestamp:
-        return "-"
-    diff = datetime.now() - datetime.fromtimestamp(timestamp)
+def fmt_time(diff: timedelta) -> Iterable[str]:
     opts: List[Tuple[int, str]] = [
         (diff.days, "d"),
         (diff.seconds // 3600, "h"),
         (diff.seconds % 3600 // 60, "min"),
         (diff.seconds % 60, "s"),
     ]
-    parts = it.starmap("[b cyan]{}[/b cyan]{}".format, filter(lambda x: x[0], opts))
-    return " ".join(it.islice(parts, acc)) + " ago"
+    parts = it.starmap("[b cyan]{:>3}[/b cyan]{}".format, filter(lambda x: x[0], opts))
+    return parts
+
+
+def duration2human(duration: int) -> str:
+    return " ".join(fmt_time(timedelta(seconds=duration)))
+
+
+def time2human(timestamp: Optional[int], acc: int = 1) -> str:
+    if not timestamp:
+        return "-"
+    diff = datetime.now() - datetime.fromtimestamp(timestamp)
+    return " ".join(it.islice(fmt_time(diff), acc)) + " ago"
 
 
 def make_console(**kwargs: Any) -> Console:
