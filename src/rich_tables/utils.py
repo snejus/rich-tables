@@ -3,7 +3,8 @@ import random
 import re
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
-from typing import Any, Dict, Iterable, List, MutableMapping, Optional, Tuple, TypeVar
+from functools import partial
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from rich import box
 from rich.align import Align
@@ -15,18 +16,26 @@ from rich.table import Column, Table
 from rich.text import Text
 from rich.tree import Tree
 
-Renderable = TypeVar("Renderable")
+JSONDict = Dict[str, Any]
+
+
+def format_new(string: str) -> str:
+    return wrap(re.sub(r"(^\s+$)", "[u green]\\1[/u green]", string), "b green")
+
+
+def format_old(string: str) -> str:
+    return wrap(re.sub(r"(^\s+$)", "[u red]\\1[/u red]", string), "b s red")
 
 
 def fmtdiff(change: str, before: str, after: str) -> str:
-    retval = before
     if change == "insert":
-        retval = wrap(after, "b green")
+        return format_new(after)
     elif change == "delete":
-        retval = wrap(before, "b strike red")
+        return format_old(before)
     elif change == "replace":
-        retval = wrap(before, "b strike red") + wrap(after, "b green")
-    return retval
+        return format_old(before) + format_new(after)
+    else:
+        return before
 
 
 def make_difftext(before: str, after: str) -> str:
@@ -36,22 +45,23 @@ def make_difftext(before: str, after: str) -> str:
     before = preparse(before)
     after = preparse(after)
 
-    matcher = SequenceMatcher(lambda x: x in " ", a=before, b=after)
+    matcher = SequenceMatcher(isjunk=lambda x: x in " ,-\\n", a=before, b=after)
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
     return diff
 
 
-def fmt_time(diff: timedelta) -> Iterable[str]:
+def fmt_time(diff: timedelta, clr: str = "cyan") -> Iterable[str]:
     opts: List[Tuple[int, str]] = [
         (diff.days, "d"),
         (diff.seconds // 3600, "h"),
         (diff.seconds % 3600 // 60, "min"),
         (diff.seconds % 60, "s"),
     ]
-    parts = it.starmap("[b cyan]{:>3}[/b cyan]{}".format, filter(lambda x: x[0], opts))
-    return parts
+
+    _fmt = "[cyan]{:>3}[/cyan]{}"
+    return it.starmap(_fmt.format, filter(lambda x: x[0], opts))
 
 
 def duration2human(duration: int) -> str:
@@ -66,7 +76,7 @@ def time2human(timestamp: Optional[int], acc: int = 1) -> str:
 
 
 def make_console(**kwargs: Any) -> Console:
-    default = dict(force_terminal=True, force_interactive=True)
+    default: JSONDict = dict(force_terminal=True, force_interactive=True)
     return Console(**{**default, **kwargs})
 
 
@@ -75,18 +85,16 @@ def wrap(text: str, tag: str) -> str:
 
 
 def new_table(*args: Any, **kwargs: Any) -> Table:
-    default = dict(
+    default: JSONDict = dict(
         border_style="black",
         show_edge=False,
         show_header=False,
         highlight=True,
         row_styles=["white"],
         expand=False,
-        style="light_steel_blue1",
     )
-    headers = []
-    if len(args):
-        headers = list(map(lambda x: Column(str(x), justify="left") or "", args))
+    headers = list(map(lambda x: Column(str(x), justify="left") or "", args))
+    if len(headers):
         default["header_style"] = "bold misty_rose1"
         default["box"] = box.SIMPLE_HEAVY
         default["show_header"] = True
@@ -102,33 +110,20 @@ def new_table(*args: Any, **kwargs: Any) -> Table:
 
 def predictably_random_color(string: str) -> str:
     random.seed(string)
-    rand1 = random.randint(150, 255)
-    rand2 = random.randint(150, 255)
-    rand3 = random.randint(150, 255)
-    return "#{:0>6X}".format(rand1 * rand2 * rand3)
-    # return "#{:0>6X}".format(random.randint(3000, 2 ** 24))
+    rand = partial(random.randint, 180, 255)
+    return "#{:0>6X}".format(rand() * rand() * rand())
 
 
 def format_with_color(name: str) -> str:
-    if re.match(r"20[12][0-9]-[0-9][0-9](-[0-9][0-9])?", name):
-        return " ".join(
-            map(
-                lambda x: wrap(x[0], f"b {x[1]}"),
-                map(lambda x: [x, predictably_random_color(x)], name.split("-")),
-            )
-        )
-    else:
-        return wrap(name, f"b i {predictably_random_color(name)}")
+    return wrap(name, f"b i {predictably_random_color(name)}")
 
 
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    align_content = None
-    if kwargs.get("align", "") == "center":
-        align_content = Align.center(content)
+    default: JSONDict
     default = dict(title_align="left", subtitle_align="left", box=box.SIMPLE, expand=True)
-    args: MutableMapping = default.copy()
-    args.update(kwargs)
-    return Panel(align_content or content, **args)
+    if kwargs.get("align", "") == "center":
+        content = Align.center(content)
+    return Panel(content, **{**default, **kwargs})
 
 
 def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
@@ -142,20 +137,23 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
 def comment_panel(comment: Dict[str, str], **kwargs: Any) -> Panel:
     state = comment.get("state") or ""
     author = format_with_color(comment["author"])
-    time = wrap(comment.get("createdAt") or "", "d")
-    title = (state + " " if state else "") + author
     return md_panel(
         re.sub(r"[\[\]\\]", "", comment["body"]),
         padding=1,
-        title=title,
-        subtitle=time,
+        title=" ".join([state, author]),
+        subtitle=wrap(comment.get("createdAt") or "", "d"),
         **kwargs,
     )
 
 
 def syntax_panel(content: str, lexer: str, **kwargs: Any) -> Panel:
-    default = dict(theme="paraiso-dark", background_color="black", word_wrap=True)
-    return Panel(Syntax(content, lexer, **default), style="on black", width=200)
+    return Panel(
+        Syntax(
+            content, lexer, theme="paraiso-dark", background_color="black", word_wrap=True
+        ),
+        style="on black",
+        width=200,
+    )
 
 
 def centered(content: Any, **kwargs: Any) -> Align:
@@ -163,7 +161,7 @@ def centered(content: Any, **kwargs: Any) -> Align:
 
 
 def new_tree(values: List[str] = [], **kwargs) -> Tree:
-    default = dict(guide_style="black")
+    default: JSONDict = dict(guide_style="black")
     tree = Tree(kwargs.pop("title", None) or "", **{**default, **kwargs})
     for val in values:
         tree.add(val)
