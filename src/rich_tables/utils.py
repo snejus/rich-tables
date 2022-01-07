@@ -60,8 +60,7 @@ def fmt_time(diff: timedelta, clr: str = "cyan") -> Iterable[str]:
         (diff.seconds % 60, "s"),
     ]
 
-    _fmt = "[cyan]{:>3}[/cyan]{}"
-    return it.starmap(_fmt.format, filter(lambda x: x[0], opts))
+    return it.starmap("{:>3}{}".format, filter(lambda x: x[0], opts))
 
 
 def duration2human(duration: int) -> str:
@@ -71,8 +70,11 @@ def duration2human(duration: int) -> str:
 def time2human(timestamp: Optional[int], acc: int = 1) -> str:
     if not timestamp:
         return "-"
-    diff = datetime.now() - datetime.fromtimestamp(timestamp)
-    return " ".join(it.islice(fmt_time(diff), acc)) + " ago"
+    diff = datetime.now().timestamp() - timestamp
+    fmted = " ".join(it.islice(fmt_time(timedelta(seconds=abs(diff))), acc))
+    if diff > 0:
+        return f"{fmted} ago"
+    return f"in {fmted}"
 
 
 def make_console(**kwargs: Any) -> Console:

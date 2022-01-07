@@ -292,49 +292,65 @@ def make_calendar_table(events: List[JSONDict]) -> None:
         print(simple_panel(table, title=wrap(date, "b"), style="cyan"))
 
 
-def make_tasks_table(task_groups: GroupsDict) -> None:
-    def getstr(data: JSONDict, key: str) -> str:
-        return str(data.get(key) or "")
+def get_val(fields_map: Dict[str, Callable], obj: JSONDict, field: str) -> str:
+    return fields_map[field](obj[field]) if obj.get(field) else ""
 
-    index = {}
+
+def make_tasks_table(task_groups: GroupsDict) -> None:
+    fields_map: Dict[str, Callable] = OrderedDict(
+        id=lambda x: str(x),
+        urgency=lambda x: str(round(x, 1)),
+        description=lambda x: x,
+        due=lambda x: re.sub(
+            r"(.*) ago$",
+            wrap("\\1", "b red"),
+            re.sub(
+                r"^in (.*)",
+                wrap("\\1", "b green"),
+                time2human(int(parse(x).timestamp())),
+            ),
+        ),
+        tags=lambda x: " ".join(map(format_with_color, x or [])),
+        # modified=lambda x: time2human(int(parse(x).timestamp())),
+        # mask=lambda x: x,
+        # imask=lambda x: str(x),
+    )
+    headers = fields_map.keys()
     status_map = {
         "completed": "s green",
         "deleted": "s red",
-        "active": "b",
         "pending": "white",
+        "started": "b green",
         "recurring": "i magenta",
     }
-    for group, tasks in task_groups.items():
-        for task in tasks:
-            recur = task.get("recur")
-            desc = task["description"] + " " + (f"({recur})" if recur else "")
-            task["description"] = wrap(desc, status_map[task["status"]])
-            task["id"] = str(task["id"])
-            task["urgency"] = str(round(task["urgency"], 1))
-            task["tags"] = " ".join(map(format_with_color, task.get("tags") or []))
-            index[task["uuid"]] = new_tree(title=task["description"])
-            for key in ("entry", "modified", "end", "due"):
-                val = task.get(key)
-                if not val:
-                    task[key] = ""
-                else:
-                    date_time = datetime.strptime(val, "%Y%m%dT%H%M%SZ")
-                    task[key] = time2human(int(date_time.timestamp()), 2)
+    index = {}
+    for task in it.chain(*it.starmap(lambda x, y: y, task_groups.items())):
+        if task.get("start"):
+            task["status"] = "started"
 
+        recur = task.get("recur")
+        if recur and task.get("status") == "recurring":
+            task["description"] += f" ({recur})"
+        index[task["uuid"]] = wrap(task["description"], status_map[task["status"]])
+
+    get_value = partial(get_val, fields_map)
     for group, tasks in task_groups.items():
-        color = predictably_random_color(group)
-        headers = ["id", "urgency", "description", "due", "tags"]
-        table = new_table(*headers)
+        table = new_table()
         for task in tasks:
-            task_tree = index[task["uuid"]]
+            task_tree = new_tree(title=index[task["uuid"]])
             for uuid in task.get("depends") or []:
-                dep = None
                 dep = index.get(uuid)
                 if dep:
                     task_tree.add(dep)
             task["description"] = task_tree
-            table.add_row(*op.itemgetter(*headers)(task))
-        console.print(border_panel(table, title=wrap(group, "b"), style=color))
+            table.add_row(*map(partial(get_value, task), *headers))
+        print(
+            border_panel(
+                table,
+                title=wrap(f"  {group}  ", "b on #000000"),
+                style=predictably_random_color(group),
+            )
+        )
 
 
 def load_data() -> Any:
