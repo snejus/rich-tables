@@ -343,7 +343,7 @@ def make_tasks_table(task_groups: GroupsDict) -> None:
                 if dep:
                     task_tree.add(dep)
             task["description"] = task_tree
-            table.add_row(*map(partial(get_value, task), *headers))
+            table.add_row(*map(partial(get_value, task), headers))
         print(
             border_panel(
                 table,
