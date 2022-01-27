@@ -3,20 +3,25 @@ import json
 import operator as op
 import re
 import sys
-from datetime import datetime
-from functools import singledispatch
-from typing import Any, Dict, Iterable, List, Type, Union
+from collections import OrderedDict, defaultdict
+from functools import partial, singledispatch
+from os import environ, path
+from typing import Any, Callable, Dict, Iterable, List, Type, Union
 
-from rich import box, print
+from dateutil.parser import parse
+from rich import box
 from rich.bar import Bar
 from rich.columns import Columns
-from rich.console import Console, ConsoleRenderable, RenderableType
+from rich.console import Console, ConsoleRenderable
+from rich.rule import Rule
 from rich.table import Table
+from rich.theme import Theme
+from ordered_set import OrderedSet
 
 from .music import make_albums_table, make_tracks_table
 from .utils import (
+    FIELDS_MAP,
     border_panel,
-    colored_split,
     comment_panel,
     duration2human,
     format_with_color,
@@ -31,9 +36,18 @@ from .utils import (
     wrap,
 )
 
-console = Console(force_terminal=True, force_interactive=True)
 JSONDict = Dict[str, Any]
 GroupsDict = Dict[str, List]
+
+
+def get_console():
+    tpath = path.join(environ.get("XDG_CONFIG_HOME") or "", "rich", "config.ini")
+    theme = Theme.from_file(open(tpath))
+    return Console(force_terminal=True, force_interactive=True, theme=theme)
+
+
+console = get_console()
+print = console.print
 
 
 def make_diff_table(group_to_data: GroupsDict) -> None:
@@ -45,7 +59,7 @@ def make_diff_table(group_to_data: GroupsDict) -> None:
                 headers.remove(head)
             headers.append("diff")
             group_title = items[0].get(group_name) or ""
-            title = "─" * 5 + "  " + wrap(group_title, "b") + "  " + "─" * 5
+            title = "".join(["─" * 5, "  ", wrap(group_title, "b"), "  ", "─" * 5])
 
             table = new_table()
             for item in items:
@@ -55,43 +69,35 @@ def make_diff_table(group_to_data: GroupsDict) -> None:
             diff_table.add_row(simple_panel(table, title=title, padding=1))
 
 
-def make_counts_table(data: List[JSONDict]) -> None:
-    total_count = sum(map(op.methodcaller("get", "count", 0), data))
+def get_bar(count: int, total_count: int) -> Bar:
+    rand1 = rand2 = rand3 = round(255 * float(count / total_count))
+    color = "#{:0>2X}{:0>2X}{:0>2X}".format(rand1, rand2, rand3)
+    bar = Bar(total_count, 0, count, color=color)
+    return bar
 
-    table = new_table()
 
-    def add_bar(count: int, *args) -> None:
-        rand1 = rand2 = rand3 = round(255 * float(count / total_count))
-        color = "#{:0>2X}{:0>2X}{:0>2X}".format(rand1, rand2, rand3)
-        bar = Bar(total_count, 0, count, color=color)
-        table.add_row(*args, str(count), bar)
+def make_counts_table(data: List[JSONDict]) -> Table:
+    headers = set(data[0])
+    count_col_name = "count"
+    if count_col_name not in headers:
+        col_map = {int: "count", str: "desc", float: "count"}
+        col_name = {col_map[type(v)]: k for k, v in data[0].items()}
+        count_col_name = col_name["count"]
+    other_col_names = list(filter(lambda x: x != count_col_name, data[0]))
+    max_count = max(map(int, map(op.methodcaller("get", count_col_name, 0), data)))
 
-    keys = set(data[0].keys()) - {"count"}
+    table = new_table(*other_col_names, count_col_name, overflow="fold", justify="right")
     for item in data:
-        count = item["count"]
-        desc = op.itemgetter(*keys)(item)
-        add_bar(count, *desc)
-    add_bar(total_count, "", "total")
-
-
-def make_time_table(data: List[JSONDict]) -> Table:
-    group_by = set(data[0].keys()).difference({"duration"}).pop()
-    total_time = sum(map(op.methodcaller("get", "duration", 0), data))
-
-    table = new_table()
-
-    def add_duration_bar(duration: int, categories: str) -> None:
-        color = predictably_random_color(categories)
-        catstr = categories
-        if categories == "total":
-            catstr = wrap(catstr, "dim")
-        bar = Bar(total_time, 0, duration, color=color)
-        table.add_row(catstr, duration2human(duration), bar)
-
-    data.append({group_by: "total", "duration": total_time})
-    for duration, categories in map(op.itemgetter("duration", group_by), data):
-        add_duration_bar(duration, categories)
-
+        count_val = int(item[count_col_name])
+        if count_col_name == "duration":
+            count_header = duration2human(count_val, 2)
+        else:
+            count_header = str(count_val)
+        table.add_row(
+            *map(lambda x: item.get(x) or "", other_col_names),
+            count_header,
+            get_bar(count_val, max_count),
+        )
     return table
 
 
@@ -117,11 +123,16 @@ def make_pulls_table(data: List[JSONDict]) -> None:
         "participants",
     }
 
+    def bold(string: str) -> str:
+        return wrap(string, "b")
+
     table = new_table()
     for pr in data:
-        desc_table = new_table(expand=True)
-        title = wrap(pr.get("title", ""), "b")
-        listvals: List[str] = []
+        title = pr.get("title", "")
+
+        print(Rule(wrap(" {title} ", "r b white"), style="r"))
+        info_table = new_table()
+        pr["author"] = format_with_color(pr["author"])
         for key, val in pr.items():
             if isinstance(key, str) and key not in exclude:
                 val = str(val)
@@ -129,24 +140,14 @@ def make_pulls_table(data: List[JSONDict]) -> None:
                     color = state_map.get(val, val)
                     if color:
                         val = wrap(val, f"b {color}")
-                listvals.append("{:<28}{}".format(wrap(key, "b"), val))
-        tree = new_tree(listvals, title=title)
-        tree.add(
-            "{:<28}{}".format(
-                wrap("participants", "b"),
-                "\t".join(map(format_with_color, pr["participants"])),
-            )
-        )
-
-        tree.add("")
-        for file in pr["files"]:
-            tree.add("{:<30}{:<26}{}".format(*file))
-        desc_table.add_row(simple_panel(tree), md_panel(pr["body"], box=box.SIMPLE))
-        table.add_row(simple_panel(desc_table))
+                info_table.add_row(wrap(key, "b"), val)
+        participants = "  ".join(map(format_with_color, pr["participants"]))
+        info_table.add_row(wrap("participants", "b"), participants)
+        table.add_row(simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE))
+        table.add_row(simple_panel(new_table(rows=pr["files"])))
 
         reviews_table = new_table()
-        reviews = pr.get("reviews") or []
-        for review in reviews:
+        for review in pr.get("reviews") or []:
             state = review["state"]
             if state == "COMMENTED":
                 continue
@@ -154,42 +155,35 @@ def make_pulls_table(data: List[JSONDict]) -> None:
             review["state"] = wrap(state, f"b {color}")
             review["body"] = re.sub(r"(^|\n)", "\\1> ", review["body"])
             reviews_table.add_row(comment_panel(review))
-        if len(reviews):
-            table.add_row(
-                simple_panel(
-                    reviews_table, title=wrap("Reviews", "b"), title_align="left"
-                )
-            )
+        if reviews_table.row_count:
+            pan = simple_panel(reviews_table, title=bold("Reviews"), title_align="left")
+            table.add_row(pan)
 
+        thread_table = new_table()
         for thread in pr.get("reviewThreads") or []:
-            thread_table = new_table()
             diff_panel = None
             comments_table = new_table()
-            comments = thread.get("comments")
-            for comment in comments:
-                if not diff_panel and "diffHunk" in comment:
-                    diff_panel = syntax_panel(
-                        re.sub(r"[\[\]\\]", "", comment["diffHunk"]),
-                        "diff",
-                        box=box.ROUNDED,
-                    )
+            for comment in thread.get("comments") or []:
+                hunk = comment.get("diffHunk")
                 comments_table.add_row(comment_panel(comment))
+                if not diff_panel and hunk:
+                    diff_panel = syntax_panel(re.sub(r"[\[\]\\]", "", hunk), "diff")
 
-            parts: Iterable[RenderableType] = filter(
-                op.truth, [diff_panel or "", comments_table]
-            )
-            thread_table.add_row(*map(simple_panel, parts))
+            if comments_table.row_count:
+                thread_table.add_row(simple_panel(comments_table))
+            if diff_panel:
+                thread_table.add_row(diff_panel)
 
             file_line = thread.get("line")
             title = thread.get("path") + " " + wrap(file_line, "b") if file_line else ""
             style = "green" if thread.get("isResolved") else "red"
             table.add_row(border_panel(thread_table, title=title, border_style=style))
 
-        comments = pr.get("comments") or []
-        if len(comments):
-            table.add_row(wrap("Comments", "b"))
-            for comment in comments:
-                table.add_row(comment_panel(comment))
+        comments_table = new_table(title=wrap("Comments", "b"))
+        for comment in pr.get("comments") or []:
+            comments_table.add_row(comment_panel(comment))
+        if comments_table.row_count:
+            table.add_row(simple_panel(comments_table))
         print(table)
 
 
@@ -205,47 +199,69 @@ def add_to_table(table: Table, content: Any, key: str = ""):
 
 
 @singledispatch
-def make_generic_table(data: Union[JSONDict, List]) -> Any:
-    if not data:
-        return ""
+def make_generic_table(
+    data: Union[JSONDict, List, ConsoleRenderable, str], header: str = ""
+) -> Any:
     return str(data)
 
 
+@make_generic_table.register(str)
+def _str(data: Union[str, int], header: str = "") -> Any:
+    return FIELDS_MAP[header](data)
+
+
 @make_generic_table.register
-def _dict(data: dict):
+def _renderable(data: ConsoleRenderable) -> ConsoleRenderable:
+    return data
+
+
+@make_generic_table.register(dict)
+def _dict(data: JSONDict):
     table = new_table()
     for key, content in data.items():
-        if key in {"genre", "style"}:
-            content = colored_split(content)
-            content.align = "left"
+        if isinstance(content, str):
+            content = make_generic_table(content, key)
         else:
             content = make_generic_table(content)
-        add_to_table(table, content, key=str(key))
+        add_to_table(table, content, key)
 
-    table.columns[0].style = "bold misty_rose1"
+    if table.columns:
+        table.columns[0].style = "bold misty_rose1"
     return border_panel(table)
 
 
-@make_generic_table.register
-def _list(data: list):
+@make_generic_table.register(list)
+def _list(data: List[JSONDict]):
     def only(data_list: Iterable[Any], _type: Type) -> bool:
         return all(map(lambda x: isinstance(x, _type), data_list))
 
     table = new_table()
     if only(data, str):
         # ["hello", "hi", "bye", ...]
-        return Columns(list(map(lambda x: wrap(x, "b"), data)), equal=True)
+        return Columns(list(map(format_with_color, data)), equal=True)
 
-    if only(data, dict) and len(set(map(str, map(dict.keys, data)))) == 1:
+    elif only(data, dict) and len(set(map(str, map(dict.keys, data)))) == 1:
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
         if not table.rows:
-            keys = list(data[0].keys())
-            table = new_table(*keys)
-        for item in data:
-            row = []
-            for value in item.values():
-                row.append(make_generic_table(value))
-            table.add_row(*row)
+            table = new_table(*data[0].keys())
+        vals_types = set(map(type, data[0].values()))
+        if (
+            len(data[0]) == 2
+            and len(vals_types.intersection({int, float, str})) == 2
+            or "count" in set(data[0].keys())
+        ):
+            # [{"some_count": 10, "some_entity": "entity"}, ...]
+            table = make_counts_table(data)
+        else:
+            for item in data:
+                row = []
+                for key, value in item.items():
+                    if isinstance(value, str):
+                        row.append(make_generic_table(value, key))
+                    else:
+                        row.append(make_generic_table(value))
+                table.add_row(*row)
+
     else:
         # [{}, "bye", True]
         for item in data:
@@ -254,68 +270,71 @@ def _list(data: list):
     return simple_panel(table)
 
 
-@make_generic_table.register
-def _renderable(data: ConsoleRenderable) -> ConsoleRenderable:
-    return data
-
-
-def make_lights_table(lights: List[JSONDict]) -> None:
+def make_lights_table(lights: List[JSONDict]) -> Table:
     from rgbxy import Converter
 
-    table = new_table(*lights[0].keys())
+    headers = lights[0].keys()
+    table = new_table(*headers)
     conv = Converter()
     for light in lights:
-        color = conv.xy_to_hex(*light.get("xy") or [0, 0])
-        light["xy"] = wrap("   a", f"#{color} on #{color}")
-        table.add_row(*map(lambda x: str(x) if x else " ", light.values()))
-    table.columns[1].justify = "left"
-
-    console.print(simple_panel(table))
+        xy = light.get("xy")
+        if xy:
+            color = conv.xy_to_hex(*xy)
+            light["xy"] = wrap("   a", f"#{color} on #{color}")
+        table.add_row(
+            *map(str, map(light.get, headers)), style="" if light["on"] else "dim"
+        )
+    return table
 
 
 def make_calendar_table(events: List[JSONDict]) -> None:
     color_header = "calendar_color"
     updated_events = []
     keys = "start_time", "end_time", "start_date", "summary", "location"
-    getitems = op.itemgetter(*keys)
     for event in events:
-        style = event[color_header]
-        event.pop(color_header)
+        style = event.pop(color_header)
         updated_event = dict(cal=wrap("aaa", f"{style} on {style}"))
-        updated_event.update(**dict(zip(keys, getitems(event))))
+        updated_event.update(**dict(zip(keys, op.itemgetter(*keys)(event))))
         updated_events.append(updated_event)
 
     for date, day_events in it.groupby(updated_events, op.itemgetter("start_date")):
-        table = new_table()
-        for event in day_events:
-            table.add_row(*event.values())
-        print(simple_panel(table, title=wrap(date, "b"), style="cyan"))
+        print(
+            simple_panel(
+                new_table(rows=map(dict.values, day_events)),
+                title=wrap(date, "b"),
+                style="cyan",
+            )
+        )
 
 
 def get_val(fields_map: Dict[str, Callable], obj: JSONDict, field: str) -> str:
     return fields_map[field](obj[field]) if obj.get(field) else ""
 
 
-def make_tasks_table(task_groups: GroupsDict) -> None:
+def make_tasks_table(tasks: List[JSONDict]) -> None:
+    get_time = partial(time2human, use_colors=True, pad=False)
     fields_map: Dict[str, Callable] = OrderedDict(
         id=lambda x: str(x),
         urgency=lambda x: str(round(x, 1)),
         description=lambda x: x,
-        due=lambda x: re.sub(
-            r"(.*) ago$",
-            wrap("\\1", "b red"),
-            re.sub(
-                r"^in (.*)",
-                wrap("\\1", "b green"),
-                time2human(int(parse(x).timestamp())),
-            ),
-        ),
+        due=lambda x: get_time(int(parse(x).timestamp())),
+        scheduled=lambda x: get_time(int(parse(x).timestamp())),
         tags=lambda x: " ".join(map(format_with_color, x or [])),
-        # modified=lambda x: time2human(int(parse(x).timestamp())),
+        project=format_with_color,
+        modified=lambda x: get_time(int(parse(x).timestamp())),
+        annotations=lambda l: "\n".join(
+            map(
+                lambda x: wrap(
+                    time2human(int(parse(x["entry"]).timestamp()), pad=False), "b"
+                )
+                + ": "
+                + wrap(x["description"], "i"),
+                reversed(l),
+            )
+        ),
         # mask=lambda x: x,
         # imask=lambda x: str(x),
     )
-    headers = fields_map.keys()
     status_map = {
         "completed": "s green",
         "deleted": "s red",
@@ -324,37 +343,45 @@ def make_tasks_table(task_groups: GroupsDict) -> None:
         "recurring": "i magenta",
     }
     index = {}
-    for task in it.chain(*it.starmap(lambda x, y: y, task_groups.items())):
+    for task in tasks:
         if task.get("start"):
             task["status"] = "started"
 
         recur = task.get("recur")
-        if recur and task.get("status") == "recurring":
-            task["description"] += f" ({recur})"
+        if recur:
+            if task.get("status") == "recurring":
+                continue
+            else:
+                task["status"] = "recurring"
+                task["description"] += f" ({recur})"
         index[task["uuid"]] = wrap(task["description"], status_map[task["status"]])
 
     get_value = partial(get_val, fields_map)
-    for group, tasks in task_groups.items():
+    group_by = tasks[0].get("group_by") or ""
+    headers = OrderedSet(fields_map.keys()) - {group_by}
+    for group, task_group in it.groupby(tasks, lambda x: x.get(group_by) or ""):
+        title = get_value(task, group_by)
         table = new_table()
-        for task in tasks:
-            task_tree = new_tree(title=index[task["uuid"]])
-            for uuid in task.get("depends") or []:
-                dep = index.get(uuid)
+        for task in task_group:
+            project_color = predictably_random_color(task.get("project") or "")
+            task_obj = index.get(task["uuid"])
+            if not task_obj:
+                continue
+
+            task_tree = new_tree(title=task_obj, guide_style=project_color)
+            ann = task.pop("annotations", None)
+            if ann:
+                task_tree.add(fields_map["annotations"](ann), guide_style=project_color)
+            for kuid in task.get("depends") or []:
+                dep = index.get(kuid)
                 if dep:
                     task_tree.add(dep)
             task["description"] = task_tree
             table.add_row(*map(partial(get_value, task), headers))
-        print(
-            border_panel(
-                table,
-                title=wrap(f"  {group}  ", "b on #000000"),
-                style=predictably_random_color(group),
-            )
-        )
+        print(border_panel(table, title=title, style=project_color))
 
 
 def load_data() -> Any:
-    data = None
     d = sys.stdin.read()
     try:
         data = json.loads(d)
@@ -366,34 +393,37 @@ def load_data() -> Any:
         return data
 
 
-def draw_data(title, data, groups={}):
-    # type: (str, Union[List, Dict], GroupsDict) -> None
-    if groups:
-        console.print(make_generic_table(data))
-    elif isinstance(data, dict):
-        if title == "Tasks":
-            make_tasks_table(data)
-        else:
-            console.print(make_generic_table(data))
-    elif isinstance(data, list):
-        if title == "Pull Requests":
-            make_pulls_table(data)
-        elif title == "JIRA Diff":
-            make_diff_table(groups)
-        elif title == "Time Usage Report":
-            print(make_time_table(data))
-        elif " count" in title.casefold():
-            make_counts_table(data)
-        elif title == "Hue lights":
-            make_lights_table(data)
-        elif title == "Calendar":
-            make_calendar_table(data)
-        elif title == "Album":
-            make_albums_table(data)
-        elif title == "Music":
-            make_tracks_table(data)
-        else:
-            console.print(make_generic_table(data))
+@singledispatch
+def draw_data(data: Union[JSONDict, List], title: str = "") -> None:
+    console.print(data)
+
+
+@draw_data.register(dict)
+def _draw_data_dict(data: JSONDict, title: str = "") -> None:
+    if "values" in data:
+        return draw_data(data["values"], data.get("title") or "")
+    console.print(make_generic_table(data))
+
+
+@draw_data.register(list)
+def _draw_data_list(data: List[JSONDict], title: str = "") -> None:
+    calls: Dict[str, Callable] = defaultdict(
+        lambda d: draw_data(d[0]) if len(d) == 1 else make_generic_table(d),
+        {
+            "Pull Requests": make_pulls_table,
+            "JIRA Diff": make_diff_table,
+            "Hue lights": make_lights_table,
+            "Calendar": make_calendar_table,
+            "Album": make_albums_table,
+            "Music": make_tracks_table,
+            "Count": make_counts_table,
+            "Tasks": make_tasks_table,
+            "": make_generic_table,
+        },
+    )
+    ret = calls[title](data)
+    if ret:
+        console.print(ret)
 
 
 def main():
@@ -405,16 +435,8 @@ def main():
     if "-j" in args:
         console.print_json(data=data)
     else:
-        groups: GroupsDict = {}
-        values = data
-        data_title = ""
-        if isinstance(data, dict):
-            data_title = data.get("title") or data_title
-            values = data.get("values") or values
-            groups = data.get("groups") or groups
-
         try:
-            draw_data(data_title, values, groups=groups)
+            draw_data(data)
         except Exception as exc:
             console.print_json(data=data)
             console.print_exception(extra_lines=4, show_locals=True)
