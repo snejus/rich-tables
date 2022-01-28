@@ -5,7 +5,6 @@ from collections import defaultdict
 from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Set, Tuple
 
-from dateutil.relativedelta import relativedelta
 from ordered_set import OrderedSet
 from rich import box, print
 from rich.console import Group
@@ -73,7 +72,6 @@ def get_val(track: JSONDict, field: str) -> str:
 
 def get_vals(fields: Set[str], tracks: Iterable[JSONDict]) -> Iterable[Iterable[str]]:
     for track in tracks:
-        # track["plays"] = track.pop("lastfm_plays", 0)
         if "skips" and "plays" in track:
             track["stats"] = track.pop("plays", ""), track.pop("skips", "")
 
@@ -81,8 +79,8 @@ def get_vals(fields: Set[str], tracks: Iterable[JSONDict]) -> Iterable[Iterable[
 
 
 def album_stats(tracks: List[JSONDict]) -> JSONDict:
-    def agg(field: str) -> Iterable[int]:
-        return map(lambda x: x.get(field) or 0, tracks)
+    def agg(field: str, default=0) -> Iterable:
+        return map(lambda x: x.get(field) or default, tracks)
 
     stats: JSONDict = dict(
         bpm=round(sum(agg("bpm")) / len(tracks)),
@@ -92,6 +90,7 @@ def album_stats(tracks: List[JSONDict]) -> JSONDict:
         mtime=max(agg("mtime")),
         last_played=max(agg("last_played")),
         tracktotal=(len(tracks), tracks[0].get("tracktotal") or 0),
+        comments="\n---\n---\n".join(set(agg("comments", ""))),
     )
     stats["stats"] = str(stats.get("plays") or ""), str(stats.get("skips") or "")
     return stats
@@ -244,14 +243,6 @@ def make_albums_table(all_tracks: List[JSONDict]) -> None:
 
 
 def make_tracks_table(all_tracks: List[JSONDict]) -> None:
-    # track_fields = list(all_tracks[0].keys())
-    # being_grouped = any(
-    #     map(
-    #         lambda x: any(map(x.startswith, ("count_", "sum_", "max_", "avg_"))),
-    #         track_fields,
-    #     )
-    # )
-    # if being_grouped:
     fields = OrderedSet([*all_tracks[0].keys(), "stats"]) - {
         "albumtypes",
         "plays",
@@ -261,6 +252,3 @@ def make_tracks_table(all_tracks: List[JSONDict]) -> None:
     for t in all_tracks:
         t["albumtype"] = t.pop("albumtypes", None) or t.pop("albumtype", None)
     print(tracks_table(all_tracks, "blue", fields, sort=False))
-    # else:
-    #     for album_name, tracks in it.groupby(all_tracks, get_album):
-    #         print(simple_album_panel(list(tracks)))
