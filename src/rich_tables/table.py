@@ -85,6 +85,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
         count_col_name = col_name["count"]
     other_col_names = list(filter(lambda x: x != count_col_name, data[0]))
     max_count = max(map(int, map(op.methodcaller("get", count_col_name, 0), data)))
+    total_count = sum(map(int, map(op.methodcaller("get", count_col_name, 0), data)))
 
     table = new_table(*other_col_names, count_col_name, overflow="fold", justify="right")
     for item in data:
@@ -98,6 +99,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
             count_header,
             get_bar(count_val, max_count),
         )
+    table.add_row("TOTAL", duration2human(total_count, 2))
     return table
 
 
@@ -360,9 +362,9 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
     group_by = tasks[0].get("group_by") or ""
     headers = OrderedSet(fields_map.keys()) - {group_by}
     for group, task_group in it.groupby(tasks, lambda x: x.get(group_by) or ""):
-        title = get_value(task, group_by)
         table = new_table()
         for task in task_group:
+            title = get_value(task, group_by)
             project_color = predictably_random_color(task.get("project") or "")
             task_obj = index.get(task["uuid"])
             if not task_obj:
