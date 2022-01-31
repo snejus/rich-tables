@@ -9,6 +9,7 @@ from os import environ, path
 from typing import Any, Callable, Dict, Iterable, List, Type, Union
 
 from dateutil.parser import parse
+from ordered_set import OrderedSet
 from rich import box
 from rich.bar import Bar
 from rich.columns import Columns
@@ -16,7 +17,6 @@ from rich.console import Console, ConsoleRenderable
 from rich.rule import Rule
 from rich.table import Table
 from rich.theme import Theme
-from ordered_set import OrderedSet
 
 from .music import make_albums_table, make_tracks_table
 from .utils import (
@@ -356,7 +356,9 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
             else:
                 task["status"] = "recurring"
                 task["description"] += f" ({recur})"
-        index[task["uuid"]] = wrap(task["description"], status_map[task["status"]])
+        index[task["uuid"]] = (
+            str(task.get("id") or "") + " " + wrap(task["description"], status_map[task["status"]])
+        )
 
     get_value = partial(get_val, fields_map)
     group_by = tasks[0].get("group_by") or ""

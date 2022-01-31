@@ -27,7 +27,7 @@ TRACK_FIELDS = OrderedSet(
 )
 ALBUM_IGNORE = TRACK_FIELDS.union(
     {
-        # "album_color",
+        "album_color",
         "albumartist_color",
         "album",
         "album_title",
