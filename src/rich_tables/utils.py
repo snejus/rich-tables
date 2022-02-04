@@ -48,7 +48,7 @@ def make_difftext(before: str, after: str, junk: str = "\n -():") -> str:
     before = preparse(before)
     after = preparse(after)
 
-    matcher = SequenceMatcher(isjunk=lambda x: x in junk, a=before, b=after)
+    matcher = SequenceMatcher(isjunk=lambda x: x not in junk, a=before, b=after)
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
