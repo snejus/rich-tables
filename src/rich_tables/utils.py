@@ -41,14 +41,14 @@ def fmtdiff(change: str, before: str, after: str) -> str:
         return before
 
 
-def make_difftext(before: str, after: str, junk: str = "\n -():") -> str:
+def make_difftext(before: str, after: str, junk: str = "\n ") -> str:
     def preparse(value: str) -> str:
         return value.strip().replace("[]", "~")
 
     before = preparse(before)
     after = preparse(after)
 
-    matcher = SequenceMatcher(isjunk=lambda x: x not in junk, a=before, b=after)
+    matcher = SequenceMatcher(isjunk=lambda x: x in junk, a=before, b=after)
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
@@ -254,4 +254,6 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     ),
     tags=lambda x: simple_panel(colored_split(x)),
     released=lambda x: x.replace("-00", ""),
+    desc=lambda x: md_panel(x) if x else "",
+    calendar=format_with_color,
 )

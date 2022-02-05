@@ -1,6 +1,7 @@
 import itertools as it
 import json
 import operator as op
+import random
 import re
 import sys
 from collections import OrderedDict, defaultdict
@@ -70,10 +71,15 @@ def make_diff_table(group_to_data: GroupsDict) -> None:
 
 
 def get_bar(count: int, total_count: int) -> Bar:
-    rand1 = rand2 = rand3 = round(255 * float(count / total_count))
-    color = "#{:0>2X}{:0>2X}{:0>2X}".format(rand1, rand2, rand3)
-    bar = Bar(total_count, 0, count, color=color)
-    return bar
+    ratio = count / total_count
+    random.seed(str(total_count))
+    rand = partial(random.randint, 50, 180)
+
+    def norm():
+        return round(rand() * ratio)
+
+    color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
+    return Bar(total_count, 0, count, color=color)
 
 
 def make_counts_table(data: List[JSONDict]) -> Table:
@@ -87,7 +93,9 @@ def make_counts_table(data: List[JSONDict]) -> Table:
     max_count = max(map(int, map(op.methodcaller("get", count_col_name, 0), data)))
     total_count = sum(map(int, map(op.methodcaller("get", count_col_name, 0), data)))
 
-    table = new_table(*other_col_names, count_col_name, overflow="fold", justify="right")
+    table = new_table(
+        *other_col_names, count_col_name, overflow="ellipsis", justify="left"
+    )
     for item in data:
         count_val = int(item[count_col_name])
         if count_col_name == "duration":
@@ -320,6 +328,7 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
         urgency=lambda x: str(round(x, 1)),
         description=lambda x: x,
         due=lambda x: get_time(int(parse(x).timestamp())),
+        end=lambda x: get_time(int(parse(x).timestamp())),
         scheduled=lambda x: get_time(int(parse(x).timestamp())),
         tags=lambda x: " ".join(map(format_with_color, x or [])),
         project=format_with_color,
@@ -338,7 +347,7 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
         # imask=lambda x: str(x),
     )
     status_map = {
-        "completed": "s green",
+        "completed": "b s black on green",
         "deleted": "s red",
         "pending": "white",
         "started": "b green",
@@ -356,15 +365,18 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
             else:
                 task["status"] = "recurring"
                 task["description"] += f" ({recur})"
+        tid = task.get("id") or ""
         index[task["uuid"]] = (
-            str(task.get("id") or "") + " " + wrap(task["description"], status_map[task["status"]])
+            str(tid) + " " + wrap(task["description"], status_map[task["status"]])
         )
+        if not tid:
+            task["id"] = task["uuid"].split("-")[0]
 
     get_value = partial(get_val, fields_map)
     group_by = tasks[0].get("group_by") or ""
     headers = OrderedSet(fields_map.keys()) - {group_by}
     for group, task_group in it.groupby(tasks, lambda x: x.get(group_by) or ""):
-        table = new_table()
+        table = new_table(*headers, padding=0)
         for task in task_group:
             title = get_value(task, group_by)
             project_color = predictably_random_color(task.get("project") or "")
@@ -382,6 +394,11 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
                     task_tree.add(dep)
             task["description"] = task_tree
             table.add_row(*map(partial(get_value, task), headers))
+        for col in table.columns.copy():
+            try:
+                next(filter(op.truth, col.cells))
+            except StopIteration:
+                table.columns.remove(col)
         print(border_panel(table, title=title, style=project_color))
 
 
