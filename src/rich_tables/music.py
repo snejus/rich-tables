@@ -89,7 +89,7 @@ def album_stats(tracks: List[JSONDict]) -> JSONDict:
         skips=sum(agg("skips")),
         mtime=max(agg("mtime")),
         last_played=max(agg("last_played")),
-        tracktotal=(len(tracks), tracks[0].get("tracktotal") or 0),
+        tracktotal=(str(len(tracks)), str(tracks[0].get("tracktotal")) or str(0)),
         comments="\n---\n---\n".join(set(agg("comments", ""))),
     )
     stats["stats"] = str(stats.get("plays") or ""), str(stats.get("skips") or "")
