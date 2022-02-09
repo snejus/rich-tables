@@ -353,8 +353,13 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
         "started": "b green",
         "recurring": "i magenta",
     }
-    index = {}
+    id_to_desc = {}
+    uuid_to_id = {}
     for task in tasks:
+        if not task.get("id"):
+            task["id"] = task["uuid"].split("-")[0]
+        uuid_to_id[task["uuid"]] = task["id"]
+
         if task.get("start"):
             task["status"] = "started"
 
@@ -365,22 +370,17 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
             else:
                 task["status"] = "recurring"
                 task["description"] += f" ({recur})"
-        tid = task.get("id") or ""
-        index[task["uuid"]] = (
-            str(tid) + " " + wrap(task["description"], status_map[task["status"]])
-        )
-        if not tid:
-            task["id"] = task["uuid"].split("-")[0]
+        id_to_desc[task["id"]] = wrap(task["description"], status_map[task["status"]])
 
     get_value = partial(get_val, fields_map)
     group_by = tasks[0].get("group_by") or ""
     headers = OrderedSet(fields_map.keys()) - {group_by}
     for group, task_group in it.groupby(tasks, lambda x: x.get(group_by) or ""):
-        table = new_table(*headers, padding=0)
-        for task in task_group:
+        table = new_table(*headers, padding=(0, 1, 0, 1))
+        for task in sorted(task_group, key=lambda x: x.get("urgency") or 0, reverse=True):
             title = get_value(task, group_by)
             project_color = predictably_random_color(task.get("project") or "")
-            task_obj = index.get(task["uuid"])
+            task_obj = id_to_desc.get(task["id"])
             if not task_obj:
                 continue
 
@@ -389,9 +389,9 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
             if ann:
                 task_tree.add(fields_map["annotations"](ann), guide_style=project_color)
             for kuid in task.get("depends") or []:
-                dep = index.get(kuid)
+                dep = id_to_desc.get(uuid_to_id.get(kuid))
                 if dep:
-                    task_tree.add(dep)
+                    task_tree.add(wrap(str(uuid_to_id[kuid]), "b") + " " + dep)
             task["description"] = task_tree
             table.add_row(*map(partial(get_value, task), headers))
         for col in table.columns.copy():
