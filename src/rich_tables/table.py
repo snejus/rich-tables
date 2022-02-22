@@ -17,6 +17,7 @@ from rich.columns import Columns
 from rich.console import Console, ConsoleRenderable
 from rich.rule import Rule
 from rich.table import Table
+from rich.text import Text
 from rich.theme import Theme
 
 from .music import make_albums_table, make_tracks_table
@@ -93,9 +94,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
     max_count = max(map(int, map(op.methodcaller("get", count_col_name, 0), data)))
     total_count = sum(map(int, map(op.methodcaller("get", count_col_name, 0), data)))
 
-    table = new_table(
-        *other_col_names, count_col_name, overflow="ellipsis", justify="left"
-    )
+    table = new_table(*other_col_names, count_col_name, justify="right")
     for item in data:
         count_val = int(item[count_col_name])
         if count_col_name == "duration":
@@ -103,7 +102,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
         else:
             count_header = str(count_val)
         table.add_row(
-            *map(lambda x: item.get(x) or "", other_col_names),
+            *map(lambda x: Text(item.get(x) or ""), other_col_names),
             count_header,
             get_bar(count_val, max_count),
         )
@@ -343,8 +342,6 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
                 reversed(l),
             )
         ),
-        # mask=lambda x: x,
-        # imask=lambda x: str(x),
     )
     status_map = {
         "completed": "b s black on green",
@@ -353,12 +350,9 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
         "started": "b green",
         "recurring": "i magenta",
     }
-    id_to_desc = {}
-    uuid_to_id = {}
+    id_to_desc = uuid_to_id = {}
     for task in tasks:
-        if not task.get("id"):
-            task["id"] = task["uuid"].split("-")[0]
-        uuid_to_id[task["uuid"]] = task["id"]
+        uuid_to_id[task["uuid"]] = task["id"] or task["uuid"].split("-")[0]
 
         if task.get("start"):
             task["status"] = "started"
