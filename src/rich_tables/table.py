@@ -352,7 +352,9 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
     }
     id_to_desc = uuid_to_id = {}
     for task in tasks:
-        uuid_to_id[task["uuid"]] = task["id"] or task["uuid"].split("-")[0]
+        if not task.get("id"):
+            task["id"] = task["uuid"].split("-")[0]
+        uuid_to_id[task["uuid"]] = task["id"]
 
         if task.get("start"):
             task["status"] = "started"
