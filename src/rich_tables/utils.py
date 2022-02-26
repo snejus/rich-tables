@@ -224,7 +224,10 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     last_played=partial(time2human),
     added=lambda x: datetime.fromtimestamp(x).strftime("%F %H:%M"),
     mtime=lambda x: re.sub(r"\] *", "]", time2human(x, pad=False)),
-    bpm=lambda x: wrap(x, "green" if x < 135 else "red" if x > 165 else "yellow"),
+    bpm=lambda x: wrap(
+        x,
+        "green" if x < 135 else "#000000" if x > 230 else "red" if x > 165 else "yellow",
+    ),
     style=format_with_color,
     genre=colored_split,
     stats=lambda x: "[green]{:<3}[/green] [red]{}[/red]".format(
