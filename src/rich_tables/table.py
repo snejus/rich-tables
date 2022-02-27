@@ -371,11 +371,21 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
     get_value = partial(get_val, fields_map)
     group_by = tasks[0].get("group_by") or ""
     headers = OrderedSet(fields_map.keys()) - {group_by}
-    for group, task_group in it.groupby(tasks, lambda x: x.get(group_by) or ""):
+
+    for group, task_group in it.chain(
+        it.groupby(
+            sorted(
+                tasks,
+                key=lambda x: (x.get(group_by) or "", x.get("urgency") or 0),
+                reverse=True,
+            ),
+            lambda x: x.get(group_by) or f"no [b]{group_by}[/]",
+        ),
+        [["started", filter(lambda x: x["status"] == "started", tasks)]],
+    ):
+        project_color = predictably_random_color(str(group))
         table = new_table(*headers, padding=(0, 1, 0, 1))
-        for task in sorted(task_group, key=lambda x: x.get("urgency") or 0, reverse=True):
-            title = get_value(task, group_by)
-            project_color = predictably_random_color(task.get("project") or "")
+        for task in task_group:
             task_obj = id_to_desc.get(task["id"])
             if not task_obj:
                 continue
@@ -383,19 +393,23 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
             task_tree = new_tree(title=task_obj, guide_style=project_color)
             ann = task.pop("annotations", None)
             if ann:
-                task_tree.add(fields_map["annotations"](ann), guide_style=project_color)
+                task_tree.add(fields_map["annotations"](ann))
             for kuid in task.get("depends") or []:
                 dep = id_to_desc.get(uuid_to_id.get(kuid))
                 if dep:
                     task_tree.add(wrap(str(uuid_to_id[kuid]), "b") + " " + dep)
             task["description"] = task_tree
             table.add_row(*map(partial(get_value, task), headers))
+
         for col in table.columns.copy():
             try:
                 next(filter(op.truth, col.cells))
             except StopIteration:
                 table.columns.remove(col)
-        print(border_panel(table, title=title, style=project_color))
+        if group == "started":
+            print(simple_panel(table, title=group, style=project_color))
+        else:
+            print(border_panel(table, title=group, style=project_color))
 
 
 def load_data() -> Any:
