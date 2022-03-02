@@ -91,18 +91,25 @@ def make_counts_table(data: List[JSONDict]) -> Table:
         col_name = {col_map[type(v)]: k for k, v in data[0].items()}
         count_col_name = col_name["count"]
     other_col_names = list(filter(lambda x: x != count_col_name, data[0]))
-    max_count = max(map(int, map(op.methodcaller("get", count_col_name, 0), data)))
-    total_count = sum(map(int, map(op.methodcaller("get", count_col_name, 0), data)))
+    max_count = max(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
+    total_count = sum(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
 
     table = new_table(*other_col_names, count_col_name, justify="right")
     for item in data:
-        count_val = int(item[count_col_name])
+        count_val = float(item[count_col_name])
         if count_col_name == "duration":
             count_header = duration2human(count_val, 2)
         else:
             count_header = str(count_val)
         table.add_row(
-            *map(lambda x: Text(item.get(x) or ""), other_col_names),
+            *map(
+                lambda x: FIELDS_MAP[x](item.get(x) or "")
+                if x in FIELDS_MAP
+                else Text(item.get(x) or "")
+                if "[" in item.get(x)
+                else item.get(x),
+                other_col_names,
+            ),
             count_header,
             get_bar(count_val, max_count),
         )

@@ -241,7 +241,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     tracktotal=lambda x: (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x),
     country=get_country,
     data_source=format_with_color,
-    helicopta={1: wrap("", "b red"), 0: "", None: ""}.get,
+    helicopta={1: wrap("", "b red"), 0: "", None: ""}.get,
     keywords=lambda x: " ".join(
         map(colored_with_bg, map(format_with_color, x.split(", ")))
     )
@@ -259,4 +259,5 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     released=lambda x: x.replace("-00", ""),
     desc=lambda x: md_panel(x) if x else "",
     calendar=format_with_color,
+    source=format_with_color,
 )
