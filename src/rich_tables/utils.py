@@ -78,7 +78,7 @@ def time2human(
     diff = time.time() - timestamp
     fmted = " ".join(it.islice(fmt_time(timedelta(seconds=abs(diff)), pad), acc))
 
-    fut, past = ("[b green]{}[/]", "[b red]{}[/]") if use_colors else ("in {}", "{} ago")
+    fut, past = ("[b green]{}[/]", "[b red]-{}[/]") if use_colors else ("in {}", "{} ago")
     return past.format(fmted) if diff > 0 else fut.format(fmted)
 
 

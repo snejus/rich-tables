@@ -12,11 +12,12 @@ from typing import Any, Callable, Dict, Iterable, List, Type, Union
 from dateutil.parser import parse
 from ordered_set import OrderedSet
 from rich import box
+from rich.align import Align
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import Console, ConsoleRenderable
 from rich.rule import Rule
-from rich.table import Table
+from rich.table import Column, Table
 from rich.text import Text
 from rich.theme import Theme
 
@@ -72,7 +73,7 @@ def make_diff_table(group_to_data: GroupsDict) -> None:
 
 
 def get_bar(count: int, total_count: int) -> Bar:
-    ratio = count / total_count
+    ratio = count / total_count if total_count else 0
     random.seed(str(total_count))
     rand = partial(random.randint, 50, 180)
 
@@ -80,7 +81,7 @@ def get_bar(count: int, total_count: int) -> Bar:
         return round(rand() * ratio)
 
     color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
-    return Bar(total_count, 0, count, color=color)
+    return Align(Bar(total_count, 0, count, color=color), vertical="middle")
 
 
 def make_counts_table(data: List[JSONDict]) -> Table:
@@ -94,7 +95,12 @@ def make_counts_table(data: List[JSONDict]) -> Table:
     max_count = max(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
     total_count = sum(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
 
-    table = new_table(*other_col_names, count_col_name, justify="right")
+    table = new_table(
+        *map(lambda x: Column(x, overflow="fold"), other_col_names),
+        count_col_name,
+        justify="left",
+        caption_justify="left",
+    )
     for item in data:
         count_val = float(item[count_col_name])
         if count_col_name == "duration":
@@ -103,17 +109,24 @@ def make_counts_table(data: List[JSONDict]) -> Table:
             count_header = str(count_val)
         table.add_row(
             *map(
-                lambda x: FIELDS_MAP[x](item.get(x) or "")
-                if x in FIELDS_MAP
-                else Text(item.get(x) or "")
-                if "[" in item.get(x)
-                else item.get(x),
-                other_col_names,
-            ),
-            count_header,
-            get_bar(count_val, max_count),
+                lambda x: Align(x, vertical="middle"),
+                (
+                    *map(
+                        lambda x: FIELDS_MAP[x](item.get(x) or "")
+                        if x in FIELDS_MAP
+                        else Text(item.get(x) or "")
+                        if "[" in item.get(x)
+                        else item.get(x),
+                        other_col_names,
+                    ),
+                    count_header,
+                    get_bar(int(count_val), max_count),
+                ),
+            )
         )
-    table.add_row("TOTAL", duration2human(total_count, 2))
+    if count_col_name == "duration":
+        total_count = duration2human(total_count, 2)
+    table.caption = f"Total {total_count}"
     return table
 
 
@@ -335,7 +348,7 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
         description=lambda x: x,
         due=lambda x: get_time(int(parse(x).timestamp())),
         end=lambda x: get_time(int(parse(x).timestamp())),
-        scheduled=lambda x: get_time(int(parse(x).timestamp())),
+        sched=lambda x: get_time(int(parse(x).timestamp())),
         tags=lambda x: " ".join(map(format_with_color, x or [])),
         project=format_with_color,
         modified=lambda x: get_time(int(parse(x).timestamp())),
@@ -359,6 +372,7 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
     }
     id_to_desc = uuid_to_id = {}
     for task in tasks:
+        task["sched"] = task.get("scheduled")
         if not task.get("id"):
             task["id"] = task["uuid"].split("-")[0]
         uuid_to_id[task["uuid"]] = task["id"]
@@ -373,11 +387,14 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
             else:
                 task["status"] = "recurring"
                 task["description"] += f" ({recur})"
-        id_to_desc[task["id"]] = wrap(task["description"], status_map[task["status"]])
+        desc = wrap(task["description"], status_map[task["status"]])
+        if task.get("priority") == "H":
+            desc = f"[b]([red]![/])[/] {desc}"
+        id_to_desc[task["id"]] = desc
 
     get_value = partial(get_val, fields_map)
     group_by = tasks[0].get("group_by") or ""
-    headers = OrderedSet(fields_map.keys()) - {group_by}
+    headers = OrderedSet(["urgency", "id", *fields_map.keys()]) - {group_by}
 
     for group, task_group in it.chain(
         it.groupby(
@@ -413,10 +430,8 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
                 next(filter(op.truth, col.cells))
             except StopIteration:
                 table.columns.remove(col)
-        if group == "started":
-            print(simple_panel(table, title=group, style=project_color))
-        else:
-            print(border_panel(table, title=group, style=project_color))
+        panel = simple_panel if group == "started" else border_panel
+        print(panel(table, title=group, style=project_color))
 
 
 def load_data() -> Any:
