@@ -92,8 +92,10 @@ def make_counts_table(data: List[JSONDict]) -> Table:
         col_name = {col_map[type(v)]: k for k, v in data[0].items()}
         count_col_name = col_name["count"]
     other_col_names = list(filter(lambda x: x != count_col_name, data[0]))
-    max_count = max(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
-    total_count = sum(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
+    all_values = list(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
+    if not any(map(lambda x: 1 > x > 0, all_values)):
+        all_values = list(map(int, all_values))
+    max_count, total_count = max(all_values), sum(all_values)
 
     table = new_table(
         *map(lambda x: Column(x, overflow="fold"), other_col_names),
@@ -101,8 +103,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
         justify="left",
         caption_justify="left",
     )
-    for item in data:
-        count_val = float(item[count_col_name])
+    for item, count_val in zip(data, all_values):
         if count_col_name == "duration":
             count_header = duration2human(count_val, 2)
         else:
@@ -120,7 +121,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
                         other_col_names,
                     ),
                     count_header,
-                    get_bar(int(count_val), max_count),
+                    get_bar(count_val, max_count),
                 ),
             )
         )
@@ -393,22 +394,19 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
         id_to_desc[task["id"]] = desc
 
     get_value = partial(get_val, fields_map)
-    group_by = tasks[0].get("group_by") or ""
+    group_by = tasks[0].get("group_by")
     headers = OrderedSet(["urgency", "id", *fields_map.keys()]) - {group_by}
 
-    for group, task_group in it.chain(
-        it.groupby(
-            sorted(
-                tasks,
-                key=lambda x: (x.get(group_by) or "", x.get("urgency") or 0),
-                reverse=True,
-            ),
-            lambda x: x.get(group_by) or f"no [b]{group_by}[/]",
+    for group, task_group in it.groupby(
+        sorted(
+            tasks,
+            key=lambda x: (x.get(group_by) or "", x.get("urgency") or 0),
+            reverse=True,
         ),
-        [["started", filter(lambda x: x["status"] == "started", tasks)]],
+        lambda x: x.get(group_by) or f"no [b]{group_by}[/]",
     ):
         project_color = predictably_random_color(str(group))
-        table = new_table(*headers, padding=(0, 1, 0, 1))
+        table = new_table(padding=(0, 1, 0, 1))
         for task in task_group:
             task_obj = id_to_desc.get(task["id"])
             if not task_obj:
@@ -431,7 +429,7 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
             except StopIteration:
                 table.columns.remove(col)
         panel = simple_panel if group == "started" else border_panel
-        print(panel(table, title=group, style=project_color))
+        print(panel(table, title=wrap(group, "b"), style=project_color))
 
 
 def load_data() -> Any:
