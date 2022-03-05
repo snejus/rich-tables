@@ -119,10 +119,9 @@ def album_title(album: JSONDict) -> str:
 def album_info(tracks: List[JSONDict]) -> JSONDict:
     first = tracks[0]
     fields = set(first.keys()) - TRACK_FIELDS
-    get = first.get
 
     album = defaultdict(str, zip(fields, op.itemgetter(*fields)(first)))
-    album.update(**album_stats(tracks), albumtype=get("albumtypes") or get("albumtype"))
+    album.update(**album_stats(tracks))
     add_colors(album)
     for field, val in filter(op.truth, sorted(album.items())):
         album[field] = get_val(album, field)
@@ -219,21 +218,32 @@ def detailed_album_panel(tracks: List[JSONDict]) -> Panel:
         Group(
             album["album_title"],
             simple_panel(comments, style="grey54") if comments else "",
-            new_table(rows=[map(simple_panel, [album_info_table(album), tracklist])]),
+            new_table(rows=[[album_info_table(album), tracklist]]),
         ),
         box=box.DOUBLE_EDGE,
         style=album["albumartist_color"],
     )
 
 
-def get_album(track: JSONDict) -> str:
-    return track.get("album") or ""
+def preprocess(tracks: List[JSONDict]) -> List[JSONDict]:
+    for t in tracks:
+        albumtypes = t.pop("albumtypes")
+        if not albumtypes:
+            t["albumtype"] = "(!) " + t["albumtype"]
+        else:
+            t["albumtype"] = albumtypes
+    return tracks
 
 
 def make_albums_table(all_tracks: List[JSONDict]) -> None:
+    all_tracks = preprocess(all_tracks)
+
     def is_single(track: JSONDict) -> bool:
         album, albumtype = track.get("album"), track.get("albumtype")
         return not album or not albumtype or albumtype == "single"
+
+    def get_album(track: JSONDict) -> str:
+        return track.get("album") or ""
 
     for track in filter(is_single, all_tracks):
         track["album"] = "singles"
@@ -243,12 +253,9 @@ def make_albums_table(all_tracks: List[JSONDict]) -> None:
 
 
 def make_tracks_table(all_tracks: List[JSONDict]) -> None:
-    fields = OrderedSet([*all_tracks[0].keys(), "stats"]) - {
-        "albumtypes",
-        "plays",
-        "skips",
-    }
+    all_tracks = preprocess(all_tracks)
 
-    for t in all_tracks:
-        t["albumtype"] = t.pop("albumtypes", None) or t.pop("albumtype", None)
+    ignore = {"albumtypes", "plays", "skips"}
+    fields = OrderedSet([*all_tracks[0].keys(), "stats"]) - ignore
+
     print(tracks_table(all_tracks, "blue", fields, sort=False))

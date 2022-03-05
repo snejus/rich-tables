@@ -15,7 +15,7 @@ from rich import box
 from rich.align import Align
 from rich.bar import Bar
 from rich.columns import Columns
-from rich.console import Console, ConsoleRenderable
+from rich.console import Console, ConsoleRenderable, Group
 from rich.rule import Rule
 from rich.table import Column, Table
 from rich.text import Text
@@ -140,8 +140,8 @@ def make_pulls_table(data: List[JSONDict]) -> None:
         "REVIEW_REQUIRED": "red",
         "DISMISSED": "red",
         "OPEN": "green",
-        " UNSEEN ": "bold black on red",
-        " SEEN ": "bold black on green",
+        "UNSEEN": "bold black on red",
+        "SEEN": "bold black on green",
     }
     exclude = {
         "title",
@@ -151,32 +151,42 @@ def make_pulls_table(data: List[JSONDict]) -> None:
         "reviewThreads",
         "files",
         "participants",
+        "url",
     }
-
-    def bold(string: str) -> str:
-        return wrap(string, "b")
 
     table = new_table()
     for pr in data:
         title = pr.get("title", "")
 
-        print(Rule(wrap(" {title} ", "r b white"), style="r"))
         info_table = new_table()
         pr["author"] = format_with_color(pr["author"])
         for key, val in pr.items():
             if isinstance(key, str) and key not in exclude:
                 val = str(val)
-                if "[" not in val:
-                    color = state_map.get(val, val)
+                if key in {"seen", "state"}:
+                    color = state_map.get(val, "default")
                     if color:
-                        val = wrap(val, f"b {color}")
+                        val = wrap(val, color)
                 info_table.add_row(wrap(key, "b"), val)
         participants = "  ".join(map(format_with_color, pr["participants"]))
         info_table.add_row(wrap("participants", "b"), participants)
-        table.add_row(simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE))
-        table.add_row(simple_panel(new_table(rows=pr["files"])))
+        print(Rule(wrap(f"{title} ", "r b white"), style="dim"))
+        print(Rule(Text.from_markup(wrap(f" {pr.get('url')} ", "dim")), style="dim"))
+        print(
+            simple_panel(
+                new_table(
+                    rows=[
+                        [info_table, md_panel(pr["body"], box=box.SIMPLE)],
+                        "",
+                        map(" ".join, pr["files"]),
+                        "",
+                    ]
+                ),
+                box=box.HORIZONTALS,
+            ),
+        )
 
-        reviews_table = new_table()
+        reviews_table = new_table(title=wrap("Reviews", "b"))
         for review in pr.get("reviews") or []:
             state = review["state"]
             if state == "COMMENTED":
@@ -186,8 +196,7 @@ def make_pulls_table(data: List[JSONDict]) -> None:
             review["body"] = re.sub(r"(^|\n)", "\\1> ", review["body"])
             reviews_table.add_row(comment_panel(review))
         if reviews_table.row_count:
-            pan = simple_panel(reviews_table, title=bold("Reviews"), title_align="left")
-            table.add_row(pan)
+            simple_panel(reviews_table)
 
         thread_table = new_table()
         for thread in pr.get("reviewThreads") or []:
@@ -207,14 +216,13 @@ def make_pulls_table(data: List[JSONDict]) -> None:
             file_line = thread.get("line")
             title = thread.get("path") + " " + wrap(file_line, "b") if file_line else ""
             style = "green" if thread.get("isResolved") else "red"
-            table.add_row(border_panel(thread_table, title=title, border_style=style))
+            print(border_panel(thread_table, title=title, border_style=style))
 
         comments_table = new_table(title=wrap("Comments", "b"))
         for comment in pr.get("comments") or []:
             comments_table.add_row(comment_panel(comment))
         if comments_table.row_count:
-            table.add_row(simple_panel(comments_table))
-        print(table)
+            print(comments_table)
 
 
 def add_to_table(table: Table, content: Any, key: str = ""):
