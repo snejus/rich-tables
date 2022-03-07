@@ -444,7 +444,7 @@ def load_data() -> Any:
     d = sys.stdin.read()
     try:
         data = json.loads(d)
-        assert data
+        assert data and (data.get("values") if "values" in data else True)
     except (json.JSONDecodeError, AssertionError):
         console.print(wrap("No data", "b red"))
         exit(1)

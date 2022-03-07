@@ -41,12 +41,12 @@ def fmtdiff(change: str, before: str, after: str) -> str:
         return before
 
 
-def make_difftext(before: str, after: str, junk: str = "-\n, *") -> str:
-    def preparse(value: str) -> str:
-        return value.strip().replace("[]", "~")
+def make_difftext(before: str, after: str, junk: str = "-\n,*") -> str:
+    # def preparse(value: str) -> str:
+    #     return value.strip().replace("[]", "~")
 
-    before = preparse(before)
-    after = preparse(after)
+    # before = preparse(before)
+    # after = preparse(after)
 
     matcher = SequenceMatcher(lambda x: x not in junk, autojunk=False, a=before, b=after)
     diff = ""
@@ -200,7 +200,8 @@ def tstamp2timedate(timestamp: Optional[str], fmt: str = "%F %H:%M") -> str:
 
 def get_country(code: str) -> str:
     try:
-        return countries.lookup(code).name
+        country = countries.lookup(code).name
+        return f":flag_for_{country.lower()}: {country}"
     except LookupError:
         return "Worldwide"
 
