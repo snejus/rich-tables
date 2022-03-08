@@ -200,7 +200,7 @@ def tstamp2timedate(timestamp: Optional[str], fmt: str = "%F %H:%M") -> str:
 
 def get_country(code: str) -> str:
     try:
-        country = countries.lookup(code).name
+        country = countries.lookup(code).name.replace(" ", "_")
         return f":flag_for_{country.lower()}: {country}"
     except LookupError:
         return "Worldwide"
@@ -223,7 +223,9 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     label=format_with_color,
     catalognum=format_with_color,
     last_played=partial(time2human),
-    added=lambda x: datetime.fromtimestamp(x).strftime("%F %H:%M"),
+    added=lambda x: x
+    if isinstance(x, str)
+    else datetime.fromtimestamp(x).strftime("%F %H:%M"),
     mtime=lambda x: re.sub(r"\] *", "]", time2human(x, pad=False)),
     bpm=lambda x: wrap(
         x,
@@ -261,4 +263,5 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     desc=lambda x: md_panel(x) if x else "",
     calendar=format_with_color,
     source=format_with_color,
+    category=format_with_color,
 )
