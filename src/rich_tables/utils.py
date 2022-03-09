@@ -3,6 +3,7 @@ import random
 import re
 import time
 from collections import defaultdict
+from typing import SupportsFloat
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from functools import partial
@@ -66,8 +67,8 @@ def fmt_time(diff: timedelta, pad: bool = True) -> Iterable[str]:
     return it.starmap(fmt.format, filter(lambda x: x[0], opts))  # type: ignore
 
 
-def duration2human(duration: int, acc: int = 1) -> str:
-    return " ".join(it.islice(fmt_time(timedelta(seconds=duration)), acc))
+def duration2human(duration: SupportsFloat, acc: int = 1) -> str:
+    return " ".join(it.islice(fmt_time(timedelta(seconds=float(duration))), acc))
 
 
 def time2human(

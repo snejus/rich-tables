@@ -7,7 +7,7 @@ import sys
 from collections import OrderedDict, defaultdict
 from functools import partial, singledispatch
 from os import environ, path
-from typing import Any, Callable, Dict, Iterable, List, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Type, Union, SupportsFloat
 
 from dateutil.parser import parse
 from ordered_set import OrderedSet
@@ -72,7 +72,7 @@ def make_diff_table(group_to_data: GroupsDict) -> None:
             diff_table.add_row(simple_panel(table, title=title, padding=1))
 
 
-def get_bar(count: int, total_count: int) -> Bar:
+def get_bar(count: SupportsFloat, total_count: SupportsFloat) -> Bar:
     ratio = count / total_count if total_count else 0
     random.seed(str(total_count))
     rand = partial(random.randint, 50, 180)
@@ -104,7 +104,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
         caption_justify="left",
     )
     for item, count_val in zip(data, all_values):
-        if count_col_name == "duration":
+        if count_col_name in {"duration", "total_duration"}:
             count_header = duration2human(count_val, 2)
         else:
             count_header = str(count_val)
@@ -125,7 +125,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
                 ),
             )
         )
-    if count_col_name == "duration":
+    if count_col_name in {"duration", "total_duration"}:
         total_count = duration2human(total_count, 2)
     table.caption = f"Total {total_count}"
     return table
