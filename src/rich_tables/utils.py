@@ -3,11 +3,10 @@ import random
 import re
 import time
 from collections import defaultdict
-from typing import SupportsFloat
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from functools import partial
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, SupportsFloat, Tuple
 
 from dateutil.relativedelta import relativedelta
 from pycountry import countries
@@ -256,9 +255,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     notes=md_panel,
     text=md_panel,
     instructions=md_panel,
-    comments=lambda x: md_panel(
-        re.sub(r" ?([\w ]+):", r"**\1**", x.replace("---", "\n---\n"))
-    ),
+    comments=lambda x: md_panel(x.replace("---", "\n---\n")),
     tags=lambda x: simple_panel(colored_split(x)),
     released=lambda x: x.replace("-00", ""),
     desc=lambda x: md_panel(x) if x else "",
