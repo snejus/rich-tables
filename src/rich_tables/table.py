@@ -86,16 +86,20 @@ def get_bar(count: SupportsFloat, total_count: SupportsFloat) -> Bar:
 
 def make_counts_table(data: List[JSONDict]) -> Table:
     headers = set(data[0])
-    count_col_name = "count"
+    count_col_name, max_col_name = "count", "total"
     if count_col_name not in headers:
         col_map = {int: "count", str: "desc", float: "count"}
         col_name = {col_map[type(v)]: k for k, v in data[0].items()}
         count_col_name = col_name["count"]
-    other_col_names = list(filter(lambda x: x != count_col_name, data[0]))
     all_values = list(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
     if not any(map(lambda x: 1 > x > 0, all_values)):
         all_values = list(map(int, all_values))
     max_count, total_count = max(all_values), sum(all_values)
+    # if max_col_name in headers:
+    #     max_values = list(map(float, map(op.methodcaller("get", max_col_name, 0), data)))
+    # else:
+    #     max_values = [max(all_values)] * len(all_values)
+    other_col_names = list(filter(lambda x: x not in {count_col_name, max_col_name}, data[0]))
 
     table = new_table(
         *map(lambda x: Column(x, overflow="fold"), other_col_names),
@@ -103,11 +107,13 @@ def make_counts_table(data: List[JSONDict]) -> Table:
         justify="left",
         caption_justify="left",
     )
+    # for item, count_val, max_val in zip(data, all_values, max_values):
     for item, count_val in zip(data, all_values):
         if count_col_name in {"duration", "total_duration"}:
             count_header = duration2human(count_val, 2)
         else:
             count_header = str(count_val)
+            # count_header = "{:<2}% {}/{}".format(round(count_val/max_val*100), count_val, int(max_val))
         table.add_row(
             *map(
                 lambda x: Align(x, vertical="middle"),
@@ -126,8 +132,8 @@ def make_counts_table(data: List[JSONDict]) -> Table:
             )
         )
     if count_col_name in {"duration", "total_duration"}:
-        total_count = duration2human(total_count, 2)
-    table.caption = f"Total {total_count}"
+        total_count = duration2human(sum(all_values), 2)
+        table.caption = f"Total {total_count}"
     return table
 
 

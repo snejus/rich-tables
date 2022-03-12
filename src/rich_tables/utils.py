@@ -241,7 +241,9 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
         "",
         (datetime.fromtimestamp(x) - relativedelta(hours=1)).strftime("%H:%M:%S"),
     ),
-    tracktotal=lambda x: (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x),
+    tracktotal=lambda x: (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
+    if isinstance(x, Iterable)
+    else str(x),
     country=get_country,
     data_source=format_with_color,
     helicopta={1: wrap("", "b red"), 0: "", None: ""}.get,
