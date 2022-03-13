@@ -220,6 +220,7 @@ def colored_split(string: str) -> str:
 FIELDS_MAP: Dict[str, Callable] = defaultdict(
     lambda: str,
     albumtype=lambda x: colored_split(x.replace("compilation", "comp")),
+    albumtypes=lambda x: "; ".join(map(colored_split, x.split("; "))),
     label=format_with_color,
     catalognum=format_with_color,
     last_played=partial(time2human),
