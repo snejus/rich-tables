@@ -200,8 +200,8 @@ def tstamp2timedate(timestamp: Optional[str], fmt: str = "%F %H:%M") -> str:
 
 def get_country(code: str) -> str:
     try:
-        country = countries.lookup(code).name.replace(" ", "_")
-        return f":flag_for_{country.lower()}: {country}"
+        country = countries.lookup(code).name.replace("Russian Federation", "Russia")
+        return f":flag_for_{country.lower().replace(' ', '_')}: {country}"
     except LookupError:
         return "Worldwide"
 
@@ -223,7 +223,8 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     albumtypes=lambda x: "; ".join(map(colored_split, x.split("; "))),
     label=format_with_color,
     catalognum=format_with_color,
-    last_played=partial(time2human),
+    last_played=lambda x: time2human(x, use_colors=True, pad=False),
+    avg_last_played=lambda x: time2human(x, acc=2, use_colors=True, pad=False),
     added=lambda x: x
     if isinstance(x, str)
     else datetime.fromtimestamp(x).strftime("%F %H:%M"),
@@ -265,4 +266,5 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     calendar=format_with_color,
     source=format_with_color,
     category=format_with_color,
+    price=lambda x: x if x else colored_with_bg(x),
 )

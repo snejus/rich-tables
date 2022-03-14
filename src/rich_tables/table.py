@@ -112,7 +112,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
         if count_col_name in {"duration", "total_duration"}:
             count_header = duration2human(count_val, 2)
         else:
-            count_header = str(count_val)
+            count_header = FIELDS_MAP[count_col_name](count_val)
             # count_header = "{:<2}% {}/{}".format(round(count_val/max_val*100), count_val, int(max_val))
         table.add_row(
             *map(
