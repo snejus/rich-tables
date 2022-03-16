@@ -74,6 +74,7 @@ def get_vals(fields: Set[str], tracks: Iterable[JSONDict]) -> Iterable[Iterable[
     for track in tracks:
         if "skips" and "plays" in track:
             track["stats"] = track.pop("plays", ""), track.pop("skips", "")
+        track["track"] = track.pop("track_alt", None) or track["track"]
 
     return map(lambda t: list(map(lambda f: get_val(t, f), fields)), tracks)
 
@@ -206,7 +207,7 @@ def detailed_album_panel(tracks: List[JSONDict]) -> Panel:
     tracklist = tracks_table(tracks, album["album_color"], t_fields)
 
     _, track = max(map(op.itemgetter("last_played", "track"), tracks))
-    if track > 0:
+    if int(re.sub(r"\D", "", str(track).replace("A", "1"))) > 0:
         row_no = tracklist.columns[0]._cells.index(str(track))
         tracklist.rows[row_no].style = "b white on #000000"
         tracklist.add_row(

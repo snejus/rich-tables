@@ -54,6 +54,24 @@ print = console.print
 
 
 def make_diff_table(group_to_data: GroupsDict) -> None:
+    # diff_table = new_table(expand=True)
+    # for group_name, item_lists in group_to_data.items():
+    #     for items in item_lists:
+    #         headers = list(items[0].keys())
+    #         for head in ["before", "after"]:
+    #             headers.remove(head)
+    #         headers.append("diff")
+    #         group_title = items[0].get(group_name) or ""
+    #         title = "".join(["─" * 5, "  ", wrap(group_title, "b"), "  ", "─" * 5])
+
+    #         table = new_table()
+    #         for item in items:
+    #             item["diff"] = make_difftext(*op.itemgetter("before", "after")(item))
+    #             item.pop(group_name, None)
+    #             table.add_row(*map(lambda x: str(x) if x else " ", item.values()))
+    #         diff_table.add_row(simple_panel(table, title=title, padding=1))
+    group_to_data = dict(hello=group_to_data)
+    print(group_to_data)
     diff_table = new_table(expand=True)
     for group_name, item_lists in group_to_data.items():
         for items in item_lists:
@@ -72,6 +90,7 @@ def make_diff_table(group_to_data: GroupsDict) -> None:
             diff_table.add_row(simple_panel(table, title=title, padding=1))
 
 
+# def get_bar(count: SupportsFloat, min_count: SupportsFloat, total_count: SupportsFloat) -> ConsoleRenderable:
 def get_bar(count: SupportsFloat, total_count: SupportsFloat) -> Bar:
     ratio = count / total_count if total_count else 0
     random.seed(str(total_count))
@@ -82,6 +101,7 @@ def get_bar(count: SupportsFloat, total_count: SupportsFloat) -> Bar:
 
     color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
     return Align(Bar(total_count, 0, count, color=color), vertical="middle")
+    # return Align(Bar(float(count) or 0, float(min_count) or 0, float(total_count) or 0, color=color), vertical="middle")
 
 
 def make_counts_table(data: List[JSONDict]) -> Table:
@@ -95,6 +115,8 @@ def make_counts_table(data: List[JSONDict]) -> Table:
     if not any(map(lambda x: 1 > x > 0, all_values)):
         all_values = list(map(int, all_values))
     max_count, total_count = max(all_values), sum(all_values)
+    # min_count, max_count, total_count = min(all_values), max(all_values), sum(all_values)
+
     # if max_col_name in headers:
     #     max_values = list(map(float, map(op.methodcaller("get", max_col_name, 0), data)))
     # else:
@@ -128,6 +150,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
                     ),
                     count_header,
                     get_bar(count_val, max_count),
+                    # get_bar(count_val, min_count, max_count),
                 ),
             )
         )
@@ -135,6 +158,8 @@ def make_counts_table(data: List[JSONDict]) -> Table:
         total_count = duration2human(sum(all_values), 2)
         table.caption = f"Total {total_count}"
     return table
+    # console.print(table)
+    # print(min_count, max_count)
 
 
 def make_pulls_table(data: List[JSONDict]) -> None:
