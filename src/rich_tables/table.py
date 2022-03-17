@@ -7,7 +7,7 @@ import sys
 from collections import OrderedDict, defaultdict
 from functools import partial, singledispatch
 from os import environ, path
-from typing import Any, Callable, Dict, Iterable, List, Type, Union, SupportsFloat
+from typing import Any, Callable, Dict, Iterable, List, SupportsFloat, Type, Union
 
 from dateutil.parser import parse
 from ordered_set import OrderedSet
@@ -15,7 +15,7 @@ from rich import box
 from rich.align import Align
 from rich.bar import Bar
 from rich.columns import Columns
-from rich.console import Console, ConsoleRenderable, Group
+from rich.console import Console, ConsoleRenderable
 from rich.rule import Rule
 from rich.table import Column, Table
 from rich.text import Text
@@ -121,7 +121,9 @@ def make_counts_table(data: List[JSONDict]) -> Table:
     #     max_values = list(map(float, map(op.methodcaller("get", max_col_name, 0), data)))
     # else:
     #     max_values = [max(all_values)] * len(all_values)
-    other_col_names = list(filter(lambda x: x not in {count_col_name, max_col_name}, data[0]))
+    other_col_names = list(
+        filter(lambda x: x not in {count_col_name, max_col_name}, data[0])
+    )
 
     table = new_table(
         *map(lambda x: Column(x, overflow="fold"), other_col_names),
@@ -189,6 +191,7 @@ def make_pulls_table(data: List[JSONDict]) -> None:
     for pr in data:
         title = pr.get("title", "")
 
+        print(Rule(wrap(f" {title} ", "r b white"), style="r"))
         info_table = new_table()
         pr["author"] = format_with_color(pr["author"])
         for key, val in pr.items():
@@ -201,33 +204,21 @@ def make_pulls_table(data: List[JSONDict]) -> None:
                 info_table.add_row(wrap(key, "b"), val)
         participants = "  ".join(map(format_with_color, pr["participants"]))
         info_table.add_row(wrap("participants", "b"), participants)
-        print(Rule(wrap(f"{title} ", "r b white"), style="dim"))
-        print(Rule(Text.from_markup(wrap(f" {pr.get('url')} ", "dim")), style="dim"))
-        print(
-            simple_panel(
-                new_table(
-                    rows=[
-                        [info_table, md_panel(pr["body"], box=box.SIMPLE)],
-                        "",
-                        map(" ".join, pr["files"]),
-                        "",
-                    ]
-                ),
-                box=box.HORIZONTALS,
-            ),
-        )
+        table.add_row(simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE))
+        # table.add_row(simple_panel(new_table(rows=pr["files"])))
 
         reviews_table = new_table(title=wrap("Reviews", "b"))
         for review in pr.get("reviews") or []:
             state = review["state"]
-            if state == "COMMENTED":
-                continue
+            # if state == "COMMENTED":
+            #     continue
             color = state_map.get(state, "default")
             review["state"] = wrap(state, f"b {color}")
             review["body"] = re.sub(r"(^|\n)", "\\1> ", review["body"])
             reviews_table.add_row(comment_panel(review))
         if reviews_table.row_count:
-            simple_panel(reviews_table)
+            pan = simple_panel(reviews_table, title_align="left")
+            table.add_row(pan)
 
         thread_table = new_table()
         for thread in pr.get("reviewThreads") or []:
@@ -247,13 +238,14 @@ def make_pulls_table(data: List[JSONDict]) -> None:
             file_line = thread.get("line")
             title = thread.get("path") + " " + wrap(file_line, "b") if file_line else ""
             style = "green" if thread.get("isResolved") else "red"
-            print(border_panel(thread_table, title=title, border_style=style))
+            table.add_row(border_panel(thread_table, title=title, border_style=style))
 
         comments_table = new_table(title=wrap("Comments", "b"))
         for comment in pr.get("comments") or []:
             comments_table.add_row(comment_panel(comment))
         if comments_table.row_count:
-            print(comments_table)
+            table.add_row(simple_panel(comments_table))
+        print(table)
 
 
 def add_to_table(table: Table, content: Any, key: str = ""):
@@ -497,21 +489,22 @@ def _draw_data_dict(data: JSONDict, title: str = "") -> None:
 
 @draw_data.register(list)
 def _draw_data_list(data: List[JSONDict], title: str = "") -> None:
-    calls: Dict[str, Callable] = defaultdict(
-        lambda d: draw_data(d[0]) if len(d) == 1 else make_generic_table(d),
-        {
-            "Pull Requests": make_pulls_table,
-            "JIRA Diff": make_diff_table,
-            "Hue lights": make_lights_table,
-            "Calendar": make_calendar_table,
-            "Album": make_albums_table,
-            "Music": make_tracks_table,
-            "Count": make_counts_table,
-            "Tasks": make_tasks_table,
-            "": make_generic_table,
-        },
-    )
-    ret = calls[title](data)
+    calls: Dict[str, Callable] = {
+        "Pull Requests": make_pulls_table,
+        "JIRA Diff": make_diff_table,
+        "Hue lights": make_lights_table,
+        "Calendar": make_calendar_table,
+        "Album": make_albums_table,
+        "Music": make_tracks_table,
+        "Count": make_counts_table,
+        "Tasks": make_tasks_table,
+        "": make_generic_table,
+    }
+    try:
+        ret = calls[title](data)
+    except KeyError:
+        ret = draw_data(data[0]) if len(data) == 1 else make_generic_table(data)
+
     if ret:
         console.print(ret)
 
