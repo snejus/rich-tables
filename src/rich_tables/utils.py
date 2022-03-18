@@ -164,28 +164,6 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
     return border_panel(Markdown(content), **kwargs)
 
 
-def comment_panel(comment: Dict[str, str], **kwargs: Any) -> Panel:
-    state = comment.get("state") or ""
-    author = format_with_color(comment["author"])
-    return md_panel(
-        re.sub(r"[\[\]\\]", "", comment["body"]),
-        padding=1,
-        title=" ".join([state, author]),
-        subtitle=wrap(comment.get("createdAt") or "", "d"),
-        **kwargs,
-    )
-
-
-def syntax_panel(content: str, lexer: str, **kwargs: Any) -> Panel:
-    return Panel(
-        Syntax(
-            content, lexer, theme="paraiso-dark", background_color="black", word_wrap=True
-        ),
-        style="on black",
-        width=200,
-    )
-
-
 def new_tree(values: List[str] = [], **kwargs) -> Tree:
     default: JSONDict = dict(guide_style="black")
     tree = Tree(kwargs.pop("title", None) or "", **{**default, **kwargs})

@@ -4,19 +4,22 @@ import operator as op
 import random
 import re
 import sys
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 from functools import partial, singledispatch
 from os import environ, path
 from typing import Any, Callable, Dict, Iterable, List, SupportsFloat, Type, Union
 
 from dateutil.parser import parse
 from ordered_set import OrderedSet
+
 from rich import box
 from rich.align import Align
 from rich.bar import Bar
 from rich.columns import Columns
-from rich.console import Console, ConsoleRenderable
+from rich.console import Console, ConsoleRenderable, Group
+from rich.panel import Panel
 from rich.rule import Rule
+from rich.syntax import Syntax
 from rich.table import Column, Table
 from rich.text import Text
 from rich.theme import Theme
@@ -25,7 +28,6 @@ from .music import make_albums_table, make_tracks_table
 from .utils import (
     FIELDS_MAP,
     border_panel,
-    comment_panel,
     duration2human,
     format_with_color,
     make_difftext,
@@ -34,7 +36,6 @@ from .utils import (
     new_tree,
     predictably_random_color,
     simple_panel,
-    syntax_panel,
     time2human,
     wrap,
 )
@@ -165,6 +166,32 @@ def make_counts_table(data: List[JSONDict]) -> Table:
 
 
 def make_pulls_table(data: List[JSONDict]) -> None:
+    def comment_panel(comment: Dict[str, str], **kwargs: Any) -> Panel:
+        state = comment.get("state") or ""
+        author = format_with_color(comment["author"])
+        return md_panel(
+            re.sub(r"[\[\]\\]", "", comment["body"]),
+            padding=1,
+            title=" ".join([state, author]),
+            subtitle=wrap(comment.get("createdAt") or "", "d"),
+            border_style="black",
+            **kwargs,
+        )
+
+    def syntax_panel(content: str, lexer: str, **kwargs: Any) -> Panel:
+        return Panel(
+            Syntax(
+                content,
+                lexer,
+                theme="paraiso-dark",
+                background_color="black",
+                word_wrap=True,
+            ),
+            style="green on black",
+            width=200,
+            title=kwargs.get("title") or "",
+        )
+
     state_map = {
         "APPROVED": "green",
         "MERGED": "magenta",
@@ -186,66 +213,59 @@ def make_pulls_table(data: List[JSONDict]) -> None:
         "participants",
         "url",
     }
+    pr = data[0]
 
-    table = new_table()
-    for pr in data:
-        title = pr.get("title", "")
+    title = pr.get("title", "")
+    info_table = new_table()
+    pr["author"] = format_with_color(pr["author"])
+    for key, val in pr.items():
+        if isinstance(key, str) and key not in exclude:
+            val = str(val)
+            if key in {"seen", "state"}:
+                color = state_map.get(val, "default")
+                if color:
+                    val = wrap(val, color)
+            info_table.add_row(wrap(key, "b"), val)
+    participants = "  ".join(map(format_with_color, pr["participants"]))
+    info_table.add_row(wrap("participants", "b"), participants)
 
-        print(Rule(wrap(f" {title} ", "r b white"), style="r"))
-        info_table = new_table()
-        pr["author"] = format_with_color(pr["author"])
-        for key, val in pr.items():
-            if isinstance(key, str) and key not in exclude:
-                val = str(val)
-                if key in {"seen", "state"}:
-                    color = state_map.get(val, "default")
-                    if color:
-                        val = wrap(val, color)
-                info_table.add_row(wrap(key, "b"), val)
-        participants = "  ".join(map(format_with_color, pr["participants"]))
-        info_table.add_row(wrap("participants", "b"), participants)
-        table.add_row(simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE))
-        # table.add_row(simple_panel(new_table(rows=pr["files"])))
+    reviews = []
+    for review in pr.get("reviews") or []:
+        review_table = new_table()
+        state = review["state"]
+        color = state_map.get(state, "default")
+        review["state"] = wrap(state, f"b {color}")
+        review["body"] = re.sub(r"(^|\n)", "\\1> ", review["body"])
+        review_table.add_row(md_panel(review["body"]))
 
-        reviews_table = new_table(title=wrap("Reviews", "b"))
-        for review in pr.get("reviews") or []:
-            state = review["state"]
-            # if state == "COMMENTED":
-            #     continue
-            color = state_map.get(state, "default")
-            review["state"] = wrap(state, f"b {color}")
-            review["body"] = re.sub(r"(^|\n)", "\\1> ", review["body"])
-            reviews_table.add_row(comment_panel(review))
-        if reviews_table.row_count:
-            pan = simple_panel(reviews_table, title_align="left")
-            table.add_row(pan)
+        for comment in review.get("comments") or []:
+            hunk = re.sub(r"[\[\]\\]", "", comment.get("diffHunk") or "")
+            file_line = comment.get("position")
+            title = f"line [b]{file_line}[/b], {comment['path']}"
+            rows = [[comment_panel(comment), syntax_panel(hunk, "diff", title=title)]]
+            review_table.add_row(simple_panel(new_table(rows=rows)))
+        reviews.append(border_panel(review_table))
 
-        thread_table = new_table()
-        for thread in pr.get("reviewThreads") or []:
-            diff_panel = None
-            comments_table = new_table()
-            for comment in thread.get("comments") or []:
-                hunk = comment.get("diffHunk")
-                comments_table.add_row(comment_panel(comment))
-                if not diff_panel and hunk:
-                    diff_panel = syntax_panel(re.sub(r"[\[\]\\]", "", hunk), "diff")
+    # if reviews_table.row_count:
+        # review_panels = map(lambda x: border_panel(x, title="hello"), reviews)
+    print(
+        Group(
+            Rule(wrap(f" {title} ", "r b white"), style="r"),
+            new_table(
+                rows=[
+                    [simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE)]
+                ]
+            ),
+            *reviews
+        ),
+    )
 
-            if comments_table.row_count:
-                thread_table.add_row(simple_panel(comments_table))
-            if diff_panel:
-                thread_table.add_row(diff_panel)
-
-            file_line = thread.get("line")
-            title = thread.get("path") + " " + wrap(file_line, "b") if file_line else ""
-            style = "green" if thread.get("isResolved") else "red"
-            table.add_row(border_panel(thread_table, title=title, border_style=style))
-
-        comments_table = new_table(title=wrap("Comments", "b"))
-        for comment in pr.get("comments") or []:
-            comments_table.add_row(comment_panel(comment))
-        if comments_table.row_count:
-            table.add_row(simple_panel(comments_table))
-        print(table)
+        # comments_table = new_table(title=wrap("Comments", "b"))
+        # for comment in pr.get("comments") or []:
+        #     comments_table.add_row(comment_panel(comment))
+        # if comments_table.row_count:
+        #     table.add_row(simple_panel(comments_table))
+        # print(table)
 
 
 def add_to_table(table: Table, content: Any, key: str = ""):
