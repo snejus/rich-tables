@@ -11,7 +11,6 @@ from typing import Any, Callable, Dict, Iterable, List, SupportsFloat, Type, Uni
 
 from dateutil.parser import parse
 from ordered_set import OrderedSet
-
 from rich import box
 from rich.align import Align
 from rich.bar import Bar
@@ -161,8 +160,6 @@ def make_counts_table(data: List[JSONDict]) -> Table:
         total_count = duration2human(sum(all_values), 2)
         table.caption = f"Total {total_count}"
     return table
-    # console.print(table)
-    # print(min_count, max_count)
 
 
 def make_pulls_table(data: List[JSONDict]) -> None:
@@ -170,12 +167,10 @@ def make_pulls_table(data: List[JSONDict]) -> None:
         state = comment.get("state") or ""
         author = format_with_color(comment["author"])
         return md_panel(
-            re.sub(r"[\[\]\\]", "", comment["body"]),
+            comment["body"],
             padding=1,
-            title=" ".join([state, author]),
-            subtitle=wrap(comment.get("createdAt") or "", "d"),
-            border_style="black",
-            **kwargs,
+            title=" ".join([state, author, comment.get("createdAt") or ""]),
+            border_style="red",
         )
 
     def syntax_panel(content: str, lexer: str, **kwargs: Any) -> Panel:
@@ -215,57 +210,40 @@ def make_pulls_table(data: List[JSONDict]) -> None:
     }
     pr = data[0]
 
-    title = pr.get("title", "")
-    info_table = new_table()
     pr["author"] = format_with_color(pr["author"])
-    for key, val in pr.items():
-        if isinstance(key, str) and key not in exclude:
-            val = str(val)
-            if key in {"seen", "state"}:
-                color = state_map.get(val, "default")
-                if color:
-                    val = wrap(val, color)
-            info_table.add_row(wrap(key, "b"), val)
-    participants = "  ".join(map(format_with_color, pr["participants"]))
-    info_table.add_row(wrap("participants", "b"), participants)
+    pr["participants"] = "  ".join(map(format_with_color, pr["participants"]))
+    for key in {"seen", "state"}:
+        pr[key] = wrap(pr[key], state_map.get(pr[key], "default"))
+    keys = sorted(set(pr) - exclude)
+    info_table = new_table(rows=map(lambda x: (wrap(x, "b"), pr[x]), keys))
 
     reviews = []
     for review in pr.get("reviews") or []:
         review_table = new_table()
         state = review["state"]
-        color = state_map.get(state, "default")
-        review["state"] = wrap(state, f"b {color}")
-        review["body"] = re.sub(r"(^|\n)", "\\1> ", review["body"])
-        review_table.add_row(md_panel(review["body"]))
+        review["state"] = wrap(state, state_map.get(state, "default"))
+        if review["body"]:
+            review_table.add_row(comment_panel(review))
 
         for comment in review.get("comments") or []:
-            hunk = re.sub(r"[\[\]\\]", "", comment.get("diffHunk") or "")
-            file_line = comment.get("position")
-            title = f"line [b]{file_line}[/b], {comment['path']}"
-            rows = [[comment_panel(comment), syntax_panel(hunk, "diff", title=title)]]
-            review_table.add_row(simple_panel(new_table(rows=rows)))
-        reviews.append(border_panel(review_table))
+            rows = [
+                comment_panel(comment, state=state),
+                syntax_panel(
+                    comment.get("diffHunk") or "",
+                    "diff",
+                    title=f"line [b]{comment.get('position')}, {comment['path']}",
+                ),
+            ]
+            review_table.add_row(simple_panel(new_table(rows=[rows])))
+        reviews.append(review_table)
 
-    # if reviews_table.row_count:
-        # review_panels = map(lambda x: border_panel(x, title="hello"), reviews)
-    print(
-        Group(
-            Rule(wrap(f" {title} ", "r b white"), style="r"),
-            new_table(
-                rows=[
-                    [simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE)]
-                ]
-            ),
-            *reviews
-        ),
+    rows = [simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE)]
+    gr = Group(
+        Rule(f"[r b white]{pr.get('title', ' ')}[/]", style="r"),
+        new_table(rows=[rows]),
+        *reviews,
     )
-
-        # comments_table = new_table(title=wrap("Comments", "b"))
-        # for comment in pr.get("comments") or []:
-        #     comments_table.add_row(comment_panel(comment))
-        # if comments_table.row_count:
-        #     table.add_row(simple_panel(comments_table))
-        # print(table)
+    print(gr)
 
 
 def add_to_table(table: Table, content: Any, key: str = ""):
@@ -372,6 +350,7 @@ def make_calendar_table(events: List[JSONDict]) -> None:
     color_header = "calendar_color"
     updated_events = []
     keys = "start_time", "end_time", "start_date", "summary", "location"
+    print(events)
     for event in events:
         style = event.pop(color_header)
         updated_event = dict(cal=wrap("aaa", f"{style} on {style}"))

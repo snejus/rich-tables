@@ -41,7 +41,7 @@ def fmtdiff(change: str, before: str, after: str) -> str:
         return before
 
 
-def make_difftext(before: str, after: str, junk: str = "-\n,*") -> str:
+def make_difftext(before: str, after: str, junk: str = " qwertyuiopasdfghjkllzxcvbnm") -> str:
     # def preparse(value: str) -> str:
     #     return value.strip().replace("[]", "~")
 
