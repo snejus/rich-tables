@@ -6,7 +6,8 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from functools import partial
-from typing import Any, Callable, Dict, Iterable, List, Optional, SupportsFloat, Tuple
+from typing import (Any, Callable, Dict, Iterable, List, Optional,
+                    SupportsFloat, Tuple)
 
 from dateutil.relativedelta import relativedelta
 from pycountry import countries
@@ -41,7 +42,9 @@ def fmtdiff(change: str, before: str, after: str) -> str:
         return before
 
 
-def make_difftext(before: str, after: str, junk: str = " qwertyuiopasdfghjkllzxcvbnm") -> str:
+def make_difftext(
+    before: str, after: str, junk: str = " qwertyuiopasdfghjkllzxcvbnm"
+) -> str:
     # def preparse(value: str) -> str:
     #     return value.strip().replace("[]", "~")
 
@@ -244,5 +247,6 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     calendar=format_with_color,
     source=format_with_color,
     category=format_with_color,
+    categories=lambda x: " ".join(map(format_with_color, x.split(","))),
     price=lambda x: x if x else colored_with_bg(x),
 )
