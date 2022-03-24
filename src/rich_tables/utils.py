@@ -6,9 +6,19 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from functools import partial
-from typing import (Any, Callable, Dict, Iterable, List, Optional,
-                    SupportsFloat, Tuple)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    SupportsFloat,
+    Tuple,
+    Union
+)
 
+from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from pycountry import countries
 from rich import box
@@ -74,11 +84,15 @@ def duration2human(duration: SupportsFloat, acc: int = 1) -> str:
 
 
 def time2human(
-    timestamp: Optional[int], acc: int = 1, use_colors=False, pad: bool = True
+    timestamp: Union[int, str], acc: int = 1, use_colors=False, pad: bool = True
 ) -> str:
-    if not timestamp:
+    if isinstance(timestamp, str):
+        seconds = int(parse(timestamp).timestamp())
+    else:
+        seconds = timestamp
+    if not seconds:
         return "-"
-    diff = time.time() - timestamp
+    diff = time.time() - seconds
     fmted = " ".join(it.islice(fmt_time(timedelta(seconds=abs(diff)), pad), acc))
 
     fut, past = ("[b green]{}[/]", "[b red]-{}[/]") if use_colors else ("in {}", "{} ago")
@@ -143,7 +157,7 @@ def new_table(*args: Any, **kwargs: Any) -> Table:
 
 def predictably_random_color(string: str) -> str:
     random.seed(string)
-    rand = partial(random.randint, 50, 180)
+    rand = partial(random.randint, 60, 190)
     return "#{:0>2X}{:0>2X}{:0>2X}".format(rand(), rand(), rand())
 
 

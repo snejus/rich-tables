@@ -2,7 +2,6 @@ import itertools as it
 import json
 import operator as op
 import random
-import re
 import sys
 from collections import OrderedDict
 from functools import partial, singledispatch
@@ -36,7 +35,7 @@ from .utils import (
     predictably_random_color,
     simple_panel,
     time2human,
-    wrap,
+    wrap
 )
 
 JSONDict = Dict[str, Any]
@@ -143,10 +142,9 @@ def make_counts_table(data: List[JSONDict]) -> Table:
                 lambda x: Align(x, vertical="middle"),
                 (
                     *map(
-                        lambda x: FIELDS_MAP[x](item.get(x) or "")
-                        if x in FIELDS_MAP
-                        else Text(item.get(x) or "")
-                        if "[" in item.get(x)
+                        lambda x: FIELDS_MAP[x](item.get(x) or "") if x in FIELDS_MAP
+                        # else Text(item.get(x) or "")
+                        # if "[" in item.get(x)
                         else item.get(x),
                         other_col_names,
                     ),
@@ -164,13 +162,12 @@ def make_counts_table(data: List[JSONDict]) -> Table:
 
 def make_pulls_table(data: List[JSONDict]) -> None:
     def comment_panel(comment: Dict[str, str], **kwargs: Any) -> Panel:
-        state = comment.get("state") or ""
-        author = format_with_color(comment["author"])
         return md_panel(
             comment["body"],
-            padding=1,
-            title=" ".join([state, author, comment.get("createdAt") or ""]),
-            border_style="red",
+            title=" ".join(
+                map(lambda x: get_val(comment, x), ["state", "author", "createdAt"])
+            ),
+            border_style="green" if comment.get("isResolved") else "red",
         )
 
     def syntax_panel(content: str, lexer: str, **kwargs: Any) -> Panel:
@@ -182,7 +179,7 @@ def make_pulls_table(data: List[JSONDict]) -> None:
                 background_color="black",
                 word_wrap=True,
             ),
-            style="green on black",
+            style=kwargs.get("style") or "black",
             width=200,
             title=kwargs.get("title") or "",
         )
@@ -197,6 +194,8 @@ def make_pulls_table(data: List[JSONDict]) -> None:
         "OPEN": "green",
         "UNSEEN": "bold black on red",
         "SEEN": "bold black on green",
+        "True": "bold green",
+        "False": "bold red",
     }
     exclude = {
         "title",
@@ -204,44 +203,62 @@ def make_pulls_table(data: List[JSONDict]) -> None:
         "reviews",
         "comments",
         "reviewThreads",
-        "files",
-        "participants",
         "url",
     }
     pr = data[0]
+    FIELDS_MAP.update(
+        {
+            "author": format_with_color,
+            "participants": lambda x: "  ".join(map(format_with_color, x)),
+            "state": lambda x: wrap(wrap(x, "b"), state_map.get(x, "default")),
+            "isReadByViewer": lambda x: wrap(str(x), state_map.get(str(x), "default")),
+            "updatedAt": lambda x: time2human(x, pad=False, use_colors=True),
+            "createdAt": lambda x: time2human(x, pad=False, use_colors=True),
+            "repository": lambda x: x.get("name"),
+            "files": lambda files: "\n".join(
+                map(
+                    lambda f: wrap(
+                        (f"+{f['additions']}" if f["additions"] else "").rjust(5),
+                        "b green",
+                    )
+                    + " "
+                    + wrap(
+                        (f"-{f['deletions']}" if f["deletions"] else "").rjust(3),
+                        "b red",
+                    )
+                    + " "
+                    + wrap(f["path"], "b"),
+                    files,
+                )
+            ),
+        }
+    )
 
-    pr["author"] = format_with_color(pr["author"])
-    pr["participants"] = "  ".join(map(format_with_color, pr["participants"]))
-    for key in {"seen", "state"}:
-        pr[key] = wrap(pr[key], state_map.get(pr[key], "default"))
     keys = sorted(set(pr) - exclude)
-    info_table = new_table(rows=map(lambda x: (wrap(x, "b"), pr[x]), keys))
+    info_table = new_table(rows=map(lambda x: (wrap(x, "b"), get_val(pr, x)), keys))
 
     reviews = []
     for review in pr.get("reviews") or []:
-        review_table = new_table()
-        state = review["state"]
-        review["state"] = wrap(state, state_map.get(state, "default"))
         if review["body"]:
-            review_table.add_row(comment_panel(review))
+            reviews.append(comment_panel(review))
 
-        for comment in review.get("comments") or []:
-            rows = [
-                comment_panel(comment, state=state),
-                syntax_panel(
-                    comment.get("diffHunk") or "",
-                    "diff",
-                    title=f"line [b]{comment.get('position')}, {comment['path']}",
-                ),
-            ]
-            review_table.add_row(simple_panel(new_table(rows=[rows])))
-        reviews.append(review_table)
+    files = []
+    rthreads = pr.get("reviewThreads") or []
+    for file, threads in it.groupby(rthreads, op.itemgetter("path")):
+        rows: List[ConsoleRenderable] = []
+        for thread in threads:
+            rows.append(syntax_panel(thread["comments"][0].get("diffHunk") or "", "diff"))
+            for comment in thread.get("comments") or []:
+                rows.append(comment_panel(comment))
+        files.append(border_panel(Group(*rows), title=wrap(thread["path"], "b magenta")))
 
-    rows = [simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE)]
+    info_section = [simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE)]
     gr = Group(
-        Rule(f"[r b white]{pr.get('title', ' ')}[/]", style="r"),
-        new_table(rows=[rows]),
+        "",
+        Rule(wrap(pr.get("title", " "), "b")),
+        new_table(rows=[info_section]),
         *reviews,
+        *files,
     )
     print(gr)
 
@@ -349,12 +366,19 @@ def make_lights_table(lights: List[JSONDict]) -> Table:
 def make_calendar_table(events: List[JSONDict]) -> None:
     color_header = "calendar_color"
     updated_events = []
-    keys = "start_time", "end_time", "start_date", "summary", "location"
-    print(events)
+    keys = "start_time", "end_time", "start_date", "summary" #, "location"
     for event in events:
-        style = event.pop(color_header)
-        updated_event = dict(cal=wrap("aaa", f"{style} on {style}"))
-        updated_event.update(**dict(zip(keys, op.itemgetter(*keys)(event))))
+        style = event.pop(color_header, None)
+        # updated_event = dict(cal=wrap("aaa", f"{style} on {style}"))
+        # updated_event.update(**dict(zip(keys, op.itemgetter(*keys)(event))))
+        updated_event = dict(zip(keys, op.itemgetter(*keys)(event)))
+        start = updated_event["start_time"]
+        end = updated_event["end_time"]
+        updated_event["bar"] = Bar(
+            86400,
+            int(parse(start).timestamp() - parse("00:00").timestamp()),
+            int(parse(end).timestamp() - parse("00:00").timestamp()),
+        )
         updated_events.append(updated_event)
 
     for date, day_events in it.groupby(updated_events, op.itemgetter("start_date")):
@@ -367,8 +391,8 @@ def make_calendar_table(events: List[JSONDict]) -> None:
         )
 
 
-def get_val(fields_map: Dict[str, Callable], obj: JSONDict, field: str) -> str:
-    return fields_map[field](obj[field]) if obj.get(field) else ""
+def get_val(obj: JSONDict, field: str) -> str:
+    return FIELDS_MAP[field](obj[field]) if obj.get(field) else ""
 
 
 def make_tasks_table(tasks: List[JSONDict]) -> None:
@@ -377,17 +401,15 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
         id=lambda x: str(x),
         urgency=lambda x: str(round(x, 1)),
         description=lambda x: x,
-        due=lambda x: get_time(int(parse(x).timestamp())),
-        end=lambda x: get_time(int(parse(x).timestamp())),
-        sched=lambda x: get_time(int(parse(x).timestamp())),
+        due=lambda x: get_time,
+        end=lambda x: get_time,
+        sched=lambda x: get_time,
         tags=lambda x: " ".join(map(format_with_color, x or [])),
         project=format_with_color,
-        modified=lambda x: get_time(int(parse(x).timestamp())),
+        modified=lambda x: get_time,
         annotations=lambda l: "\n".join(
             map(
-                lambda x: wrap(
-                    time2human(int(parse(x["entry"]).timestamp()), pad=False), "b"
-                )
+                lambda x: wrap(time2human(x["entry"], pad=False), "b")
                 + ": "
                 + wrap(x["description"], "i"),
                 reversed(l),
@@ -480,7 +502,7 @@ def draw_data(data: Union[JSONDict, List], title: str = "") -> None:
 
 
 @draw_data.register(dict)
-def _draw_data_dict(data: JSONDict, title: str = "") -> None:
+def _draw_data_dict(data: JSONDict) -> None:
     if "values" in data:
         return draw_data(data["values"], data.get("title") or "")
     console.print(make_generic_table(data))
@@ -500,9 +522,12 @@ def _draw_data_list(data: List[JSONDict], title: str = "") -> None:
         "": make_generic_table,
     }
     try:
-        ret = calls[title](data)
+        func = calls[title]
     except KeyError:
+        print(title.encode())
         ret = draw_data(data[0]) if len(data) == 1 else make_generic_table(data)
+    else:
+        ret = func(data)
 
     if ret:
         console.print(ret)
