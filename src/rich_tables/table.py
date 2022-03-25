@@ -366,7 +366,7 @@ def make_lights_table(lights: List[JSONDict]) -> Table:
 def make_calendar_table(events: List[JSONDict]) -> None:
     color_header = "calendar_color"
     updated_events = []
-    keys = "start_time", "end_time", "start_date", "summary" #, "location"
+    keys = "start_time", "end_time", "start_date", "summary"  # , "location"
     for event in events:
         style = event.pop(color_header, None)
         # updated_event = dict(cal=wrap("aaa", f"{style} on {style}"))
@@ -397,16 +397,16 @@ def get_val(obj: JSONDict, field: str) -> str:
 
 def make_tasks_table(tasks: List[JSONDict]) -> None:
     get_time = partial(time2human, use_colors=True, pad=False)
-    fields_map: Dict[str, Callable] = OrderedDict(
-        id=lambda x: str(x),
+    fields_map = dict(
+        id=str,
         urgency=lambda x: str(round(x, 1)),
         description=lambda x: x,
-        due=lambda x: get_time,
-        end=lambda x: get_time,
-        sched=lambda x: get_time,
+        due=get_time,
+        end=get_time,
+        sched=get_time,
         tags=lambda x: " ".join(map(format_with_color, x or [])),
         project=format_with_color,
-        modified=lambda x: get_time,
+        modified=get_time,
         annotations=lambda l: "\n".join(
             map(
                 lambda x: wrap(time2human(x["entry"], pad=False), "b")
@@ -416,6 +416,7 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
             )
         ),
     )
+    FIELDS_MAP.update(fields_map)
     status_map = {
         "completed": "b s black on green",
         "deleted": "s red",
@@ -445,8 +446,7 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
             desc = f"[b]([red]![/])[/] {desc}"
         id_to_desc[task["id"]] = desc
 
-    get_value = partial(get_val, fields_map)
-    group_by = tasks[0].get("group_by")
+    group_by = tasks[0].get("group_by") or ""
     headers = OrderedSet(["urgency", "id", *fields_map.keys()]) - {group_by}
 
     for group, task_group in it.groupby(
@@ -467,13 +467,13 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
             task_tree = new_tree(title=task_obj, guide_style=project_color)
             ann = task.pop("annotations", None)
             if ann:
-                task_tree.add(fields_map["annotations"](ann))
+                task_tree.add(FIELDS_MAP["annotations"](ann))
             for kuid in task.get("depends") or []:
                 dep = id_to_desc.get(uuid_to_id.get(kuid))
                 if dep:
                     task_tree.add(wrap(str(uuid_to_id[kuid]), "b") + " " + dep)
             task["description"] = task_tree
-            table.add_row(*map(partial(get_value, task), headers))
+            table.add_row(*map(lambda x: get_val(task, x), headers))
 
         for col in table.columns.copy():
             try:

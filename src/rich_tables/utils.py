@@ -177,8 +177,8 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
     return simple_panel(content, **{**dict(box=box.ROUNDED), **kwargs})
 
 
-def md_panel(content: str, **kwargs: Any) -> Panel:
-    return border_panel(Markdown(content), **kwargs)
+def md_panel(content: Optional[str], **kwargs: Any) -> Panel:
+    return border_panel(Markdown(content), **kwargs) if content else ""
 
 
 def new_tree(values: List[str] = [], **kwargs) -> Tree:
@@ -257,10 +257,13 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     comments=lambda x: md_panel(x.replace("---", "\n---\n")),
     tags=lambda x: simple_panel(colored_split(x)),
     released=lambda x: x.replace("-00", ""),
-    desc=lambda x: md_panel(x) if x else "",
+    desc=md_panel,
     calendar=format_with_color,
     source=format_with_color,
     category=format_with_color,
     categories=lambda x: " ".join(map(format_with_color, x.split(","))),
     price=lambda x: x if x else colored_with_bg(x),
+    interview=md_panel,
+    benefits=md_panel,
+    primary=colored_split,
 )
