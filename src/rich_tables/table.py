@@ -6,7 +6,7 @@ import sys
 from collections import OrderedDict
 from functools import partial, singledispatch
 from os import environ, path
-from typing import Any, Callable, Dict, Iterable, List, SupportsFloat, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, SupportsFloat, Tuple, Type, Union
 
 from dateutil.parser import parse
 from ordered_set import OrderedSet
@@ -364,31 +364,38 @@ def make_lights_table(lights: List[JSONDict]) -> Table:
 
 
 def make_calendar_table(events: List[JSONDict]) -> None:
-    color_header = "calendar_color"
-    updated_events = []
-    keys = "start_time", "end_time", "start_date", "summary"  # , "location"
-    for event in events:
-        style = event.pop(color_header, None)
-        # updated_event = dict(cal=wrap("aaa", f"{style} on {style}"))
-        # updated_event.update(**dict(zip(keys, op.itemgetter(*keys)(event))))
-        updated_event = dict(zip(keys, op.itemgetter(*keys)(event)))
-        start = updated_event["start_time"]
-        end = updated_event["end_time"]
-        updated_event["bar"] = Bar(
-            86400,
-            int(parse(start).timestamp() - parse("00:00").timestamp()),
-            int(parse(end).timestamp() - parse("00:00").timestamp()),
+    def get_start_end(start: str, end: str) -> Tuple[int, int]:
+        if start == end == "00:00":
+            return 0, 86400
+        day_start_ts = parse("00:00").timestamp()
+        return int(parse(start).timestamp() - day_start_ts), int(
+            parse(end).timestamp() - day_start_ts
         )
-        updated_events.append(updated_event)
 
-    for date, day_events in it.groupby(updated_events, op.itemgetter("start_date")):
-        print(
-            simple_panel(
-                new_table(rows=map(dict.values, day_events)),
-                title=wrap(date, "b"),
-                style="cyan",
-            )
+    calendars = set(map(op.itemgetter("calendar"), events))
+    cal_to_color = dict(zip(calendars, map(predictably_random_color, calendars)))
+    cal_fmted = it.starmap(
+        lambda x, y: wrap(f" {x} ", f"b black on {y}"), cal_to_color.items()
+    )
+    print(Columns(cal_fmted, expand=True, equal=True, align="center"))
+
+    updated_events = []
+    for event in events:
+        color = cal_to_color[event["calendar"]]
+        event["summary"] = wrap(event["summary"], f"b {color}")
+        event["bar"] = Bar(
+            86400, *get_start_end(event["start_time"], event["end_time"]), color=color
         )
+        updated_events.append(event)
+
+    table = new_table(expand=True)
+    keys = "summary", "start_time", "end_time", "bar"  # , "location"
+    for date, day_events in it.groupby(updated_events, op.itemgetter("start_date")):
+        table.add_row()
+        table.add_row(wrap(f"   {date}   ", "on grey3"))
+        for event in day_events:
+            table.add_row(*op.itemgetter(*keys)(event))
+    print(table)
 
 
 def get_val(obj: JSONDict, field: str) -> str:
