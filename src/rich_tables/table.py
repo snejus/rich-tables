@@ -3,7 +3,7 @@ import json
 import operator as op
 import random
 import sys
-from collections import OrderedDict
+from datetime import datetime
 from functools import partial, singledispatch
 from os import environ, path
 from typing import Any, Callable, Dict, Iterable, List, SupportsFloat, Tuple, Type, Union
@@ -19,7 +19,6 @@ from rich.panel import Panel
 from rich.rule import Rule
 from rich.syntax import Syntax
 from rich.table import Column, Table
-from rich.text import Text
 from rich.theme import Theme
 
 from .music import make_albums_table, make_tracks_table
@@ -89,9 +88,8 @@ def make_diff_table(group_to_data: GroupsDict) -> None:
             diff_table.add_row(simple_panel(table, title=title, padding=1))
 
 
-# def get_bar(count: SupportsFloat, min_count: SupportsFloat, total_count: SupportsFloat) -> ConsoleRenderable:
 def get_bar(count: SupportsFloat, total_count: SupportsFloat) -> Bar:
-    ratio = count / total_count if total_count else 0
+    ratio = float(count) / float(total_count) if total_count else 0
     random.seed(str(total_count))
     rand = partial(random.randint, 50, 180)
 
@@ -100,7 +98,6 @@ def get_bar(count: SupportsFloat, total_count: SupportsFloat) -> Bar:
 
     color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
     return Align(Bar(total_count, 0, count, color=color), vertical="middle")
-    # return Align(Bar(float(count) or 0, float(min_count) or 0, float(total_count) or 0, color=color), vertical="middle")
 
 
 def make_counts_table(data: List[JSONDict]) -> Table:
@@ -114,12 +111,6 @@ def make_counts_table(data: List[JSONDict]) -> Table:
     if not any(map(lambda x: 1 > x > 0, all_values)):
         all_values = list(map(int, all_values))
     max_count, total_count = max(all_values), sum(all_values)
-    # min_count, max_count, total_count = min(all_values), max(all_values), sum(all_values)
-
-    # if max_col_name in headers:
-    #     max_values = list(map(float, map(op.methodcaller("get", max_col_name, 0), data)))
-    # else:
-    #     max_values = [max(all_values)] * len(all_values)
     other_col_names = list(
         filter(lambda x: x not in {count_col_name, max_col_name}, data[0])
     )
@@ -130,27 +121,23 @@ def make_counts_table(data: List[JSONDict]) -> Table:
         justify="left",
         caption_justify="left",
     )
-    # for item, count_val, max_val in zip(data, all_values, max_values):
     for item, count_val in zip(data, all_values):
         if count_col_name in {"duration", "total_duration"}:
             count_header = duration2human(count_val, 2)
         else:
             count_header = FIELDS_MAP[count_col_name](count_val)
-            # count_header = "{:<2}% {}/{}".format(round(count_val/max_val*100), count_val, int(max_val))
         table.add_row(
             *map(
                 lambda x: Align(x, vertical="middle"),
                 (
                     *map(
-                        lambda x: FIELDS_MAP[x](item.get(x) or "") if x in FIELDS_MAP
-                        # else Text(item.get(x) or "")
-                        # if "[" in item.get(x)
-                        else item.get(x),
+                        lambda x: FIELDS_MAP[x](item.get(x) or "")
+                        if x in FIELDS_MAP
+                        else str(item.get(x)),
                         other_col_names,
                     ),
                     count_header,
                     get_bar(count_val, max_count),
-                    # get_bar(count_val, min_count, max_count),
                 ),
             )
         )
@@ -197,14 +184,7 @@ def make_pulls_table(data: List[JSONDict]) -> None:
         "True": "bold green",
         "False": "bold red",
     }
-    exclude = {
-        "title",
-        "body",
-        "reviews",
-        "comments",
-        "reviewThreads",
-        "url",
-    }
+    exclude = {"title", "body", "reviews", "comments", "reviewThreads", "url"}
     pr = data[0]
     FIELDS_MAP.update(
         {
@@ -218,13 +198,12 @@ def make_pulls_table(data: List[JSONDict]) -> None:
             "files": lambda files: "\n".join(
                 map(
                     lambda f: wrap(
-                        (f"+{f['additions']}" if f["additions"] else "").rjust(5),
+                        ("+" + f["additions"] if f["additions"] else "").rjust(5),
                         "b green",
                     )
                     + " "
                     + wrap(
-                        (f"-{f['deletions']}" if f["deletions"] else "").rjust(3),
-                        "b red",
+                        ("-" + f["deletions"] if f["deletions"] else "").rjust(3), "b red"
                     )
                     + " "
                     + wrap(f["path"], "b"),
@@ -364,13 +343,11 @@ def make_lights_table(lights: List[JSONDict]) -> Table:
 
 
 def make_calendar_table(events: List[JSONDict]) -> None:
-    def get_start_end(start: str, end: str) -> Tuple[int, int]:
-        if start == end == "00:00":
+    def get_start_end(start: datetime, end: datetime) -> Tuple[int, int]:
+        if start.hour == end.hour == 0:
             return 0, 86400
-        day_start_ts = parse("00:00").timestamp()
-        return int(parse(start).timestamp() - day_start_ts), int(
-            parse(end).timestamp() - day_start_ts
-        )
+        day_start_ts = start.replace(hour=0).timestamp()
+        return int(start.timestamp() - day_start_ts), int(end.timestamp() - day_start_ts)
 
     calendars = set(map(op.itemgetter("calendar"), events))
     cal_to_color = dict(zip(calendars, map(predictably_random_color, calendars)))
@@ -379,22 +356,26 @@ def make_calendar_table(events: List[JSONDict]) -> None:
     )
     print(Columns(cal_fmted, expand=True, equal=True, align="center"))
 
-    updated_events = []
+    events = events.copy()
     for event in events:
         color = cal_to_color[event["calendar"]]
         event["summary"] = wrap(event["summary"], f"b {color}")
-        event["bar"] = Bar(
-            86400, *get_start_end(event["start_time"], event["end_time"]), color=color
-        )
-        updated_events.append(event)
+        start = parse(event["start"])
+        end = parse(event["end"])
+        event["start_date"] = start.strftime("%F")
+        event["start_time"] = start.strftime("%H:%M")
+        event["end_time"] = end.strftime("%H:%M")
+        event["bar"] = Bar(86400, *get_start_end(start, end), color=color)
 
     table = new_table(expand=True)
     keys = "summary", "start_time", "end_time", "bar"  # , "location"
-    for date, day_events in it.groupby(updated_events, op.itemgetter("start_date")):
+    for date, day_events in it.groupby(events, op.itemgetter("start_date")):
         table.add_row()
         table.add_row(wrap(f"   {date}   ", "on grey3"))
         for event in day_events:
             table.add_row(*op.itemgetter(*keys)(event))
+            if "saras" not in event["calendar"]:
+                table.rows[-1].style = "i dim"
     print(table)
 
 
@@ -552,7 +533,7 @@ def main():
         try:
             draw_data(data)
         except Exception as exc:
-            console.print_json(data=data)
+            console.print(data)
             console.print_exception(extra_lines=4, show_locals=True)
             raise exc
 
