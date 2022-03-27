@@ -362,20 +362,18 @@ def make_calendar_table(events: List[JSONDict]) -> None:
         event["summary"] = wrap(event["summary"], f"b {color}")
         start = parse(event["start"])
         end = parse(event["end"])
-        event["start_date"] = start.strftime("%F")
+        event["start_date"] = start.strftime("%A, %F")
         event["start_time"] = start.strftime("%H:%M")
         event["end_time"] = end.strftime("%H:%M")
         event["bar"] = Bar(86400, *get_start_end(start, end), color=color)
 
     table = new_table(expand=True)
-    keys = "summary", "start_time", "end_time", "bar"  # , "location"
+    keys = "summary", "start_time", "end_time", "bar"
     for date, day_events in it.groupby(events, op.itemgetter("start_date")):
         table.add_row()
-        table.add_row(wrap(f"   {date}   ", "on grey3"))
+        table.add_row(wrap(f"   {date}   ", "b white on grey3"))
         for event in day_events:
             table.add_row(*op.itemgetter(*keys)(event))
-            if "saras" not in event["calendar"]:
-                table.rows[-1].style = "i dim"
     print(table)
 
 
