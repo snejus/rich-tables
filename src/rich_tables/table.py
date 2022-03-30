@@ -88,8 +88,9 @@ def make_diff_table(group_to_data: GroupsDict) -> None:
             diff_table.add_row(simple_panel(table, title=title, padding=1))
 
 
-def get_bar(count: SupportsFloat, total_count: SupportsFloat) -> Bar:
-    ratio = float(count) / float(total_count) if total_count else 0
+def get_bar(count: SupportsFloat, total_count: SupportsFloat) -> Align:
+    count = float(count)
+    ratio = count / float(total_count) if total_count else 0
     random.seed(str(total_count))
     rand = partial(random.randint, 50, 180)
 
@@ -97,7 +98,7 @@ def get_bar(count: SupportsFloat, total_count: SupportsFloat) -> Bar:
         return round(rand() * ratio)
 
     color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
-    return Align(Bar(total_count, 0, count, color=color), vertical="middle")
+    return Align(Bar(float(total_count), 0, count, color=color), vertical="middle")
 
 
 def make_counts_table(data: List[JSONDict]) -> Table:
@@ -142,7 +143,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
             )
         )
     if count_col_name in {"duration", "total_duration"}:
-        total_count = duration2human(sum(all_values), 2)
+        total_count = duration2human(float(sum(all_values)), 2)
         table.caption = f"Total {total_count}"
     return table
 
@@ -171,6 +172,17 @@ def make_pulls_table(data: List[JSONDict]) -> None:
             title=kwargs.get("title") or "",
         )
 
+    def fmt_add_del(file: JSONDict) -> str:
+        additions = f"-{file['additions']}" if file["additions"] else ""
+        deletions = f"-{file['deletions']}" if file["deletions"] else ""
+        return " ".join(
+            [
+                wrap(additions.rjust(5), "b green"),
+                wrap(deletions.rjust(3), "b red"),
+                wrap(file["path"], "b"),
+            ]
+        )
+
     state_map = {
         "APPROVED": "green",
         "MERGED": "magenta",
@@ -195,21 +207,7 @@ def make_pulls_table(data: List[JSONDict]) -> None:
             "updatedAt": lambda x: time2human(x, pad=False, use_colors=True),
             "createdAt": lambda x: time2human(x, pad=False, use_colors=True),
             "repository": lambda x: x.get("name"),
-            "files": lambda files: "\n".join(
-                map(
-                    lambda f: wrap(
-                        ("+" + f["additions"] if f["additions"] else "").rjust(5),
-                        "b green",
-                    )
-                    + " "
-                    + wrap(
-                        ("-" + f["deletions"] if f["deletions"] else "").rjust(3), "b red"
-                    )
-                    + " "
-                    + wrap(f["path"], "b"),
-                    files,
-                )
-            ),
+            "files": lambda files: "\n".join(map(fmt_add_del, files)),
         }
     )
 
@@ -358,22 +356,28 @@ def make_calendar_table(events: List[JSONDict]) -> None:
 
     events = events.copy()
     for event in events:
-        color = cal_to_color[event["calendar"]]
-        event["summary"] = wrap(event["summary"], f"b {color}")
         start = parse(event["start"])
         end = parse(event["end"])
-        event["start_date"] = start.strftime("%A, %F")
-        event["start_time"] = start.strftime("%H:%M")
-        event["end_time"] = end.strftime("%H:%M")
-        event["bar"] = Bar(86400, *get_start_end(start, end), color=color)
+        if end.replace(tzinfo=None) < datetime.now():
+            color = "grey7"
+        else:
+            color = cal_to_color[event["calendar"]]
+        event.update(
+            color=color,
+            summary=wrap(event["summary"], f"b {color}"),
+            start_date=start.strftime("%A, %F"),
+            start_time=wrap(start.strftime("%H:%M"), "white"),
+            end_time=wrap(end.strftime("%H:%M"), "white"),
+            bar=Bar(86400, *get_start_end(start, end), color=color),
+        )
 
-    table = new_table(expand=True)
+    table = new_table(expand=True, highlight=False)
     keys = "summary", "start_time", "end_time", "bar"
     for date, day_events in it.groupby(events, op.itemgetter("start_date")):
         table.add_row()
         table.add_row(wrap(f"   {date}   ", "b white on grey3"))
         for event in day_events:
-            table.add_row(*op.itemgetter(*keys)(event))
+            table.add_row(*op.itemgetter(*keys)(event), style=f"dim {event['color']}")
     print(table)
 
 
@@ -383,7 +387,7 @@ def get_val(obj: JSONDict, field: str) -> str:
 
 def make_tasks_table(tasks: List[JSONDict]) -> None:
     get_time = partial(time2human, use_colors=True, pad=False)
-    fields_map = dict(
+    fields_map: JSONDict = dict(
         id=str,
         urgency=lambda x: str(round(x, 1)),
         description=lambda x: x,
@@ -398,7 +402,7 @@ def make_tasks_table(tasks: List[JSONDict]) -> None:
                 lambda x: wrap(time2human(x["entry"], pad=False), "b")
                 + ": "
                 + wrap(x["description"], "i"),
-                reversed(l),
+                l,
             )
         ),
     )
