@@ -377,7 +377,7 @@ def make_calendar_table(events: List[JSONDict]) -> None:
         table.add_row()
         table.add_row(wrap(f"   {date}   ", "b white on grey3"))
         for event in day_events:
-            table.add_row(*op.itemgetter(*keys)(event), style=f"dim {event['color']}")
+            table.add_row(*op.itemgetter(*keys)(event), style=event["color"])
     print(table)
 
 
