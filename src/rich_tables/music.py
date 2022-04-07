@@ -228,7 +228,7 @@ def detailed_album_panel(tracks: List[JSONDict]) -> Panel:
 
 def preprocess(tracks: List[JSONDict]) -> List[JSONDict]:
     for t in tracks:
-        albumtypes = t.pop("albumtypes")
+        albumtypes = t.pop("albumtypes", None)
         if not albumtypes:
             t["albumtype"] = "(!) " + t["albumtype"]
         else:
