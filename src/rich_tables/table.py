@@ -16,6 +16,7 @@ from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import Console, ConsoleRenderable, Group
 from rich.panel import Panel
+from rich.layout import Layout
 from rich.rule import Rule
 from rich.syntax import Syntax
 from rich.table import Column, Table
@@ -240,87 +241,103 @@ def make_pulls_table(data: List[JSONDict]) -> None:
     print(gr)
 
 
-def add_to_table(table: Table, content: Any, key: str = ""):
-    args = []
-    if key:
-        args.append(key)
-    if isinstance(content, list):
-        args.extend(content)
+def add_to_table(
+    rends: List[ConsoleRenderable], table: Table, content: Any, key: str = ""
+):
+    if isinstance(content, ConsoleRenderable) and isinstance(content.renderable, Table):
+        content.renderable.show_header = False
+        content.renderable.expand = True
+        content.padding = 1, 1, 0, 0
+        content.expand = False
+        # content.width = 65
+        content.title_align = "center"
+        # content.renderable.paddings = 1
+        content.title = wrap(key[:65], "b")
+        rends.append(content)
     else:
-        args.append(content)
-    table.add_row(*args)
+        args = []
+        if key:
+            args.append(key)
+        if isinstance(content, list):
+            args.extend(content)
+        else:
+            args.append(content)
+        table.add_row(*args)
 
 
 @singledispatch
 def make_generic_table(
     data: Union[JSONDict, List, ConsoleRenderable, str], header: str = ""
 ) -> Any:
-    return str(data)
+    return data
 
 
 @make_generic_table.register(str)
+@make_generic_table.register(int)
 def _str(data: Union[str, int], header: str = "") -> Any:
     return FIELDS_MAP[header](data)
 
 
 @make_generic_table.register
-def _renderable(data: ConsoleRenderable) -> ConsoleRenderable:
+def _renderable(data: ConsoleRenderable, header: str = "") -> ConsoleRenderable:
     return data
 
 
 @make_generic_table.register(dict)
-def _dict(data: JSONDict):
+def _dict(data: JSONDict, header: str = ""):
     table = new_table()
+    rends: List[ConsoleRenderable] = []
     for key, content in data.items():
-        if isinstance(content, str):
-            content = make_generic_table(content, key)
-        else:
-            content = make_generic_table(content)
-        add_to_table(table, content, key)
+        content = make_generic_table(content, header)
+        add_to_table(rends, table, content, key)
 
     if table.columns:
         table.columns[0].style = "bold misty_rose1"
-    return border_panel(table)
+        rends.insert(0, table)
+    if len(rends) > 2:
+        return Columns(
+            rends, expand=False, equal=False, right_to_left=False, column_first=False
+        )
+    return border_panel(Group(*rends))
 
 
 @make_generic_table.register(list)
-def _list(data: List[JSONDict]):
+def _list(data: List[Any], header: str = ""):
     def only(data_list: Iterable[Any], _type: Type) -> bool:
         return all(map(lambda x: isinstance(x, _type), data_list))
 
-    table = new_table()
+    table = new_table(overflow="ellipsis")
+    rends: List[ConsoleRenderable] = []
     if only(data, str):
         # ["hello", "hi", "bye", ...]
-        return Columns(list(map(format_with_color, data)), equal=True)
+        return " ".join(map(format_with_color, data))
 
     elif only(data, dict) and len(set(map(str, map(dict.keys, data)))) == 1:
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
+        first_item = data[0]
+        headers = list(first_item)
         if not table.rows:
-            table = new_table(*data[0].keys())
-        vals_types = set(map(type, data[0].values()))
+            table = new_table(*headers, expand=False)
+
+        vals_types = set(map(type, first_item.values()))
         if (
-            len(data[0]) == 2
+            len(headers) == 2
             and len(vals_types.intersection({int, float, str})) == 2
-            or "count" in set(data[0].keys())
+            or "count" in headers
         ):
             # [{"some_count": 10, "some_entity": "entity"}, ...]
             table = make_counts_table(data)
+
         else:
             for item in data:
-                row = []
-                for key, value in item.items():
-                    if isinstance(value, str):
-                        row.append(make_generic_table(value, key))
-                    else:
-                        row.append(make_generic_table(value))
-                table.add_row(*row)
+                table.add_row(*map(make_generic_table, item.values(), headers))
 
     else:
         # [{}, "bye", True]
         for item in data:
-            add_to_table(table, make_generic_table(item))
+            add_to_table(rends, table, make_generic_table(item))
 
-    return simple_panel(table)
+    return border_panel(table)
 
 
 def make_lights_table(lights: List[JSONDict]) -> Table:

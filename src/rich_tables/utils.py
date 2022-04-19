@@ -26,7 +26,6 @@ from rich.align import Align
 from rich.console import Console, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
-from rich.syntax import Syntax
 from rich.table import Column, Table
 from rich.tree import Tree
 
@@ -110,19 +109,21 @@ def wrap(text: str, tag: str) -> str:
 
 class NewTable(Table):
     def __init__(self, *args, **kwargs) -> None:
-        overflow = kwargs.pop("overflow", None)
-        justify = kwargs.pop("justify", None)
-
+        overflow = kwargs.pop("overflow", "ellipsis")
+        justify = kwargs.pop("justify", "center")
+        vertical = kwargs.pop("vertical", "center")
+        if args:
+            args = map(
+                lambda x: Column(
+                    x, overflow=overflow, justify=justify, vertical=vertical
+                ),
+                args,
+            )
         super().__init__(*args, **kwargs)
-
-        for col in self.columns:
-            col.overflow = overflow or col.overflow
-            col.justify = justify or col.justify
 
     def add_rows(self, rows: Iterable) -> None:
         """Add multiple rows to the table."""
         for row in rows:
-            # row = map(lambda x: str(x) if type(x, (int, bool, ))
             self.add_row(*row)
 
     @property
@@ -144,9 +145,7 @@ def new_table(*args: Any, **kwargs: Any) -> Table:
     )
     if args:
         default.update(
-            header_style="bold misty_rose1",
-            box=box.SIMPLE_HEAVY,
-            show_header=True,
+            header_style="bold misty_rose1", box=box.SIMPLE_HEAVY, show_header=True
         )
     rows = kwargs.pop("rows", [])
     table = NewTable(*args, **{**default, **kwargs})
@@ -168,7 +167,7 @@ def format_with_color(name: str) -> str:
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
     default: JSONDict
     default = dict(title_align="left", subtitle_align="left", box=box.SIMPLE, expand=True)
-    if kwargs.get("align", "") == "center":
+    if kwargs.pop("align", "") == "center":
         content = Align.center(content)
     return Panel(content, **{**default, **kwargs})
 
@@ -255,15 +254,18 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     text=md_panel,
     instructions=md_panel,
     comments=lambda x: md_panel(x.replace("---", "\n---\n")),
-    tags=lambda x: simple_panel(colored_split(x)),
+    tags=colored_split,
     released=lambda x: x.replace("-00", ""),
     desc=md_panel,
     calendar=format_with_color,
     source=format_with_color,
     category=format_with_color,
-    categories=lambda x: " ".join(map(format_with_color, x.split(","))),
+    categories=lambda x: colored_split(","),
     price=lambda x: x if x else colored_with_bg(x),
     interview=md_panel,
     benefits=md_panel,
     primary=colored_split,
+    **{"from": format_with_color},
+    to=format_with_color,
+    Subject=format_with_color,
 )
