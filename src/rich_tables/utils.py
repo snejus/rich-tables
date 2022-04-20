@@ -1,4 +1,5 @@
 import itertools as it
+import operator as op
 import random
 import re
 import time
@@ -26,7 +27,7 @@ from rich.align import Align
 from rich.console import Console, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
-from rich.table import Column, Table
+from rich.table import Table
 from rich.tree import Tree
 
 JSONDict = Dict[str, Any]
@@ -109,29 +110,29 @@ def wrap(text: str, tag: str) -> str:
 
 class NewTable(Table):
     def __init__(self, *args, **kwargs) -> None:
-        overflow = kwargs.pop("overflow", "ellipsis")
-        justify = kwargs.pop("justify", "center")
-        vertical = kwargs.pop("vertical", "center")
-        if args:
-            args = map(
-                lambda x: Column(
-                    x, overflow=overflow, justify=justify, vertical=vertical
-                ),
-                args,
-            )
-        super().__init__(*args, **kwargs)
+        ckwargs = dict(
+            overflow=kwargs.pop("overflow", "ellipsis"),
+            justify=kwargs.pop("justify", "left"),
+            vertical=kwargs.pop("vertical", "top"),
+        )
+        super().__init__(**kwargs)
+        for arg in args:
+            self.add_column(arg, **ckwargs)
 
     def add_rows(self, rows: Iterable) -> None:
         """Add multiple rows to the table."""
         for row in rows:
             self.add_row(*row)
 
-    @property
-    def colmap(self) -> Dict[str, Column]:
-        """Provide a mapping between columns names / ids and columns."""
-        pass
+    def add_dict_row(self, item: JSONDict) -> None:
+        """Add an item to the table attempting to match its keys to column headers."""
+        col_keys: List[str] = sorted(item.keys(), key=lambda x: self.colmap[x])
+        self.add_row(*map(lambda x: str(item.get(x) or ""), col_keys))
 
-    # def col(self, name: str) -> Column:
+    @property
+    def colmap(self) -> Dict[str, int]:
+        """Provide a mapping between columns names / ids and columns."""
+        return {c.header: c._index for c in self.columns if c.header}
 
 
 def new_table(*args: Any, **kwargs: Any) -> Table:
@@ -161,12 +162,14 @@ def predictably_random_color(string: str) -> str:
 
 
 def format_with_color(name: str) -> str:
-    return wrap(name, f"b i {predictably_random_color(name)}")
+    return wrap(name, f"b {predictably_random_color(name)}")
 
 
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
     default: JSONDict
-    default = dict(title_align="left", subtitle_align="left", box=box.SIMPLE, expand=True)
+    default = dict(
+        title_align="left", subtitle_align="left", box=box.SIMPLE, expand=True, padding=1
+    )
     if kwargs.pop("align", "") == "center":
         content = Align.center(content)
     return Panel(content, **{**default, **kwargs})
@@ -214,7 +217,7 @@ def colored_split(string: str) -> str:
 FIELDS_MAP: Dict[str, Callable] = defaultdict(
     lambda: str,
     albumtype=lambda x: colored_split(x.replace("compilation", "comp")),
-    albumtypes=lambda x: "; ".join(map(colored_split, x.split("; "))),
+    albumtypes=lambda x: "; ".join(map(format_with_color, x.split("; "))),
     label=format_with_color,
     catalognum=format_with_color,
     last_played=lambda x: time2human(x, use_colors=True, pad=False),
@@ -236,16 +239,16 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
         r"^00:",
         "",
         (datetime.fromtimestamp(x) - relativedelta(hours=1)).strftime("%H:%M:%S"),
-    ),
+    )
+    if isinstance(x, int)
+    else x,
     tracktotal=lambda x: (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
     if isinstance(x, Iterable)
     else str(x),
     country=get_country,
     data_source=format_with_color,
     helicopta={1: wrap("", "b red"), 0: "", None: ""}.get,
-    keywords=lambda x: " ".join(
-        map(colored_with_bg, map(format_with_color, x.split(", ")))
-    )
+    keywords=lambda x: " ".join(map(colored_with_bg, colored_split(x).split("  ")))
     if isinstance(x, str)
     else x,
     ingr=lambda x: simple_panel(colored_split(x)),
@@ -260,12 +263,12 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     calendar=format_with_color,
     source=format_with_color,
     category=format_with_color,
-    categories=lambda x: colored_split(","),
-    price=lambda x: x if x else colored_with_bg(x),
+    categories=colored_split,
+    price=lambda x: colored_with_bg(str(x)),
     interview=md_panel,
     benefits=md_panel,
     primary=colored_split,
     **{"from": format_with_color},
     to=format_with_color,
-    Subject=format_with_color,
+    # subject=format_with_color,
 )

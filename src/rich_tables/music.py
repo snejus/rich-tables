@@ -17,7 +17,7 @@ from .utils import (
     new_table,
     predictably_random_color,
     simple_panel,
-    wrap,
+    wrap
 )
 
 JSONDict = Dict[str, Any]
@@ -50,6 +50,8 @@ DISPLAY_HEADER: Dict[str, str] = {
     "mtime": "updated",
     "data_source": "source",
     "helicopta": "🚁",
+    "track_alt": "💿",
+    "catalognum": "📖",
 }
 
 new_table = partial(new_table, collapse_padding=True, expand=True)

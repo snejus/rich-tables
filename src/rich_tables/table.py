@@ -15,11 +15,12 @@ from rich.align import Align
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import Console, ConsoleRenderable, Group
-from rich.panel import Panel
+from rich.errors import NotRenderableError
 from rich.layout import Layout
+from rich.panel import Panel
 from rich.rule import Rule
 from rich.syntax import Syntax
-from rich.table import Column, Table
+from rich.table import Table
 from rich.theme import Theme
 
 from .music import make_albums_table, make_tracks_table
@@ -118,10 +119,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
     )
 
     table = new_table(
-        *map(lambda x: Column(x, overflow="fold"), other_col_names),
-        count_col_name,
-        justify="left",
-        caption_justify="left",
+        *other_col_names, count_col_name, caption_justify="left", overflow="fold"
     )
     for item, count_val in zip(data, all_values):
         if count_col_name in {"duration", "total_duration"}:
@@ -241,24 +239,65 @@ def make_pulls_table(data: List[JSONDict]) -> None:
     print(gr)
 
 
+def make_bicolumn_layout(rends: List[ConsoleRenderable]) -> Layout:
+    col_rows = dict(left=0, right=0)
+    divided: Dict[str, List] = dict(left=[], right=[])
+    standalone = []
+    for rend in rends:
+        # if not isinstance(rend, Table):
+        #     standalone.append(rend)
+        #     continue
+        try:
+            table = rend.renderable
+        except AttributeError:
+            table = rend
+        if "from" in table.colmap and "subject" in table.colmap:
+            standalone.append(table)
+            continue
+
+        side = "left" if col_rows["left"] <= col_rows["right"] else "right"
+        divided[side].append(rend)
+        col_rows[side] += table.row_count
+
+    lay = Layout()
+    layouts: Dict[str, Layout] = {}
+    if standalone:
+        layouts["wide"] = Align.center(Group(*standalone), vertical="bottom")
+    if divided["left"]:
+        layouts["left"] = Align.center(Group(*divided["left"]), vertical="bottom")
+    if divided["right"]:
+        layouts["right"] = Align.center(Group(*divided["right"]), vertical="bottom")
+
+    # print(Group(Group(Align.left(groups["left"]), Align.right(groups["right"])), groups["wide"]))
+
+    if "left" in layouts or "right" in layouts:
+        lay.add_split(Layout(name="top"))
+        if "left" in layouts and "right" in layouts:
+            lay["top"].split(Layout(layouts["left"], name="left"), Layout(layouts["right"], name="right"), splitter="row")
+    if "wide" in layouts:
+        lay.add_split(Layout(layouts["wide"], size=15, name="bottom"))
+        console.height = 200
+
+    return lay
+
+
 def add_to_table(
     rends: List[ConsoleRenderable], table: Table, content: Any, key: str = ""
 ):
-    if isinstance(content, ConsoleRenderable) and isinstance(content.renderable, Table):
+    if hasattr(content, "renderable") and isinstance(content.renderable, Table):
         content.renderable.show_header = False
         content.renderable.expand = True
-        content.padding = 1, 1, 0, 0
-        content.expand = False
-        # content.width = 65
+        content.expand = True
         content.title_align = "center"
-        # content.renderable.paddings = 1
         content.title = wrap(key[:65], "b")
+        rends.append(content)
+    elif key == "comments":
         rends.append(content)
     else:
         args = []
         if key:
             args.append(key)
-        if isinstance(content, list):
+        if isinstance(content, Iterable) and not isinstance(content, str):
             args.extend(content)
         else:
             args.append(content)
@@ -274,8 +313,12 @@ def make_generic_table(
 
 @make_generic_table.register(str)
 @make_generic_table.register(int)
-def _str(data: Union[str, int], header: str = "") -> Any:
-    return FIELDS_MAP[header](data)
+@make_generic_table.register(float)
+def _str(data: Union[str, int, float], header: str = "") -> Any:
+    try:
+        return FIELDS_MAP[header](data)
+    except NotRenderableError:
+        return FIELDS_MAP[header](str(data))
 
 
 @make_generic_table.register
@@ -288,17 +331,18 @@ def _dict(data: JSONDict, header: str = ""):
     table = new_table()
     rends: List[ConsoleRenderable] = []
     for key, content in data.items():
-        content = make_generic_table(content, header)
+        content = make_generic_table(content, key)
         add_to_table(rends, table, content, key)
 
     if table.columns:
         table.columns[0].style = "bold misty_rose1"
-        rends.insert(0, table)
-    if len(rends) > 2:
-        return Columns(
-            rends, expand=False, equal=False, right_to_left=False, column_first=False
-        )
-    return border_panel(Group(*rends))
+        table.expand = True
+        rends.insert(0, border_panel(table, expand=True))
+
+    if rends:
+        return make_bicolumn_layout(rends)
+
+    # return border_panel(table)
 
 
 @make_generic_table.register(list)
@@ -312,7 +356,7 @@ def _list(data: List[Any], header: str = ""):
         # ["hello", "hi", "bye", ...]
         return " ".join(map(format_with_color, data))
 
-    elif only(data, dict) and len(set(map(str, map(dict.keys, data)))) == 1:
+    elif only(data, dict):
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
         first_item = data[0]
         headers = list(first_item)
@@ -330,14 +374,18 @@ def _list(data: List[Any], header: str = ""):
 
         else:
             for item in data:
-                table.add_row(*map(make_generic_table, item.values(), headers))
+                table.add_row(
+                    *map(
+                        make_generic_table, [item.get(h) or "" for h in headers], headers
+                    )
+                )
 
     else:
         # [{}, "bye", True]
         for item in data:
             add_to_table(rends, table, make_generic_table(item))
 
-    return border_panel(table)
+    return simple_panel(table)
 
 
 def make_lights_table(lights: List[JSONDict]) -> Table:
