@@ -1,5 +1,4 @@
 import itertools as it
-import operator as op
 import random
 import re
 import time
@@ -24,7 +23,7 @@ from dateutil.relativedelta import relativedelta
 from pycountry import countries
 from rich import box
 from rich.align import Align
-from rich.console import Console, RenderableType
+from rich.console import Console, ConsoleRenderable, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
@@ -124,15 +123,20 @@ class NewTable(Table):
         for row in rows:
             self.add_row(*row)
 
-    def add_dict_row(self, item: JSONDict) -> None:
-        """Add an item to the table attempting to match its keys to column headers."""
-        col_keys: List[str] = sorted(item.keys(), key=lambda x: self.colmap[x])
-        self.add_row(*map(lambda x: str(item.get(x) or ""), col_keys))
+    @property
+    def colnames(self) -> List[str]:
+        """Provide a mapping between columns names / ids and columns."""
+        return [str(c.header) for c in self.columns]
 
     @property
     def colmap(self) -> Dict[str, int]:
         """Provide a mapping between columns names / ids and columns."""
-        return {c.header: c._index for c in self.columns if c.header}
+        return {str(c.header): c._index for c in self.columns if c.header}
+
+    def take_dict_item(self, item: JSONDict, transform: Callable = lambda x: x) -> None:
+        """Take the required columns / keys from the given dictionary item."""
+        print(item)
+        self.add_row(*(transform(item.get(c) or "", c) for c in self.colnames))
 
 
 def new_table(*args: Any, **kwargs: Any) -> Table:
@@ -179,13 +183,15 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
     return simple_panel(content, **{**dict(box=box.ROUNDED), **kwargs})
 
 
-def md_panel(content: Optional[str], **kwargs: Any) -> Panel:
-    return border_panel(Markdown(content), **kwargs) if content else ""
+def md_panel(content: str, **kwargs: Any) -> Panel:
+    return border_panel(Markdown(content), **kwargs)
 
 
-def new_tree(values: List[str] = [], **kwargs) -> Tree:
-    default: JSONDict = dict(guide_style="black")
-    tree = Tree(kwargs.pop("title", None) or "", **{**default, **kwargs})
+def new_tree(values: List[ConsoleRenderable] = [], title: str = "", **kwargs) -> Tree:
+    color = predictably_random_color(title or "")
+    default: JSONDict = dict(style=color, guide_style=color)
+    tree = Tree(wrap(title, "b"), **{**default, **kwargs})
+
     for val in values:
         tree.add(val)
     return tree
@@ -270,5 +276,6 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     primary=colored_split,
     **{"from": format_with_color},
     to=format_with_color,
+    creditText=md_panel,
     # subject=format_with_color,
 )
