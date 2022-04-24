@@ -3,6 +3,7 @@ import json
 import operator as op
 import random
 import sys
+from collections import ChainMap
 from datetime import datetime
 from functools import partial, singledispatch
 from os import environ, path
@@ -55,11 +56,18 @@ JSONDict = Dict[str, Any]
 GroupsDict = Dict[str, List]
 
 
-def get_console():
+def get_theme():
     tpath = path.join(environ.get("XDG_CONFIG_HOME") or "~/.config", "rich", "config.ini")
-    theme = Theme.from_file(open(tpath))
+    return Theme.from_file(open(tpath))
+
+
+def get_console(**kwargs):
     return Console(
-        soft_wrap=True, force_terminal=True, force_interactive=True, theme=theme
+        theme=get_theme(),
+        soft_wrap=True,
+        force_terminal=True,
+        force_interactive=True,
+        **kwargs,
     )
 
 
@@ -161,7 +169,7 @@ def make_counts_table(data: List[JSONDict]) -> Table:
     return table
 
 
-def make_pulls_table(data: List[JSONDict]) -> None:
+def make_pulls_table(data: List[JSONDict]) -> ConsoleRenderable:
     def comment_panel(comment: Dict[str, str], **kwargs: Any) -> Panel:
         return md_panel(
             comment["body"],
@@ -185,16 +193,14 @@ def make_pulls_table(data: List[JSONDict]) -> None:
             title=kwargs.get("title") or "",
         )
 
-    def fmt_add_del(file: JSONDict) -> str:
+    def fmt_add_del(file: JSONDict) -> List[str]:
         additions = f"-{file['additions']}" if file["additions"] else ""
         deletions = f"-{file['deletions']}" if file["deletions"] else ""
-        return " ".join(
-            [
-                wrap(additions.rjust(5), "b green"),
-                wrap(deletions.rjust(3), "b red"),
-                wrap(file["path"], "b"),
-            ]
-        )
+        return [
+            wrap(additions.rjust(5), "b green"),
+            wrap(deletions.rjust(3), "b red"),
+            wrap(file["path"], "b"),
+        ]
 
     state_map = {
         "APPROVED": "green",
@@ -209,7 +215,7 @@ def make_pulls_table(data: List[JSONDict]) -> None:
         "True": "bold green",
         "False": "bold red",
     }
-    exclude = {"title", "body", "reviews", "comments", "reviewThreads", "url"}
+    exclude = {"title", "body", "reviews", "comments", "reviewThreads", "url", "files"}
     pr = data[0]
     FIELDS_MAP.update(
         {
@@ -220,12 +226,15 @@ def make_pulls_table(data: List[JSONDict]) -> None:
             "updatedAt": lambda x: time2human(x, pad=False, use_colors=True),
             "createdAt": lambda x: time2human(x, pad=False, use_colors=True),
             "repository": lambda x: x.get("name"),
-            "files": lambda files: "\n".join(map(fmt_add_del, files)),
+            "files": lambda x: new_table(title="files", rows=map(fmt_add_del, x)),
         }
     )
 
     keys = sorted(set(pr) - exclude)
-    info_table = new_table(rows=map(lambda x: (wrap(x, "b"), get_val(pr, x)), keys))
+    info_table = Group(
+        new_table(rows=map(lambda x: (wrap(x, "b"), get_val(pr, x)), keys)),
+        get_val(pr, "files"),
+    )
 
     reviews = []
     for review in pr.get("reviews") or []:
@@ -242,15 +251,17 @@ def make_pulls_table(data: List[JSONDict]) -> None:
                 rows.append(comment_panel(comment))
         files.append(border_panel(Group(*rows), title=wrap(thread["path"], "b magenta")))
 
+    comments = []
+    for comment in pr.get("comments") or []:
+        comments.append(comment_panel(comment))
+
     info_section = [simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE)]
-    gr = Group(
+    return Group(
         "",
         Rule(wrap(pr.get("title", " "), "b")),
         new_table(rows=[info_section]),
-        *reviews,
-        *files,
+        new_table(rows=[reviews, files, comments])
     )
-    print(gr)
 
 
 def make_bicolumn_layout(rends: List[ConsoleRenderable]) -> Layout:
@@ -338,31 +349,39 @@ def _str(data: Union[str, int, float], header: str = "") -> Any:
         return FIELDS_MAP[header](str(data))
 
 
+@make_generic_table.register(float)
+def _float(data: float, header: str = "") -> Any:
+    return FIELDS_MAP[header](str(data))
+
+
 @make_generic_table.register
 def _renderable(data: ConsoleRenderable, header: str = "") -> ConsoleRenderable:
     return data
 
 
+@make_generic_table.register(ChainMap)
 @make_generic_table.register(dict)
-def _dict(data: JSONDict, header: str = ""):
-    table = new_table("", "", border_style="misty_rose1", box=box.MINIMAL)
+def _dict(data: ChainMap, header: str = ""):
+    print(len(data))
+    print(header)
+    table = new_table(
+        "", "", show_header=False, border_style="misty_rose1", box=box.MINIMAL
+    )
     table.columns[0].style = "bold misty_rose1"
 
     rends = []
     for key, content in data.items():
-        print(key)
-        table.add_row(make_generic_table(key), make_generic_table(content))
+        # table.add_row(make_generic_table(key), make_generic_table(content))
         # add_to_table(rends, table, content, key)
-        # content = make_generic_table(content)
-        # add_to_table(rends, table, content, key)
+        add_to_table(rends, table, make_generic_table(content, key), key)
 
     tree = new_tree(title=header)
     # if table.columns:
     rends = [table, *rends]
 
     if not header:
-        return border_panel(Group(*rends), title=key)
-    return new_tree(rends, title=header)
+        return border_panel(Group(*rends), title=header or key)
+    return new_tree(rends, title=header or key)
 
 
 @make_generic_table.register(list)
@@ -371,7 +390,7 @@ def _list(data: List[Any], header: str = ""):
         return all(map(lambda x: isinstance(x, _type), data_list))
 
     if len(data) == 1:
-        return make_generic_table(data[0], header)
+        return make_generic_table(data[0], "hio")
     rends = []
     table = new_table(show_header=True)
     common_table = new_table(show_header=True)
@@ -406,10 +425,16 @@ def _list(data: List[Any], header: str = ""):
 
         # aux_table = new_table(*headers, show_header=False)
         for item in data:
+            # for col, value in item.items():
+            # add_to_table([], table, make_generic_table(item, header), header)
             table.take_dict_item(item, transform=make_generic_table)
+    else:
+        for item in data:
+            table.add_row(*make_generic_table(item, header))
+            # add_to_table(, table, make_generic_table(item, header), header)
 
     return border_panel(
-        simple_panel(Group(common_table, table) if common_table.row_count else table), title=header
+        (Group(common_table, table) if common_table.row_count else table), title=header
     )
 
 
@@ -605,7 +630,8 @@ def _draw_data_list(data: List[JSONDict], title: str = "") -> None:
         func = calls[title]
     except KeyError:
         print(title.encode())
-        ret = draw_data(data[0]) if len(data) == 1 else make_generic_table(data)
+        make_generic_table(data)
+        # ret = draw_data(data[0]) if len(data) == 1 else make_generic_table(data)
     else:
         ret = func(data)
     return ret
@@ -628,8 +654,8 @@ def main():
             raise exc
         else:
             try:
-                for r in it.chain(*ret):
-                    console.print(r)
+                # for r in ret:
+                console.print(ret)
             except TypeError:
                 console.print(ret)
 

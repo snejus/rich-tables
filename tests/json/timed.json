@@ -1,0 +1,86 @@
+[
+  {
+    "category": "Work admin",
+    "total_duration": 0
+  },
+  {
+    "category": "photos",
+    "total_duration": 2.007
+  },
+  {
+    "category": "zsh",
+    "total_duration": 30.057000000000002
+  },
+  {
+    "category": "Refactoring",
+    "total_duration": 112.226
+  },
+  {
+    "category": "configs",
+    "total_duration": 246.49699999999999
+  },
+  {
+    "category": "Reading Docs",
+    "total_duration": 276.55
+  },
+  {
+    "category": "Emails",
+    "total_duration": 800.0440000000001
+  },
+  {
+    "category": "beetcamp",
+    "total_duration": 1330.6600000000003
+  },
+  {
+    "category": "Finances",
+    "total_duration": 1472.8700000000001
+  },
+  {
+    "category": "Testing",
+    "total_duration": 1665.453
+  },
+  {
+    "category": "Term",
+    "total_duration": 1693.4570000000012
+  },
+  {
+    "category": "Browsing",
+    "total_duration": 2779.837000000001
+  },
+  {
+    "category": "python",
+    "total_duration": 4028.028999999998
+  },
+  {
+    "category": "music",
+    "total_duration": 5054.267999999997
+  },
+  {
+    "category": "Editing",
+    "total_duration": 5294.546999999998
+  },
+  {
+    "category": "rich-tables",
+    "total_duration": 7841.561999999998
+  },
+  {
+    "category": "video",
+    "total_duration": 8844.924
+  },
+  {
+    "category": "Chats",
+    "total_duration": 10097.328000000003
+  },
+  {
+    "category": "Datavis",
+    "total_duration": 10473.08499999999
+  },
+  {
+    "category": "music vis",
+    "total_duration": 18318.1
+  },
+  {
+    "category": "AFK",
+    "total_duration": 33478.236000000004
+  }
+]

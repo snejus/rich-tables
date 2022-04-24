@@ -252,7 +252,7 @@ def make_albums_table(all_tracks: List[JSONDict]) -> None:
         track["album"] = "singles"
         track["albumartist"] = track["label"]
     for album_name, tracks in it.groupby(all_tracks, get_album):
-        print(detailed_album_panel(list(tracks)))
+        return detailed_album_panel(list(tracks))
 
 
 def make_tracks_table(all_tracks: List[JSONDict]) -> None:

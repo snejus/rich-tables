@@ -1,0 +1,65 @@
+{
+  "title": "Pull Requests",
+  "values": [
+    {
+      "title": "Handle albums without ASCII alphanums",
+      "url": "https://github.com/snejus/beetcamp/pull/28",
+      "state": "MERGED",
+      "additions": 81,
+      "deletions": 37,
+      "repository": {
+        "name": "beetcamp"
+      },
+      "author": "snejus",
+      "isReadByViewer": true,
+      "createdAt": "2022-04-03T19:49:35Z",
+      "updatedAt": "2022-04-03T20:07:05Z",
+      "reviewDecision": null,
+      "participants": [
+        "snejus"
+      ],
+      "body": "### Fixed\n\n* Fixed importing of officially purchased Bandcamp tracks which have **Visit {label_url}** in their `COMMENT` field (at least for FLAC files) when the album name does not contain a single ASCII alphanumeric character. We here use the album name to guess the release url, and in this case the plugin has previously been failing to take into account this edge case and failed the import process immediately.\n\n[0.13.2]: https://github.com/snejus/beetcamp/releases/tag/0.13.2\n",
+      "files": [
+        {
+          "additions": 8,
+          "deletions": 0,
+          "path": "CHANGELOG.md"
+        },
+        {
+          "additions": 35,
+          "deletions": 15,
+          "path": "beetsplug/bandcamp/__init__.py"
+        },
+        {
+          "additions": 1,
+          "deletions": 1,
+          "path": "pyproject.toml"
+        },
+        {
+          "additions": 3,
+          "deletions": 21,
+          "path": "tests/test_real_queries.py"
+        },
+        {
+          "additions": 34,
+          "deletions": 0,
+          "path": "tests/test_search.py"
+        }
+      ],
+      "comments": [
+        {
+          "author": "sonarcloud",
+          "body": "Kudos, SonarCloud Quality Gate passed! ![Quality Gate passed](https://sonarsource.github.io/sonarcloud-github-static-resources/v2/checks/QualityGateBadge/passed-16px.png)",
+          "createdAt": "2022-04-03T19:50:26Z"
+        },
+        {
+          "author": "sonarcloud",
+          "body": "Please retry analysis of this Pull-Request directly on [SonarCloud]",
+          "createdAt": "2022-04-03T19:50:26Z"
+        }
+      ],
+      "reviews": [],
+      "reviewThreads": []
+    }
+  ]
+}
