@@ -1,4 +1,5 @@
 import itertools as it
+import operator as op
 import random
 import re
 import time
@@ -20,9 +21,11 @@ from typing import (
 
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
+from ordered_set import OrderedSet
 from pycountry import countries
 from rich import box
 from rich.align import Align
+from rich.bar import Bar
 from rich.console import Console, ConsoleRenderable, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -54,12 +57,6 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str, after: str, junk: str = " qwertyuiopasdfghjkllzxcvbnm"
 ) -> str:
-    # def preparse(value: str) -> str:
-    #     return value.strip().replace("[]", "~")
-
-    # before = preparse(before)
-    # after = preparse(after)
-
     matcher = SequenceMatcher(lambda x: x not in junk, autojunk=False, a=before, b=after)
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
@@ -86,7 +83,7 @@ def time2human(
     timestamp: Union[int, str], acc: int = 1, use_colors=False, pad: bool = True
 ) -> str:
     if isinstance(timestamp, str):
-        seconds = int(parse(timestamp).timestamp())
+        seconds = parse(timestamp).timestamp()
     else:
         seconds = timestamp
     if not seconds:
@@ -99,7 +96,9 @@ def time2human(
 
 
 def make_console(**kwargs: Any) -> Console:
-    default: JSONDict = dict(force_terminal=True, force_interactive=True)
+    default: JSONDict = dict(
+        force_terminal=True, force_interactive=True, emoji_variant="emoji"
+    )
     return Console(**{**default, **kwargs})
 
 
@@ -138,7 +137,7 @@ class NewTable(Table):
         self.add_row(*(transform(item.get(c) or "", c) for c in self.colnames))
 
 
-def new_table(*args: Any, **kwargs: Any) -> Table:
+def new_table(*args: Any, **kwargs: Any) -> NewTable:
     default: JSONDict = dict(
         border_style="black",
         show_edge=False,
@@ -219,6 +218,49 @@ def colored_split(string: str) -> str:
     return "  ".join(map(format_with_color, sorted(split_pat.split(string))))
 
 
+def progress_bar(count: SupportsFloat, total_count: SupportsFloat) -> Bar:
+    count = float(count)
+    ratio = count / float(total_count) if total_count else 0
+    random.seed(str(total_count))
+    rand = partial(random.randint, 50, 180)
+
+    def norm():
+        return round(rand() * ratio)
+
+    color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
+    return Bar(float(total_count), 0, count, color=color)
+
+
+def get_val(obj: JSONDict, field: str) -> str:
+    return FIELDS_MAP[field](obj[field]) if obj.get(field) else ""
+
+
+def counts_table(data: List[JSONDict]) -> Table:
+    keys = set(data[0])
+    count_col_name = "count"
+    if count_col_name not in keys:
+        for key, val in data[0].items():
+            if isinstance(val, (int, float)):
+                count_col_name = key
+
+    all_counts = list(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
+    if min(all_counts) > 1:
+        all_counts = list(map(int, all_counts))
+    max_count = max(all_counts)
+
+    headers = [*(keys - {count_col_name}), count_col_name]
+    table = new_table(*headers, overflow="fold", vertical="middle")
+    for item, count_val in zip(data, all_counts):
+        table.add_row(
+            *map(lambda x: get_val(item, x), headers),
+            progress_bar(count_val, max_count),
+        )
+    if count_col_name in {"duration", "total_duration"}:
+        table.caption = "Total " + duration2human(float(sum(all_counts)), 2)
+        table.caption_justify = "left"
+    return table
+
+
 FIELDS_MAP: Dict[str, Callable] = defaultdict(
     lambda: str,
     albumtype=lambda x: colored_split(x.replace("compilation", "comp")),
@@ -276,5 +318,6 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     **{"from": format_with_color},
     to=format_with_color,
     creditText=md_panel,
-    # subject=format_with_color,
+    duration=lambda x: duration2human(x, 2),
+    total_duration=lambda x: duration2human(x, 2),
 )
