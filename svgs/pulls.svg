@@ -1,0 +1,164 @@
+<svg width="1248.0" height="1044" viewBox="0 0 1248.0 1044"
+     xmlns="http://www.w3.org/2000/svg">
+    <style>
+        @font-face {
+            font-family: "Fira Code";
+            src: local("FiraCode-Regular"),
+                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2") format("woff2"),
+                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff") format("woff");
+            font-style: normal;
+            font-weight: 400;
+        }
+        @font-face {
+            font-family: "Fira Code";
+            src: local("FiraCode-Bold"),
+                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2") format("woff2"),
+                 url("https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Bold.woff") format("woff");
+            font-style: bold;
+            font-weight: 700;
+        }
+        span {
+            display: inline-block;
+            white-space: pre;
+            vertical-align: top;
+            font-size: 18px;
+            font-family:'Fira Code','Cascadia Code',Monaco,Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .blink {
+           animation: blinker 1s infinite;
+        }
+        @keyframes blinker {
+            from { opacity: 1.0; }
+            50% { opacity: 0.3; }
+            to { opacity: 1.0; }
+        }
+        #wrapper {
+            padding: 140px;
+            padding-top: 100px;
+        }
+        #terminal {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #0c0c0c;
+            border-radius: 14px;
+            outline: 1px solid #484848;
+        }
+        #terminal:after {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            content: '';
+            border-radius: 14px;
+            background: rgb(71,77,102);
+            background: linear-gradient(90deg, #804D69 0%, #4E4B89 100%);
+            transform: rotate(-4.5deg);
+            z-index: -1;
+        }
+        #terminal-header {
+            position: relative;
+            width: 100%;
+            background-color: #2e2e2e;
+            margin-bottom: 12px;
+            font-weight: bold;
+            border-radius: 14px 14px 0 0;
+            color: #f2f2f2;
+            font-size: 18px;
+            box-shadow: inset 0px -1px 0px 0px #4e4e4e,
+                        inset 0px -4px 8px 0px #1a1a1a;
+        }
+        #terminal-title-tab {
+            display: inline-block;
+            margin-top: 14px;
+            margin-left: 124px;
+            font-family: sans-serif;
+            padding: 14px 28px;
+            border-radius: 6px 6px 0 0;
+            background-color: #0c0c0c;
+            box-shadow: inset 0px 1px 0px 0px #4e4e4e,
+                        0px -4px 4px 0px #1e1e1e,
+                        inset 1px 0px 0px 0px #4e4e4e,
+                        inset -1px 0px 0px 0px #4e4e4e;
+        }
+        #terminal-traffic-lights {
+            position: absolute;
+            top: 24px;
+            left: 20px;
+        }
+        #terminal-body {
+            line-height: 22px;
+            padding: 14px;
+        }
+        .r1 {color: #f2f2f2; text-decoration-color: #f2f2f2;background-color: #0c0c0c;}
+.r2 {color: #23d18b; text-decoration-color: #23d18b;background-color: #0c0c0c;}
+.r3 {font-weight: bold;color: #f2f2f2; text-decoration-color: #f2f2f2;;background-color: #0c0c0c;}
+.r4 {color: #e5e5e5; text-decoration-color: #e5e5e5;background-color: #0c0c0c;}
+.r5 {color: #0c0c0c; text-decoration-color: #0c0c0c;background-color: #0c0c0c;}
+.r6 {color: #e5e5e5; text-decoration-color: #e5e5e5; font-weight: bold;background-color: #0c0c0c;}
+.r7 {color: #11a8cd; text-decoration-color: #11a8cd; font-weight: bold;background-color: #0c0c0c;}
+.r8 {color: #546d3c; text-decoration-color: #546d3c; font-weight: bold;background-color: #0c0c0c;}
+.r9 {color: #cd3131; text-decoration-color: #cd3131; font-weight: bold;background-color: #0c0c0c;}
+.r10 {color: #e5e510; text-decoration-color: #e5e510; font-weight: bold;background-color: #0c0c0c;}
+.r11 {color: #0dbc79; text-decoration-color: #0dbc79; font-weight: bold; font-style: italic;background-color: #0c0c0c;}
+.r12 {color: #e5e5e5; text-decoration-color: #e5e5e5; background-color: #0c0c0c}
+.r13 {color: #bc3fbc; text-decoration-color: #bc3fbc; font-weight: bold;background-color: #0c0c0c;}
+.r14 {color: #0dbc79; text-decoration-color: #0dbc79; font-weight: bold;background-color: #0c0c0c;}
+.r15 {color: #cd3131; text-decoration-color: #cd3131;background-color: #0c0c0c;}
+.r16 {color: #4b3e45; text-decoration-color: #4b3e45; font-weight: bold;background-color: #0c0c0c;}
+    </style>
+    <foreignObject x="0" y="0" width="100%" height="100%">
+        <body xmlns="http://www.w3.org/1999/xhtml">
+            <div id="wrapper">
+                <div id="terminal">
+                    <div id='terminal-header'>
+                        <svg id="terminal-traffic-lights" width="90" height="21" viewBox="0 0 90 21" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="14" cy="8" r="8" fill="#ff6159"/>
+                            <circle cx="38" cy="8" r="8" fill="#ffbd2e"/>
+                            <circle cx="62" cy="8" r="8" fill="#28c941"/>
+                        </svg>
+                        <div id="terminal-title-tab">Rich</div>
+                    </div>
+                    <div id='terminal-body'>
+                        <div><span class="r1"></span><span class="r1">                                                                                </span></div>
+<div><span class="r2">──────────────────── </span><span class="r3">Handle albums without ASCII alphanums</span><span class="r2"> ─────────────────────</span></div>
+<div><span class="r4">                                        </span><span class="r5">┃</span><span class="r4">                                       </span></div>
+<div><span class="r4">                                        </span><span class="r5">┃</span><span class="r4">                                       </span></div>
+<div><span class="r4">    </span><span class="r6">additions</span><span class="r4">      </span><span class="r5">┃</span><span class="r4"> </span><span class="r7">81</span><span class="r4">                 </span><span class="r5">┃</span><span class="r4">                 </span><span class="r6">Fixed</span><span class="r4">                 </span></div>
+<div><span class="r4">    </span><span class="r6">author</span><span class="r4">         </span><span class="r5">│</span><span class="r4"> </span><span class="r8">snejus</span><span class="r4">             </span><span class="r5">┃</span><span class="r4">                                       </span></div>
+<div><span class="r4">    </span><span class="r6">createdAt</span><span class="r4">      </span><span class="r5">│</span><span class="r4"> </span><span class="r9">-20d</span><span class="r4">               </span><span class="r5">┃</span><span class="r4">   </span><span class="r10"> • </span><span class="r4">Fixed importing of officially    </span></div>
+<div><span class="r4">    </span><span class="r6">deletions</span><span class="r4">      </span><span class="r5">│</span><span class="r4"> </span><span class="r7">37</span><span class="r4">                 </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">purchased Bandcamp tracks        </span></div>
+<div><span class="r4">    </span><span class="r6">isReadByViewer</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r11">True</span><span class="r4">               </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">which have </span><span class="r6">Visit {label_url}</span><span class="r4">     </span></div>
+<div><span class="r4">    </span><span class="r6">participants</span><span class="r4">   </span><span class="r5">│</span><span class="r4"> </span><span class="r8">snejus</span><span class="r4">             </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">in their </span><span class="r12">COMMENT</span><span class="r4"> field (at       </span></div>
+<div><span class="r4">    </span><span class="r6">repository</span><span class="r4">     </span><span class="r5">│</span><span class="r4"> beetcamp           </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">least for FLAC files) when the   </span></div>
+<div><span class="r4">    </span><span class="r6">reviewDecision</span><span class="r4"> </span><span class="r5">│</span><span class="r4">                    </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">album name does not contain a    </span></div>
+<div><span class="r4">    </span><span class="r6">state</span><span class="r4">          </span><span class="r5">│</span><span class="r4"> </span><span class="r13">MERGED</span><span class="r4">             </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">single ASCII alphanumeric        </span></div>
+<div><span class="r4">    </span><span class="r6">updatedAt</span><span class="r4">      </span><span class="r5">│</span><span class="r4"> </span><span class="r9">-20d</span><span class="r4">               </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">character. We here use the       </span></div>
+<div><span class="r4">   </span><span class="r6">              files               </span><span class="r4">   </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">album name to guess the          </span></div>
+<div><span class="r4">    </span><span class="r14">   </span><span class="r14">-8</span><span class="r4"> </span><span class="r5">┃</span><span class="r4"> </span><span class="r9">   </span><span class="r4"> </span><span class="r5">┃</span><span class="r4"> </span><span class="r6">CHANGELOG.md</span><span class="r4">          </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">release url, and in this case    </span></div>
+<div><span class="r4">    </span><span class="r14">  </span><span class="r14">-35</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r9">-15</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r6">beetsplug/bandcam…</span><span class="r4">    </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">the plugin has previously been   </span></div>
+<div><span class="r4">    </span><span class="r14">   </span><span class="r14">-1</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r9"> </span><span class="r9">-1</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r6">pyproject.toml</span><span class="r4">        </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">failing to take into account     </span></div>
+<div><span class="r4">    </span><span class="r14">   </span><span class="r14">-3</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r9">-21</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r6">tests/test_real_q…</span><span class="r4">    </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">this edge case and failed the    </span></div>
+<div><span class="r4">    </span><span class="r14">  </span><span class="r14">-34</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r9">   </span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r6">tests/test_search…</span><span class="r4">    </span><span class="r5">┃</span><span class="r4">   </span><span class="r10">   </span><span class="r4">import process immediately.      </span></div>
+<div><span class="r4">                                        </span><span class="r5">┃</span><span class="r4">                                       </span></div>
+<div><span class="r4">                                        </span><span class="r5">┃</span><span class="r4">                                       </span></div>
+<div><span class="r4">                                       </span><span class="r5">┃</span><span class="r4">                                        </span></div>
+<div><span class="r4">                                       </span><span class="r5">│</span><span class="r4">                                        </span></div>
+<div><span class="r4"> </span><span class="r15">╭─  </span><span class="r16">sonarcloud</span><span class="r15"> </span><span class="r9">-20d</span><span class="r15"> ────────────────╮</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r15">╭─  </span><span class="r16">sonarcloud</span><span class="r15"> </span><span class="r9">-20d</span><span class="r15"> ─────────────────╮</span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r15">│</span><span class="r4">                                   </span><span class="r15">│</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r15">│</span><span class="r4">                                    </span><span class="r15">│</span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r15">│</span><span class="r4"> 🌆 </span><span class="r4"><a href="https://sonarsource.github.io/sonarcloud-github-static-resources/v2/checks/QualityGateBadge/passed-16px.png">Quality Gate passed</a></span><span class="r4">            </span><span class="r15">│</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r15">│</span><span class="r4"> Please retry analysis of this      </span><span class="r15">│</span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r15">│</span><span class="r4"> passed!                           </span><span class="r15">│</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r15">│</span><span class="r4"> Pull-Request directly on           </span><span class="r15">│</span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r15">│</span><span class="r4">                                   </span><span class="r15">│</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r15">│</span><span class="r4"> [SonarCloud]                       </span><span class="r15">│</span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r15">╰───────────────────────────────────╯</span><span class="r4"> </span><span class="r5">│</span><span class="r4"> </span><span class="r15">│</span><span class="r4">                                    </span><span class="r15">│</span><span class="r4"> </span></div>
+<div><span class="r4">                                       </span><span class="r5">│</span><span class="r4"> </span><span class="r15">╰────────────────────────────────────╯</span><span class="r4"> </span></div>
+<div><span class="r1"></span><span class="r1">                                                                                </span></div>
+                    </div>
+                </div>
+            </div>
+        </body>
+    </foreignObject>
+</svg>
