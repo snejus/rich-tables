@@ -144,7 +144,7 @@ def new_table(*args: Any, **kwargs: Any) -> NewTable:
         show_header=False,
         highlight=True,
         row_styles=["white"],
-        expand=False,
+        expand=True,
     )
     if args:
         default.update(
@@ -169,9 +169,7 @@ def format_with_color(name: str) -> str:
 
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
     default: JSONDict
-    default = dict(
-        title_align="left", subtitle_align="left", box=box.SIMPLE, expand=True, padding=1
-    )
+    default = dict(title_align="left", subtitle_align="left", box=box.SIMPLE, expand=True)
     if kwargs.pop("align", "") == "center":
         content = Align.center(content)
     return Panel(content, **{**default, **kwargs})
@@ -186,8 +184,8 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
 
 
 def new_tree(values: List[ConsoleRenderable] = [], title: str = "", **kwargs) -> Tree:
-    color = predictably_random_color(title or "")
-    default: JSONDict = dict(style=color, guide_style=color)
+    color = predictably_random_color(title or str(values))
+    default: JSONDict = dict(guide_style=color)
     tree = Tree(wrap(title, "b"), **{**default, **kwargs})
 
     for val in values:
@@ -252,8 +250,7 @@ def counts_table(data: List[JSONDict]) -> Table:
     table = new_table(*headers, overflow="fold", vertical="middle")
     for item, count_val in zip(data, all_counts):
         table.add_row(
-            *map(lambda x: get_val(item, x), headers),
-            progress_bar(count_val, max_count),
+            *map(lambda x: get_val(item, x), headers), progress_bar(count_val, max_count)
         )
     if count_col_name in {"duration", "total_duration"}:
         table.caption = "Total " + duration2human(float(sum(all_counts)), 2)
@@ -294,7 +291,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     else str(x),
     country=get_country,
     data_source=format_with_color,
-    helicopta={1: wrap("", "b red"), 0: "", None: ""}.get,
+    helicopta={1: wrap(" ", "b red"), 0: "", None: ""}.get,
     keywords=lambda x: " ".join(map(colored_with_bg, colored_split(x).split("  ")))
     if isinstance(x, str)
     else x,

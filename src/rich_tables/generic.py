@@ -1,10 +1,12 @@
 import itertools as it
-from collections import ChainMap
+import operator as op
 from functools import singledispatch
 from typing import Any, Dict, Iterable, List, Set, Type, Union
 
-from rich import box
+from ordered_set import OrderedSet
+from rich import box, print
 from rich.align import Align
+from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group
 from rich.errors import NotRenderableError
 from rich.layout import Layout
@@ -17,7 +19,9 @@ from .utils import (
     format_with_color,
     new_table,
     new_tree,
-    wrap
+    predictably_random_color,
+    wrap,
+    make_console,
 )
 
 JSONDict = Dict[str, Any]
@@ -116,11 +120,12 @@ def _float(data: float, header: str = "") -> ConsoleRenderable:
 def _renderable(data: ConsoleRenderable, header: str = "") -> ConsoleRenderable:
     return data
 
+console = make_console()
 
 @flexitable.register(dict)
 def _dict(data: Dict, header: str = ""):
     table = new_table(
-        "", "", show_header=False, border_style="misty_rose1", box=box.MINIMAL
+        "", "", show_header=False, border_style="misty_rose1", box=box.MINIMAL, expand=False
     )
     table.columns[0].style = "bold misty_rose1"
 
@@ -132,8 +137,11 @@ def _dict(data: Dict, header: str = ""):
 
     rends = [table, *rends]
 
+    for rend in rends:
+        print(console.measure(rend))
+        print(console.width)
     if not header:
-        return border_panel(Group(*rends), title=header or key)
+        return Group(*rends)
     return new_tree(rends, title=header or key)
 
 
@@ -142,19 +150,19 @@ def _list(data: List[Any], header: str = ""):
     def only(data_list: Iterable[Any], _type: Type) -> bool:
         return all(map(lambda x: isinstance(x, _type), data_list))
 
-    if len(data) == 1:
-        return flexitable(data[0], "hio")
-
-    table = new_table(show_header=True)
-    common_table = new_table(show_header=True)
     if only(data, str):
         # ["hello", "hi", "bye", ...]
         return " ".join(map(format_with_color, data))
 
+    if len(data) == 1:
+        return flexitable(data[0], header)
+
+    table = new_table(show_header=True)
+
     if only(data, dict):
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
         first_item = data[0]
-        keys: Set[str] = set.union(*map(lambda x: set(x.keys()), data))
+        keys = OrderedSet.union(*map(lambda x: OrderedSet(x.keys()), data))
         vals_types = set(map(type, first_item.values()))
         if (
             len(keys) == 2
@@ -164,28 +172,25 @@ def _list(data: List[Any], header: str = ""):
             # [{"some_count": 10, "some_entity": "entity"}, ...]
             return counts_table(data)
 
-        headers = []
-        key_uniq_vals = zip(
-            keys, map(lambda x: set(map(str, map(lambda y: y.get(x) or "", data))), keys)
-        )
-        for col, values in sorted(
-            key_uniq_vals, key=lambda x: (len(x[1]), len("".join(x[1])))
-        ):
-            if len(data) > 1 and len(values) == 1:
-                common_table.add_row(wrap(col, "b"), *values)
-            else:
-                table.add_column(col)
+        color = predictably_random_color(str(keys))
+        col_vals = zip(keys, map(lambda x: list(map(op.itemgetter(x), data)), keys))
+        for col, values in col_vals:
+            table.add_column(col)
 
-        # aux_table = new_table(*headers, show_header=False)
         for item in data:
-            # for col, value in item.items():
-            # add_to_table([], table, flexitable(item, header), header)
             table.take_dict_item(item, transform=flexitable)
     else:
         for item in data:
             table.add_row(*flexitable(item, header))
-            # add_to_table(, table, flexitable(item, header), header)
 
-    return border_panel(
-        (Group(common_table, table) if common_table.row_count else table), title=header
-    )
+    table.expand = False
+    # table.collapse_padding = True
+    table.box = None
+    color = predictably_random_color(header)
+    for col in table.columns:
+        col.header = wrap(f" {col.header} ", f"i b {color} on grey7")
+
+    if header:
+        table.show_header = False
+        return border_panel(table, padding=1, box=box.ROUNDED, title=wrap(header, "b"), border_style="dim " + color, expand=False)
+    return table

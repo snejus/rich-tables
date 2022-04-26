@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 from dateutil.parser import parse
 from ordered_set import OrderedSet
 from rich import box
+from rich.align import Align
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import Console, ConsoleRenderable, Group
@@ -25,6 +26,7 @@ from .utils import (
     FIELDS_MAP,
     border_panel,
     format_with_color,
+    get_val,
     make_difftext,
     md_panel,
     new_table,
@@ -94,13 +96,30 @@ def diff_table(group_to_data: GroupsDict) -> None:
 
 
 def pulls_table(data: List[JSONDict]) -> ConsoleRenderable:
-    def comment_panel(comment: Dict[str, str], **kwargs: Any) -> Panel:
-        return md_panel(
-            comment["body"],
+    def review_panel(
+        comment: Dict[str, str], *renderables: ConsoleRenderable, **kwargs: Any
+    ) -> Panel:
+        return border_panel(
+            Group(md_panel(comment["body"]), *renderables),
             title=" ".join(
                 map(lambda x: get_val(comment, x), ["state", "author", "createdAt"])
             ),
-            border_style="green" if comment.get("isResolved") else "red",
+            border_style="green"
+            if comment.get("isResolved")
+            else "red"
+            if "isResolved" in comment
+            else "",
+        )
+
+    def comment_panel(comment: Dict[str, str]) -> Panel:
+        return md_panel(
+            comment["body"],
+            title=" ".join(map(lambda x: get_val(comment, x), ["author", "createdAt"])),
+            border_style="green"
+            if comment.get("isResolved")
+            else "red"
+            if "isResolved" in comment
+            else "",
         )
 
     def syntax_panel(content: str, lexer: str, **kwargs: Any) -> Panel:
@@ -160,31 +179,31 @@ def pulls_table(data: List[JSONDict]) -> ConsoleRenderable:
         get_val(pr, "files"),
     )
 
-    reviews = []
+    contents: List[Tuple[str, ConsoleRenderable]] = []
     for review in pr.get("reviews") or []:
-        if review["body"]:
-            reviews.append(comment_panel(review))
-
-    files = []
-    rthreads = pr.get("reviewThreads") or []
-    for file, threads in it.groupby(rthreads, op.itemgetter("path")):
-        rows: List[ConsoleRenderable] = []
-        for thread in threads:
-            rows.append(syntax_panel(thread["comments"][0].get("diffHunk") or "", "diff"))
-            for comment in thread.get("comments") or []:
+        files = []
+        for file, comments in it.groupby(review["comments"], op.itemgetter("path")):
+            rows: List[ConsoleRenderable] = []
+            for comment in comments or []:
+                rows.append(syntax_panel(comment.get("diffHunk") or "", "diff"))
                 rows.append(comment_panel(comment))
-        files.append(border_panel(Group(*rows), title=wrap(thread["path"], "b magenta")))
+            files.append(border_panel(Group(*rows), title=wrap(file, "b magenta")))
+        contents.append(
+            (
+                review["createdAt"],
+                review_panel(review, simple_panel(new_table("", rows=[files]))),
+            )
+        )
 
-    comments = []
     for comment in pr.get("comments") or []:
-        comments.append(comment_panel(comment))
+        contents.append((comment["createdAt"], comment_panel(comment)))
 
     info_section = [simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE)]
     return Group(
         "",
         Rule(wrap(pr.get("title", " "), "b")),
         new_table(rows=[info_section]),
-        new_table(rows=[reviews, files, comments]),
+        *map(op.itemgetter(1), sorted(contents, key=op.itemgetter(0))),
     )
 
 
@@ -244,10 +263,6 @@ def calendar_table(events: List[JSONDict]) -> Table:
         for event in day_events:
             table.add_row(*op.itemgetter(*keys)(event), style=event["color"])
     return table
-
-
-def get_val(obj: JSONDict, field: str) -> str:
-    return FIELDS_MAP[field](obj[field]) if obj.get(field) else ""
 
 
 def tasks_table(tasks: List[JSONDict]) -> None:
