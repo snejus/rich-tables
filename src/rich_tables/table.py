@@ -42,8 +42,13 @@ GroupsDict = Dict[str, List]
 
 
 def get_theme():
-    tpath = path.join(environ.get("XDG_CONFIG_HOME") or "~/.config", "rich", "config.ini")
-    return Theme.from_file(open(tpath))
+    return Theme.read(
+        path.join(
+            environ.get("XDG_CONFIG_HOME") or path.expanduser("~/.config"),
+            "rich",
+            "config.ini",
+        )
+    )
 
 
 def get_console(**kwargs):
@@ -100,26 +105,32 @@ def pulls_table(data: List[JSONDict]) -> ConsoleRenderable:
         comment: Dict[str, str], *renderables: ConsoleRenderable, **kwargs: Any
     ) -> Panel:
         return border_panel(
-            Group(md_panel(comment["body"]), *renderables),
+            Group(md_panel(comment["body"], border_style="dim"), *renderables),
             title=" ".join(
                 map(lambda x: get_val(comment, x), ["state", "author", "createdAt"])
             ),
-            border_style="green"
-            if comment.get("isResolved")
-            else "red"
-            if "isResolved" in comment
-            else "",
+            border_style="dim "
+            + (
+                "green"
+                if comment.get("isResolved")
+                else "red"
+                if "isResolved" in comment
+                else ""
+            ),
         )
 
     def comment_panel(comment: Dict[str, str]) -> Panel:
         return md_panel(
             comment["body"],
             title=" ".join(map(lambda x: get_val(comment, x), ["author", "createdAt"])),
-            border_style="green"
-            if comment.get("isResolved")
-            else "red"
-            if "isResolved" in comment
-            else "",
+            border_style="dim "
+            + (
+                "green"
+                if comment.get("isResolved")
+                else "red"
+                if "isResolved" in comment
+                else ""
+            ),
         )
 
     def syntax_panel(content: str, lexer: str, **kwargs: Any) -> Panel:
@@ -132,7 +143,7 @@ def pulls_table(data: List[JSONDict]) -> ConsoleRenderable:
                 word_wrap=True,
             ),
             style=kwargs.get("style") or "black",
-            width=200,
+            width=console.width,
             title=kwargs.get("title") or "",
         )
 

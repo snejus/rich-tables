@@ -6,7 +6,7 @@ from freezegun import freeze_time
 from rich_tables.table import draw_data
 from rich_tables.utils import make_console
 
-console = make_console(record=True, width=int(os.environ.get("COLUMNS", 120)) - 10)
+console = make_console(record=True, width=124)
 
 
 @freeze_time("2022-04-01")

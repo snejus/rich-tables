@@ -1,4 +1,4 @@
-<svg width="1602.0" height="890" viewBox="0 0 1602.0 890"
+<svg width="1767.1999999999998" height="890" viewBox="0 0 1767.1999999999998 890"
      xmlns="http://www.w3.org/2000/svg">
     <style>
         @font-face {
@@ -17,30 +17,30 @@
             font-style: bold;
             font-weight: 700;
         }
-        .rich-svg-182246222-terminal-wrapper span {
+        .rich-svg-4070735541-terminal-wrapper span {
             display: inline-block;
             white-space: pre;
             vertical-align: top;
             font-size: 18px;
             font-family:'Rich Fira Code','Cascadia Code',Monaco,Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace;
         }
-        .rich-svg-182246222-terminal-wrapper a {
+        .rich-svg-4070735541-terminal-wrapper a {
             text-decoration: none;
             color: inherit;
         }
-        .rich-svg-182246222-terminal-body .blink {
-           animation: rich-svg-182246222-blinker 1s infinite;
+        .rich-svg-4070735541-terminal-body .blink {
+           animation: rich-svg-4070735541-blinker 1s infinite;
         }
-        @keyframes rich-svg-182246222-blinker {
+        @keyframes rich-svg-4070735541-blinker {
             from { opacity: 1.0; }
             50% { opacity: 0.3; }
             to { opacity: 1.0; }
         }
-        .rich-svg-182246222-terminal-wrapper {
+        .rich-svg-4070735541-terminal-wrapper {
             padding: 140px;
             padding-top: 100px;
         }
-        .rich-svg-182246222-terminal {
+        .rich-svg-4070735541-terminal {
             position: relative;
             display: flex;
             flex-direction: column;
@@ -49,7 +49,7 @@
             border-radius: 14px;
             box-shadow: 0 0 0 1px #484848;
         }
-        .rich-svg-182246222-terminal:after {
+        .rich-svg-4070735541-terminal:after {
             position: absolute;
             width: 100%;
             height: 100%;
@@ -60,7 +60,7 @@
             transform: rotate(-4.5deg);
             z-index: -1;
         }
-        .rich-svg-182246222-terminal-header {
+        .rich-svg-4070735541-terminal-header {
             position: relative;
             width: 100%;
             background-color: #2e2e2e;
@@ -72,7 +72,7 @@
             box-shadow: inset 0px -1px 0px 0px #4e4e4e,
                         inset 0px -4px 8px 0px #1a1a1a;
         }
-        .rich-svg-182246222-terminal-title-tab {
+        .rich-svg-4070735541-terminal-title-tab {
             display: inline-block;
             margin-top: 14px;
             margin-left: 124px;
@@ -85,97 +85,97 @@
                         inset 1px 0px 0px 0px #4e4e4e,
                         inset -1px 0px 0px 0px #4e4e4e;
         }
-        .rich-svg-182246222-terminal-traffic-lights {
+        .rich-svg-4070735541-terminal-traffic-lights {
             position: absolute;
             top: 24px;
             left: 20px;
         }
-        .rich-svg-182246222-terminal-body {
+        .rich-svg-4070735541-terminal-body {
             line-height: 22px;
             padding: 14px;
         }
-        .rich-svg-182246222-terminal-body .r1 {color: #f2f2f2; text-decoration-color: #f2f2f2;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r2 {color: #ffd7d7; text-decoration-color: #ffd7d7; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r3 {color: #0c0c0c; text-decoration-color: #0c0c0c;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r4 {color: #e5e5e5; text-decoration-color: #e5e5e5;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r5 {color: #8b898a; text-decoration-color: #8b898a; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r6 {color: #000000; text-decoration-color: #000000; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r7 {color: #b97791; text-decoration-color: #b97791; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r8 {color: #757c5c; text-decoration-color: #757c5c; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r9 {color: #af8c60; text-decoration-color: #af8c60; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r10 {color: #823f8e; text-decoration-color: #823f8e; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r11 {color: #010001; text-decoration-color: #010001; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r12 {color: #5a6f9c; text-decoration-color: #5a6f9c; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r13 {color: #010101; text-decoration-color: #010101; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r14 {color: #5a9661; text-decoration-color: #5a9661; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r15 {color: #020103; text-decoration-color: #020103; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r16 {color: #8a657b; text-decoration-color: #8a657b; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r17 {color: #030205; text-decoration-color: #030205; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r18 {color: #939ca8; text-decoration-color: #939ca8; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r19 {color: #030306; text-decoration-color: #030306; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r20 {color: #807684; text-decoration-color: #807684; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r21 {color: #040307; text-decoration-color: #040307; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r22 {color: #654f76; text-decoration-color: #654f76; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r23 {color: #9277a5; text-decoration-color: #9277a5; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r24 {color: #06050b; text-decoration-color: #06050b; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r25 {color: #9eae75; text-decoration-color: #9eae75; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r26 {color: #090711; text-decoration-color: #090711; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r27 {color: #4cad5c; text-decoration-color: #4cad5c; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r28 {color: #0b0915; text-decoration-color: #0b0915; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r29 {color: #596a7b; text-decoration-color: #596a7b; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r30 {color: #0b0a16; text-decoration-color: #0b0a16; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r31 {color: #6b6343; text-decoration-color: #6b6343; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r32 {color: #110f20; text-decoration-color: #110f20; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r33 {color: #654a74; text-decoration-color: #654a74; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r34 {color: #131024; text-decoration-color: #131024; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r35 {color: #54997a; text-decoration-color: #54997a; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r36 {color: #15132a; text-decoration-color: #15132a; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r37 {color: #6481b3; text-decoration-color: #6481b3; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r38 {color: #16132b; text-decoration-color: #16132b; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r39 {color: #91544e; text-decoration-color: #91544e; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r40 {color: #27224c; text-decoration-color: #27224c; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r41 {color: #7c4eaa; text-decoration-color: #7c4eaa; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-182246222-terminal-body .r42 {color: #473e8a; text-decoration-color: #473e8a; background-color: #0c0c0c}
-.rich-svg-182246222-terminal-body .r43 {color: #7f7f7f; text-decoration-color: #7f7f7f; font-style: italic;color: #f2f2f2; text-decoration-color: #f2f2f2;;background-color: #0c0c0c;}
+        .rich-svg-4070735541-terminal-body .r1 {color: #f2f2f2; text-decoration-color: #f2f2f2;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r2 {color: #ffd7d7; text-decoration-color: #ffd7d7; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r3 {color: #0c0c0c; text-decoration-color: #0c0c0c;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r4 {color: #e5e5e5; text-decoration-color: #e5e5e5;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r5 {color: #8b898a; text-decoration-color: #8b898a; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r6 {color: #000000; text-decoration-color: #000000; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r7 {color: #b97791; text-decoration-color: #b97791; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r8 {color: #757c5c; text-decoration-color: #757c5c; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r9 {color: #af8c60; text-decoration-color: #af8c60; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r10 {color: #823f8e; text-decoration-color: #823f8e; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r11 {color: #010001; text-decoration-color: #010001; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r12 {color: #5a6f9c; text-decoration-color: #5a6f9c; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r13 {color: #010101; text-decoration-color: #010101; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r14 {color: #5a9661; text-decoration-color: #5a9661; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r15 {color: #020103; text-decoration-color: #020103; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r16 {color: #8a657b; text-decoration-color: #8a657b; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r17 {color: #030205; text-decoration-color: #030205; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r18 {color: #939ca8; text-decoration-color: #939ca8; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r19 {color: #030306; text-decoration-color: #030306; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r20 {color: #807684; text-decoration-color: #807684; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r21 {color: #040307; text-decoration-color: #040307; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r22 {color: #654f76; text-decoration-color: #654f76; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r23 {color: #9277a5; text-decoration-color: #9277a5; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r24 {color: #06050b; text-decoration-color: #06050b; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r25 {color: #9eae75; text-decoration-color: #9eae75; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r26 {color: #090711; text-decoration-color: #090711; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r27 {color: #4cad5c; text-decoration-color: #4cad5c; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r28 {color: #0b0915; text-decoration-color: #0b0915; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r29 {color: #596a7b; text-decoration-color: #596a7b; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r30 {color: #0b0a16; text-decoration-color: #0b0a16; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r31 {color: #6b6343; text-decoration-color: #6b6343; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r32 {color: #110f20; text-decoration-color: #110f20; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r33 {color: #654a74; text-decoration-color: #654a74; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r34 {color: #131024; text-decoration-color: #131024; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r35 {color: #54997a; text-decoration-color: #54997a; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r36 {color: #15132a; text-decoration-color: #15132a; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r37 {color: #6481b3; text-decoration-color: #6481b3; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r38 {color: #16132b; text-decoration-color: #16132b; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r39 {color: #91544e; text-decoration-color: #91544e; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r40 {color: #27224c; text-decoration-color: #27224c; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r41 {color: #7c4eaa; text-decoration-color: #7c4eaa; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-4070735541-terminal-body .r42 {color: #473e8a; text-decoration-color: #473e8a; background-color: #0c0c0c}
+.rich-svg-4070735541-terminal-body .r43 {color: #7f7f7f; text-decoration-color: #7f7f7f; font-style: italic;color: #f2f2f2; text-decoration-color: #f2f2f2;;background-color: #0c0c0c;}
     </style>
     <foreignObject x="0" y="0" width="100%" height="100%">
         <body xmlns="http://www.w3.org/1999/xhtml">
-            <div class="rich-svg-182246222-terminal-wrapper">
-                <div class="rich-svg-182246222-terminal">
-                    <div class="rich-svg-182246222-terminal-header">
-                        <svg class="rich-svg-182246222-terminal-traffic-lights" width="90" height="21" viewBox="0 0 90 21" xmlns="http://www.w3.org/2000/svg">
+            <div class="rich-svg-4070735541-terminal-wrapper">
+                <div class="rich-svg-4070735541-terminal">
+                    <div class="rich-svg-4070735541-terminal-header">
+                        <svg class="rich-svg-4070735541-terminal-traffic-lights" width="90" height="21" viewBox="0 0 90 21" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="14" cy="8" r="8" fill="#ff6159"/>
                             <circle cx="38" cy="8" r="8" fill="#ffbd2e"/>
                             <circle cx="62" cy="8" r="8" fill="#28c941"/>
                         </svg>
-                        <div class="rich-svg-182246222-terminal-title-tab">Rich</div>
+                        <div class="rich-svg-4070735541-terminal-title-tab">Rich</div>
                     </div>
-                    <div class="rich-svg-182246222-terminal-body">
-                        <div><span class="r2"> category     </span><span class="r3"> </span><span class="r2"> total_duration </span><span class="r3"> </span><span class="r2">                                                                              </span></div>
-<div><span class="r3">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span></div>
-<div><span class="r4"> </span><span class="r5">Work admin</span><span class="r4">   </span><span class="r3"> </span><span class="r4">                </span><span class="r3"> </span><span class="r4"> </span><span class="r6">                                                                            </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r7">photos</span><span class="r4">       </span><span class="r3"> </span><span class="r4">   2s           </span><span class="r3"> </span><span class="r4"> </span><span class="r6">                                                                            </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r8">zsh</span><span class="r4">          </span><span class="r3"> </span><span class="r4">  30s           </span><span class="r3"> </span><span class="r4"> </span><span class="r6">                                                                            </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r9">Refactoring</span><span class="r4">  </span><span class="r3"> </span><span class="r4">   1min  52s    </span><span class="r3"> </span><span class="r4"> </span><span class="r6">▎                                                                           </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r10">configs</span><span class="r4">      </span><span class="r3"> </span><span class="r4">   4min   6s    </span><span class="r3"> </span><span class="r4"> </span><span class="r11">▌                                                                           </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r12">Reading Docs</span><span class="r4"> </span><span class="r3"> </span><span class="r4">   4min  36s    </span><span class="r3"> </span><span class="r4"> </span><span class="r13">▋                                                                           </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r14">Emails</span><span class="r4">       </span><span class="r3"> </span><span class="r4">  13min  20s    </span><span class="r3"> </span><span class="r4"> </span><span class="r15">█▊                                                                          </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r16">beetcamp</span><span class="r4">     </span><span class="r3"> </span><span class="r4">  22min  10s    </span><span class="r3"> </span><span class="r4"> </span><span class="r17">███                                                                         </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r18">Finances</span><span class="r4">     </span><span class="r3"> </span><span class="r4">  24min  32s    </span><span class="r3"> </span><span class="r4"> </span><span class="r19">███▎                                                                        </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r20">Testing</span><span class="r4">      </span><span class="r3"> </span><span class="r4">  27min  45s    </span><span class="r3"> </span><span class="r4"> </span><span class="r21">███▊                                                                        </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r22">Term</span><span class="r4">         </span><span class="r3"> </span><span class="r4">  28min  13s    </span><span class="r3"> </span><span class="r4"> </span><span class="r21">███▊                                                                        </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r23">Browsing</span><span class="r4">     </span><span class="r3"> </span><span class="r4">  46min  19s    </span><span class="r3"> </span><span class="r4"> </span><span class="r24">██████▎                                                                     </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r25">python</span><span class="r4">       </span><span class="r3"> </span><span class="r4">   1h   7min    </span><span class="r3"> </span><span class="r4"> </span><span class="r26">█████████▏                                                                  </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r27">music</span><span class="r4">        </span><span class="r3"> </span><span class="r4">   1h  24min    </span><span class="r3"> </span><span class="r4"> </span><span class="r28">███████████▍                                                                </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r29">Editing</span><span class="r4">      </span><span class="r3"> </span><span class="r4">   1h  28min    </span><span class="r3"> </span><span class="r4"> </span><span class="r30">████████████                                                                </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r31">rich-tables</span><span class="r4">  </span><span class="r3"> </span><span class="r4">   2h  10min    </span><span class="r3"> </span><span class="r4"> </span><span class="r32">█████████████████▊                                                          </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r33">video</span><span class="r4">        </span><span class="r3"> </span><span class="r4">   2h  27min    </span><span class="r3"> </span><span class="r4"> </span><span class="r34">████████████████████                                                        </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r35">Chats</span><span class="r4">        </span><span class="r3"> </span><span class="r4">   2h  48min    </span><span class="r3"> </span><span class="r4"> </span><span class="r36">██████████████████████▉                                                     </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r37">Datavis</span><span class="r4">      </span><span class="r3"> </span><span class="r4">   2h  54min    </span><span class="r3"> </span><span class="r4"> </span><span class="r38">███████████████████████▊                                                    </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r39">music vis</span><span class="r4">    </span><span class="r3"> </span><span class="r4">   5h   5min    </span><span class="r3"> </span><span class="r4"> </span><span class="r40">█████████████████████████████████████████▌                                  </span><span class="r4"> </span></div>
-<div><span class="r4"> </span><span class="r41">AFK</span><span class="r4">          </span><span class="r3"> </span><span class="r4">   9h  17min    </span><span class="r3"> </span><span class="r4"> </span><span class="r42">████████████████████████████████████████████████████████████████████████████</span><span class="r4"> </span></div>
-<div><span class="r43">Total   1d   7h                                                                                               </span></div>
-<div><span class="r1"></span><span class="r1">                                                                                                              </span></div>
+                    <div class="rich-svg-4070735541-terminal-body">
+                        <div><span class="r2"> category     </span><span class="r3"> </span><span class="r2"> total_duration </span><span class="r3"> </span><span class="r2">                                                                                            </span></div>
+<div><span class="r3">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span></div>
+<div><span class="r4"> </span><span class="r5">Work admin</span><span class="r4">   </span><span class="r3"> </span><span class="r4">                </span><span class="r3"> </span><span class="r4"> </span><span class="r6">                                                                                          </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r7">photos</span><span class="r4">       </span><span class="r3"> </span><span class="r4">   2s           </span><span class="r3"> </span><span class="r4"> </span><span class="r6">                                                                                          </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r8">zsh</span><span class="r4">          </span><span class="r3"> </span><span class="r4">  30s           </span><span class="r3"> </span><span class="r4"> </span><span class="r6">                                                                                          </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r9">Refactoring</span><span class="r4">  </span><span class="r3"> </span><span class="r4">   1min  52s    </span><span class="r3"> </span><span class="r4"> </span><span class="r6">▎                                                                                         </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r10">configs</span><span class="r4">      </span><span class="r3"> </span><span class="r4">   4min   6s    </span><span class="r3"> </span><span class="r4"> </span><span class="r11">▋                                                                                         </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r12">Reading Docs</span><span class="r4"> </span><span class="r3"> </span><span class="r4">   4min  36s    </span><span class="r3"> </span><span class="r4"> </span><span class="r13">▋                                                                                         </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r14">Emails</span><span class="r4">       </span><span class="r3"> </span><span class="r4">  13min  20s    </span><span class="r3"> </span><span class="r4"> </span><span class="r15">██▏                                                                                       </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r16">beetcamp</span><span class="r4">     </span><span class="r3"> </span><span class="r4">  22min  10s    </span><span class="r3"> </span><span class="r4"> </span><span class="r17">███▌                                                                                      </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r18">Finances</span><span class="r4">     </span><span class="r3"> </span><span class="r4">  24min  32s    </span><span class="r3"> </span><span class="r4"> </span><span class="r19">███▉                                                                                      </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r20">Testing</span><span class="r4">      </span><span class="r3"> </span><span class="r4">  27min  45s    </span><span class="r3"> </span><span class="r4"> </span><span class="r21">████▍                                                                                     </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r22">Term</span><span class="r4">         </span><span class="r3"> </span><span class="r4">  28min  13s    </span><span class="r3"> </span><span class="r4"> </span><span class="r21">████▌                                                                                     </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r23">Browsing</span><span class="r4">     </span><span class="r3"> </span><span class="r4">  46min  19s    </span><span class="r3"> </span><span class="r4"> </span><span class="r24">███████▍                                                                                  </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r25">python</span><span class="r4">       </span><span class="r3"> </span><span class="r4">   1h   7min    </span><span class="r3"> </span><span class="r4"> </span><span class="r26">██████████▊                                                                               </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r27">music</span><span class="r4">        </span><span class="r3"> </span><span class="r4">   1h  24min    </span><span class="r3"> </span><span class="r4"> </span><span class="r28">█████████████▌                                                                            </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r29">Editing</span><span class="r4">      </span><span class="r3"> </span><span class="r4">   1h  28min    </span><span class="r3"> </span><span class="r4"> </span><span class="r30">██████████████▏                                                                           </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r31">rich-tables</span><span class="r4">  </span><span class="r3"> </span><span class="r4">   2h  10min    </span><span class="r3"> </span><span class="r4"> </span><span class="r32">█████████████████████                                                                     </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r33">video</span><span class="r4">        </span><span class="r3"> </span><span class="r4">   2h  27min    </span><span class="r3"> </span><span class="r4"> </span><span class="r34">███████████████████████▊                                                                  </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r35">Chats</span><span class="r4">        </span><span class="r3"> </span><span class="r4">   2h  48min    </span><span class="r3"> </span><span class="r4"> </span><span class="r36">███████████████████████████▏                                                              </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r37">Datavis</span><span class="r4">      </span><span class="r3"> </span><span class="r4">   2h  54min    </span><span class="r3"> </span><span class="r4"> </span><span class="r38">████████████████████████████▏                                                             </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r39">music vis</span><span class="r4">    </span><span class="r3"> </span><span class="r4">   5h   5min    </span><span class="r3"> </span><span class="r4"> </span><span class="r40">█████████████████████████████████████████████████▏                                        </span><span class="r4"> </span></div>
+<div><span class="r4"> </span><span class="r41">AFK</span><span class="r4">          </span><span class="r3"> </span><span class="r4">   9h  17min    </span><span class="r3"> </span><span class="r4"> </span><span class="r42">██████████████████████████████████████████████████████████████████████████████████████████</span><span class="r4"> </span></div>
+<div><span class="r43">Total   1d   7h                                                                                                             </span></div>
+<div><span class="r1"></span><span class="r1">                                                                                                                            </span></div>
                     </div>
                 </div>
             </div>
