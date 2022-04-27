@@ -13,10 +13,10 @@ console = make_console(record=True, width=124)
 @pytest.mark.parametrize(
     "input_file, output_file",
     [
-        ("pr_data.json", "pulls.svg"),
         ("timed.json", "timed.svg"),
         ("albums.json", "album.svg"),
         ("pr.json", "pr.svg"),
+        ("emails.json", "emails.svg"),
     ],
 )
 def test_pulls(input_file, output_file):

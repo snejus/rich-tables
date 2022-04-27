@@ -1,0 +1,124 @@
+{
+  "Changes to something": [
+    {
+      "idx": 36,
+      "date": "Sat. 00:20",
+      "from": "Person 10",
+      "tags": [
+        "music",
+        "replied"
+      ]
+    },
+    {
+      "idx": 35,
+      "date": "Sat. 00:32",
+      "from": "to: Person 10",
+      "tags": [
+        "sent",
+        "📋"
+      ]
+    }
+  ],
+  "Hey, you bean": [
+    {
+      "idx": 78,
+      "date": "February 24",
+      "from": "Lovely Person",
+      "tags": [
+        "imp"
+      ]
+    },
+    {
+      "idx": 77,
+      "date": "February 24",
+      "from": "Lovely Person",
+      "tags": [
+        "imp"
+      ]
+    }
+  ],
+  "Some Conversation": [
+    {
+      "idx": 75,
+      "date": "March 31",
+      "from": "Person",
+      "tags": [
+        "opps",
+        "replied"
+      ]
+    },
+    {
+      "idx": 74,
+      "date": "April 01",
+      "from": "to: Person",
+      "tags": [
+        "replied",
+        "sent",
+        "📋"
+      ]
+    },
+    {
+      "idx": 73,
+      "date": "April 04",
+      "from": "Name Surname",
+      "tags": [
+        "opps"
+      ]
+    },
+    {
+      "idx": 71,
+      "date": "April 04",
+      "from": "Name Surname",
+      "tags": [
+        "opps"
+      ]
+    }
+  ],
+  "": [
+    {
+      "idx": 4,
+      "date": "Today 16:24",
+      "subject": "New release of types-python-dateutil (2.8.14) on PyPI",
+      "from": "Libraries",
+      "tags": [
+        "24h",
+        "pkg",
+        "unread"
+      ]
+    },
+    {
+      "idx": 3,
+      "date": "Today 16:24",
+      "subject": "New release of types-requests (2.27.22) on PyPI",
+      "from": "Libraries",
+      "tags": [
+        "24h",
+        "pkg",
+        "unread"
+      ]
+    },
+    {
+      "idx": 2,
+      "date": "Today 16:42",
+      "subject": "New message from Soma Records",
+      "from": "Bandcamp",
+      "tags": [
+        "24h",
+        "bcmsg",
+        "music",
+        "unread"
+      ]
+    },
+    {
+      "idx": 1,
+      "date": "Today 17:48",
+      "subject": "New release of mypy (0.950) on PyPI",
+      "from": "Libraries",
+      "tags": [
+        "24h",
+        "pkg",
+        "unread"
+      ]
+    }
+  ]
+}
