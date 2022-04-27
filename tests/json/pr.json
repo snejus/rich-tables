@@ -1,0 +1,381 @@
+{
+  "title": "Pull Requests",
+  "values": [
+    {
+      "title": "Database parental directories creation if not exist",
+      "url": "https://github.com/beetbox/beets/pull/4327",
+      "state": "MERGED",
+      "additions": 53,
+      "deletions": 2,
+      "repository": {
+        "name": "beets"
+      },
+      "author": "alicezou",
+      "isReadByViewer": true,
+      "createdAt": "2022-03-27T14:51:34Z",
+      "updatedAt": "2022-04-07T21:08:06Z",
+      "reviewDecision": "CHANGES_REQUESTED",
+      "participants": [
+        "alicezou",
+        "sampsyo",
+        "wisp3rwind"
+      ],
+      "body": "## Description\r\n\r\nAdd prompt for users to select whether to create parental directories when they do not exist.\r\n\r\n## To Do\r\n\r\n- [x] Documentation. (If you've add a new command-line flag, for example, find the appropriate page under `docs/` to describe it.)\r\n- [x] Changelog. (Add an entry to `docs/changelog.rst` near the top of the document.)\r\n- [x] Tests. (Encouraged but not strictly required.) [still working on it]\r\n",
+      "files": [
+        {
+          "additions": 12,
+          "deletions": 0,
+          "path": "beets/ui/__init__.py"
+        },
+        {
+          "additions": 2,
+          "deletions": 0,
+          "path": "docs/changelog.rst"
+        },
+        {
+          "additions": 1,
+          "deletions": 0,
+          "path": "test/test_dbcore.py"
+        },
+        {
+          "additions": 38,
+          "deletions": 2,
+          "path": "test/test_ui_init.py"
+        }
+      ],
+      "comments": [
+        {
+          "author": "alicezou",
+          "body": "Hi Benedikt,\r\nThank you for your review! I have updated my commits.",
+          "createdAt": "2022-03-30T01:43:12Z"
+        },
+        {
+          "author": "alicezou",
+          "body": "Hi Adrian,\r\nThank you for the feedback! I have updated the related files.",
+          "createdAt": "2022-03-30T16:57:59Z"
+        },
+        {
+          "author": "alicezou",
+          "body": "Hi, \r\nIt's been a week since my last update. Are there any changes that I can make to improve this pull request? I am looking forward to hearing from you. :)\r\n@wisp3rwind @sampsyo ",
+          "createdAt": "2022-04-06T21:39:15Z"
+        },
+        {
+          "author": "alicezou",
+          "body": "Hi Adrian, \r\nThank you for your comments! I have updated the relevant parts. ",
+          "createdAt": "2022-04-07T19:24:39Z"
+        }
+      ],
+      "reviews": [
+        {
+          "author": "wisp3rwind",
+          "body": "Hi, thanks for  getting this started! I've left a few inline comments on how I think the design of this PR might be improved.",
+          "createdAt": "2022-03-29T20:05:25Z",
+          "state": "CHANGES_REQUESTED",
+          "comments": [
+            {
+              "author": "wisp3rwind",
+              "body": "It is somewhat unfortunate that this couples the `beets.dbcore` and `beets.ui` modules, whereas the former used to be standalone (except for importing `beets.util`). Would it be possible instead to catch the exception on missing directory in `beets/ui/__init__.py:_open_library()`, ask for creating the directory, and trying to open the database again afterwards?\r\n\r\nApart from that, a more descriptive name instead `_path_checker` what be nice, maybe along the lines of `check_db_directory_exists`?",
+              "createdAt": "2022-03-29T20:05:25Z",
+              "outdated": true,
+              "path": "beets/dbcore/db.py",
+              "position": null,
+              "diffHunk": "@@ -901,8 +901,19 @@ class Database:\n     data is written in a transaction.\n     \"\"\"\n \n+    # Check whether parental directories exist.\n+    def _path_checker(self, path):\n+        if not isinstance(path, bytes) and path == ':memory:':  # in memory db\n+            return\n+        newpath = os.path.dirname(path)\n+        if not os.path.isdir(newpath):\n+            from beets.ui.commands import database_dir_creation\n+            if database_dir_creation(newpath):\n+                os.makedirs(newpath)\n+"
+            },
+            {
+              "author": "wisp3rwind",
+              "body": "It might be helpful to more explicity describe the issue here; the path alone might not be enough to understand the problem: `The database directory {} does not exists, ...`?",
+              "createdAt": "2022-03-29T20:08:28Z",
+              "outdated": true,
+              "path": "beets/ui/commands.py",
+              "position": null,
+              "diffHunk": "@@ -1398,6 +1398,15 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return ui.input_yn(\"{} does not exist, create it (Y/n)?\""
+            },
+            {
+              "author": "wisp3rwind",
+              "body": "That would behave identically with the `try ... catch` removed, right?",
+              "createdAt": "2022-03-29T20:10:06Z",
+              "outdated": true,
+              "path": "test/test_dbcore.py",
+              "position": null,
+              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())\n+        try:\n+            dbcore.Database(non_exist_path)\n+        except OSError as e:\n+            raise e"
+            },
+            {
+              "author": "wisp3rwind",
+              "body": "I think this should be using a path within a temporary directory, to be certain that we don't pollute the environment where the test is run.",
+              "createdAt": "2022-03-29T20:15:01Z",
+              "outdated": true,
+              "path": "test/test_dbcore.py",
+              "position": null,
+              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())"
+            },
+            {
+              "author": "wisp3rwind",
+              "body": "It might be easier to use the `control_stdin` context manager from `test/helper.py` (see its docstring for details).",
+              "createdAt": "2022-03-29T20:15:07Z",
+              "outdated": true,
+              "path": "test/test_dbcore.py",
+              "position": null,
+              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())\n+        try:\n+            dbcore.Database(non_exist_path)\n+        except OSError as e:\n+            raise e\n+        shutil.rmtree(\"ParentalDirCreationTest\")\n+\n+    @mock.patch('builtins.input', side_effect=['n', ])"
+            }
+          ]
+        },
+        {
+          "author": "sampsyo",
+          "body": "Looking great!! Here are a few granular suggestions.\r\n\r\nI actually think it would be fine (and a bit simpler) to keep the prompt code directly in the `beets.ui` module (i.e., `ui/__init__.py`) rather than having a short function in the `beets.ui.commands` module. The latter module is centered around providing implementations for the `beet <foo>` subcommands, and this functionality is actually a global thing that is not associated with any particular subcommand—so it would be a bit simpler to just keep everything in the new `_check_db_directory_exists` function.\r\n\r\nI also just wanted to state for the record that this issue will *probably* only affect people who have changed the `library` configuration option… beets automatically creates `~/.config/beets` by default and puts `library.db` in there. But custom database locations would not enjoy this automation (until now).",
+          "createdAt": "2022-03-30T15:35:46Z",
+          "state": "COMMENTED",
+          "comments": [
+            {
+              "author": "sampsyo",
+              "body": "```suggestion\r\n                       exists. Create it (Y/n)?\"\r\n```\r\n\r\nSo it's two full sentences.",
+              "createdAt": "2022-03-30T15:35:46Z",
+              "outdated": true,
+              "path": "beets/ui/commands.py",
+              "position": null,
+              "diffHunk": "@@ -1398,6 +1398,16 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return ui.input_yn(\"The database directory {} does not \\\n+                       exists, create it (Y/n)?\""
+            },
+            {
+              "author": "sampsyo",
+              "body": "```suggestion\r\n* Create the parental directories for database if they do not exist.\r\n  :bug:`3808` :bug:`4327`\r\n```\r\n\r\nIncluding references to where this was discussed.",
+              "createdAt": "2022-03-30T15:36:40Z",
+              "outdated": true,
+              "path": "docs/changelog.rst",
+              "position": null,
+              "diffHunk": "@@ -7,6 +7,7 @@ Changelog\n Changelog goes here!\n \n New features:\n+* Create the parental directories for database if they do not exist.\n "
+            },
+            {
+              "author": "sampsyo",
+              "body": "TBH I think it's probably OK to leave this sentence off? This is an edge case, and the prompt clearly explains to users what's going on, so I don't think we need to warn people that this might happen.",
+              "createdAt": "2022-03-30T15:37:20Z",
+              "outdated": true,
+              "path": "docs/guides/main.rst",
+              "position": null,
+              "diffHunk": "@@ -142,7 +142,8 @@ place to start::\n \n Change that first path to a directory where you'd like to keep your music. Then,\n for ``library``, choose a good place to keep a database file that keeps an index\n-of your music. (The config's format is `YAML`_. You'll want to configure your\n+of your music. Beets will prompt you if the parental directories for database do\n+not exist. (The config's format is `YAML`_. You'll want to configure your"
+            }
+          ]
+        },
+        {
+          "author": "sampsyo",
+          "body": "Looking good!! I have just a few very small comments, but then I think this should be good to go.",
+          "createdAt": "2022-04-07T18:54:35Z",
+          "state": "CHANGES_REQUESTED",
+          "comments": [
+            {
+              "author": "sampsyo",
+              "body": "This comment looks like it's out of date (it can just be deleted).",
+              "createdAt": "2022-04-07T18:54:35Z",
+              "outdated": true,
+              "path": "beets/ui/commands.py",
+              "position": null,
+              "diffHunk": "@@ -1398,6 +1398,9 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+"
+            },
+            {
+              "author": "sampsyo",
+              "body": "I suggest just \"inlining\" this code, since it's pretty simple and not called anywhere else. (That is, just do this prompting right inside the function below instead of having a separate function.)",
+              "createdAt": "2022-04-07T18:55:23Z",
+              "outdated": true,
+              "path": "beets/ui/__init__.py",
+              "position": null,
+              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\"\n+                    .format(util.displayable_path(path)))"
+            },
+            {
+              "author": "sampsyo",
+              "body": "Maybe should be called `_ensure_db_directory_exists` since it does more than just check?",
+              "createdAt": "2022-04-07T18:55:37Z",
+              "outdated": true,
+              "path": "beets/ui/__init__.py",
+              "position": null,
+              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\"\n+                    .format(util.displayable_path(path)))\n+\n+\n+def _check_db_directory_exists(path):"
+            },
+            {
+              "author": "sampsyo",
+              "body": "exists -> exist",
+              "createdAt": "2022-04-07T18:55:45Z",
+              "outdated": true,
+              "path": "beets/ui/__init__.py",
+              "position": null,
+              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\""
+            }
+          ]
+        },
+        {
+          "author": "sampsyo",
+          "body": "Looks perfect. Thanks again!!",
+          "createdAt": "2022-04-07T21:07:59Z",
+          "state": "APPROVED",
+          "comments": []
+        }
+      ],
+      "reviewThreads": [
+        {
+          "path": "beets/dbcore/db.py",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "wisp3rwind",
+              "body": "It is somewhat unfortunate that this couples the `beets.dbcore` and `beets.ui` modules, whereas the former used to be standalone (except for importing `beets.util`). Would it be possible instead to catch the exception on missing directory in `beets/ui/__init__.py:_open_library()`, ask for creating the directory, and trying to open the database again afterwards?\r\n\r\nApart from that, a more descriptive name instead `_path_checker` what be nice, maybe along the lines of `check_db_directory_exists`?",
+              "createdAt": "2022-03-29T20:05:25Z",
+              "diffHunk": "@@ -901,8 +901,19 @@ class Database:\n     data is written in a transaction.\n     \"\"\"\n \n+    # Check whether parental directories exist.\n+    def _path_checker(self, path):\n+        if not isinstance(path, bytes) and path == ':memory:':  # in memory db\n+            return\n+        newpath = os.path.dirname(path)\n+        if not os.path.isdir(newpath):\n+            from beets.ui.commands import database_dir_creation\n+            if database_dir_creation(newpath):\n+                os.makedirs(newpath)\n+"
+            }
+          ]
+        },
+        {
+          "path": "beets/ui/commands.py",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "wisp3rwind",
+              "body": "It might be helpful to more explicity describe the issue here; the path alone might not be enough to understand the problem: `The database directory {} does not exists, ...`?",
+              "createdAt": "2022-03-29T20:08:28Z",
+              "diffHunk": "@@ -1398,6 +1398,15 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return ui.input_yn(\"{} does not exist, create it (Y/n)?\""
+            }
+          ]
+        },
+        {
+          "path": "test/test_dbcore.py",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "wisp3rwind",
+              "body": "That would behave identically with the `try ... catch` removed, right?",
+              "createdAt": "2022-03-29T20:10:06Z",
+              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())\n+        try:\n+            dbcore.Database(non_exist_path)\n+        except OSError as e:\n+            raise e"
+            }
+          ]
+        },
+        {
+          "path": "test/test_dbcore.py",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "wisp3rwind",
+              "body": "I think this should be using a path within a temporary directory, to be certain that we don't pollute the environment where the test is run.",
+              "createdAt": "2022-03-29T20:15:01Z",
+              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())"
+            }
+          ]
+        },
+        {
+          "path": "test/test_dbcore.py",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "wisp3rwind",
+              "body": "It might be easier to use the `control_stdin` context manager from `test/helper.py` (see its docstring for details).",
+              "createdAt": "2022-03-29T20:15:07Z",
+              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())\n+        try:\n+            dbcore.Database(non_exist_path)\n+        except OSError as e:\n+            raise e\n+        shutil.rmtree(\"ParentalDirCreationTest\")\n+\n+    @mock.patch('builtins.input', side_effect=['n', ])"
+            }
+          ]
+        },
+        {
+          "path": "beets/ui/commands.py",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "sampsyo",
+              "body": "```suggestion\r\n                       exists. Create it (Y/n)?\"\r\n```\r\n\r\nSo it's two full sentences.",
+              "createdAt": "2022-03-30T15:35:46Z",
+              "diffHunk": "@@ -1398,6 +1398,16 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return ui.input_yn(\"The database directory {} does not \\\n+                       exists, create it (Y/n)?\""
+            }
+          ]
+        },
+        {
+          "path": "docs/changelog.rst",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "sampsyo",
+              "body": "```suggestion\r\n* Create the parental directories for database if they do not exist.\r\n  :bug:`3808` :bug:`4327`\r\n```\r\n\r\nIncluding references to where this was discussed.",
+              "createdAt": "2022-03-30T15:36:40Z",
+              "diffHunk": "@@ -7,6 +7,7 @@ Changelog\n Changelog goes here!\n \n New features:\n+* Create the parental directories for database if they do not exist.\n "
+            }
+          ]
+        },
+        {
+          "path": "docs/guides/main.rst",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "sampsyo",
+              "body": "TBH I think it's probably OK to leave this sentence off? This is an edge case, and the prompt clearly explains to users what's going on, so I don't think we need to warn people that this might happen.",
+              "createdAt": "2022-03-30T15:37:20Z",
+              "diffHunk": "@@ -142,7 +142,8 @@ place to start::\n \n Change that first path to a directory where you'd like to keep your music. Then,\n for ``library``, choose a good place to keep a database file that keeps an index\n-of your music. (The config's format is `YAML`_. You'll want to configure your\n+of your music. Beets will prompt you if the parental directories for database do\n+not exist. (The config's format is `YAML`_. You'll want to configure your"
+            }
+          ]
+        },
+        {
+          "path": "beets/ui/commands.py",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "sampsyo",
+              "body": "This comment looks like it's out of date (it can just be deleted).",
+              "createdAt": "2022-04-07T18:54:35Z",
+              "diffHunk": "@@ -1398,6 +1398,9 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+"
+            }
+          ]
+        },
+        {
+          "path": "beets/ui/__init__.py",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "sampsyo",
+              "body": "I suggest just \"inlining\" this code, since it's pretty simple and not called anywhere else. (That is, just do this prompting right inside the function below instead of having a separate function.)",
+              "createdAt": "2022-04-07T18:55:23Z",
+              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\"\n+                    .format(util.displayable_path(path)))"
+            }
+          ]
+        },
+        {
+          "path": "beets/ui/__init__.py",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "sampsyo",
+              "body": "Maybe should be called `_ensure_db_directory_exists` since it does more than just check?",
+              "createdAt": "2022-04-07T18:55:37Z",
+              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\"\n+                    .format(util.displayable_path(path)))\n+\n+\n+def _check_db_directory_exists(path):"
+            }
+          ]
+        },
+        {
+          "path": "beets/ui/__init__.py",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "sampsyo",
+              "body": "exists -> exist",
+              "createdAt": "2022-04-07T18:55:45Z",
+              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
