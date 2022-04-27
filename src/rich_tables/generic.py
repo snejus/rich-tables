@@ -17,11 +17,11 @@ from .utils import (
     border_panel,
     counts_table,
     format_with_color,
+    make_console,
     new_table,
     new_tree,
     predictably_random_color,
-    wrap,
-    make_console,
+    wrap
 )
 
 JSONDict = Dict[str, Any]
@@ -120,12 +120,19 @@ def _float(data: float, header: str = "") -> ConsoleRenderable:
 def _renderable(data: ConsoleRenderable, header: str = "") -> ConsoleRenderable:
     return data
 
+
 console = make_console()
+
 
 @flexitable.register(dict)
 def _dict(data: Dict, header: str = ""):
     table = new_table(
-        "", "", show_header=False, border_style="misty_rose1", box=box.MINIMAL, expand=False
+        "",
+        "",
+        show_header=False,
+        border_style="misty_rose1",
+        box=box.MINIMAL,
+        expand=False,
     )
     table.columns[0].style = "bold misty_rose1"
 
@@ -137,12 +144,38 @@ def _dict(data: Dict, header: str = ""):
 
     rends = [table, *rends]
 
+    lines: List[List[ConsoleRenderable]] = []
+    line_width = 0
     for rend in rends:
-        print(console.measure(rend))
-        print(console.width)
+        width = console.measure(rend).maximum
+        if line_width + width < console.width:
+            print(line_width)
+            if not lines:
+                lines.append([rend])
+            else:
+                lines[-1].append(rend)
+            line_width += width
+        else:
+            line_width = width
+            lines.append([rend])
+    print(*map(len, lines))
+
+    rend_lines: List[ConsoleRenderable] = []
+    for line in lines:
+        if len(line) == 1:
+            rend_lines.append(line[0])
+        else:
+            rend_lines.append(
+                new_table(
+                    rows=[map(lambda x: Align.center(x, vertical="middle"), line)],
+                    expand=True,
+                    justify="left",
+                )
+            )
+
     if not header:
-        return Group(*rends)
-    return new_tree(rends, title=header or key)
+        return Group(*rend_lines)
+    return new_tree(rend_lines, title=header or key)
 
 
 @flexitable.register(list)
@@ -192,5 +225,12 @@ def _list(data: List[Any], header: str = ""):
 
     if header:
         table.show_header = False
-        return border_panel(table, padding=1, box=box.ROUNDED, title=wrap(header, "b"), border_style="dim " + color, expand=False)
+        return border_panel(
+            table,
+            padding=1,
+            box=box.ROUNDED,
+            title=wrap(header, "b"),
+            border_style="dim " + color,
+            expand=False,
+        )
     return table
