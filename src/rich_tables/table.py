@@ -2,23 +2,21 @@ import itertools as it
 import json
 import operator as op
 import sys
-from datetime import datetime
+from collections import defaultdict
+from datetime import datetime, timedelta
 from functools import partial, singledispatch
-from os import environ, path
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
 
 from dateutil.parser import parse
 from ordered_set import OrderedSet
-from rich import box
-from rich.align import Align
+from rich import box, inspect
 from rich.bar import Bar
 from rich.columns import Columns
-from rich.console import Console, ConsoleRenderable, Group
+from rich.console import ConsoleRenderable, Group
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.syntax import Syntax
 from rich.table import Table
-from rich.theme import Theme
 
 from .generic import flexitable
 from .music import albums_table, tracks_table
@@ -27,6 +25,7 @@ from .utils import (
     border_panel,
     format_with_color,
     get_val,
+    make_console,
     make_difftext,
     md_panel,
     new_table,
@@ -41,27 +40,7 @@ JSONDict = Dict[str, Any]
 GroupsDict = Dict[str, List]
 
 
-def get_theme():
-    return Theme.read(
-        path.join(
-            environ.get("XDG_CONFIG_HOME") or path.expanduser("~/.config"),
-            "rich",
-            "config.ini",
-        )
-    )
-
-
-def get_console(**kwargs):
-    return Console(
-        theme=get_theme(),
-        soft_wrap=True,
-        force_terminal=True,
-        force_interactive=True,
-        **kwargs,
-    )
-
-
-console = get_console()
+console = make_console()
 print = console.print
 
 
@@ -191,20 +170,39 @@ def pulls_table(data: List[JSONDict]) -> ConsoleRenderable:
     )
 
     contents: List[Tuple[str, ConsoleRenderable]] = []
-    for review in pr.get("reviews") or []:
-        files = []
-        for file, comments in it.groupby(review["comments"], op.itemgetter("path")):
-            rows: List[ConsoleRenderable] = []
+    all_comments = it.chain(*map(op.itemgetter("comments"), pr.get("reviews", [])))
+    # for review in pr.get("reviews") or []:
+    # files: defaultdict[Tuple[str, str], List] = defaultdict(list)
+    files: List[ConsoleRenderable] = []
+    for file, comments in it.groupby(
+        sorted(all_comments, key=op.itemgetter("path", "diffHunk", "createdAt")),
+        op.itemgetter("path"),
+    ):
+        rows: List[ConsoleRenderable] = []
+        for diff_hunk, comments in it.groupby(comments, op.itemgetter("diffHunk")):
+            rows.append(syntax_panel(diff_hunk, "diff"))
             for comment in comments or []:
-                rows.append(syntax_panel(comment.get("diffHunk") or "", "diff"))
                 rows.append(comment_panel(comment))
-            files.append(border_panel(Group(*rows), title=wrap(file, "b magenta")))
+        files.append(border_panel(Group(*rows), title=wrap(file, "b magenta")))
         contents.append(
             (
-                review["createdAt"],
-                review_panel(review, simple_panel(new_table("", rows=[files]))),
+                comment["createdAt"],
+                simple_panel(new_table("", rows=[files])),
             )
         )
+    # yield from files
+    # contents.append(
+    #     (
+    #         review["createdAt"],
+    #         review_panel(review, simple_panel(new_table("", rows=[files]))),
+    #     )
+    # )
+    # contents.append(
+    #     (
+    #         datetime.now(),
+    #         review_panel(review, simple_panel(new_table("", rows=[files]))),
+    #     )
+    # )
 
     for comment in pr.get("comments") or []:
         contents.append((comment["createdAt"], comment_panel(comment)))
@@ -249,31 +247,76 @@ def calendar_table(events: List[JSONDict]) -> Table:
     )
     print(Columns(cal_fmted, expand=True, equal=True, align="center"))
 
-    events = events.copy()
+    new_events: List[JSONDict] = []
     for event in events:
-        start = parse(event["start"])
-        end = parse(event["end"])
-        if end.replace(tzinfo=None) < datetime.now():
-            color = "grey7"
-        else:
-            color = cal_to_color[event["calendar"]]
-        event.update(
-            color=color,
-            summary=wrap(event["summary"], f"b {color}"),
-            start_date=start.strftime("%A, %F"),
-            start_time=wrap(start.strftime("%H:%M"), "white"),
-            end_time=wrap(end.strftime("%H:%M"), "white"),
-            bar=Bar(86400, *get_start_end(start, end), color=color),
-        )
+        orig_start = parse(event["start"])
+        orig_end = parse(event["end"])
+        h_after_midnight = (
+            24 * (orig_end - orig_start).days + ((orig_end - orig_start).seconds // 3600)
+        ) - (24 - orig_start.hour)
 
-    table = new_table(expand=True, highlight=False)
-    keys = "summary", "start_time", "end_time", "bar"
-    for date, day_events in it.groupby(events, op.itemgetter("start_date")):
-        table.add_row()
-        table.add_row(wrap(f"   {date}   ", "b white on grey3"))
+        end = (orig_start + timedelta(days=1)).replace(hour=0, minute=0, second=0)
+
+        def eod(day_offset: int) -> datetime:
+            return (orig_start + timedelta(days=day_offset)).replace(
+                hour=23, minute=59, second=59
+            )
+
+        def midnight(day_offset: int) -> datetime:
+            return (orig_start + timedelta(days=day_offset)).replace(
+                hour=0, minute=0, second=0
+            )
+
+        days_count = h_after_midnight // 24 + 1
+        for start, end in zip(
+            [orig_start, *map(midnight, range(1, days_count + 1))],
+            [*map(eod, range(days_count)), orig_end],
+        ):
+            if start == end:
+                continue
+
+            color = (
+                "grey7"
+                if end.replace(tzinfo=None) < datetime.now()
+                else cal_to_color[event["calendar"]]
+            )
+            new_events.append(
+                {
+                    **event,
+                    **dict(
+                        color=color,
+                        summary=wrap(
+                            event["summary"], f"b {cal_to_color[event['calendar']]}"
+                        ),
+                        start=start,
+                        start_day=f"{start.day} {start.strftime('%a')}",
+                        start_time=wrap(start.strftime("%H:%M"), "white"),
+                        end_time=wrap(end.strftime("%H:%M"), "white"),
+                        bar=Bar(86400, *get_start_end(start, end), color=color),
+                    ),
+                }
+            )
+
+    keys = "start_day", "summary", "start_time", "end_time", "bar"
+    for month, day_events in it.groupby(
+        new_events, lambda x: (x["start"].month, x["start"].strftime("%B"))
+    ):
+        table = new_table(
+            *keys,
+            expand=True,
+            highlight=False,
+            padding=0,
+            collapse_padding=True,
+            show_header=False,
+            title_justify="left",
+        )
         for event in day_events:
-            table.add_row(*op.itemgetter(*keys)(event), style=event["color"])
-    return table
+            if "Week " in event["summary"]:
+                table.add_row("")
+                table.take_dict_item(event, style=event["color"] + " on grey7")
+            else:
+                table.take_dict_item(event)
+        yield border_panel(table, title=month[1])
 
 
 def tasks_table(tasks: List[JSONDict]) -> None:
@@ -404,9 +447,7 @@ def _draw_data_list(data: List[JSONDict], title: str = "") -> None:
     try:
         func = calls[title]
     except KeyError:
-        print(title.encode())
-        flexitable(data)
-        # ret = draw_data(data[0]) if len(data) == 1 else flexitable(data)
+        return flexitable(data)
     else:
         ret = func(data)
     return ret
@@ -428,7 +469,11 @@ def main():
             console.print_exception(extra_lines=4, show_locals=True)
             raise exc
         else:
-            console.print(ret)
+            if isinstance(ret, Iterable):
+                for rend in ret:
+                    print(rend)
+            else:
+                console.print(ret)
 
 
 if __name__ == "__main__":

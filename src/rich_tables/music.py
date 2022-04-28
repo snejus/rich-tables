@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, Iterable, List, Tuple
 
 from ordered_set import OrderedSet
 from rich import box
+from rich.align import Align
 from rich.console import ConsoleRenderable, Group
 from rich.panel import Panel
 from rich.table import Table
@@ -47,12 +48,12 @@ DISPLAY_HEADER: Dict[str, str] = {
     "last_played": "  🎶 ⏰",
     "mtime": "updated",
     "data_source": "source",
-    "helicopta": "🚁",
-    "track_alt": "💿",
+    "helicopta": ":helicopter:",
+    "track_alt": ":cd:",
     "catalognum": "📖",
 }
 
-new_table = partial(new_table, collapse_padding=True, expand=True)
+new_table = partial(new_table, collapse_padding=True, expand=True, padding=0)
 
 
 def get_header(key: str) -> str:
@@ -222,7 +223,11 @@ def detailed_album_panel(tracks: List[JSONDict]) -> Panel:
     return border_panel(
         Group(
             album["album_title"],
-            simple_panel(comments, style="grey54") if comments else "",
+            Align.center(
+                simple_panel(comments, style="grey54", expand=True, align="center")
+            )
+            if comments
+            else "",
             new_table(rows=[[album_info_table(album), tracklist]]),
         ),
         box=box.DOUBLE_EDGE,

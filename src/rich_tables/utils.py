@@ -7,6 +7,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from functools import partial
+from os import environ, path
 from typing import (
     Any,
     Callable,
@@ -21,7 +22,6 @@ from typing import (
 
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
-from ordered_set import OrderedSet
 from pycountry import countries
 from rich import box
 from rich.align import Align
@@ -30,6 +30,7 @@ from rich.console import Console, ConsoleRenderable, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
+from rich.theme import Theme
 from rich.tree import Tree
 
 JSONDict = Dict[str, Any]
@@ -95,11 +96,20 @@ def time2human(
     return past.format(fmted) if diff > 0 else fut.format(fmted)
 
 
-def make_console(**kwargs: Any) -> Console:
-    default: JSONDict = dict(
-        force_terminal=True, force_interactive=True, emoji_variant="emoji"
+def get_theme():
+    return Theme.read(
+        path.join(
+            environ.get("XDG_CONFIG_HOME") or path.expanduser("~/.config"),
+            "rich",
+            "config.ini",
+        )
     )
-    return Console(**{**default, **kwargs})
+
+
+def make_console(**kwargs):
+    return Console(
+        theme=get_theme(), force_terminal=True, force_interactive=True, **kwargs
+    )
 
 
 def wrap(text: str, tag: str) -> str:
@@ -132,9 +142,11 @@ class NewTable(Table):
         """Provide a mapping between columns names / ids and columns."""
         return {str(c.header): c._index for c in self.columns if c.header}
 
-    def take_dict_item(self, item: JSONDict, transform: Callable = lambda x: x) -> None:
+    def take_dict_item(
+        self, item: JSONDict, transform: Callable = lambda x, y: x, **kwargs
+    ) -> None:
         """Take the required columns / keys from the given dictionary item."""
-        self.add_row(*(transform(item.get(c) or "", c) for c in self.colnames))
+        self.add_row(*(transform(item.get(c) or "", c) for c in self.colnames), **kwargs)
 
 
 def new_table(*args: Any, **kwargs: Any) -> NewTable:
@@ -168,15 +180,20 @@ def format_with_color(name: str) -> str:
 
 
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    default: JSONDict
-    default = dict(title_align="left", subtitle_align="left", box=box.SIMPLE, expand=True)
+    default: JSONDict = dict(
+        title_align="left", subtitle_align="left", box=box.SIMPLE, expand=False
+    )
+    if "title" in kwargs:
+        kwargs["title"] = wrap(kwargs["title"], "b")
     if kwargs.pop("align", "") == "center":
-        content = Align.center(content)
+        content = Align.center(content, vertical="middle")
     return Panel(content, **{**default, **kwargs})
 
 
 def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    return simple_panel(content, **{**dict(box=box.ROUNDED), **kwargs})
+    return simple_panel(
+        content, **{**dict(box=box.ROUNDED, border_style="dim"), **kwargs}
+    )
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
@@ -300,7 +317,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     notes=md_panel,
     text=md_panel,
     instructions=md_panel,
-    comments=lambda x: md_panel(x.replace("---", "\n---\n")),
+    comments=lambda x: md_panel(x, title="comments"),
     tags=colored_split,
     released=lambda x: x.replace("-00", ""),
     desc=md_panel,

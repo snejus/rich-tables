@@ -1,12 +1,10 @@
 import itertools as it
-import operator as op
 from functools import singledispatch
-from typing import Any, Dict, Iterable, List, Set, Type, Union
+from typing import Any, Dict, Iterable, List, Type, Union
 
 from ordered_set import OrderedSet
 from rich import box, print
 from rich.align import Align
-from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group
 from rich.errors import NotRenderableError
 from rich.layout import Layout
@@ -21,6 +19,7 @@ from .utils import (
     new_table,
     new_tree,
     predictably_random_color,
+    simple_panel,
     wrap
 )
 
@@ -63,35 +62,16 @@ def make_bicolumn_layout(rends: List[ConsoleRenderable]) -> Layout:
 def add_to_table(
     rends: List[ConsoleRenderable], table: Table, content: Any, key: str = ""
 ):
-    # if isinstance(content, Group):
-    #     # if not content._renderables[0].title:
-    #     print(len(content._renderables))
-    #     content = border_panel(content)
-    #         # content._renderables[0].title = key
-    # if isinstance(content, Tree):
-    #     rends.append(content)
-    #     # table.add_row(key, content)
-    # elif isinstance(content, Table):
-    #     rends.append(content)
-    # elif isinstance(content, Panel):
-    #     content.expand = False
-    #     content.title_align = "left"
-    #     content.title = wrap(key[:65], "b")
-    #     if hasattr(content, "renderable") and isinstance(content.renderable, Table):
-    #         content.renderable.show_header = False
-    #         content.renderable.expand = False
-    #     rends.append(content)
-    # else:
     args = []
     if isinstance(content, ConsoleRenderable):
         rends.append(content)
     else:
         if key:
             args.append(key)
-        if isinstance(content, Iterable) and not isinstance(content, str):
-            args.extend(content)
-        else:
-            args.append(content)
+        # if isinstance(content, Iterable) and not isinstance(content, str):
+        #     args.append(content)
+        # else:
+        args.append(content)
         table.add_row(*args)
 
 
@@ -143,13 +123,13 @@ def _dict(data: Dict, header: str = ""):
         add_to_table(rends, table, flexitable(content, key), key)
 
     rends = [table, *rends]
+    # print(rends)
 
     lines: List[List[ConsoleRenderable]] = []
     line_width = 0
     for rend in rends:
         width = console.measure(rend).maximum
         if line_width + width < console.width:
-            print(line_width)
             if not lines:
                 lines.append([rend])
             else:
@@ -158,7 +138,6 @@ def _dict(data: Dict, header: str = ""):
         else:
             line_width = width
             lines.append([rend])
-    print(*map(len, lines))
 
     rend_lines: List[ConsoleRenderable] = []
     for line in lines:
@@ -174,7 +153,9 @@ def _dict(data: Dict, header: str = ""):
             )
 
     if not header:
-        return Group(*rend_lines)
+        return rend_lines
+        # return Group(*rend_lines)
+        # return new_tree(rend_lines, title=header or key)
     return new_tree(rend_lines, title=header or key)
 
 
@@ -190,7 +171,7 @@ def _list(data: List[Any], header: str = ""):
     if len(data) == 1:
         return flexitable(data[0], header)
 
-    table = new_table(show_header=True)
+    table = new_table(show_header=True, expand=False, box=None)
 
     if only(data, dict):
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
@@ -198,39 +179,35 @@ def _list(data: List[Any], header: str = ""):
         keys = OrderedSet.union(*map(lambda x: OrderedSet(x.keys()), data))
         vals_types = set(map(type, first_item.values()))
         if (
-            len(keys) == 2
-            and len(vals_types.intersection({int, float, str})) == 2
-            or "count" in keys
+            (len(keys) == 2
+            and len(vals_types.intersection({int, float, str})) == 2)
+            or "count_" in " ".join(keys)
         ):
             # [{"some_count": 10, "some_entity": "entity"}, ...]
             return counts_table(data)
 
-        color = predictably_random_color(str(keys))
-        col_vals = zip(keys, map(lambda x: list(map(op.itemgetter(x), data)), keys))
-        for col, values in col_vals:
+        for col in keys:
+            # print(len(col))
             table.add_column(col)
 
         for item in data:
             table.take_dict_item(item, transform=flexitable)
+    elif only(data, list) and all(
+        map(lambda idx: len(set(type(x[idx]) for x in data)) == 1, range(len(data[0])))
+    ):
+        for item_list in data:
+            table.add_row(*map(flexitable, item_list))
+
     else:
         for item in data:
-            table.add_row(*flexitable(item, header))
+            table.add_row(flexitable(item, header))
 
-    table.expand = False
-    # table.collapse_padding = True
-    table.box = None
     color = predictably_random_color(header)
     for col in table.columns:
-        col.header = wrap(f" {col.header} ", f"i b {color} on grey7")
+        if col.header:
+            col.header = wrap(f" {col.header} ", f"i b {color} on grey7")
 
     if header:
         table.show_header = False
-        return border_panel(
-            table,
-            padding=1,
-            box=box.ROUNDED,
-            title=wrap(header, "b"),
-            border_style="dim " + color,
-            expand=False,
-        )
-    return table
+        return border_panel(table, title=header, padding=1, border_style=f"dim {color}")
+    return simple_panel(table)
