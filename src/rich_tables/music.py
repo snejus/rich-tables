@@ -37,7 +37,6 @@ ALBUM_IGNORE = TRACK_FIELDS | {
     "plays",
     "skips",
     "albumartist",
-    "albumtypes",
 }
 
 
@@ -185,7 +184,7 @@ def simple_album_panel(tracks: List[JSONDict]) -> Panel:
 
     get = album.get
 
-    albumtype = FIELDS_MAP["albumtype"](get("albumtype"))
+    albumtype = get_val(album, "albumtypes")
     title = ""
     name = get("album")
     if name:
@@ -235,22 +234,10 @@ def detailed_album_panel(tracks: List[JSONDict]) -> Panel:
     )
 
 
-def preprocess(tracks: List[JSONDict]) -> List[JSONDict]:
-    for t in tracks:
-        albumtypes = t.pop("albumtypes", None)
-        if not albumtypes:
-            t["albumtype"] = "(!) " + t["albumtype"]
-        else:
-            t["albumtype"] = albumtypes
-    return tracks
-
-
 def albums_table(all_tracks: List[JSONDict]) -> ConsoleRenderable:
-    all_tracks = preprocess(all_tracks)
-
     def is_single(track: JSONDict) -> bool:
-        album, albumtype = track.get("album"), track.get("albumtype")
-        return not album or not albumtype or albumtype == "single"
+        album, albumtype = track.get("album"), track.get("albumtypes")
+        return not album or albumtype == "single"
 
     def get_album(track: JSONDict) -> str:
         return track.get("album") or ""
@@ -266,9 +253,7 @@ def albums_table(all_tracks: List[JSONDict]) -> ConsoleRenderable:
 
 
 def tracks_table(all_tracks: List[JSONDict]) -> ConsoleRenderable:
-    all_tracks = preprocess(all_tracks)
-
-    ignore = {"albumtypes", "plays", "skips"}
+    ignore = {"plays", "skips"}
     fields = OrderedSet([*all_tracks[0].keys(), "stats"]).difference(ignore)
 
     return _tracks_table(all_tracks, "blue", fields, sort=False)

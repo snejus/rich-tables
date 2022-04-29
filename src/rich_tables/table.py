@@ -2,14 +2,12 @@ import itertools as it
 import json
 import operator as op
 import sys
-from collections import defaultdict
 from datetime import datetime, timedelta
 from functools import partial, singledispatch
 from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
 
 from dateutil.parser import parse
 from ordered_set import OrderedSet
-from rich import box, inspect
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group
@@ -26,7 +24,6 @@ from .utils import (
     format_with_color,
     get_val,
     make_console,
-    make_difftext,
     md_panel,
     new_table,
     new_tree,
@@ -44,72 +41,22 @@ console = make_console()
 print = console.print
 
 
-def diff_table(group_to_data: GroupsDict) -> None:
-    # diff_table = new_table(expand=True)
-    # for group_name, item_lists in group_to_data.items():
-    #     for items in item_lists:
-    #         headers = list(items[0].keys())
-    #         for head in ["before", "after"]:
-    #             headers.remove(head)
-    #         headers.append("diff")
-    #         group_title = items[0].get(group_name) or ""
-    #         title = "".join(["─" * 5, "  ", wrap(group_title, "b"), "  ", "─" * 5])
-
-    #         table = new_table()
-    #         for item in items:
-    #             item["diff"] = make_difftext(*op.itemgetter("before", "after")(item))
-    #             item.pop(group_name, None)
-    #             table.add_row(*map(lambda x: str(x) if x else " ", item.values()))
-    #         diff_table.add_row(simple_panel(table, title=title, padding=1))
-    diff_table = new_table(expand=True)
-    for group_name, item_lists in group_to_data.items():
-        for items in item_lists:
-            headers = list(items[0].keys())
-            for head in ["before", "after"]:
-                headers.remove(head)
-            headers.append("diff")
-            group_title = items[0].get(group_name) or ""
-            title = "".join(["─" * 5, "  ", wrap(group_title, "b"), "  ", "─" * 5])
-
-            table = new_table()
-            for item in items:
-                item["diff"] = make_difftext(*op.itemgetter("before", "after")(item))
-                item.pop(group_name, None)
-                table.add_row(*map(lambda x: str(x) if x else " ", item.values()))
-            diff_table.add_row(simple_panel(table, title=title, padding=1))
-
-
-def pulls_table(data: List[JSONDict]) -> ConsoleRenderable:
-    def review_panel(
-        comment: Dict[str, str], *renderables: ConsoleRenderable, **kwargs: Any
-    ) -> Panel:
-        return border_panel(
-            Group(md_panel(comment["body"], border_style="dim"), *renderables),
+def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]:
+    def comment_panel(comment: Dict[str, str], **kwargs) -> Panel:
+        return md_panel(
+            comment["body"],
             title=" ".join(
                 map(lambda x: get_val(comment, x), ["state", "author", "createdAt"])
             ),
-            border_style="dim "
+            border_style=""
             + (
                 "green"
-                if comment.get("isResolved")
+                if comment.get("isResolved") or comment.get("outdated") == "False"
                 else "red"
-                if "isResolved" in comment
-                else ""
+                if "isResolved" in comment or comment.get("outdated")
+                else state_map.get(comment.get("state") or "") or ""
             ),
-        )
-
-    def comment_panel(comment: Dict[str, str]) -> Panel:
-        return md_panel(
-            comment["body"],
-            title=" ".join(map(lambda x: get_val(comment, x), ["author", "createdAt"])),
-            border_style="dim "
-            + (
-                "green"
-                if comment.get("isResolved")
-                else "red"
-                if "isResolved" in comment
-                else ""
-            ),
+            **kwargs,
         )
 
     def syntax_panel(content: str, lexer: str, **kwargs: Any) -> Panel:
@@ -122,7 +69,6 @@ def pulls_table(data: List[JSONDict]) -> ConsoleRenderable:
                 word_wrap=True,
             ),
             style=kwargs.get("style") or "black",
-            width=console.width,
             title=kwargs.get("title") or "",
         )
 
@@ -150,70 +96,62 @@ def pulls_table(data: List[JSONDict]) -> ConsoleRenderable:
     }
     exclude = {"title", "body", "reviews", "comments", "reviewThreads", "url", "files"}
     pr = data[0]
+    pr["diff"] = "[green]+{}[/] [red]-{}[/]".format(
+        pr.pop("additions", ""), pr.pop("deletions", "")
+    )
     FIELDS_MAP.update(
         {
             "author": format_with_color,
             "participants": lambda x: "  ".join(map(format_with_color, x)),
             "state": lambda x: wrap(wrap(x, "b"), state_map.get(x, "default")),
+            "reviewDecision": lambda x: wrap(wrap(x, "b"), state_map.get(x, "default")),
             "isReadByViewer": lambda x: wrap(str(x), state_map.get(str(x), "default")),
             "updatedAt": lambda x: time2human(x, pad=False, use_colors=True),
             "createdAt": lambda x: time2human(x, pad=False, use_colors=True),
             "repository": lambda x: x.get("name"),
-            "files": lambda x: new_table(title="files", rows=map(fmt_add_del, x)),
+            "files": lambda x: border_panel(
+                new_table(rows=map(fmt_add_del, x)), title="files"
+            ),
         }
     )
 
+    yield ""
+    yield Rule(wrap(pr.get("title", " "), "b"))
     keys = sorted(set(pr) - exclude)
     info_table = Group(
         new_table(rows=map(lambda x: (wrap(x, "b"), get_val(pr, x)), keys)),
         get_val(pr, "files"),
     )
+    yield new_table(rows=[[simple_panel(info_table), md_panel(pr["body"])]])
 
-    contents: List[Tuple[str, ConsoleRenderable]] = []
+    for review in pr["reviews"]:
+        for comment in review["comments"]:
+            comment["state"] = review["state"]
+
+    global_comments: List[ConsoleRenderable] = []
+    raw_global_comments = filter(op.itemgetter("body"), pr["reviews"] + pr["comments"])
+    for comment in sorted(raw_global_comments, key=op.itemgetter("createdAt")):
+        subtitle = format_with_color("review" if "state" in comment else "comment")
+        global_comments.append(comment_panel(comment, subtitle=subtitle))
+    yield border_panel(
+        new_table(rows=it.zip_longest(*(iter(global_comments),) * 2)),
+        title="Reviews & Comments",
+    )
+
     all_comments = it.chain(*map(op.itemgetter("comments"), pr.get("reviews", [])))
-    # for review in pr.get("reviews") or []:
-    # files: defaultdict[Tuple[str, str], List] = defaultdict(list)
     files: List[ConsoleRenderable] = []
     for file, comments in it.groupby(
         sorted(all_comments, key=op.itemgetter("path", "diffHunk", "createdAt")),
         op.itemgetter("path"),
     ):
-        rows: List[ConsoleRenderable] = []
         for diff_hunk, comments in it.groupby(comments, op.itemgetter("diffHunk")):
-            rows.append(syntax_panel(diff_hunk, "diff"))
-            for comment in comments or []:
-                rows.append(comment_panel(comment))
-        files.append(border_panel(Group(*rows), title=wrap(file, "b magenta")))
-        contents.append(
-            (
-                comment["createdAt"],
-                simple_panel(new_table("", rows=[files])),
+            files.append(
+                simple_panel(
+                    Group(syntax_panel(diff_hunk, "diff"), *map(comment_panel, comments)),
+                    title=wrap(file, "b magenta"),
+                )
             )
-        )
-    # yield from files
-    # contents.append(
-    #     (
-    #         review["createdAt"],
-    #         review_panel(review, simple_panel(new_table("", rows=[files]))),
-    #     )
-    # )
-    # contents.append(
-    #     (
-    #         datetime.now(),
-    #         review_panel(review, simple_panel(new_table("", rows=[files]))),
-    #     )
-    # )
-
-    for comment in pr.get("comments") or []:
-        contents.append((comment["createdAt"], comment_panel(comment)))
-
-    info_section = [simple_panel(info_table), md_panel(pr["body"], box=box.SIMPLE)]
-    return Group(
-        "",
-        Rule(wrap(pr.get("title", " "), "b")),
-        new_table(rows=[info_section]),
-        *map(op.itemgetter(1), sorted(contents, key=op.itemgetter(0))),
-    )
+    yield new_table(rows=it.zip_longest(*(iter(files),) * 2))
 
 
 def lights_table(lights: List[JSONDict]) -> Table:
@@ -233,7 +171,7 @@ def lights_table(lights: List[JSONDict]) -> Table:
     return table
 
 
-def calendar_table(events: List[JSONDict]) -> Table:
+def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
     def get_start_end(start: datetime, end: datetime) -> Tuple[int, int]:
         if start.hour == end.hour == 0:
             return 0, 86400
@@ -436,7 +374,6 @@ def _draw_data_dict(data: JSONDict) -> None:
 def _draw_data_list(data: List[JSONDict], title: str = "") -> None:
     calls: Dict[str, Callable] = {
         "Pull Requests": pulls_table,
-        "JIRA Diff": diff_table,
         "Hue lights": lights_table,
         "Calendar": calendar_table,
         "Album": albums_table,

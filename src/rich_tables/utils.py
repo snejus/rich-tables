@@ -200,7 +200,7 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
     return border_panel(Markdown(content), **kwargs)
 
 
-def new_tree(values: List[ConsoleRenderable] = [], title: str = "", **kwargs) -> Tree:
+def new_tree(values: Iterable[ConsoleRenderable] = [], title: str = "", **kwargs) -> Tree:
     color = predictably_random_color(title or str(values))
     default: JSONDict = dict(guide_style=color)
     tree = Tree(wrap(title, "b"), **{**default, **kwargs})
@@ -277,8 +277,9 @@ def counts_table(data: List[JSONDict]) -> Table:
 
 FIELDS_MAP: Dict[str, Callable] = defaultdict(
     lambda: str,
-    albumtype=lambda x: colored_split(x.replace("compilation", "comp")),
-    albumtypes=lambda x: "; ".join(map(format_with_color, x.split("; "))),
+    albumtypes=lambda x: "; ".join(
+        map(format_with_color, x.replace("compilation", "comp").split("; "))
+    ),
     label=format_with_color,
     catalognum=format_with_color,
     last_played=lambda x: time2human(x, use_colors=True, pad=False),

@@ -1,4 +1,5 @@
 import itertools as it
+import operator as op
 from functools import singledispatch
 from typing import Any, Dict, Iterable, List, Type, Union
 
@@ -16,6 +17,7 @@ from .utils import (
     counts_table,
     format_with_color,
     make_console,
+    make_difftext,
     new_table,
     new_tree,
     predictably_random_color,
@@ -71,7 +73,10 @@ def add_to_table(
         # if isinstance(content, Iterable) and not isinstance(content, str):
         #     args.append(content)
         # else:
-        args.append(content)
+        if isinstance(content, Iterable) and not isinstance(content, str):
+            args.extend(content)
+        else:
+            args.append(content)
         table.add_row(*args)
 
 
@@ -118,12 +123,9 @@ def _dict(data: Dict, header: str = ""):
 
     rends: List[ConsoleRenderable] = []
     for key, content in data.items():
-        # table.add_row(flexitable(key), flexitable(content))
-        # add_to_table(rends, table, content, key)
         add_to_table(rends, table, flexitable(content, key), key)
 
     rends = [table, *rends]
-    # print(rends)
 
     lines: List[List[ConsoleRenderable]] = []
     line_width = 0
@@ -156,7 +158,8 @@ def _dict(data: Dict, header: str = ""):
         return rend_lines
         # return Group(*rend_lines)
         # return new_tree(rend_lines, title=header or key)
-    return new_tree(rend_lines, title=header or key)
+    else:
+        return new_tree(rend_lines, title=header or key)
 
 
 @flexitable.register(list)
@@ -168,39 +171,46 @@ def _list(data: List[Any], header: str = ""):
         # ["hello", "hi", "bye", ...]
         return " ".join(map(format_with_color, data))
 
-    if len(data) == 1:
-        return flexitable(data[0], header)
-
     table = new_table(show_header=True, expand=False, box=None)
 
     if only(data, dict):
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
         first_item = data[0]
         keys = OrderedSet.union(*map(lambda x: OrderedSet(x.keys()), data))
+        if {"before", "after"}.issubset(keys):
+            for idx in range(len(data)):
+                item = data[idx]
+                keys = item["before"].keys()
+                data[idx] = dict(
+                    zip(
+                        keys,
+                        map(
+                            lambda k: make_difftext(
+                                item["before"][k] or "", item["after"][k] or ""
+                            ),
+                            keys,
+                        ),
+                    )
+                )
         vals_types = set(map(type, first_item.values()))
         if (
-            (len(keys) == 2
-            and len(vals_types.intersection({int, float, str})) == 2)
-            or "count_" in " ".join(keys)
-        ):
+            len(keys) == 2 and len(vals_types.intersection({int, float, str})) == 2
+        ) or "count_" in " ".join(keys):
             # [{"some_count": 10, "some_entity": "entity"}, ...]
             return counts_table(data)
 
         for col in keys:
-            # print(len(col))
             table.add_column(col)
 
         for item in data:
             table.take_dict_item(item, transform=flexitable)
-    elif only(data, list) and all(
-        map(lambda idx: len(set(type(x[idx]) for x in data)) == 1, range(len(data[0])))
-    ):
-        for item_list in data:
-            table.add_row(*map(flexitable, item_list))
-
     else:
-        for item in data:
-            table.add_row(flexitable(item, header))
+        for item in filter(op.truth, data):
+            content = flexitable(item, header)
+            if isinstance(content, Iterable) and not isinstance(content, str):
+                table.add_row(*content)
+            else:
+                table.add_row(flexitable(item, header))
 
     color = predictably_random_color(header)
     for col in table.columns:
@@ -210,4 +220,5 @@ def _list(data: List[Any], header: str = ""):
     if header:
         table.show_header = False
         return border_panel(table, title=header, padding=1, border_style=f"dim {color}")
-    return simple_panel(table)
+    else:
+        return simple_panel(table)
