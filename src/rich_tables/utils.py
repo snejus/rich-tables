@@ -58,6 +58,8 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str, after: str, junk: str = " qwertyuiopasdfghjkllzxcvbnm"
 ) -> str:
+    before = before.replace("]", r"\]").replace("[", r"\[")
+    after = after.replace("]", r"\]").replace("[", r"\[")
     matcher = SequenceMatcher(lambda x: x not in junk, autojunk=False, a=before, b=after)
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
@@ -84,7 +86,10 @@ def time2human(
     timestamp: Union[int, str], acc: int = 1, use_colors=False, pad: bool = True
 ) -> str:
     if isinstance(timestamp, str):
-        seconds = parse(timestamp).timestamp()
+        try:
+            seconds = parse(timestamp).timestamp()
+        except:
+            seconds = 0
     else:
         seconds = timestamp
     if not seconds:
@@ -290,7 +295,13 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     mtime=lambda x: re.sub(r"\] *", "]", time2human(x, pad=False)),
     bpm=lambda x: wrap(
         x,
-        "green" if x < 135 else "#000000" if x > 230 else "red" if x > 165 else "yellow",
+        "green"
+        if int(x or 0) < 135
+        else "#000000"
+        if int(x or 0) > 230
+        else "red"
+        if int(x or 0) > 165
+        else "yellow",
     ),
     style=format_with_color,
     genre=colored_split,
@@ -335,4 +346,18 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     creditText=md_panel,
     duration=lambda x: duration2human(x, 2),
     total_duration=lambda x: duration2human(x, 2),
+    brand=format_with_color,
+    answer=md_panel,
 )
+
+DISPLAY_HEADER: Dict[str, str] = {
+    "track": "#",
+    "bpm": "🚀",
+    "stats": "",
+    "last_played": "  🎶 ⏰",
+    "mtime": "updated",
+    "data_source": "source",
+    "helicopta": ":helicopter:",
+    "track_alt": ":cd:",
+    "catalognum": "📖",
+}

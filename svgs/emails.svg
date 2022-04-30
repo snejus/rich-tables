@@ -1,4 +1,4 @@
-<svg width="1767.1999999999998" height="494" viewBox="0 0 1767.1999999999998 494"
+<svg width="1767.1999999999998" height="846" viewBox="0 0 1767.1999999999998 846"
      xmlns="http://www.w3.org/2000/svg">
     <style>
         @font-face {
@@ -17,30 +17,30 @@
             font-style: bold;
             font-weight: 700;
         }
-        .rich-svg-1313331903-terminal-wrapper span {
+        .rich-svg-384678569-terminal-wrapper span {
             display: inline-block;
             white-space: pre;
             vertical-align: top;
             font-size: 18px;
             font-family:'Rich Fira Code','Cascadia Code',Monaco,Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace;
         }
-        .rich-svg-1313331903-terminal-wrapper a {
+        .rich-svg-384678569-terminal-wrapper a {
             text-decoration: none;
             color: inherit;
         }
-        .rich-svg-1313331903-terminal-body .blink {
-           animation: rich-svg-1313331903-blinker 1s infinite;
+        .rich-svg-384678569-terminal-body .blink {
+           animation: rich-svg-384678569-blinker 1s infinite;
         }
-        @keyframes rich-svg-1313331903-blinker {
+        @keyframes rich-svg-384678569-blinker {
             from { opacity: 1.0; }
             50% { opacity: 0.3; }
             to { opacity: 1.0; }
         }
-        .rich-svg-1313331903-terminal-wrapper {
+        .rich-svg-384678569-terminal-wrapper {
             padding: 140px;
             padding-top: 100px;
         }
-        .rich-svg-1313331903-terminal {
+        .rich-svg-384678569-terminal {
             position: relative;
             display: flex;
             flex-direction: column;
@@ -49,7 +49,7 @@
             border-radius: 14px;
             box-shadow: 0 0 0 1px #484848;
         }
-        .rich-svg-1313331903-terminal:after {
+        .rich-svg-384678569-terminal:after {
             position: absolute;
             width: 100%;
             height: 100%;
@@ -60,7 +60,7 @@
             transform: rotate(-4.5deg);
             z-index: -1;
         }
-        .rich-svg-1313331903-terminal-header {
+        .rich-svg-384678569-terminal-header {
             position: relative;
             width: 100%;
             background-color: #2e2e2e;
@@ -72,7 +72,7 @@
             box-shadow: inset 0px -1px 0px 0px #4e4e4e,
                         inset 0px -4px 8px 0px #1a1a1a;
         }
-        .rich-svg-1313331903-terminal-title-tab {
+        .rich-svg-384678569-terminal-title-tab {
             display: inline-block;
             margin-top: 14px;
             margin-left: 124px;
@@ -85,39 +85,83 @@
                         inset 1px 0px 0px 0px #4e4e4e,
                         inset -1px 0px 0px 0px #4e4e4e;
         }
-        .rich-svg-1313331903-terminal-traffic-lights {
+        .rich-svg-384678569-terminal-traffic-lights {
             position: absolute;
             top: 24px;
             left: 20px;
         }
-        .rich-svg-1313331903-terminal-body {
+        .rich-svg-384678569-terminal-body {
             line-height: 22px;
             padding: 14px;
         }
-        .rich-svg-1313331903-terminal-body .r1 {color: #f2f2f2; text-decoration-color: #f2f2f2;background-color: #0c0c0c;}
-.rich-svg-1313331903-terminal-body .r2 {font-weight: bold;color: #f2f2f2; text-decoration-color: #f2f2f2;;background-color: #0c0c0c;}
-.rich-svg-1313331903-terminal-body .r3 {color: #d670d6; text-decoration-color: #d670d6; font-weight: bold;background-color: #0c0c0c;}
-.rich-svg-1313331903-terminal-body .r4 {color: #87ceeb; text-decoration-color: #87ceeb; font-weight: bold;background-color: #0c0c0c;}
+        .rich-svg-384678569-terminal-body .r1 {color: #f2f2f2; text-decoration-color: #f2f2f2;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r2 {color: #e5e5e5; text-decoration-color: #e5e5e5;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r3 {color: #5f5029; text-decoration-color: #5f5029;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r4 {color: #5f5029; text-decoration-color: #5f5029; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r5 {color: #212733; text-decoration-color: #212733;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r6 {color: #4a603d; text-decoration-color: #4a603d;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r7 {color: #4a603d; text-decoration-color: #4a603d; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r8 {color: #87ceeb; text-decoration-color: #87ceeb; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r9 {color: #23d18b; text-decoration-color: #23d18b; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r10 {color: #83a761; text-decoration-color: #83a761; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r11 {color: #4cad5c; text-decoration-color: #4cad5c; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r12 {color: #ae613e; text-decoration-color: #ae613e; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r13 {color: #7b99ab; text-decoration-color: #7b99ab; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r14 {color: #6b974d; text-decoration-color: #6b974d; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r15 {color: #7eb579; text-decoration-color: #7eb579; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r16 {color: #789196; text-decoration-color: #789196; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r17 {color: #3f5b66; text-decoration-color: #3f5b66; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r18 {color: #615845; text-decoration-color: #615845;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r19 {color: #615845; text-decoration-color: #615845; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r20 {color: #b87d85; text-decoration-color: #b87d85; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r21 {color: #82479c; text-decoration-color: #82479c; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r22 {color: #7783a7; text-decoration-color: #7783a7; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r23 {color: #9885a4; text-decoration-color: #9885a4; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r24 {color: #5e3e55; text-decoration-color: #5e3e55;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r25 {color: #5e3e55; text-decoration-color: #5e3e55; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r26 {color: #e5e5e5; text-decoration-color: #e5e5e5; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r27 {color: #898eaa; text-decoration-color: #898eaa; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r28 {color: #a94075; text-decoration-color: #a94075; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r29 {color: #4c5584; text-decoration-color: #4c5584; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r30 {color: #44b843; text-decoration-color: #44b843; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r31 {color: #7a657f; text-decoration-color: #7a657f; font-weight: bold;background-color: #0c0c0c;}
+.rich-svg-384678569-terminal-body .r32 {color: #5e6540; text-decoration-color: #5e6540; font-weight: bold;background-color: #0c0c0c;}
     </style>
     <foreignObject x="0" y="0" width="100%" height="100%">
         <body xmlns="http://www.w3.org/1999/xhtml">
-            <div class="rich-svg-1313331903-terminal-wrapper">
-                <div class="rich-svg-1313331903-terminal">
-                    <div class="rich-svg-1313331903-terminal-header">
-                        <svg class="rich-svg-1313331903-terminal-traffic-lights" width="90" height="21" viewBox="0 0 90 21" xmlns="http://www.w3.org/2000/svg">
+            <div class="rich-svg-384678569-terminal-wrapper">
+                <div class="rich-svg-384678569-terminal">
+                    <div class="rich-svg-384678569-terminal-header">
+                        <svg class="rich-svg-384678569-terminal-traffic-lights" width="90" height="21" viewBox="0 0 90 21" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="14" cy="8" r="8" fill="#ff6159"/>
                             <circle cx="38" cy="8" r="8" fill="#ffbd2e"/>
                             <circle cx="62" cy="8" r="8" fill="#28c941"/>
                         </svg>
-                        <div class="rich-svg-1313331903-terminal-title-tab">Rich</div>
+                        <div class="rich-svg-384678569-terminal-title-tab">Rich</div>
                     </div>
-                    <div class="rich-svg-1313331903-terminal-body">
-                        <div><span class="r2">[</span><span class="r1">                                                                                                                           </span></div>
-<div><span class="r1">    </span><span class="r2">&lt;</span><span class="r3">rich_tables.utils.NewTable</span><span class="r1"> object at </span><span class="r4">0x7f1916be1660</span><span class="r2">&gt;</span><span class="r1">,</span><span class="r1">                                                                  </span></div>
-<div><span class="r1">    </span><span class="r2">&lt;</span><span class="r3">rich_tables.utils.NewTable</span><span class="r1"> object at </span><span class="r4">0x7f1916be3250</span><span class="r2">&gt;</span><span class="r1">,</span><span class="r1">                                                                  </span></div>
-<div><span class="r1">    </span><span class="r2">&lt;</span><span class="r3">rich.panel.Panel</span><span class="r1"> object at </span><span class="r4">0x7f1916be0ee0</span><span class="r2">&gt;</span><span class="r1">,</span><span class="r1">                                                                            </span></div>
-<div><span class="r1">    </span><span class="r2">&lt;</span><span class="r3">rich.panel.Panel</span><span class="r1"> object at </span><span class="r4">0x7f1916be0d60</span><span class="r2">&gt;</span><span class="r1">                                                                             </span></div>
-<div><span class="r2">]</span><span class="r1">                                                                                                                           </span></div>
+                    <div class="rich-svg-384678569-terminal-body">
+                        <div><span class="r2">         </span><span class="r3">╭─ </span><span class="r4">tags</span><span class="r3"> ─────────────────────────────────────────╮</span><span class="r2">         </span><span class="r5">┃</span><span class="r2">       </span><span class="r6">╭─ </span><span class="r7">tags</span><span class="r6"> ────────────────────────────────╮</span><span class="r2">       </span></div>
+<div><span class="r2">         </span><span class="r3">│</span><span class="r2">                                                </span><span class="r3">│</span><span class="r2">         </span><span class="r5">┃</span><span class="r2">       </span><span class="r6">│</span><span class="r2">                                       </span><span class="r6">│</span><span class="r2">       </span></div>
+<div><span class="r2">         </span><span class="r3">│</span><span class="r2">  </span><span class="r8">36</span><span class="r2">  Sat. </span><span class="r9">00:20</span><span class="r2">  </span><span class="r10">Person </span><span class="r10">10</span><span class="r2">      </span><span class="r11">music</span><span class="r2"> </span><span class="r12">replied</span><span class="r2">  </span><span class="r3">│</span><span class="r2">         </span><span class="r5">┃</span><span class="r2">       </span><span class="r6">│</span><span class="r2">  </span><span class="r8">78</span><span class="r2">  February </span><span class="r8">24</span><span class="r2">  </span><span class="r13">Lovely Person</span><span class="r2">  </span><span class="r14">imp</span><span class="r2">  </span><span class="r6">│</span><span class="r2">       </span></div>
+<div><span class="r2">         </span><span class="r3">│</span><span class="r2">  </span><span class="r8">35</span><span class="r2">  Sat. </span><span class="r9">00:32</span><span class="r2">  </span><span class="r15">to: Person </span><span class="r15">10</span><span class="r2">  </span><span class="r16">sent</span><span class="r2"> </span><span class="r17">📋</span><span class="r2">        </span><span class="r3">│</span><span class="r2">         </span><span class="r5">┃</span><span class="r2">       </span><span class="r6">│</span><span class="r2">  </span><span class="r8">77</span><span class="r2">  February </span><span class="r8">24</span><span class="r2">  </span><span class="r13">Lovely Person</span><span class="r2">  </span><span class="r14">imp</span><span class="r2">  </span><span class="r6">│</span><span class="r2">       </span></div>
+<div><span class="r2">         </span><span class="r3">│</span><span class="r2">                                                </span><span class="r3">│</span><span class="r2">         </span><span class="r5">┃</span><span class="r2">       </span><span class="r6">│</span><span class="r2">                                       </span><span class="r6">│</span><span class="r2">       </span></div>
+<div><span class="r2">         </span><span class="r3">╰────────────────────────────────────────────────╯</span><span class="r2">         </span><span class="r5">┃</span><span class="r2">       </span><span class="r6">╰───────────────────────────────────────╯</span><span class="r2">       </span></div>
+<div><span class="r18">╭─ </span><span class="r19">tags</span><span class="r18"> ────────────────────────────────────────╮</span><span class="r1">                                                                           </span></div>
+<div><span class="r18">│</span><span class="r1">                                               </span><span class="r18">│</span><span class="r1">                                                                           </span></div>
+<div><span class="r18">│</span><span class="r1"> </span><span class="r2"> </span><span class="r8">75</span><span class="r2">  March </span><span class="r8">31</span><span class="r2">  </span><span class="r20">Person</span><span class="r2">        </span><span class="r21">opps</span><span class="r2"> </span><span class="r12">replied</span><span class="r2">    </span><span class="r1"> </span><span class="r18">│</span><span class="r1">                                                                           </span></div>
+<div><span class="r18">│</span><span class="r1"> </span><span class="r2"> </span><span class="r8">74</span><span class="r2">  April </span><span class="r8">01</span><span class="r2">  </span><span class="r22">to: Person</span><span class="r2">    </span><span class="r12">replied</span><span class="r2"> </span><span class="r16">sent</span><span class="r2"> </span><span class="r17">📋</span><span class="r2"> </span><span class="r1"> </span><span class="r18">│</span><span class="r1">                                                                           </span></div>
+<div><span class="r18">│</span><span class="r1"> </span><span class="r2"> </span><span class="r8">73</span><span class="r2">  April </span><span class="r8">04</span><span class="r2">  </span><span class="r23">Name Surname</span><span class="r2">  </span><span class="r21">opps</span><span class="r2">            </span><span class="r1"> </span><span class="r18">│</span><span class="r1">                                                                           </span></div>
+<div><span class="r18">│</span><span class="r1"> </span><span class="r2"> </span><span class="r8">71</span><span class="r2">  April </span><span class="r8">04</span><span class="r2">  </span><span class="r23">Name Surname</span><span class="r2">  </span><span class="r21">opps</span><span class="r2">            </span><span class="r1"> </span><span class="r18">│</span><span class="r1">                                                                           </span></div>
+<div><span class="r18">│</span><span class="r1">                                               </span><span class="r18">│</span><span class="r1">                                                                           </span></div>
+<div><span class="r18">╰───────────────────────────────────────────────╯</span><span class="r1">                                                                           </span></div>
+<div><span class="r24">╭─ </span><span class="r25">tags</span><span class="r24"> ─────────────────────────────────────────────────────────────────────────────────────────────────────╮</span><span class="r1">              </span></div>
+<div><span class="r24">│</span><span class="r1">                                                                                                            </span><span class="r24">│</span><span class="r1">              </span></div>
+<div><span class="r24">│</span><span class="r1"> </span><span class="r2"> </span><span class="r8">4</span><span class="r2">  Today </span><span class="r9">16:24</span><span class="r2">  New release of types-python-dateutil </span><span class="r26">(</span><span class="r8">2.8</span><span class="r2">.</span><span class="r8">14</span><span class="r26">)</span><span class="r2"> on PyPI  </span><span class="r27">Libraries</span><span class="r2">  </span><span class="r28">24h</span><span class="r2"> </span><span class="r29">pkg</span><span class="r2"> </span><span class="r30">unread</span><span class="r2">         </span><span class="r1"> </span><span class="r24">│</span><span class="r1">              </span></div>
+<div><span class="r24">│</span><span class="r1"> </span><span class="r2"> </span><span class="r8">3</span><span class="r2">  Today </span><span class="r9">16:24</span><span class="r2">  New release of types-requests </span><span class="r26">(</span><span class="r8">2.27</span><span class="r2">.</span><span class="r8">22</span><span class="r26">)</span><span class="r2"> on PyPI        </span><span class="r27">Libraries</span><span class="r2">  </span><span class="r28">24h</span><span class="r2"> </span><span class="r29">pkg</span><span class="r2"> </span><span class="r30">unread</span><span class="r2">         </span><span class="r1"> </span><span class="r24">│</span><span class="r1">              </span></div>
+<div><span class="r24">│</span><span class="r1"> </span><span class="r2"> </span><span class="r8">2</span><span class="r2">  Today </span><span class="r9">16:42</span><span class="r2">  New message from Soma Records                          </span><span class="r31">Bandcamp</span><span class="r2">   </span><span class="r28">24h</span><span class="r2"> </span><span class="r32">bcmsg</span><span class="r2"> </span><span class="r11">music</span><span class="r2"> </span><span class="r30">unread</span><span class="r2"> </span><span class="r1"> </span><span class="r24">│</span><span class="r1">              </span></div>
+<div><span class="r24">│</span><span class="r1"> </span><span class="r2"> </span><span class="r8">1</span><span class="r2">  Today </span><span class="r9">17:48</span><span class="r2">  New release of mypy </span><span class="r26">(</span><span class="r8">0.950</span><span class="r26">)</span><span class="r2"> on PyPI                    </span><span class="r27">Libraries</span><span class="r2">  </span><span class="r28">24h</span><span class="r2"> </span><span class="r29">pkg</span><span class="r2"> </span><span class="r30">unread</span><span class="r2">         </span><span class="r1"> </span><span class="r24">│</span><span class="r1">              </span></div>
+<div><span class="r24">│</span><span class="r1">                                                                                                            </span><span class="r24">│</span><span class="r1">              </span></div>
+<div><span class="r24">╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</span><span class="r1">              </span></div>
 <div><span class="r1"></span><span class="r1">                                                                                                                            </span></div>
                     </div>
                 </div>

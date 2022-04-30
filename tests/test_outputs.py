@@ -5,6 +5,7 @@ import pytest
 from freezegun import freeze_time
 from rich_tables.table import draw_data
 from rich_tables.utils import make_console
+from typing import Iterable
 
 console = make_console(record=True, width=124)
 
@@ -24,5 +25,9 @@ def test_pulls(input_file, output_file):
         data = json.load(f)
 
     result = draw_data(data)
-    console.print(result)
+    if isinstance(result, Iterable):
+        for res in result:
+            console.print(res)
+    else:
+        console.print(result)
     console.save_svg(os.path.join("svgs", output_file))

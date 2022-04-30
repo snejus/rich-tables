@@ -22,7 +22,8 @@ from .utils import (
     new_tree,
     predictably_random_color,
     simple_panel,
-    wrap
+    wrap,
+    DISPLAY_HEADER
 )
 
 JSONDict = Dict[str, Any]
@@ -200,6 +201,8 @@ def _list(data: List[Any], header: str = ""):
             return counts_table(data)
 
         for col in keys:
+            if set(map(lambda x: str(x.get(col)), data)).issubset({None, ""}):
+                continue
             table.add_column(col)
 
         for item in data:
@@ -213,9 +216,13 @@ def _list(data: List[Any], header: str = ""):
                 table.add_row(flexitable(item, header))
 
     color = predictably_random_color(header)
-    for col in table.columns:
+    cols = table.columns.copy()
+    table.columns = []
+    for col in cols:
         if col.header:
-            col.header = wrap(f" {col.header} ", f"i b {color} on grey7")
+            header = DISPLAY_HEADER.get(col.header, col.header)
+            col.header = wrap(f" {header} ", f"i b {color} on grey7")
+        table.columns.append(col)
 
     if header:
         table.show_header = False

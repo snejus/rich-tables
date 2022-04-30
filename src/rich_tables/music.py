@@ -18,6 +18,7 @@ from .utils import (
     new_table,
     predictably_random_color,
     simple_panel,
+    DISPLAY_HEADER,
     wrap
 )
 
@@ -39,18 +40,6 @@ ALBUM_IGNORE = TRACK_FIELDS | {
     "albumartist",
 }
 
-
-DISPLAY_HEADER: Dict[str, str] = {
-    "track": "#",
-    "bpm": "🚀",
-    "stats": "",
-    "last_played": "  🎶 ⏰",
-    "mtime": "updated",
-    "data_source": "source",
-    "helicopta": ":helicopter:",
-    "track_alt": ":cd:",
-    "catalognum": "📖",
-}
 
 new_table = partial(new_table, collapse_padding=True, expand=True, padding=0)
 
