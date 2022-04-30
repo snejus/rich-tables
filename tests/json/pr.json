@@ -2,30 +2,35 @@
   "title": "Pull Requests",
   "values": [
     {
-      "title": "Database parental directories creation if not exist",
-      "url": "https://github.com/beetbox/beets/pull/4327",
+      "title": "Ability to optionally disable the musicbrainz metadata source",
+      "url": "https://github.com/beetbox/beets/pull/4319",
       "state": "MERGED",
-      "additions": 53,
-      "deletions": 2,
+      "additions": 35,
+      "deletions": 22,
       "repository": {
         "name": "beets"
       },
-      "author": "alicezou",
+      "author": "snejus",
       "isReadByViewer": true,
-      "createdAt": "2022-03-27T14:51:34Z",
-      "updatedAt": "2022-04-07T21:08:06Z",
-      "reviewDecision": "CHANGES_REQUESTED",
+      "createdAt": "2022-03-15T22:16:46Z",
+      "updatedAt": "2022-03-24T11:25:23Z",
+      "reviewDecision": "APPROVED",
       "participants": [
-        "alicezou",
+        "snejus",
         "sampsyo",
         "wisp3rwind"
       ],
-      "body": "## Description\r\n\r\nAdd prompt for users to select whether to create parental directories when they do not exist.\r\n\r\n## To Do\r\n\r\n- [x] Documentation. (If you've add a new command-line flag, for example, find the appropriate page under `docs/` to describe it.)\r\n- [x] Changelog. (Add an entry to `docs/changelog.rst` near the top of the document.)\r\n- [x] Tests. (Encouraged but not strictly required.) [still working on it]\r\n",
+      "body": "## Description\r\n\r\nFixes #400.  <!-- Insert issue number here if applicable. -->\r\nRelated to #2686\r\n\r\nAs I mentioned in https://github.com/beetbox/beets/issues/400#issuecomment-1067666254, this adds a patch that allows to disable the MusicBrainz metadata source during the import process.\r\n\r\nI had a little go at making the `MusicBrainz Options` section in the docs a little bit more consistent, and copied over the entire default config section for clarity.\r\n\r\n## To Do\r\n\r\n- [x] Documentation. (If you've add a new command-line flag, for example, find the appropriate page under `docs/` to describe it.)\r\n- [x] Changelog. (Add an entry to `docs/changelog.rst` near the top of the document.)\r\n- [ ] Tests. (Encouraged but not strictly required.)\r\n",
       "files": [
         {
-          "additions": 12,
+          "additions": 21,
+          "deletions": 22,
+          "path": "beets/autotag/hooks.py"
+        },
+        {
+          "additions": 1,
           "deletions": 0,
-          "path": "beets/ui/__init__.py"
+          "path": "beets/config_default.yaml"
         },
         {
           "additions": 2,
@@ -33,345 +38,422 @@
           "path": "docs/changelog.rst"
         },
         {
-          "additions": 1,
+          "additions": 11,
           "deletions": 0,
-          "path": "test/test_dbcore.py"
-        },
-        {
-          "additions": 38,
-          "deletions": 2,
-          "path": "test/test_ui_init.py"
+          "path": "docs/reference/config.rst"
         }
       ],
       "comments": [
         {
-          "author": "alicezou",
-          "body": "Hi Benedikt,\r\nThank you for your review! I have updated my commits.",
-          "createdAt": "2022-03-30T01:43:12Z"
+          "author": "snejus",
+          "body": "I do agree, will add the logic to `hooks.py` in a second.",
+          "createdAt": "2022-03-17T23:44:08Z"
         },
         {
-          "author": "alicezou",
-          "body": "Hi Adrian,\r\nThank you for the feedback! I have updated the related files.",
-          "createdAt": "2022-03-30T16:57:59Z"
-        },
-        {
-          "author": "alicezou",
-          "body": "Hi, \r\nIt's been a week since my last update. Are there any changes that I can make to improve this pull request? I am looking forward to hearing from you. :)\r\n@wisp3rwind @sampsyo ",
-          "createdAt": "2022-04-06T21:39:15Z"
-        },
-        {
-          "author": "alicezou",
-          "body": "Hi Adrian, \r\nThank you for your comments! I have updated the relevant parts. ",
-          "createdAt": "2022-04-07T19:24:39Z"
+          "author": "snejus",
+          "body": "It did end up being cleaner once the error handling logic got abstracted away. ",
+          "createdAt": "2022-03-18T05:25:44Z"
         }
       ],
       "reviews": [
         {
-          "author": "wisp3rwind",
-          "body": "Hi, thanks for  getting this started! I've left a few inline comments on how I think the design of this PR might be improved.",
-          "createdAt": "2022-03-29T20:05:25Z",
-          "state": "CHANGES_REQUESTED",
-          "comments": [
-            {
-              "author": "wisp3rwind",
-              "body": "It is somewhat unfortunate that this couples the `beets.dbcore` and `beets.ui` modules, whereas the former used to be standalone (except for importing `beets.util`). Would it be possible instead to catch the exception on missing directory in `beets/ui/__init__.py:_open_library()`, ask for creating the directory, and trying to open the database again afterwards?\r\n\r\nApart from that, a more descriptive name instead `_path_checker` what be nice, maybe along the lines of `check_db_directory_exists`?",
-              "createdAt": "2022-03-29T20:05:25Z",
-              "outdated": true,
-              "path": "beets/dbcore/db.py",
-              "position": null,
-              "diffHunk": "@@ -901,8 +901,19 @@ class Database:\n     data is written in a transaction.\n     \"\"\"\n \n+    # Check whether parental directories exist.\n+    def _path_checker(self, path):\n+        if not isinstance(path, bytes) and path == ':memory:':  # in memory db\n+            return\n+        newpath = os.path.dirname(path)\n+        if not os.path.isdir(newpath):\n+            from beets.ui.commands import database_dir_creation\n+            if database_dir_creation(newpath):\n+                os.makedirs(newpath)\n+"
-            },
-            {
-              "author": "wisp3rwind",
-              "body": "It might be helpful to more explicity describe the issue here; the path alone might not be enough to understand the problem: `The database directory {} does not exists, ...`?",
-              "createdAt": "2022-03-29T20:08:28Z",
-              "outdated": true,
-              "path": "beets/ui/commands.py",
-              "position": null,
-              "diffHunk": "@@ -1398,6 +1398,15 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return ui.input_yn(\"{} does not exist, create it (Y/n)?\""
-            },
-            {
-              "author": "wisp3rwind",
-              "body": "That would behave identically with the `try ... catch` removed, right?",
-              "createdAt": "2022-03-29T20:10:06Z",
-              "outdated": true,
-              "path": "test/test_dbcore.py",
-              "position": null,
-              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())\n+        try:\n+            dbcore.Database(non_exist_path)\n+        except OSError as e:\n+            raise e"
-            },
-            {
-              "author": "wisp3rwind",
-              "body": "I think this should be using a path within a temporary directory, to be certain that we don't pollute the environment where the test is run.",
-              "createdAt": "2022-03-29T20:15:01Z",
-              "outdated": true,
-              "path": "test/test_dbcore.py",
-              "position": null,
-              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())"
-            },
-            {
-              "author": "wisp3rwind",
-              "body": "It might be easier to use the `control_stdin` context manager from `test/helper.py` (see its docstring for details).",
-              "createdAt": "2022-03-29T20:15:07Z",
-              "outdated": true,
-              "path": "test/test_dbcore.py",
-              "position": null,
-              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())\n+        try:\n+            dbcore.Database(non_exist_path)\n+        except OSError as e:\n+            raise e\n+        shutil.rmtree(\"ParentalDirCreationTest\")\n+\n+    @mock.patch('builtins.input', side_effect=['n', ])"
-            }
-          ]
-        },
-        {
           "author": "sampsyo",
-          "body": "Looking great!! Here are a few granular suggestions.\r\n\r\nI actually think it would be fine (and a bit simpler) to keep the prompt code directly in the `beets.ui` module (i.e., `ui/__init__.py`) rather than having a short function in the `beets.ui.commands` module. The latter module is centered around providing implementations for the `beet <foo>` subcommands, and this functionality is actually a global thing that is not associated with any particular subcommand—so it would be a bit simpler to just keep everything in the new `_check_db_directory_exists` function.\r\n\r\nI also just wanted to state for the record that this issue will *probably* only affect people who have changed the `library` configuration option… beets automatically creates `~/.config/beets` by default and puts `library.db` in there. But custom database locations would not enjoy this automation (until now).",
-          "createdAt": "2022-03-30T15:35:46Z",
+          "body": "Awesome; thanks for getting this started! I actually think that it might be a little cleaner to handle this disabling in the `beets.autotag.hooks` module, which is the \"dispatcher\" that aggregates results from multiple sources. For example, this is the line that asks MB for matches:\r\nhttps://github.com/beetbox/beets/blob/3f6da68af2444b77807692023abfd607f0146750/beets/autotag/hooks.py#L615\r\n\r\nMaybe it would make a little more sense to skip those calls there, rather than having them all return None?",
+          "createdAt": "2022-03-16T18:19:23Z",
           "state": "COMMENTED",
           "comments": [
             {
               "author": "sampsyo",
-              "body": "```suggestion\r\n                       exists. Create it (Y/n)?\"\r\n```\r\n\r\nSo it's two full sentences.",
-              "createdAt": "2022-03-30T15:35:46Z",
+              "body": "The `.get(bool)` bit here is actually unnecessary; using this in an `if` does that automatically.",
+              "createdAt": "2022-03-16T18:19:23Z",
               "outdated": true,
-              "path": "beets/ui/commands.py",
+              "path": "beets/autotag/mb.py",
               "position": null,
-              "diffHunk": "@@ -1398,6 +1398,16 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return ui.input_yn(\"The database directory {} does not \\\n+                       exists, create it (Y/n)?\""
+              "diffHunk": "@@ -482,6 +482,9 @@ def match_album(artist, album, tracks=None, extra_tags=None):\n     The query consists of an artist name, an album name, and,\n     optionally, a number of tracks on the album and any other extra tags.\n     \"\"\"\n+    if not config[\"musicbrainz\"][\"enabled\"].get(bool):"
             },
             {
               "author": "sampsyo",
-              "body": "```suggestion\r\n* Create the parental directories for database if they do not exist.\r\n  :bug:`3808` :bug:`4327`\r\n```\r\n\r\nIncluding references to where this was discussed.",
-              "createdAt": "2022-03-30T15:36:40Z",
+              "body": "Just for my own sanity, could we keep this PR's docs changes focused on the new option? Some refactoring, reordering, and adding examples would be nice too, but it will be easier to think about in a separate PR. Thank you!",
+              "createdAt": "2022-03-16T18:20:28Z",
               "outdated": true,
-              "path": "docs/changelog.rst",
+              "path": "docs/reference/config.rst",
               "position": null,
-              "diffHunk": "@@ -7,6 +7,7 @@ Changelog\n Changelog goes here!\n \n New features:\n+* Create the parental directories for database if they do not exist.\n "
-            },
+              "diffHunk": "@@ -716,6 +716,39 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+Default configuration::"
+            }
+          ]
+        },
+        {
+          "author": "snejus",
+          "body": "",
+          "createdAt": "2022-03-17T23:41:44Z",
+          "state": "COMMENTED",
+          "comments": [
             {
-              "author": "sampsyo",
-              "body": "TBH I think it's probably OK to leave this sentence off? This is an edge case, and the prompt clearly explains to users what's going on, so I don't think we need to warn people that this might happen.",
-              "createdAt": "2022-03-30T15:37:20Z",
+              "author": "snejus",
+              "body": "Of course, I'll move them out to another branch!",
+              "createdAt": "2022-03-17T23:41:44Z",
               "outdated": true,
-              "path": "docs/guides/main.rst",
+              "path": "docs/reference/config.rst",
               "position": null,
-              "diffHunk": "@@ -142,7 +142,8 @@ place to start::\n \n Change that first path to a directory where you'd like to keep your music. Then,\n for ``library``, choose a good place to keep a database file that keeps an index\n-of your music. (The config's format is `YAML`_. You'll want to configure your\n+of your music. Beets will prompt you if the parental directories for database do\n+not exist. (The config's format is `YAML`_. You'll want to configure your"
+              "diffHunk": "@@ -716,6 +716,39 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+Default configuration::"
+            }
+          ]
+        },
+        {
+          "author": "snejus",
+          "body": "",
+          "createdAt": "2022-03-17T23:42:03Z",
+          "state": "COMMENTED",
+          "comments": [
+            {
+              "author": "snejus",
+              "body": "That's helpful, thanks!",
+              "createdAt": "2022-03-17T23:42:03Z",
+              "outdated": true,
+              "path": "beets/autotag/mb.py",
+              "position": null,
+              "diffHunk": "@@ -482,6 +482,9 @@ def match_album(artist, album, tracks=None, extra_tags=None):\n     The query consists of an artist name, an album name, and,\n     optionally, a number of tracks on the album and any other extra tags.\n     \"\"\"\n+    if not config[\"musicbrainz\"][\"enabled\"].get(bool):"
+            }
+          ]
+        },
+        {
+          "author": "wisp3rwind",
+          "body": "",
+          "createdAt": "2022-03-18T22:29:53Z",
+          "state": "COMMENTED",
+          "comments": [
+            {
+              "author": "wisp3rwind",
+              "body": "In my opinion, this pattern would be much more readable as\r\n\r\n```python\r\n    if artist and album and config[\"musicbrainz\"][\"enabled\"]:\r\n        yield from handle_exc(mb.match_album, artist, *common_args)\r\n```\r\n\r\nwith the check for MB being enabled removed from `handle_exc`. This would separate exception handling and checking whether to query musicbrainz somewhat more cleanly.\r\n\r\nIf not going this way, renaming `handle_exc` -> `invoke_mb` or similar would also help.",
+              "createdAt": "2022-03-18T22:29:53Z",
+              "outdated": true,
+              "path": "beets/autotag/hooks.py",
+              "position": null,
+              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]\n     # Base candidates if we have album and artist to match.\n     if artist and album:\n-        try:\n-            yield from mb.match_album(artist, album, len(items),\n-                                      extra_tags)\n-        except mb.MusicBrainzAPIError as exc:\n-            exc.log(log)\n+        yield from handle_exc(mb.match_album, artist, *common_args)"
+            }
+          ]
+        },
+        {
+          "author": "snejus",
+          "body": "",
+          "createdAt": "2022-03-18T22:58:19Z",
+          "state": "COMMENTED",
+          "comments": [
+            {
+              "author": "snejus",
+              "body": "Good point, @wisp3rwind. I've just renamed the function to `invoke_mb` ",
+              "createdAt": "2022-03-18T22:58:19Z",
+              "outdated": true,
+              "path": "beets/autotag/hooks.py",
+              "position": null,
+              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]\n     # Base candidates if we have album and artist to match.\n     if artist and album:\n-        try:\n-            yield from mb.match_album(artist, album, len(items),\n-                                      extra_tags)\n-        except mb.MusicBrainzAPIError as exc:\n-            exc.log(log)\n+        yield from handle_exc(mb.match_album, artist, *common_args)"
             }
           ]
         },
         {
           "author": "sampsyo",
-          "body": "Looking good!! I have just a few very small comments, but then I think this should be good to go.",
-          "createdAt": "2022-04-07T18:54:35Z",
-          "state": "CHANGES_REQUESTED",
+          "body": "Nice; looking good overall! I have a few low-level suggestions.",
+          "createdAt": "2022-03-19T14:23:13Z",
+          "state": "COMMENTED",
           "comments": [
             {
               "author": "sampsyo",
-              "body": "This comment looks like it's out of date (it can just be deleted).",
-              "createdAt": "2022-04-07T18:54:35Z",
+              "body": "I do sort of like @wisp3rwind's suggestion to consider moving this out of the `invoke_mb` utility—it might make it a little clearer what's going on!",
+              "createdAt": "2022-03-19T14:23:13Z",
               "outdated": true,
-              "path": "beets/ui/commands.py",
+              "path": "beets/autotag/hooks.py",
               "position": null,
-              "diffHunk": "@@ -1398,6 +1398,9 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+"
+              "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()"
             },
             {
               "author": "sampsyo",
-              "body": "I suggest just \"inlining\" this code, since it's pretty simple and not called anywhere else. (That is, just do this prompting right inside the function below instead of having a separate function.)",
-              "createdAt": "2022-04-07T18:55:23Z",
-              "outdated": true,
-              "path": "beets/ui/__init__.py",
-              "position": null,
-              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\"\n+                    .format(util.displayable_path(path)))"
+              "body": "I think this might cause a crash when an exception occurs. Namely, it seems like this function needs to return an iterable, right? So I think this exception handler should probably `return ()` or similar…",
+              "createdAt": "2022-03-19T14:23:46Z",
+              "outdated": false,
+              "path": "beets/autotag/hooks.py",
+              "position": 8,
+              "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()\n+\n+    try:\n+        return call_func(*args)\n+    except mb.MusicBrainzAPIError as exc:\n+        exc.log(log)"
             },
             {
               "author": "sampsyo",
-              "body": "Maybe should be called `_ensure_db_directory_exists` since it does more than just check?",
-              "createdAt": "2022-04-07T18:55:37Z",
+              "body": "I know this might be bikeshedding, but I actually think the repetition (passing the same set of arguments to the two calls to `mb.match_album`) is a little more intelligible.",
+              "createdAt": "2022-03-19T14:24:48Z",
               "outdated": true,
-              "path": "beets/ui/__init__.py",
+              "path": "beets/autotag/hooks.py",
               "position": null,
-              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\"\n+                    .format(util.displayable_path(path)))\n+\n+\n+def _check_db_directory_exists(path):"
+              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]"
             },
             {
               "author": "sampsyo",
-              "body": "exists -> exist",
-              "createdAt": "2022-04-07T18:55:45Z",
+              "body": "This stanza and the next could share a single `if config[\"musicbrainz\"][\"enabled\"]:`.",
+              "createdAt": "2022-03-19T14:25:13Z",
               "outdated": true,
-              "path": "beets/ui/__init__.py",
+              "path": "beets/autotag/hooks.py",
               "position": null,
-              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\""
+              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]\n     # Base candidates if we have album and artist to match.\n     if artist and album:"
+            },
+            {
+              "author": "sampsyo",
+              "body": "I think this documentation stuff might be out of order—it makes the \"top-level\" description below appear to be part of the \"enabled\" subsection. I think this should appear among the other subsections below (which start with \"searchlimit\").",
+              "createdAt": "2022-03-19T14:26:22Z",
+              "outdated": true,
+              "path": "docs/reference/config.rst",
+              "position": null,
+              "diffHunk": "@@ -716,6 +716,17 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+.. _musicbrainz.enabled:\n+\n+enabled\n+~~~~~~~\n+\n+This option allows you to disable using MusicBrainz as a metadata source. This applies\n+if you use plugins that fetch data from alternative sources and should make the import\n+process quicker.\n+\n+Default: ``yes``."
+            }
+          ]
+        },
+        {
+          "author": "wisp3rwind",
+          "body": "",
+          "createdAt": "2022-03-20T10:27:57Z",
+          "state": "COMMENTED",
+          "comments": [
+            {
+              "author": "wisp3rwind",
+              "body": "I think I'm also fine with the current version (renamed to `invoke_mb`); I was mostly concerned about `handle_exc` being actively misleading since it does more than handling exceptions. So, from my side, I'd say it's up to you @snejus which variant you prefer.",
+              "createdAt": "2022-03-20T10:27:58Z",
+              "outdated": true,
+              "path": "beets/autotag/hooks.py",
+              "position": null,
+              "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()"
+            }
+          ]
+        },
+        {
+          "author": "wisp3rwind",
+          "body": "",
+          "createdAt": "2022-03-20T10:29:27Z",
+          "state": "COMMENTED",
+          "comments": [
+            {
+              "author": "wisp3rwind",
+              "body": "Nice catch! Yes, I'd suspect the same.",
+              "createdAt": "2022-03-20T10:29:27Z",
+              "outdated": false,
+              "path": "beets/autotag/hooks.py",
+              "position": 8,
+              "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()\n+\n+    try:\n+        return call_func(*args)\n+    except mb.MusicBrainzAPIError as exc:\n+        exc.log(log)"
+            }
+          ]
+        },
+        {
+          "author": "snejus",
+          "body": "",
+          "createdAt": "2022-03-23T16:23:16Z",
+          "state": "COMMENTED",
+          "comments": [
+            {
+              "author": "snejus",
+              "body": "Well caught! Fixed in e1ffadb2",
+              "createdAt": "2022-03-23T16:23:16Z",
+              "outdated": false,
+              "path": "beets/autotag/hooks.py",
+              "position": 8,
+              "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()\n+\n+    try:\n+        return call_func(*args)\n+    except mb.MusicBrainzAPIError as exc:\n+        exc.log(log)"
+            }
+          ]
+        },
+        {
+          "author": "snejus",
+          "body": "",
+          "createdAt": "2022-03-23T16:27:52Z",
+          "state": "COMMENTED",
+          "comments": [
+            {
+              "author": "snejus",
+              "body": "True. I must admit I sometimes treat the maximum line length a bit too religiously and adjust the code accordingly ... in unconventional ways 😆 ",
+              "createdAt": "2022-03-23T16:27:53Z",
+              "outdated": true,
+              "path": "beets/autotag/hooks.py",
+              "position": null,
+              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]"
+            }
+          ]
+        },
+        {
+          "author": "snejus",
+          "body": "",
+          "createdAt": "2022-03-23T17:03:22Z",
+          "state": "COMMENTED",
+          "comments": [
+            {
+              "author": "snejus",
+              "body": "Agree - have moved it below.",
+              "createdAt": "2022-03-23T17:03:22Z",
+              "outdated": true,
+              "path": "docs/reference/config.rst",
+              "position": null,
+              "diffHunk": "@@ -716,6 +716,17 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+.. _musicbrainz.enabled:\n+\n+enabled\n+~~~~~~~\n+\n+This option allows you to disable using MusicBrainz as a metadata source. This applies\n+if you use plugins that fetch data from alternative sources and should make the import\n+process quicker.\n+\n+Default: ``yes``."
             }
           ]
         },
         {
           "author": "sampsyo",
-          "body": "Looks perfect. Thanks again!!",
-          "createdAt": "2022-04-07T21:07:59Z",
+          "body": "Looks great to me; thank you for your attention to detail here! 😃 ",
+          "createdAt": "2022-03-23T21:05:48Z",
           "state": "APPROVED",
           "comments": []
         }
       ],
       "reviewThreads": [
         {
-          "path": "beets/dbcore/db.py",
+          "path": "beets/autotag/mb.py",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "sampsyo",
+              "body": "The `.get(bool)` bit here is actually unnecessary; using this in an `if` does that automatically.",
+              "createdAt": "2022-03-16T18:19:23Z",
+              "diffHunk": "@@ -482,6 +482,9 @@ def match_album(artist, album, tracks=None, extra_tags=None):\n     The query consists of an artist name, an album name, and,\n     optionally, a number of tracks on the album and any other extra tags.\n     \"\"\"\n+    if not config[\"musicbrainz\"][\"enabled\"].get(bool):"
+            },
+            {
+              "author": "snejus",
+              "body": "That's helpful, thanks!",
+              "createdAt": "2022-03-17T23:42:03Z",
+              "diffHunk": "@@ -482,6 +482,9 @@ def match_album(artist, album, tracks=None, extra_tags=None):\n     The query consists of an artist name, an album name, and,\n     optionally, a number of tracks on the album and any other extra tags.\n     \"\"\"\n+    if not config[\"musicbrainz\"][\"enabled\"].get(bool):"
+            }
+          ]
+        },
+        {
+          "path": "docs/reference/config.rst",
+          "line": null,
+          "isResolved": false,
+          "resolvedBy": null,
+          "comments": [
+            {
+              "author": "sampsyo",
+              "body": "Just for my own sanity, could we keep this PR's docs changes focused on the new option? Some refactoring, reordering, and adding examples would be nice too, but it will be easier to think about in a separate PR. Thank you!",
+              "createdAt": "2022-03-16T18:20:28Z",
+              "diffHunk": "@@ -716,6 +716,39 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+Default configuration::"
+            },
+            {
+              "author": "snejus",
+              "body": "Of course, I'll move them out to another branch!",
+              "createdAt": "2022-03-17T23:41:44Z",
+              "diffHunk": "@@ -716,6 +716,39 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+Default configuration::"
+            }
+          ]
+        },
+        {
+          "path": "beets/autotag/hooks.py",
           "line": null,
           "isResolved": false,
           "resolvedBy": null,
           "comments": [
             {
               "author": "wisp3rwind",
-              "body": "It is somewhat unfortunate that this couples the `beets.dbcore` and `beets.ui` modules, whereas the former used to be standalone (except for importing `beets.util`). Would it be possible instead to catch the exception on missing directory in `beets/ui/__init__.py:_open_library()`, ask for creating the directory, and trying to open the database again afterwards?\r\n\r\nApart from that, a more descriptive name instead `_path_checker` what be nice, maybe along the lines of `check_db_directory_exists`?",
-              "createdAt": "2022-03-29T20:05:25Z",
-              "diffHunk": "@@ -901,8 +901,19 @@ class Database:\n     data is written in a transaction.\n     \"\"\"\n \n+    # Check whether parental directories exist.\n+    def _path_checker(self, path):\n+        if not isinstance(path, bytes) and path == ':memory:':  # in memory db\n+            return\n+        newpath = os.path.dirname(path)\n+        if not os.path.isdir(newpath):\n+            from beets.ui.commands import database_dir_creation\n+            if database_dir_creation(newpath):\n+                os.makedirs(newpath)\n+"
+              "body": "In my opinion, this pattern would be much more readable as\r\n\r\n```python\r\n    if artist and album and config[\"musicbrainz\"][\"enabled\"]:\r\n        yield from handle_exc(mb.match_album, artist, *common_args)\r\n```\r\n\r\nwith the check for MB being enabled removed from `handle_exc`. This would separate exception handling and checking whether to query musicbrainz somewhat more cleanly.\r\n\r\nIf not going this way, renaming `handle_exc` -> `invoke_mb` or similar would also help.",
+              "createdAt": "2022-03-18T22:29:53Z",
+              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]\n     # Base candidates if we have album and artist to match.\n     if artist and album:\n-        try:\n-            yield from mb.match_album(artist, album, len(items),\n-                                      extra_tags)\n-        except mb.MusicBrainzAPIError as exc:\n-            exc.log(log)\n+        yield from handle_exc(mb.match_album, artist, *common_args)"
+            },
+            {
+              "author": "snejus",
+              "body": "Good point, @wisp3rwind. I've just renamed the function to `invoke_mb` ",
+              "createdAt": "2022-03-18T22:58:19Z",
+              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]\n     # Base candidates if we have album and artist to match.\n     if artist and album:\n-        try:\n-            yield from mb.match_album(artist, album, len(items),\n-                                      extra_tags)\n-        except mb.MusicBrainzAPIError as exc:\n-            exc.log(log)\n+        yield from handle_exc(mb.match_album, artist, *common_args)"
             }
           ]
         },
         {
-          "path": "beets/ui/commands.py",
+          "path": "beets/autotag/hooks.py",
           "line": null,
           "isResolved": false,
           "resolvedBy": null,
           "comments": [
+            {
+              "author": "sampsyo",
+              "body": "I do sort of like @wisp3rwind's suggestion to consider moving this out of the `invoke_mb` utility—it might make it a little clearer what's going on!",
+              "createdAt": "2022-03-19T14:23:13Z",
+              "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()"
+            },
             {
               "author": "wisp3rwind",
-              "body": "It might be helpful to more explicity describe the issue here; the path alone might not be enough to understand the problem: `The database directory {} does not exists, ...`?",
-              "createdAt": "2022-03-29T20:08:28Z",
-              "diffHunk": "@@ -1398,6 +1398,15 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return ui.input_yn(\"{} does not exist, create it (Y/n)?\""
+              "body": "I think I'm also fine with the current version (renamed to `invoke_mb`); I was mostly concerned about `handle_exc` being actively misleading since it does more than handling exceptions. So, from my side, I'd say it's up to you @snejus which variant you prefer.",
+              "createdAt": "2022-03-20T10:27:58Z",
+              "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()"
             }
           ]
         },
         {
-          "path": "test/test_dbcore.py",
-          "line": null,
+          "path": "beets/autotag/hooks.py",
+          "line": 605,
           "isResolved": false,
           "resolvedBy": null,
           "comments": [
+            {
+              "author": "sampsyo",
+              "body": "I think this might cause a crash when an exception occurs. Namely, it seems like this function needs to return an iterable, right? So I think this exception handler should probably `return ()` or similar…",
+              "createdAt": "2022-03-19T14:23:46Z",
+              "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()\n+\n+    try:\n+        return call_func(*args)\n+    except mb.MusicBrainzAPIError as exc:\n+        exc.log(log)"
+            },
             {
               "author": "wisp3rwind",
-              "body": "That would behave identically with the `try ... catch` removed, right?",
-              "createdAt": "2022-03-29T20:10:06Z",
-              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())\n+        try:\n+            dbcore.Database(non_exist_path)\n+        except OSError as e:\n+            raise e"
-            }
-          ]
-        },
-        {
-          "path": "test/test_dbcore.py",
-          "line": null,
-          "isResolved": false,
-          "resolvedBy": null,
-          "comments": [
+              "body": "Nice catch! Yes, I'd suspect the same.",
+              "createdAt": "2022-03-20T10:29:27Z",
+              "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()\n+\n+    try:\n+        return call_func(*args)\n+    except mb.MusicBrainzAPIError as exc:\n+        exc.log(log)"
+            },
             {
-              "author": "wisp3rwind",
-              "body": "I think this should be using a path within a temporary directory, to be certain that we don't pollute the environment where the test is run.",
-              "createdAt": "2022-03-29T20:15:01Z",
-              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())"
+              "author": "snejus",
+              "body": "Well caught! Fixed in e1ffadb2",
+              "createdAt": "2022-03-23T16:23:16Z",
+              "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()\n+\n+    try:\n+        return call_func(*args)\n+    except mb.MusicBrainzAPIError as exc:\n+        exc.log(log)"
             }
           ]
         },
         {
-          "path": "test/test_dbcore.py",
-          "line": null,
-          "isResolved": false,
-          "resolvedBy": null,
-          "comments": [
-            {
-              "author": "wisp3rwind",
-              "body": "It might be easier to use the `control_stdin` context manager from `test/helper.py` (see its docstring for details).",
-              "createdAt": "2022-03-29T20:15:07Z",
-              "diffHunk": "@@ -760,8 +762,31 @@ def test_no_results(self):\n             ModelFixture1, dbcore.query.FalseQuery()).get())\n \n \n+class ParentalDirCreation(unittest.TestCase):\n+    @mock.patch('builtins.input', side_effect=['y', ])\n+    def test_create_yes(self, _):\n+        non_exist_path = \"ParentalDirCreationTest/nonexist/\" + str(random())\n+        try:\n+            dbcore.Database(non_exist_path)\n+        except OSError as e:\n+            raise e\n+        shutil.rmtree(\"ParentalDirCreationTest\")\n+\n+    @mock.patch('builtins.input', side_effect=['n', ])"
-            }
-          ]
-        },
-        {
-          "path": "beets/ui/commands.py",
+          "path": "beets/autotag/hooks.py",
           "line": null,
           "isResolved": false,
           "resolvedBy": null,
           "comments": [
             {
               "author": "sampsyo",
-              "body": "```suggestion\r\n                       exists. Create it (Y/n)?\"\r\n```\r\n\r\nSo it's two full sentences.",
-              "createdAt": "2022-03-30T15:35:46Z",
-              "diffHunk": "@@ -1398,6 +1398,16 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return ui.input_yn(\"The database directory {} does not \\\n+                       exists, create it (Y/n)?\""
+              "body": "I know this might be bikeshedding, but I actually think the repetition (passing the same set of arguments to the two calls to `mb.match_album`) is a little more intelligible.",
+              "createdAt": "2022-03-19T14:24:48Z",
+              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]"
+            },
+            {
+              "author": "snejus",
+              "body": "True. I must admit I sometimes treat the maximum line length a bit too religiously and adjust the code accordingly ... in unconventional ways 😆 ",
+              "createdAt": "2022-03-23T16:27:53Z",
+              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]"
             }
           ]
         },
         {
-          "path": "docs/changelog.rst",
+          "path": "beets/autotag/hooks.py",
           "line": null,
           "isResolved": false,
           "resolvedBy": null,
           "comments": [
             {
               "author": "sampsyo",
-              "body": "```suggestion\r\n* Create the parental directories for database if they do not exist.\r\n  :bug:`3808` :bug:`4327`\r\n```\r\n\r\nIncluding references to where this was discussed.",
-              "createdAt": "2022-03-30T15:36:40Z",
-              "diffHunk": "@@ -7,6 +7,7 @@ Changelog\n Changelog goes here!\n \n New features:\n+* Create the parental directories for database if they do not exist.\n "
+              "body": "This stanza and the next could share a single `if config[\"musicbrainz\"][\"enabled\"]:`.",
+              "createdAt": "2022-03-19T14:25:13Z",
+              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]\n     # Base candidates if we have album and artist to match.\n     if artist and album:"
             }
           ]
         },
         {
-          "path": "docs/guides/main.rst",
+          "path": "docs/reference/config.rst",
           "line": null,
           "isResolved": false,
           "resolvedBy": null,
           "comments": [
             {
               "author": "sampsyo",
-              "body": "TBH I think it's probably OK to leave this sentence off? This is an edge case, and the prompt clearly explains to users what's going on, so I don't think we need to warn people that this might happen.",
-              "createdAt": "2022-03-30T15:37:20Z",
-              "diffHunk": "@@ -142,7 +142,8 @@ place to start::\n \n Change that first path to a directory where you'd like to keep your music. Then,\n for ``library``, choose a good place to keep a database file that keeps an index\n-of your music. (The config's format is `YAML`_. You'll want to configure your\n+of your music. Beets will prompt you if the parental directories for database do\n+not exist. (The config's format is `YAML`_. You'll want to configure your"
-            }
-          ]
-        },
-        {
-          "path": "beets/ui/commands.py",
-          "line": null,
-          "isResolved": false,
-          "resolvedBy": null,
-          "comments": [
+              "body": "I think this documentation stuff might be out of order—it makes the \"top-level\" description below appear to be part of the \"enabled\" subsection. I think this should appear among the other subsections below (which start with \"searchlimit\").",
+              "createdAt": "2022-03-19T14:26:22Z",
+              "diffHunk": "@@ -716,6 +716,17 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+.. _musicbrainz.enabled:\n+\n+enabled\n+~~~~~~~\n+\n+This option allows you to disable using MusicBrainz as a metadata source. This applies\n+if you use plugins that fetch data from alternative sources and should make the import\n+process quicker.\n+\n+Default: ``yes``."
+            },
             {
-              "author": "sampsyo",
-              "body": "This comment looks like it's out of date (it can just be deleted).",
-              "createdAt": "2022-04-07T18:54:35Z",
-              "diffHunk": "@@ -1398,6 +1398,9 @@ def show_version(lib, opts, args):\n version_cmd.func = show_version\n default_commands.append(version_cmd)\n \n+# database_location: return true if user\n+# wants to create the parent directories.\n+"
-            }
-          ]
-        },
-        {
-          "path": "beets/ui/__init__.py",
-          "line": null,
-          "isResolved": false,
-          "resolvedBy": null,
-          "comments": [
-            {
-              "author": "sampsyo",
-              "body": "I suggest just \"inlining\" this code, since it's pretty simple and not called anywhere else. (That is, just do this prompting right inside the function below instead of having a separate function.)",
-              "createdAt": "2022-04-07T18:55:23Z",
-              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\"\n+                    .format(util.displayable_path(path)))"
-            }
-          ]
-        },
-        {
-          "path": "beets/ui/__init__.py",
-          "line": null,
-          "isResolved": false,
-          "resolvedBy": null,
-          "comments": [
-            {
-              "author": "sampsyo",
-              "body": "Maybe should be called `_ensure_db_directory_exists` since it does more than just check?",
-              "createdAt": "2022-04-07T18:55:37Z",
-              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\"\n+                    .format(util.displayable_path(path)))\n+\n+\n+def _check_db_directory_exists(path):"
-            }
-          ]
-        },
-        {
-          "path": "beets/ui/__init__.py",
-          "line": null,
-          "isResolved": false,
-          "resolvedBy": null,
-          "comments": [
-            {
-              "author": "sampsyo",
-              "body": "exists -> exist",
-              "createdAt": "2022-04-07T18:55:45Z",
-              "diffHunk": "@@ -1206,11 +1206,30 @@ def _configure(options):\n               util.displayable_path(config.config_dir()))\n     return config\n \n+# Check whether parental directories exist.\n+\n+\n+def database_dir_creation(path):\n+    # Ask the user for a choice.\n+    return input_yn(\"The database directory {} does not \\\n+                       exists. Create it (Y/n)?\""
+              "author": "snejus",
+              "body": "Agree - have moved it below.",
+              "createdAt": "2022-03-23T17:03:22Z",
+              "diffHunk": "@@ -716,6 +716,17 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+.. _musicbrainz.enabled:\n+\n+enabled\n+~~~~~~~\n+\n+This option allows you to disable using MusicBrainz as a metadata source. This applies\n+if you use plugins that fetch data from alternative sources and should make the import\n+process quicker.\n+\n+Default: ``yes``."
             }
           ]
         }
