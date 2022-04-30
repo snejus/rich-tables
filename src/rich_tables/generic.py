@@ -149,16 +149,16 @@ def _dict(data: Dict, header: str = ""):
         else:
             rend_lines.append(
                 new_table(
-                    rows=[map(lambda x: Align.center(x, vertical="middle"), line)],
+                    rows=[map(lambda x: Align.center(x, vertical="top"), line)],
                     expand=True,
                     justify="left",
                 )
             )
 
     if not header:
-        return rend_lines
+        # return rend_lines
         # return Group(*rend_lines)
-        # return new_tree(rend_lines, title=header or key)
+        return new_tree(rend_lines, title=header or key)
     else:
         return new_tree(rend_lines, title=header or key)
 
@@ -226,6 +226,7 @@ def _list(data: List[Any], header: str = ""):
 
     if header:
         table.show_header = False
-        return border_panel(table, title=header, padding=1, border_style=f"dim {color}")
+        return simple_panel(table, title=header, padding=1, border_style=f"dim {color}")
     else:
-        return simple_panel(table)
+        return table
+        # return border_panel(table)
