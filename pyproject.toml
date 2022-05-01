@@ -14,7 +14,7 @@ rgbxy = ">=0.5"
 ordered-set = ">=4.0.2"
 pycountry = ">=20.7.3"
 
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.dev-dependencies]
 flake8 = ">=4.0.1"
 mypy = ">=0.910"
 pylint = ">=2.13.7"

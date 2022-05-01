@@ -348,6 +348,8 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     total_duration=lambda x: duration2human(x, 2),
     brand=format_with_color,
     answer=md_panel,
+    plays=lambda x: wrap(x, "b green"),
+    skips=lambda x: wrap(x, "b red"),
 )
 
 DISPLAY_HEADER: Dict[str, str] = {

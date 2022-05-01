@@ -149,16 +149,16 @@ def _dict(data: Dict, header: str = ""):
         else:
             rend_lines.append(
                 new_table(
-                    rows=[map(lambda x: Align.center(x, vertical="top"), line)],
+                    rows=[map(lambda x: Align.left(x, vertical="middle"), line)],
                     expand=True,
                     justify="left",
                 )
             )
 
     if not header:
-        # return rend_lines
+        return rend_lines
         # return Group(*rend_lines)
-        return new_tree(rend_lines, title=header or key)
+        # return new_tree(rend_lines, title=header or key)
     else:
         return new_tree(rend_lines, title=header or key)
 
@@ -201,7 +201,7 @@ def _list(data: List[Any], header: str = ""):
             return counts_table(data)
 
         for col in keys:
-            if set(map(lambda x: str(x.get(col)), data)).issubset({None, ""}):
+            if set(map(lambda x: str(x.get(col)), data)).issubset({"None", "", "0"}):
                 continue
             table.add_column(col)
 
@@ -217,16 +217,15 @@ def _list(data: List[Any], header: str = ""):
 
     color = predictably_random_color(header)
     cols = table.columns.copy()
-    table.columns = []
+    # table.columns = []
     for col in cols:
         if col.header:
-            header = DISPLAY_HEADER.get(col.header, col.header)
-            col.header = wrap(f" {header} ", f"i b {color} on grey7")
-        table.columns.append(col)
+            # header = DISPLAY_HEADER.get(col.header, col.header)
+            col.header = wrap(f" {col.header} ", f"i b {color} on grey7")
+        # table.columns.append(col)
 
     if header:
         table.show_header = False
-        return simple_panel(table, title=header, padding=1, border_style=f"dim {color}")
+        return border_panel(table, title=header, padding=1, border_style=f"dim {color}")
     else:
-        return table
-        # return border_panel(table)
+        return simple_panel(table)
