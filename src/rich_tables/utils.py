@@ -344,7 +344,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     **{"from": format_with_color},
     to=format_with_color,
     creditText=md_panel,
-    duration=lambda x: duration2human(x, 2),
+    duration=lambda x: duration2human(x, 2) if isinstance(x, (int, float)) else x,
     total_duration=lambda x: duration2human(x, 2),
     brand=format_with_color,
     answer=md_panel,

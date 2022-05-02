@@ -177,7 +177,7 @@ def _list(data: List[Any], header: str = ""):
     if only(data, dict):
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
         first_item = data[0]
-        keys = OrderedSet.union(*map(lambda x: OrderedSet(x.keys()), data))
+        keys = OrderedSet.union(*map(lambda x: OrderedSet([k for k in x if x[k]]), data))
         if {"before", "after"}.issubset(keys):
             for idx in range(len(data)):
                 item = data[idx]
@@ -200,13 +200,18 @@ def _list(data: List[Any], header: str = ""):
             # [{"some_count": 10, "some_entity": "entity"}, ...]
             return counts_table(data)
 
-        for col in keys:
-            if set(map(lambda x: str(x.get(col)), data)).issubset({"None", "", "0"}):
-                continue
-            table.add_column(col)
+        if len(keys) < 15:
+            for col in keys:
+                # if set(map(lambda x: str(x.get(col)), data)).issubset({"None", "", "0"}):
+                #     continue
+                table.add_column(col)
 
-        for item in data:
-            table.take_dict_item(item, transform=flexitable)
+            for item in data:
+                table.take_dict_item(item, transform=flexitable)
+        else:
+            for item in data:
+                table.add_row(*flexitable(dict(zip(keys, op.itemgetter(*keys)(item)))))
+                table.add_row("")
     else:
         for item in filter(op.truth, data):
             content = flexitable(item, header)
