@@ -41,7 +41,7 @@ def format_new(string: str) -> str:
 
 
 def format_old(string: str) -> str:
-    return wrap(re.sub(r"(^\s+$)", "[u red]\\1[/u red]", string), "b red")
+    return wrap(re.sub(r"(\s+)", "[u red]\\1[/u red]", string), "b s red")
     # return wrap(string, "b s red")
 
 
@@ -63,7 +63,7 @@ def make_difftext(
     before = re.sub(r"\\?\[", r"\\[", before)
     after = re.sub(r"\\?\[", r"\\[", after)
 
-    matcher = SequenceMatcher(autojunk=True, a=before, b=after)
+    matcher = SequenceMatcher(lambda x: x in junk, autojunk=False, a=before, b=after)
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
