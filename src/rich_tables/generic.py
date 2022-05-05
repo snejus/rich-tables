@@ -3,7 +3,7 @@ import operator as op
 from functools import singledispatch
 from typing import Any, Dict, Iterable, List, Type, Union
 
-from ordered_set import OrderedSet
+from ordered_set import OrderedSet as ordset  # type: ignore[import]
 from rich import box, print
 from rich.align import Align
 from rich.console import ConsoleRenderable, Group
@@ -11,55 +11,49 @@ from rich.errors import NotRenderableError
 from rich.layout import Layout
 from rich.table import Table
 
+from .utils import border_panel
 from .utils import (
+    DISPLAY_HEADER,
     FIELDS_MAP,
-    border_panel,
-    counts_table,
+    duration2human,
     format_with_color,
+    get_val,
     make_console,
     make_difftext,
     new_table,
     new_tree,
     predictably_random_color,
+    progress_bar,
     simple_panel,
-    wrap,
-    DISPLAY_HEADER
+    wrap
 )
 
 JSONDict = Dict[str, Any]
 
 
-def make_bicolumn_layout(rends: List[ConsoleRenderable]) -> Layout:
-    col_rows = dict(left=0, right=0)
-    divided: Dict[str, List] = dict(left=[], right=[])
-    standalone = []
-    for rend in rends:
-        rend.expand = False
-        try:
-            row_count = rend.renderable.row_count + 6
-        except AttributeError:
-            standalone.append(rend)
-            continue
-        else:
-            side = "left" if col_rows["left"] <= col_rows["right"] else "right"
-            divided[side].append(rend)
-            col_rows[side] += row_count
+def counts_table(data: List[JSONDict]) -> Table:
+    keys = set(data[0])
+    count_col_name = "count"
+    if count_col_name not in keys:
+        for key, val in data[0].items():
+            if isinstance(val, (int, float)):
+                count_col_name = key
 
-    lay = Align.left(
-        Group(
-            *it.starmap(
-                lambda r1, r2: Align.center(
-                    new_table(
-                        rows=[[Align.right(r1), Align.left(r2, vertical="middle")]]
-                        if r2
-                        else [[r1]]
-                    )
-                ),
-                it.zip_longest(rends[::2], rends[1::2]),
-            )
+    all_counts = list(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
+    if min(all_counts) > 1:
+        all_counts = list(map(int, all_counts))
+    max_count = max(all_counts)
+
+    headers = [*(keys - {count_col_name}), count_col_name]
+    table = new_table(*headers, overflow="fold", vertical="middle")
+    for item, count_val in zip(data, all_counts):
+        table.add_row(
+            *map(flexitable, op.itemgetter(*headers)(item)), progress_bar(count_val, max_count)
         )
-    )
-    return lay
+    if count_col_name in {"duration", "total_duration"}:
+        table.caption = "Total " + duration2human(float(sum(all_counts)), 2)
+        table.caption_justify = "left"
+    return table
 
 
 def add_to_table(
@@ -112,6 +106,7 @@ console = make_console()
 
 @flexitable.register(dict)
 def _dict(data: Dict, header: str = ""):
+    print(header)
     table = new_table(
         "",
         "",
@@ -176,8 +171,7 @@ def _list(data: List[Any], header: str = ""):
 
     if only(data, dict):
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
-        first_item = data[0]
-        keys = OrderedSet.union(*map(lambda x: OrderedSet([k for k in x if x[k]]), data))
+        keys = ordset(filter(lambda k: any(filter(op.itemgetter(k), data)), data[0]))
         if {"before", "after"}.issubset(keys):
             for idx in range(len(data)):
                 item = data[idx]
@@ -193,7 +187,7 @@ def _list(data: List[Any], header: str = ""):
                         ),
                     )
                 )
-        vals_types = set(map(type, first_item.values()))
+        vals_types = set(map(type, data[0].values()))
         if (
             len(keys) == 2 and len(vals_types.intersection({int, float, str})) == 2
         ) or "count_" in " ".join(keys):
@@ -202,12 +196,10 @@ def _list(data: List[Any], header: str = ""):
 
         if len(keys) < 15:
             for col in keys:
-                # if set(map(lambda x: str(x.get(col)), data)).issubset({"None", "", "0"}):
-                #     continue
                 table.add_column(col)
 
             for item in data:
-                table.take_dict_item(item, transform=flexitable)
+                table.add_dict_item(item, transform=flexitable)
         else:
             for item in data:
                 table.add_row(*flexitable(dict(zip(keys, op.itemgetter(*keys)(item)))))
@@ -222,12 +214,10 @@ def _list(data: List[Any], header: str = ""):
 
     color = predictably_random_color(header)
     cols = table.columns.copy()
-    # table.columns = []
     for col in cols:
         if col.header:
             # header = DISPLAY_HEADER.get(col.header, col.header)
             col.header = wrap(f" {col.header} ", f"i b {color} on grey7")
-        # table.columns.append(col)
 
     if header:
         table.show_header = False

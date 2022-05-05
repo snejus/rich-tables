@@ -41,8 +41,7 @@ def format_new(string: str) -> str:
 
 
 def format_old(string: str) -> str:
-    return wrap(re.sub(r"(\s+)", "[u red]\\1[/u red]", string), "b s red")
-    # return wrap(string, "b s red")
+    return wrap(string, "b s red")
 
 
 def fmtdiff(change: str, before: str, after: str) -> str:
@@ -57,7 +56,9 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 
 
 def make_difftext(
-    before: str, after: str, junk: str = " qwertyuiopasdfghjkllzxcvbnm"
+    before: str,
+    after: str,
+    junk: str = " qwertyuiopasdfghjkllzxcvbnm"
     # before: str, after: str, junk: str = r" \n"
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
@@ -150,7 +151,7 @@ class NewTable(Table):
         """Provide a mapping between columns names / ids and columns."""
         return {str(c.header): c._index for c in self.columns if c.header}
 
-    def take_dict_item(
+    def add_dict_item(
         self, item: JSONDict, transform: Callable = lambda x, y: x, **kwargs
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
@@ -165,6 +166,7 @@ def new_table(*args: Any, **kwargs: Any) -> NewTable:
         highlight=True,
         row_styles=["white"],
         expand=True,
+        title_justify="left",
     )
     if args:
         default.update(

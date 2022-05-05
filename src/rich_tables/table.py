@@ -162,12 +162,14 @@ def lights_table(lights: List[JSONDict]) -> Table:
     conv = Converter()
     for light in lights:
         xy = light.get("xy")
-        if xy:
+        style = ""
+        if not light["on"]:
+            style = "dim"
+            light["xy"] = ""
+        elif xy:
             color = conv.xy_to_hex(*xy)
             light["xy"] = wrap("   a", f"#{color} on #{color}")
-        table.add_row(
-            *map(str, map(light.get, headers)), style="" if light["on"] else "dim"
-        )
+        table.add_row(*map(str, map(lambda x: light.get(x) or "", headers)), style=style)
     return table
 
 
@@ -239,21 +241,13 @@ def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
     for month, day_events in it.groupby(
         new_events, lambda x: (x["start"].month, x["start"].strftime("%B"))
     ):
-        table = new_table(
-            *keys,
-            expand=True,
-            highlight=False,
-            padding=0,
-            collapse_padding=True,
-            show_header=False,
-            title_justify="left",
-        )
+        table = new_table(*keys, highlight=False, padding=0, show_header=False)
         for event in day_events:
             if "Week " in event["summary"]:
                 table.add_row("")
-                table.take_dict_item(event, style=event["color"] + " on grey7")
+                table.add_dict_item(event, style=event["color"] + " on grey7")
             else:
-                table.take_dict_item(event)
+                table.add_dict_item(event)
         yield border_panel(table, title=month[1])
 
 
@@ -343,7 +337,7 @@ def tasks_table(tasks: List[JSONDict]) -> None:
             except StopIteration:
                 table.columns.remove(col)
         panel = simple_panel if group == "started" else border_panel
-        print(panel(table, title=wrap(group, "b"), style=project_color))
+        yield panel(table, title=wrap(group, "b"), style=project_color)
 
 
 def load_data() -> Any:
