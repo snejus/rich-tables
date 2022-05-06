@@ -39,7 +39,7 @@ def counts_table(data: List[JSONDict]) -> Table:
             if isinstance(val, (int, float)):
                 count_col_name = key
 
-    all_counts = list(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
+    all_counts = list(map(float, map(lambda x: x.get(count_col_name) or 0, data)))
     if min(all_counts) > 1:
         all_counts = list(map(int, all_counts))
     max_count = max(all_counts)
