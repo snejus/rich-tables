@@ -13,47 +13,19 @@ from rich.table import Table
 
 from .utils import border_panel
 from .utils import (
-    DISPLAY_HEADER,
     FIELDS_MAP,
-    duration2human,
     format_with_color,
-    get_val,
+    counts_table,
     make_console,
     make_difftext,
     new_table,
     new_tree,
     predictably_random_color,
-    progress_bar,
     simple_panel,
     wrap
 )
 
 JSONDict = Dict[str, Any]
-
-
-def counts_table(data: List[JSONDict]) -> Table:
-    keys = set(data[0])
-    count_col_name = "count"
-    if count_col_name not in keys:
-        for key, val in data[0].items():
-            if isinstance(val, (int, float)):
-                count_col_name = key
-
-    all_counts = list(map(float, map(lambda x: x.get(count_col_name) or 0, data)))
-    if min(all_counts) > 1:
-        all_counts = list(map(int, all_counts))
-    max_count = max(all_counts)
-
-    headers = [*(keys - {count_col_name}), count_col_name]
-    table = new_table(*headers, overflow="fold", vertical="middle")
-    for item, count_val in zip(data, all_counts):
-        table.add_row(
-            *map(flexitable, op.itemgetter(*headers)(item)), progress_bar(count_val, max_count)
-        )
-    if count_col_name in {"duration", "total_duration"}:
-        table.caption = "Total " + duration2human(float(sum(all_counts)), 2)
-        table.caption_justify = "left"
-    return table
 
 
 def add_to_table(
