@@ -36,6 +36,10 @@ from rich.tree import Tree
 JSONDict = Dict[str, Any]
 
 
+def wrap(text: str, tag: str) -> str:
+    return f"[{tag}]{text}[/{tag}]"
+
+
 def format_new(string: str) -> str:
     return wrap(re.sub(r"(^\s+$)", "[u green]\\1[/u green]", string), "b green")
 
@@ -52,7 +56,7 @@ def fmtdiff(change: str, before: str, after: str) -> str:
     elif change == "replace":
         return format_old(before) + format_new(after)
     else:
-        return before
+        return wrap(before, "dim")
 
 
 def make_difftext(
@@ -119,10 +123,6 @@ def make_console(**kwargs):
     return Console(
         theme=get_theme(), force_terminal=True, force_interactive=True, **kwargs
     )
-
-
-def wrap(text: str, tag: str) -> str:
-    return f"[{tag}]{text}[/{tag}]"
 
 
 class NewTable(Table):
