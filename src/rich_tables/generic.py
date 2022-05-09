@@ -78,7 +78,6 @@ console = make_console()
 
 @flexitable.register(dict)
 def _dict(data: Dict, header: str = ""):
-    print(header)
     table = new_table(
         "",
         "",

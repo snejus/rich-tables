@@ -6,7 +6,7 @@ authors = ["Šarūnas Nejus <snejus@protonmail.com>"]
 packages = [{ from = "src", include = "rich_tables" }]
 
 [tool.poetry.dependencies]
-python = ">=3.7,<4"
+python = ">=3.6.3,<4"
 
 rich = ">=12.3.0"
 python-dateutil = ">=2.8.2"
@@ -19,7 +19,7 @@ flake8 = ">=4.0.1"
 mypy = ">=0.910"
 pylint = ">=2.13.7"
 
-pytest = ">=7.1.2"
+pytest = ">=7"
 pytest-clarity = ">=1.0.1"
 pytest-cov = ">=3.0.0"
 freezegun = ">=1.2.1"

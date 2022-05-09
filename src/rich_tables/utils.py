@@ -69,6 +69,7 @@ def make_difftext(
     after = re.sub(r"\\?\[", r"\\[", after)
 
     matcher = SequenceMatcher(lambda x: x in junk, autojunk=False, a=before, b=after)
+    # matcher = SequenceMatcher(autojunk=False, a=before, b=after)
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
@@ -352,6 +353,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     duration=lambda x: duration2human(x, 2) if isinstance(x, (int, float)) else x,
     total_duration=lambda x: duration2human(x, 2),
     brand=format_with_color,
+    mastering=format_with_color,
     answer=md_panel,
     plays=lambda x: wrap(x, "b green"),
     skips=lambda x: wrap(x, "b red"),
