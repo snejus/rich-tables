@@ -227,7 +227,13 @@ def tstamp2timedate(timestamp: Optional[str], fmt: str = "%F %H:%M") -> str:
 
 def get_country(code: str) -> str:
     try:
-        country = countries.lookup(code).name.replace("Russian Federation", "Russia")
+        country = (
+            countries.lookup(code)
+            .name.replace("Russian Federation", "Russia")
+            .replace("Czechia", "Czech Republic")
+            .replace("North Macedonia", "Macedonia")
+            .replace("Korea, Republic of", "South Korea")
+        )
         return f":flag_for_{country.lower().replace(' ', '_')}: {country}"
     except LookupError:
         return "Worldwide"
