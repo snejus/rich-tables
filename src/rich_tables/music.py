@@ -225,8 +225,8 @@ def detailed_album_panel(tracks: List[JSONDict]) -> Panel:
 
 def albums_table(all_tracks: List[JSONDict]) -> ConsoleRenderable:
     def is_single(track: JSONDict) -> bool:
-        album, albumtype = track.get("album"), track.get("albumtypes")
-        return not album or albumtype == "single"
+        album, albumtype = track.get("album"), track.get("albumtypes") or ""
+        return not album and "single" in albumtype
 
     def get_album(track: JSONDict) -> str:
         return track.get("album") or ""
