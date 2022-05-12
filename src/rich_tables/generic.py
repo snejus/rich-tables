@@ -11,11 +11,11 @@ from rich.errors import NotRenderableError
 from rich.layout import Layout
 from rich.table import Table
 
-from .utils import border_panel
 from .utils import (
     FIELDS_MAP,
-    format_with_color,
+    border_panel,
     counts_table,
+    format_with_color,
     make_console,
     make_difftext,
     new_table,
@@ -142,7 +142,10 @@ def _list(data: List[Any], header: str = ""):
 
     if only(data, dict):
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
-        keys = ordset(filter(lambda k: any(filter(op.itemgetter(k), data)), data[0]))
+        # and set((tuple(d) for d in data)) == 1:
+        # keys = ordset(it.chain(*(tuple(d.keys()) for d in data)))
+        keys = data[0].keys()
+        keys = ordset(filter(lambda k: any(d.get(k) for d in data), keys))
         if {"before", "after"}.issubset(keys):
             for idx in range(len(data)):
                 item = data[idx]

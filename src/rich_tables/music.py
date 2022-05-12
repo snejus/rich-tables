@@ -235,10 +235,11 @@ def albums_table(all_tracks: List[JSONDict]) -> ConsoleRenderable:
         track["album"] = "singles"
         track["albumartist"] = track["label"]
 
-    albums = []
+    # albums = []
     for album_name, tracks in it.groupby(all_tracks, get_album):
-        albums.append(detailed_album_panel(list(tracks)))
-    return Group(*albums)
+        # albums.append(detailed_album_panel(list(tracks)))
+        yield detailed_album_panel(list(tracks))
+    # return Group(*albums)
 
 
 def tracks_table(all_tracks: List[JSONDict]) -> ConsoleRenderable:
