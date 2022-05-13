@@ -143,9 +143,9 @@ def _list(data: List[Any], header: str = ""):
     if only(data, dict):
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
         # and set((tuple(d) for d in data)) == 1:
-        # keys = ordset(it.chain(*(tuple(d.keys()) for d in data)))
-        keys = data[0].keys()
-        keys = ordset(filter(lambda k: any(d.get(k) for d in data), keys))
+        keys = ordset(it.chain(*(tuple(d.keys()) for d in data)))
+        # keys = data[0].keys()
+        keys = ordset(filter(lambda k: any((d.get(k) for d in data)), keys))
         if {"before", "after"}.issubset(keys):
             for idx in range(len(data)):
                 item = data[idx]
