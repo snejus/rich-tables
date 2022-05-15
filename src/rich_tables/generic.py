@@ -176,7 +176,7 @@ def _list(data: List[Any], header: str = ""):
                 table.add_dict_item(item, transform=flexitable)
         else:
             for item in data:
-                table.add_row(*flexitable(dict(zip(keys, op.itemgetter(*keys)(item)))))
+                table.add_row(*flexitable(dict(zip(keys, map(lambda x: item.get(x, ""), keys)))))
                 table.add_row("")
     else:
         for item in filter(op.truth, data):
