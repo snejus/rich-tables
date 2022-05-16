@@ -73,7 +73,7 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
         )
 
     def fmt_add_del(file: JSONDict) -> List[str]:
-        additions = f"-{file['additions']}" if file["additions"] else ""
+        additions = f"+{file['additions']}" if file["additions"] else ""
         deletions = f"-{file['deletions']}" if file["deletions"] else ""
         return [
             wrap(additions.rjust(5), "b green"),

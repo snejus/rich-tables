@@ -33,6 +33,9 @@ def add_to_table(
 ):
     args = []
     if isinstance(content, ConsoleRenderable):
+        # rends.append(content)
+        if getattr(content, "title", None) and not content.title:
+            content.title = key
         rends.append(content)
     else:
         if key:
@@ -92,41 +95,50 @@ def _dict(data: Dict, header: str = ""):
     for key, content in data.items():
         add_to_table(rends, table, flexitable(content, key), key)
 
-    rends = [table, *rends]
+    # for rend in rends:
+    #     table.add_row(rend)
+    # rends = [table, *rends]
 
-    lines: List[List[ConsoleRenderable]] = []
-    line_width = 0
-    for rend in rends:
-        width = console.measure(rend).maximum
-        if line_width + width < console.width:
-            if not lines:
-                lines.append([rend])
-            else:
-                lines[-1].append(rend)
-            line_width += width
-        else:
-            line_width = width
-            lines.append([rend])
+    # lines: List[List[ConsoleRenderable]] = []
+    # line_width = 0
+    # for rend in rends:
+    #     width = console.measure(rend).maximum
+    #     if line_width + width < console.width:
+    #         if not lines:
+    #             lines.append([rend])
+    #         else:
+    #             lines[-1].append(rend)
+    #         line_width += width
+    #     else:
+    #         line_width = width
+    #         lines.append([rend])
 
-    rend_lines: List[ConsoleRenderable] = []
-    for line in lines:
-        if len(line) == 1:
-            rend_lines.append(line[0])
-        else:
-            rend_lines.append(
-                new_table(
-                    rows=[map(lambda x: Align.left(x, vertical="middle"), line)],
-                    expand=True,
-                    justify="left",
-                )
-            )
+    # rend_lines: List[ConsoleRenderable] = []
+    # for line in lines:
+    #     if len(line) == 1:
+    #         rend_lines.append(line[0])
+    #     else:
+    #         rend_lines.append(
+    #             new_table(
+    #                 rows=[map(lambda x: Align.left(x, vertical="middle"), line)],
+    #                 expand=True,
+    #                 justify="left",
+    #             )
+    #         )
 
-    if not header:
-        return rend_lines
+    if rends:
+        # rend_table = new_table("", rows=[[rend] for rend in rends])
+        # return border_panel(Group(table, rend_table), title=header)
+        return new_tree([table, *rends], title=header)
+    else:
+        return border_panel(table, title=header)
+
+    # if header:
+    #     return new_tree(rend_lines, title=header)
+    # else:
+    #     return rend_lines
         # return Group(*rend_lines)
         # return new_tree(rend_lines, title=header or key)
-    else:
-        return new_tree(rend_lines, title=header or key)
 
 
 @flexitable.register(list)
@@ -142,9 +154,7 @@ def _list(data: List[Any], header: str = ""):
 
     if only(data, dict):
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
-        # and set((tuple(d) for d in data)) == 1:
         keys = ordset(it.chain(*(tuple(d.keys()) for d in data)))
-        # keys = data[0].keys()
         keys = ordset(filter(lambda k: any((d.get(k) for d in data)), keys))
         if {"before", "after"}.issubset(keys):
             for idx in range(len(data)):
@@ -176,15 +186,15 @@ def _list(data: List[Any], header: str = ""):
                 table.add_dict_item(item, transform=flexitable)
         else:
             for item in data:
-                table.add_row(*flexitable(dict(zip(keys, map(lambda x: item.get(x, ""), keys)))))
+                table.add_row(flexitable(dict(zip(keys, map(lambda x: item.get(x, ""), keys)))))
                 table.add_row("")
     else:
         for item in filter(op.truth, data):
-            content = flexitable(item, header)
+            content = flexitable(item)
             if isinstance(content, Iterable) and not isinstance(content, str):
                 table.add_row(*content)
             else:
-                table.add_row(flexitable(item, header))
+                table.add_row(flexitable(item))
 
     color = predictably_random_color(header)
     cols = table.columns.copy()
