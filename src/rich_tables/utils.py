@@ -20,6 +20,7 @@ from typing import (
     Union
 )
 
+from ordered_set import OrderedSet as ordset
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 from pycountry import countries
@@ -156,7 +157,7 @@ class NewTable(Table):
         self, item: JSONDict, transform: Callable = lambda x, y: x, **kwargs
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
-        self.add_row(*(transform(item.get(c) or "", c) for c in self.colnames), **kwargs)
+        self.add_row(*(transform(item.get(c, ""), c) for c in self.colnames), **kwargs)
 
 
 def new_table(*args: Any, **kwargs: Any) -> NewTable:
@@ -264,22 +265,24 @@ def progress_bar(count: SupportsFloat, total_count: SupportsFloat) -> Bar:
 
 
 def get_val(obj: JSONDict, field: str) -> str:
-    return FIELDS_MAP[field](obj[field]) if obj.get(field) else ""
+    return FIELDS_MAP[field](obj[field]) if obj.get(field, "") else ""
 
 
 def counts_table(data: List[JSONDict]) -> Table:
-    keys = set(data[0])
+    keys = ordset(data[0])
     count_col_name = "count"
     if count_col_name not in keys:
-        for key, val in data[0].items():
-            if isinstance(val, (int, float)):
+        first = data[0]
+        for key in keys:
+            if key != "total" and isinstance(first[key], (int, float)):
                 count_col_name = key
 
-    all_counts = list(map(float, map(op.methodcaller("get", count_col_name, 0), data)))
+    all_counts = [float(i.get(count_col_name, 0)) for i in data]
     if min(all_counts) > 1:
         all_counts = list(map(int, all_counts))
     max_count = max(all_counts)
 
+    # ensure count_col is at the end
     headers = [*(keys - {count_col_name}), count_col_name]
     table = new_table(*headers, overflow="fold", vertical="middle")
     for item, count_val in zip(data, all_counts):
@@ -295,7 +298,7 @@ def counts_table(data: List[JSONDict]) -> Table:
 FIELDS_MAP: Dict[str, Callable] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
-        map(format_with_color, x.replace("compilation", "comp").split("; "))
+        map(format_with_color, x.replace("album; compilation", "comp").split("; "))
     ),
     label=format_with_color,
     catalognum=format_with_color,

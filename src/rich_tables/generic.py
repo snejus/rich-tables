@@ -174,7 +174,7 @@ def _list(data: List[Any], header: str = ""):
         vals_types = set(map(type, data[0].values()))
         if (
             len(keys) == 2 and len(vals_types.intersection({int, float, str})) == 2
-        ) or "count_" in " ".join(keys):
+        ) or "count_" in " ".join(keys) or "sum_" in " ".join(keys):
             # [{"some_count": 10, "some_entity": "entity"}, ...]
             return counts_table(data)
 

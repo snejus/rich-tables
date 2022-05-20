@@ -229,7 +229,7 @@ def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
                             event["summary"], f"b {cal_to_color[event['calendar']]}"
                         ),
                         start=start,
-                        start_day=f"{start.day} {start.strftime('%a')}",
+                        start_day=start.strftime("%d %a"),
                         start_time=wrap(start.strftime("%H:%M"), "white"),
                         end_time=wrap(end.strftime("%H:%M"), "white"),
                         bar=Bar(86400, *get_start_end(start, end), color=color),
@@ -239,7 +239,7 @@ def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
 
     keys = "start_day", "summary", "start_time", "end_time", "bar"
     for month, day_events in it.groupby(
-        new_events, lambda x: (x["start"].month, x["start"].strftime("%B"))
+        new_events, lambda x: (x["start"].month, x["start"].strftime("%Y %B"))
     ):
         table = new_table(*keys, highlight=False, padding=0, show_header=False)
         for event in day_events:
