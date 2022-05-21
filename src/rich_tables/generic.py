@@ -12,6 +12,7 @@ from rich.layout import Layout
 from rich.table import Table
 
 from .utils import (
+    DISPLAY_HEADER,
     FIELDS_MAP,
     border_panel,
     counts_table,
@@ -137,8 +138,8 @@ def _dict(data: Dict, header: str = ""):
     #     return new_tree(rend_lines, title=header)
     # else:
     #     return rend_lines
-        # return Group(*rend_lines)
-        # return new_tree(rend_lines, title=header or key)
+    # return Group(*rend_lines)
+    # return new_tree(rend_lines, title=header or key)
 
 
 @flexitable.register(list)
@@ -173,8 +174,10 @@ def _list(data: List[Any], header: str = ""):
                 )
         vals_types = set(map(type, data[0].values()))
         if (
-            len(keys) == 2 and len(vals_types.intersection({int, float, str})) == 2
-        ) or "count_" in " ".join(keys) or "sum_" in " ".join(keys):
+            (len(keys) == 2 and len(vals_types.intersection({int, float, str})) == 2)
+            or "count_" in " ".join(keys)
+            or "sum_" in " ".join(keys)
+        ):
             # [{"some_count": 10, "some_entity": "entity"}, ...]
             return counts_table(data)
 
@@ -186,7 +189,9 @@ def _list(data: List[Any], header: str = ""):
                 table.add_dict_item(item, transform=flexitable)
         else:
             for item in data:
-                table.add_row(flexitable(dict(zip(keys, map(lambda x: item.get(x, ""), keys)))))
+                table.add_row(
+                    flexitable(dict(zip(keys, map(lambda x: item.get(x, ""), keys))))
+                )
                 table.add_row("")
     else:
         for item in filter(op.truth, data):
@@ -197,11 +202,11 @@ def _list(data: List[Any], header: str = ""):
                 table.add_row(flexitable(item))
 
     color = predictably_random_color(header)
-    cols = table.columns.copy()
-    for col in cols:
+    table.header_style = "on grey3"
+    for col in table.columns:
         if col.header:
-            # header = DISPLAY_HEADER.get(col.header, col.header)
-            col.header = wrap(f" {col.header} ", f"i b {color} on grey7")
+            new_header = DISPLAY_HEADER.get(col.header) or col.header
+            col.header = wrap(new_header, f"b {predictably_random_color(new_header)}")
 
     if header:
         table.show_header = False

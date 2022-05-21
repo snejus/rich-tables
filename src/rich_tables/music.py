@@ -13,19 +13,29 @@ from rich.panel import Panel
 from rich.table import Table
 
 from .utils import (
+    DISPLAY_HEADER,
     FIELDS_MAP,
     border_panel,
     new_table,
     predictably_random_color,
     simple_panel,
-    DISPLAY_HEADER,
     wrap
 )
 
 JSONDict = Dict[str, Any]
 
 TRACK_FIELDS = OrderedSet(
-    ["track", "length", "artist", "title", "bpm", "last_played", "stats", "helicopta"]
+    [
+        "track",
+        "length",
+        "artist",
+        "title",
+        "bpm",
+        "last_played",
+        "plays",
+        "skips",
+        "helicopta",
+    ]
 )
 ALBUM_IGNORE = TRACK_FIELDS | {
     "album_color",
@@ -35,8 +45,6 @@ ALBUM_IGNORE = TRACK_FIELDS | {
     "comments",
     "genre",
     "tracktotal",
-    "plays",
-    "skips",
     "albumartist",
 }
 
@@ -62,11 +70,6 @@ def get_val(track: JSONDict, field: str) -> str:
 def get_vals(
     fields: OrderedSet[str], tracks: Iterable[JSONDict]
 ) -> Iterable[Iterable[str]]:
-    for track in tracks:
-        if "skips" and "plays" in track:
-            track["stats"] = track.pop("plays", ""), track.pop("skips", "")
-        # track["track"] = track.pop("track_alt", None) or track["track"]
-
     return map(lambda t: list(map(lambda f: get_val(t, f), fields)), tracks)
 
 
@@ -84,7 +87,6 @@ def album_stats(tracks: List[JSONDict]) -> JSONDict:
         tracktotal=(str(len(tracks)), str(tracks[0].get("tracktotal")) or str(0)),
         comments="\n---\n---\n".join(set(agg("comments", ""))),
     )
-    stats["stats"] = str(stats.get("plays") or ""), str(stats.get("skips") or "")
     return stats
 
 
@@ -101,11 +103,11 @@ def format_title(title: str) -> str:
     return wrap(f"  {title}  ", "i white on grey3")
 
 
-def album_title(album: JSONDict) -> str:
+def album_title(album: JSONDict) -> Table:
     name = re.sub(r"\].* - ", "]", album["album"])
     artist = album.get("albumartist") or album.get("artist")
     genre = album.get("genre") or ""
-    return format_title(f"{name} by {artist}") + 10 * " " + genre
+    return new_table(rows=[[format_title(f"{name} by {artist}"), genre]])
 
 
 def album_info(tracks: List[JSONDict]) -> JSONDict:
@@ -145,12 +147,13 @@ def simple_tracks_table(tracks, color="white", fields=TRACK_FIELDS, sort=False):
 def _tracks_table(tracks, color="white", fields=TRACK_FIELDS, sort=True):
     # type: (List[JSONDict], str, OrderedSet[str], bool) -> Table
     return new_table(
-        *map(get_header, fields.intersection({*tracks[0].keys(), "stats"})),
+        *map(get_header, fields.intersection(set(tracks[0]))),
         rows=get_vals(
             fields,
             sorted(tracks, key=op.methodcaller("get", "track", "")) if sort else tracks,
         ),
         border_style=color,
+        padding=(0, 0, 0, 1),
     )
 
 
@@ -185,7 +188,7 @@ def simple_album_panel(tracks: List[JSONDict]) -> Panel:
         )
         fields = TRACK_FIELDS
     else:
-        fields = OrderedSet([*tracks[0].keys(), "stats"])
+        fields = OrderedSet(tracks[0])
         fields.discard("albumtypes")
 
     color = predictably_random_color(str(len(tracks)))
@@ -223,27 +226,18 @@ def detailed_album_panel(tracks: List[JSONDict]) -> Panel:
     )
 
 
-def albums_table(all_tracks: List[JSONDict]) -> ConsoleRenderable:
-    def is_single(track: JSONDict) -> bool:
-        album, albumtype = track.get("album"), track.get("albumtypes") or ""
-        return not album and "single" in albumtype
-
+def albums_table(all_tracks: List[JSONDict]) -> Iterable[ConsoleRenderable]:
     def get_album(track: JSONDict) -> str:
         return track.get("album") or ""
 
-    for track in filter(is_single, all_tracks):
-        track["album"] = "singles"
-        track["albumartist"] = track["label"]
+    for track in all_tracks:
+        if not track["album"] and "single" in track.get("albumtype", ""):
+            track["album"] = "singles"
+            track["albumartist"] = track["label"]
 
-    # albums = []
     for album_name, tracks in it.groupby(all_tracks, get_album):
-        # albums.append(detailed_album_panel(list(tracks)))
         yield detailed_album_panel(list(tracks))
-    # return Group(*albums)
 
 
 def tracks_table(all_tracks: List[JSONDict]) -> ConsoleRenderable:
-    ignore = {"plays", "skips"}
-    fields = OrderedSet([*all_tracks[0].keys(), "stats"]).difference(ignore)
-
-    return _tracks_table(all_tracks, "blue", fields, sort=False)
+    return _tracks_table(all_tracks, "blue", OrderedSet(all_tracks[0]), sort=False)

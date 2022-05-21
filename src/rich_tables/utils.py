@@ -17,12 +17,13 @@ from typing import (
     Optional,
     SupportsFloat,
     Tuple,
+    Type,
     Union
 )
 
-from ordered_set import OrderedSet as ordset
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
+from ordered_set import OrderedSet as ordset
 from pycountry import countries
 from rich import box
 from rich.align import Align
@@ -251,17 +252,19 @@ def colored_split(string: str) -> str:
     return "  ".join(map(format_with_color, sorted(split_pat.split(string))))
 
 
-def progress_bar(count: SupportsFloat, total_count: SupportsFloat) -> Bar:
-    count = float(count)
-    ratio = count / float(total_count) if total_count else 0
-    random.seed(str(total_count))
+def progress_bar(count: float, total_max: float, item_max: Optional[float]) -> Bar:
+    use_max = total_max
+    if item_max is not None:
+        use_max = item_max
+    ratio = count / use_max if use_max else 0
+    random.seed(str(total_max))
     rand = partial(random.randint, 50, 180)
 
     def norm():
         return round(rand() * ratio)
 
     color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
-    return Bar(float(total_count), 0, count, color=color)
+    return Bar(use_max, 0, count, color=color)
 
 
 def get_val(obj: JSONDict, field: str) -> str:
@@ -277,17 +280,27 @@ def counts_table(data: List[JSONDict]) -> Table:
             if key != "total" and isinstance(first[key], (int, float)):
                 count_col_name = key
 
-    all_counts = [float(i.get(count_col_name, 0)) for i in data]
-    if min(all_counts) > 1:
-        all_counts = list(map(int, all_counts))
-    max_count = max(all_counts)
+    all_counts = {float(i.get(count_col_name, 0)) for i in data}
+    num_type: Type = float
+    if len({c % 1 for c in all_counts}) == 1:
+        num_type = int
+    total_max = max(all_counts)
 
     # ensure count_col is at the end
-    headers = [*(keys - {count_col_name}), count_col_name]
+    headers = keys - {count_col_name, "total"}
     table = new_table(*headers, overflow="fold", vertical="middle")
-    for item, count_val in zip(data, all_counts):
+    for item in data:
+        item_count = float(item.pop(count_col_name, 0))
+        item_max = item.pop("total", None)
+        if item_max is not None:
+            item_max = float(item_max)
+            item_table_val = f"{num_type(item_count)}/{num_type(item_max)}"
+        else:
+            item_table_val = str(num_type(item_count))
         table.add_row(
-            *map(lambda x: get_val(item, x), headers), progress_bar(count_val, max_count)
+            *map(lambda x: get_val(item, x), headers),
+            item_table_val,
+            progress_bar(item_count, total_max, item_max=item_max),
         )
     if count_col_name in {"duration", "total_duration"}:
         table.caption = "Total " + duration2human(float(sum(all_counts)), 2)
@@ -298,7 +311,16 @@ def counts_table(data: List[JSONDict]) -> Table:
 FIELDS_MAP: Dict[str, Callable] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
-        map(format_with_color, x.replace("album; compilation", "comp").split("; "))
+        map(
+            format_with_color,
+            {
+                "album; compilation": "comp",
+                "dj-mix; broadcast": "dj-mix",
+                "broadcast; dj-mix": "dj-mix",
+            }
+            .get(x, x)
+            .split("; "),
+        )
     ),
     label=format_with_color,
     catalognum=format_with_color,
@@ -320,13 +342,12 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     ),
     style=format_with_color,
     genre=colored_split,
-    stats=lambda x: "[green]{:<3}[/green] [red]{}[/red]".format(
-        f"🞂{x[0]}" if x[0] else "", f"🞩{x[1]}" if x[1] else ""
-    ),
     length=lambda x: re.sub(
         r"^00:",
         "",
-        (datetime.fromtimestamp(int(float(x))) - relativedelta(hours=1)).strftime("%H:%M:%S"),
+        (datetime.fromtimestamp(int(float(x))) - relativedelta(hours=1)).strftime(
+            "%H:%M:%S"
+        ),
     ),
     tracktotal=lambda x: (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
     if isinstance(x, Iterable) and not isinstance(x, str)
@@ -342,7 +363,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     notes=md_panel,
     text=md_panel,
     instructions=md_panel,
-    comments=lambda x: md_panel(x, title="comments"),
+    comments=lambda x: md_panel(x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"),
     tags=colored_split,
     released=lambda x: x.replace("-00", ""),
     desc=md_panel,
@@ -369,11 +390,13 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
 DISPLAY_HEADER: Dict[str, str] = {
     "track": "#",
     "bpm": "🚀",
-    "stats": "",
-    "last_played": "  🎶 ⏰",
+    "last_played": "⏰",
     "mtime": "updated",
     "data_source": "source",
-    "helicopta": ":helicopter:",
+    "helicopta": "[dark red]:helicopter:[/]",
     "track_alt": ":cd:",
     "catalognum": "📖",
+    "plays": "[green]:play_button:[/]",
+    "skips": "[red]:stop_button:[/]",
+    "albumtypes": "types"
 }
