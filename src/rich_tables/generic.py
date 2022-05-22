@@ -179,7 +179,7 @@ def _list(data: List[Any], header: str = ""):
             or "sum_" in " ".join(keys)
         ):
             # [{"some_count": 10, "some_entity": "entity"}, ...]
-            return counts_table(data)
+            return counts_table(data, header=header)
 
         if len(keys) < 15:
             for col in keys:

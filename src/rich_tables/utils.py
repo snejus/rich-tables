@@ -271,7 +271,7 @@ def get_val(obj: JSONDict, field: str) -> str:
     return FIELDS_MAP[field](obj[field]) if obj.get(field, "") else ""
 
 
-def counts_table(data: List[JSONDict]) -> Table:
+def counts_table(data: List[JSONDict], header: str = "") -> Table:
     keys = ordset(data[0])
     count_col_name = "count"
     if count_col_name not in keys:
@@ -287,7 +287,7 @@ def counts_table(data: List[JSONDict]) -> Table:
     total_max = max(all_counts)
 
     # ensure count_col is at the end
-    headers = keys - {count_col_name, "total"}
+    headers = (keys - {count_col_name, "total"}) | {count_col_name}
     table = new_table(*headers, overflow="fold", vertical="middle")
     for item in data:
         item_count = float(item.pop(count_col_name, 0))
@@ -305,6 +305,8 @@ def counts_table(data: List[JSONDict]) -> Table:
     if count_col_name in {"duration", "total_duration"}:
         table.caption = "Total " + duration2human(float(sum(all_counts)), 2)
         table.caption_justify = "left"
+    if header:
+        table.title = header
     return table
 
 
@@ -363,7 +365,9 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     notes=md_panel,
     text=md_panel,
     instructions=md_panel,
-    comments=lambda x: md_panel(x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"),
+    comments=lambda x: md_panel(
+        x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
+    ),
     tags=colored_split,
     released=lambda x: x.replace("-00", ""),
     desc=md_panel,
@@ -390,7 +394,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
 DISPLAY_HEADER: Dict[str, str] = {
     "track": "#",
     "bpm": "🚀",
-    "last_played": "⏰",
+    "last_played": ":timer_clock: ",
     "mtime": "updated",
     "data_source": "source",
     "helicopta": "[dark red]:helicopter:[/]",
@@ -398,5 +402,5 @@ DISPLAY_HEADER: Dict[str, str] = {
     "catalognum": "📖",
     "plays": "[green]:play_button:[/]",
     "skips": "[red]:stop_button:[/]",
-    "albumtypes": "types"
+    "albumtypes": "types",
 }
