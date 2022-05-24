@@ -237,17 +237,22 @@ def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
                 }
             )
 
-    keys = "start_day", "summary", "start_time", "end_time", "bar"
-    for month, day_events in it.groupby(
+    keys = "summary", "start_time", "end_time", "bar"
+    for month, month_events in it.groupby(
         new_events, lambda x: (x["start"].month, x["start"].strftime("%Y %B"))
     ):
         table = new_table(*keys, highlight=False, padding=0, show_header=False)
-        for event in day_events:
-            if "Week " in event["summary"]:
-                table.add_row("")
-                table.add_dict_item(event, style=event["color"] + " on grey7")
-            else:
-                table.add_dict_item(event)
+        for day, day_events in it.groupby(
+            sorted(month_events, key=lambda x: x["start_day"]), lambda x: x["start_day"]
+        ):
+            table.add_row(wrap(day, "b i"))
+            for event in day_events:
+                if "Week " in event["summary"]:
+                    table.add_row("")
+                    table.add_dict_item(event, style=event["color"] + " on grey7")
+                else:
+                    table.add_dict_item(event)
+            table.add_row("")
         yield border_panel(table, title=month[1])
 
 
