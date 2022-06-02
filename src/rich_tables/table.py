@@ -138,7 +138,7 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
         title="Reviews & Comments",
     )
 
-    all_comments = it.chain(*map(op.itemgetter("comments"), pr.get("reviews", [])))
+    all_comments = it.chain(map(op.itemgetter("comments"), pr.get("reviews", [])))
     files: List[ConsoleRenderable] = []
     for file, comments in it.groupby(
         sorted(all_comments, key=op.itemgetter("path", "diffHunk", "createdAt")),
@@ -173,7 +173,7 @@ def lights_table(lights: List[JSONDict]) -> Table:
     return table
 
 
-def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
+def calendar_table(events: List[List]) -> Iterable[ConsoleRenderable]:
     def get_start_end(start: datetime, end: datetime) -> Tuple[int, int]:
         if start.hour == end.hour == 0:
             return 0, 86400
