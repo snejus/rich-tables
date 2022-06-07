@@ -10,17 +10,9 @@ from rich_tables.utils import make_console
 
 
 @freeze_time("2022-04-01")
-@pytest.mark.parametrize(
-    "input_file, output_file",
-    [
-        ("timed.json", "timed.svg"),
-        ("albums.json", "album.svg"),
-        ("pr.json", "pr.svg"),
-        ("emails.json", "emails.svg"),
-    ],
-)
-def test_pulls(input_file, output_file):
-    with open(os.path.join("tests/json", input_file), "r") as f:
+@pytest.mark.parametrize("testcase", ["timed", "album", "pr", "emails", "generic"])
+def test_pulls(testcase):
+    with open(os.path.join("tests/json", f"{testcase}.json"), "r") as f:
         data = json.load(f)
 
     console = make_console(record=True)
@@ -30,4 +22,4 @@ def test_pulls(input_file, output_file):
             console.print(res)
     else:
         console.print(result)
-    console.save_svg(os.path.join("svgs", output_file))
+    console.save_svg(os.path.join("svgs", f"{testcase}.svg"))

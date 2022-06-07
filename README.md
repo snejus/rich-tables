@@ -11,3 +11,6 @@
 
 ### pr
 ![image](svgs/pr.svg)
+
+### random JSON data
+![image](svgs/generic.svg)

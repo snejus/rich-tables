@@ -1,0 +1,187 @@
+{
+  "@context": "https://schema.org",
+  "@id": "https://gina909.bandcamp.com/track/hyper-poc",
+  "@type": "MusicRecording",
+  "additionalProperty": [
+    {
+      "@type": "PropertyValue",
+      "name": "track_id",
+      "value": 3071225133
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "art_id",
+      "value": 932925975
+    },
+    {
+      "@type": "PropertyValue",
+      "name": "license_name",
+      "value": "attribution"
+    }
+  ],
+  "byArtist": {
+    "@id": "https://gina909.bandcamp.com",
+    "@type": "MusicGroup",
+    "name": "GINA"
+  },
+  "copyrightNotice": "Attribution",
+  "creditText": "Mastered By Madmatik\r\nArtwork by Aviss",
+  "dateModified": "25 Apr 2021 01:41:12 GMT",
+  "datePublished": "24 Apr 2021 00:00:00 GMT",
+  "duration": "P00H04M42S",
+  "image": "https://f4.bcbits.com/img/a0932925975_10.jpg",
+  "inAlbum": {
+    "@type": "MusicAlbum",
+    "albumRelease": [
+      {
+        "@id": "https://gina909.bandcamp.com/track/hyper-poc",
+        "@type": [
+          "MusicRelease",
+          "Product"
+        ],
+        "additionalProperty": [
+          {
+            "@type": "PropertyValue",
+            "name": "item_id",
+            "value": 3071225133
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "item_type",
+            "value": "t"
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "selling_band_id",
+            "value": 872247837
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "type_name",
+            "value": "Digital"
+          },
+          {
+            "@type": "PropertyValue",
+            "name": "art_id",
+            "value": 932925975
+          }
+        ],
+        "description": "Includes high-quality download in MP3, FLAC and more. Paying supporters also get unlimited streaming via the free Bandcamp app.",
+        "image": [
+          "https://f4.bcbits.com/img/a0932925975_10.jpg"
+        ],
+        "musicReleaseFormat": "DigitalFormat",
+        "name": "Hyper Poc",
+        "offers": {
+          "@type": "Offer",
+          "additionalProperty": [
+            {
+              "@type": "PropertyValue",
+              "name": "max_price",
+              "value": 1000
+            }
+          ],
+          "availability": "OnlineOnly",
+          "price": 3,
+          "priceCurrency": "AUD",
+          "priceSpecification": {
+            "minPrice": 3
+          },
+          "url": "https://gina909.bandcamp.com/track/hyper-poc#t3071225133-buy"
+        }
+      }
+    ],
+    "albumReleaseType": "SingleRelease",
+    "name": "Hyper Poc",
+    "numTracks": 1
+  },
+  "keywords": [
+    "Electronic",
+    "techno",
+    "tekno",
+    "trance",
+    "Melbourne"
+  ],
+  "name": "Hyper Poc",
+  "publisher": {
+    "@id": "https://gina909.bandcamp.com",
+    "@type": "MusicGroup",
+    "additionalProperty": [
+      {
+        "@type": "PropertyValue",
+        "name": "band_id",
+        "value": 872247837
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "currency",
+        "value": "AUD"
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "has_any_downloads",
+        "value": true
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "image_height",
+        "value": 2829
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "image_id",
+        "value": 20586851
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "image_width",
+        "value": 2829
+      }
+    ],
+    "foundingLocation": {
+      "@type": "Place",
+      "name": "Melbourne, Australia"
+    },
+    "genre": "https://bandcamp.com/tag/electronic",
+    "image": "https://f4.bcbits.com/img/0020586851_10.jpg",
+    "mainEntityOfPage": [
+      {
+        "@type": "WebPage",
+        "name": "SoundCloud",
+        "url": "https://soundcloud.com/gina909"
+      },
+      {
+        "@type": "WebPage",
+        "name": "Instagram",
+        "url": "https://www.instagram.com/boygina_/"
+      }
+    ],
+    "name": "GINA",
+    "subjectOf": [
+      {
+        "@type": "WebPage",
+        "additionalProperty": [
+          {
+            "@type": "PropertyValue",
+            "name": "nav_type",
+            "value": "m"
+          }
+        ],
+        "name": "music",
+        "url": "https://gina909.bandcamp.com/music"
+      },
+      {
+        "@type": "WebPage",
+        "additionalProperty": [
+          {
+            "@type": "PropertyValue",
+            "name": "nav_type",
+            "value": "c"
+          }
+        ],
+        "name": "community",
+        "url": "https://gina909.bandcamp.com/community"
+      }
+    ]
+  }
+}
