@@ -1,4 +1,4 @@
-<svg class="rich-terminal" viewBox="0 0 1531 635.5999999999999" xmlns="http://www.w3.org/2000/svg">
+<svg class="rich-terminal" viewBox="0 0 1629 635.5999999999999" xmlns="http://www.w3.org/2000/svg">
     <!-- Generated with Rich https://www.textualize.io -->
     <style>
 
@@ -19,173 +19,173 @@
         font-weight: 700;
     }
 
-    .terminal-1666082826-matrix {
+    .terminal-1379582303-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-1666082826-title {
+    .terminal-1379582303-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-1666082826-r1 { fill: #ffd7d7;font-weight: bold }
-.terminal-1666082826-r2 { fill: #212733 }
-.terminal-1666082826-r3 { fill: #c5c8c6 }
-.terminal-1666082826-r4 { fill: #8b898a;font-weight: bold }
-.terminal-1666082826-r5 { fill: #87ceeb;font-weight: bold }
-.terminal-1666082826-r6 { fill: #000000 }
-.terminal-1666082826-r7 { fill: #b97791;font-weight: bold }
-.terminal-1666082826-r8 { fill: #757c5c;font-weight: bold }
-.terminal-1666082826-r9 { fill: #af8c60;font-weight: bold }
-.terminal-1666082826-r10 { fill: #823f8e;font-weight: bold }
-.terminal-1666082826-r11 { fill: #010001 }
-.terminal-1666082826-r12 { fill: #5a6f9c;font-weight: bold }
-.terminal-1666082826-r13 { fill: #010101 }
-.terminal-1666082826-r14 { fill: #5a9661;font-weight: bold }
-.terminal-1666082826-r15 { fill: #020103 }
-.terminal-1666082826-r16 { fill: #8a657b;font-weight: bold }
-.terminal-1666082826-r17 { fill: #030205 }
-.terminal-1666082826-r18 { fill: #939ca8;font-weight: bold }
-.terminal-1666082826-r19 { fill: #030306 }
-.terminal-1666082826-r20 { fill: #807684;font-weight: bold }
-.terminal-1666082826-r21 { fill: #040307 }
-.terminal-1666082826-r22 { fill: #654f76;font-weight: bold }
-.terminal-1666082826-r23 { fill: #9277a5;font-weight: bold }
-.terminal-1666082826-r24 { fill: #06050b }
-.terminal-1666082826-r25 { fill: #9eae75;font-weight: bold }
-.terminal-1666082826-r26 { fill: #090711 }
-.terminal-1666082826-r27 { fill: #4cad5c;font-weight: bold }
-.terminal-1666082826-r28 { fill: #0b0915 }
-.terminal-1666082826-r29 { fill: #596a7b;font-weight: bold }
-.terminal-1666082826-r30 { fill: #0b0a16 }
-.terminal-1666082826-r31 { fill: #6b6343;font-weight: bold }
-.terminal-1666082826-r32 { fill: #110f20 }
-.terminal-1666082826-r33 { fill: #654a74;font-weight: bold }
-.terminal-1666082826-r34 { fill: #131024 }
-.terminal-1666082826-r35 { fill: #54997a;font-weight: bold }
-.terminal-1666082826-r36 { fill: #15132a }
-.terminal-1666082826-r37 { fill: #6481b3;font-weight: bold }
-.terminal-1666082826-r38 { fill: #16132b }
-.terminal-1666082826-r39 { fill: #91544e;font-weight: bold }
-.terminal-1666082826-r40 { fill: #27224c }
-.terminal-1666082826-r41 { fill: #7c4eaa;font-weight: bold }
-.terminal-1666082826-r42 { fill: #473e8a }
-.terminal-1666082826-r43 { fill: #868887;font-style: italic; }
+    .terminal-1379582303-r1 { fill: #ffd7d7;font-weight: bold }
+.terminal-1379582303-r2 { fill: #212733 }
+.terminal-1379582303-r3 { fill: #c5c8c6 }
+.terminal-1379582303-r4 { fill: #8b898a;font-weight: bold }
+.terminal-1379582303-r5 { fill: #87ceeb;font-weight: bold }
+.terminal-1379582303-r6 { fill: #000000 }
+.terminal-1379582303-r7 { fill: #b97791;font-weight: bold }
+.terminal-1379582303-r8 { fill: #757c5c;font-weight: bold }
+.terminal-1379582303-r9 { fill: #af8c60;font-weight: bold }
+.terminal-1379582303-r10 { fill: #823f8e;font-weight: bold }
+.terminal-1379582303-r11 { fill: #010001 }
+.terminal-1379582303-r12 { fill: #5a6f9c;font-weight: bold }
+.terminal-1379582303-r13 { fill: #010101 }
+.terminal-1379582303-r14 { fill: #5a9661;font-weight: bold }
+.terminal-1379582303-r15 { fill: #020103 }
+.terminal-1379582303-r16 { fill: #8a657b;font-weight: bold }
+.terminal-1379582303-r17 { fill: #030205 }
+.terminal-1379582303-r18 { fill: #939ca8;font-weight: bold }
+.terminal-1379582303-r19 { fill: #030306 }
+.terminal-1379582303-r20 { fill: #807684;font-weight: bold }
+.terminal-1379582303-r21 { fill: #040307 }
+.terminal-1379582303-r22 { fill: #654f76;font-weight: bold }
+.terminal-1379582303-r23 { fill: #9277a5;font-weight: bold }
+.terminal-1379582303-r24 { fill: #06050b }
+.terminal-1379582303-r25 { fill: #9eae75;font-weight: bold }
+.terminal-1379582303-r26 { fill: #090711 }
+.terminal-1379582303-r27 { fill: #4cad5c;font-weight: bold }
+.terminal-1379582303-r28 { fill: #0b0915 }
+.terminal-1379582303-r29 { fill: #596a7b;font-weight: bold }
+.terminal-1379582303-r30 { fill: #0b0a16 }
+.terminal-1379582303-r31 { fill: #6b6343;font-weight: bold }
+.terminal-1379582303-r32 { fill: #110f20 }
+.terminal-1379582303-r33 { fill: #654a74;font-weight: bold }
+.terminal-1379582303-r34 { fill: #131024 }
+.terminal-1379582303-r35 { fill: #54997a;font-weight: bold }
+.terminal-1379582303-r36 { fill: #15132a }
+.terminal-1379582303-r37 { fill: #6481b3;font-weight: bold }
+.terminal-1379582303-r38 { fill: #16132b }
+.terminal-1379582303-r39 { fill: #91544e;font-weight: bold }
+.terminal-1379582303-r40 { fill: #27224c }
+.terminal-1379582303-r41 { fill: #7c4eaa;font-weight: bold }
+.terminal-1379582303-r42 { fill: #473e8a }
+.terminal-1379582303-r43 { fill: #868887;font-style: italic; }
     </style>
 
     <defs>
-    <clipPath id="terminal-1666082826-clip-terminal">
-      <rect x="0" y="0" width="1511.8" height="584.5999999999999" />
+    <clipPath id="terminal-1379582303-clip-terminal">
+      <rect x="0" y="0" width="1609.3999999999999" height="584.5999999999999" />
     </clipPath>
-    <clipPath id="terminal-1666082826-line-0">
-    <rect x="0" y="1.5" width="1512.8" height="24.65"/>
+    <clipPath id="terminal-1379582303-line-0">
+    <rect x="0" y="1.5" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-1">
-    <rect x="0" y="25.9" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-1">
+    <rect x="0" y="25.9" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-2">
-    <rect x="0" y="50.3" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-2">
+    <rect x="0" y="50.3" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-3">
-    <rect x="0" y="74.7" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-3">
+    <rect x="0" y="74.7" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-4">
-    <rect x="0" y="99.1" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-4">
+    <rect x="0" y="99.1" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-5">
-    <rect x="0" y="123.5" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-5">
+    <rect x="0" y="123.5" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-6">
-    <rect x="0" y="147.9" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-6">
+    <rect x="0" y="147.9" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-7">
-    <rect x="0" y="172.3" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-7">
+    <rect x="0" y="172.3" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-8">
-    <rect x="0" y="196.7" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-8">
+    <rect x="0" y="196.7" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-9">
-    <rect x="0" y="221.1" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-9">
+    <rect x="0" y="221.1" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-10">
-    <rect x="0" y="245.5" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-10">
+    <rect x="0" y="245.5" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-11">
-    <rect x="0" y="269.9" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-11">
+    <rect x="0" y="269.9" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-12">
-    <rect x="0" y="294.3" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-12">
+    <rect x="0" y="294.3" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-13">
-    <rect x="0" y="318.7" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-13">
+    <rect x="0" y="318.7" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-14">
-    <rect x="0" y="343.1" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-14">
+    <rect x="0" y="343.1" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-15">
-    <rect x="0" y="367.5" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-15">
+    <rect x="0" y="367.5" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-16">
-    <rect x="0" y="391.9" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-16">
+    <rect x="0" y="391.9" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-17">
-    <rect x="0" y="416.3" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-17">
+    <rect x="0" y="416.3" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-18">
-    <rect x="0" y="440.7" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-18">
+    <rect x="0" y="440.7" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-19">
-    <rect x="0" y="465.1" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-19">
+    <rect x="0" y="465.1" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-20">
-    <rect x="0" y="489.5" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-20">
+    <rect x="0" y="489.5" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-21">
-    <rect x="0" y="513.9" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-21">
+    <rect x="0" y="513.9" width="1610.4" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1666082826-line-22">
-    <rect x="0" y="538.3" width="1512.8" height="24.65"/>
+<clipPath id="terminal-1379582303-line-22">
+    <rect x="0" y="538.3" width="1610.4" height="24.65"/>
             </clipPath>
     </defs>
 
-    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1529" height="633.6" rx="8"/><text class="terminal-1666082826-title" fill="#c5c8c6" text-anchor="middle" x="764" y="27">Rich</text>
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1627" height="633.6" rx="8"/><text class="terminal-1379582303-title" fill="#c5c8c6" text-anchor="middle" x="813" y="27">Rich</text>
             <g transform="translate(26,22)">
             <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
             <circle cx="22" cy="0" r="7" fill="#febc2e"/>
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-1666082826-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#terminal-1379582303-clip-terminal)">
     
-    <g class="terminal-1666082826-matrix">
-    <text class="terminal-1666082826-r1" x="12.2" y="20" textLength="146.4" clip-path="url(#terminal-1666082826-line-0)">category&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r1" x="195.2" y="20" textLength="170.8" clip-path="url(#terminal-1666082826-line-0)">total_duration</text><text class="terminal-1666082826-r3" x="1512.8" y="20" textLength="12.2" clip-path="url(#terminal-1666082826-line-0)">
-</text><text class="terminal-1666082826-r2" x="0" y="44.4" textLength="1512.8" clip-path="url(#terminal-1666082826-line-1)">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text><text class="terminal-1666082826-r3" x="1512.8" y="44.4" textLength="12.2" clip-path="url(#terminal-1666082826-line-1)">
-</text><text class="terminal-1666082826-r4" x="12.2" y="68.8" textLength="122" clip-path="url(#terminal-1666082826-line-2)">Work&#160;admin</text><text class="terminal-1666082826-r5" x="402.6" y="68.8" textLength="36.6" clip-path="url(#terminal-1666082826-line-2)">0.0</text><text class="terminal-1666082826-r3" x="1512.8" y="68.8" textLength="12.2" clip-path="url(#terminal-1666082826-line-2)">
-</text><text class="terminal-1666082826-r7" x="12.2" y="93.2" textLength="73.2" clip-path="url(#terminal-1666082826-line-3)">photos</text><text class="terminal-1666082826-r5" x="402.6" y="93.2" textLength="61" clip-path="url(#terminal-1666082826-line-3)">2.007</text><text class="terminal-1666082826-r3" x="1512.8" y="93.2" textLength="12.2" clip-path="url(#terminal-1666082826-line-3)">
-</text><text class="terminal-1666082826-r8" x="12.2" y="117.6" textLength="36.6" clip-path="url(#terminal-1666082826-line-4)">zsh</text><text class="terminal-1666082826-r5" x="402.6" y="117.6" textLength="219.6" clip-path="url(#terminal-1666082826-line-4)">30.057000000000002</text><text class="terminal-1666082826-r3" x="1512.8" y="117.6" textLength="12.2" clip-path="url(#terminal-1666082826-line-4)">
-</text><text class="terminal-1666082826-r9" x="12.2" y="142" textLength="134.2" clip-path="url(#terminal-1666082826-line-5)">Refactoring</text><text class="terminal-1666082826-r5" x="402.6" y="142" textLength="85.4" clip-path="url(#terminal-1666082826-line-5)">112.226</text><text class="terminal-1666082826-r6" x="658.8" y="142" textLength="841.8" clip-path="url(#terminal-1666082826-line-5)">▏&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="142" textLength="12.2" clip-path="url(#terminal-1666082826-line-5)">
-</text><text class="terminal-1666082826-r10" x="12.2" y="166.4" textLength="85.4" clip-path="url(#terminal-1666082826-line-6)">configs</text><text class="terminal-1666082826-r5" x="402.6" y="166.4" textLength="219.6" clip-path="url(#terminal-1666082826-line-6)">246.49699999999999</text><text class="terminal-1666082826-r11" x="658.8" y="166.4" textLength="841.8" clip-path="url(#terminal-1666082826-line-6)">▌&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="166.4" textLength="12.2" clip-path="url(#terminal-1666082826-line-6)">
-</text><text class="terminal-1666082826-r12" x="12.2" y="190.8" textLength="146.4" clip-path="url(#terminal-1666082826-line-7)">Reading&#160;Docs</text><text class="terminal-1666082826-r5" x="402.6" y="190.8" textLength="73.2" clip-path="url(#terminal-1666082826-line-7)">276.55</text><text class="terminal-1666082826-r13" x="658.8" y="190.8" textLength="841.8" clip-path="url(#terminal-1666082826-line-7)">▌&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="190.8" textLength="12.2" clip-path="url(#terminal-1666082826-line-7)">
-</text><text class="terminal-1666082826-r14" x="12.2" y="215.2" textLength="73.2" clip-path="url(#terminal-1666082826-line-8)">Emails</text><text class="terminal-1666082826-r5" x="402.6" y="215.2" textLength="207.4" clip-path="url(#terminal-1666082826-line-8)">800.0440000000001</text><text class="terminal-1666082826-r15" x="658.8" y="215.2" textLength="841.8" clip-path="url(#terminal-1666082826-line-8)">█▋&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="215.2" textLength="12.2" clip-path="url(#terminal-1666082826-line-8)">
-</text><text class="terminal-1666082826-r16" x="12.2" y="239.6" textLength="97.6" clip-path="url(#terminal-1666082826-line-9)">beetcamp</text><text class="terminal-1666082826-r5" x="402.6" y="239.6" textLength="219.6" clip-path="url(#terminal-1666082826-line-9)">1330.6600000000003</text><text class="terminal-1666082826-r17" x="658.8" y="239.6" textLength="841.8" clip-path="url(#terminal-1666082826-line-9)">██▋&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="239.6" textLength="12.2" clip-path="url(#terminal-1666082826-line-9)">
-</text><text class="terminal-1666082826-r18" x="12.2" y="264" textLength="97.6" clip-path="url(#terminal-1666082826-line-10)">Finances</text><text class="terminal-1666082826-r5" x="402.6" y="264" textLength="219.6" clip-path="url(#terminal-1666082826-line-10)">1472.8700000000001</text><text class="terminal-1666082826-r19" x="658.8" y="264" textLength="841.8" clip-path="url(#terminal-1666082826-line-10)">███&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="264" textLength="12.2" clip-path="url(#terminal-1666082826-line-10)">
-</text><text class="terminal-1666082826-r20" x="12.2" y="288.4" textLength="85.4" clip-path="url(#terminal-1666082826-line-11)">Testing</text><text class="terminal-1666082826-r5" x="402.6" y="288.4" textLength="97.6" clip-path="url(#terminal-1666082826-line-11)">1665.453</text><text class="terminal-1666082826-r21" x="658.8" y="288.4" textLength="841.8" clip-path="url(#terminal-1666082826-line-11)">███▍&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="288.4" textLength="12.2" clip-path="url(#terminal-1666082826-line-11)">
-</text><text class="terminal-1666082826-r22" x="12.2" y="312.8" textLength="48.8" clip-path="url(#terminal-1666082826-line-12)">Term</text><text class="terminal-1666082826-r5" x="402.6" y="312.8" textLength="219.6" clip-path="url(#terminal-1666082826-line-12)">1693.4570000000012</text><text class="terminal-1666082826-r21" x="658.8" y="312.8" textLength="841.8" clip-path="url(#terminal-1666082826-line-12)">███▍&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="312.8" textLength="12.2" clip-path="url(#terminal-1666082826-line-12)">
-</text><text class="terminal-1666082826-r23" x="12.2" y="337.2" textLength="97.6" clip-path="url(#terminal-1666082826-line-13)">Browsing</text><text class="terminal-1666082826-r5" x="402.6" y="337.2" textLength="207.4" clip-path="url(#terminal-1666082826-line-13)">2779.837000000001</text><text class="terminal-1666082826-r24" x="658.8" y="337.2" textLength="841.8" clip-path="url(#terminal-1666082826-line-13)">█████▋&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="337.2" textLength="12.2" clip-path="url(#terminal-1666082826-line-13)">
-</text><text class="terminal-1666082826-r25" x="12.2" y="361.6" textLength="73.2" clip-path="url(#terminal-1666082826-line-14)">python</text><text class="terminal-1666082826-r5" x="402.6" y="361.6" textLength="207.4" clip-path="url(#terminal-1666082826-line-14)">4028.028999999998</text><text class="terminal-1666082826-r26" x="658.8" y="361.6" textLength="841.8" clip-path="url(#terminal-1666082826-line-14)">████████▎&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="361.6" textLength="12.2" clip-path="url(#terminal-1666082826-line-14)">
-</text><text class="terminal-1666082826-r27" x="12.2" y="386" textLength="61" clip-path="url(#terminal-1666082826-line-15)">music</text><text class="terminal-1666082826-r5" x="402.6" y="386" textLength="207.4" clip-path="url(#terminal-1666082826-line-15)">5054.267999999997</text><text class="terminal-1666082826-r28" x="658.8" y="386" textLength="841.8" clip-path="url(#terminal-1666082826-line-15)">██████████▍&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="386" textLength="12.2" clip-path="url(#terminal-1666082826-line-15)">
-</text><text class="terminal-1666082826-r29" x="12.2" y="410.4" textLength="85.4" clip-path="url(#terminal-1666082826-line-16)">Editing</text><text class="terminal-1666082826-r5" x="402.6" y="410.4" textLength="207.4" clip-path="url(#terminal-1666082826-line-16)">5294.546999999998</text><text class="terminal-1666082826-r30" x="658.8" y="410.4" textLength="841.8" clip-path="url(#terminal-1666082826-line-16)">██████████▉&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="410.4" textLength="12.2" clip-path="url(#terminal-1666082826-line-16)">
-</text><text class="terminal-1666082826-r31" x="12.2" y="434.8" textLength="134.2" clip-path="url(#terminal-1666082826-line-17)">rich-tables</text><text class="terminal-1666082826-r5" x="402.6" y="434.8" textLength="207.4" clip-path="url(#terminal-1666082826-line-17)">7841.561999999998</text><text class="terminal-1666082826-r32" x="658.8" y="434.8" textLength="841.8" clip-path="url(#terminal-1666082826-line-17)">████████████████▏&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="434.8" textLength="12.2" clip-path="url(#terminal-1666082826-line-17)">
-</text><text class="terminal-1666082826-r33" x="12.2" y="459.2" textLength="61" clip-path="url(#terminal-1666082826-line-18)">video</text><text class="terminal-1666082826-r5" x="402.6" y="459.2" textLength="97.6" clip-path="url(#terminal-1666082826-line-18)">8844.924</text><text class="terminal-1666082826-r34" x="658.8" y="459.2" textLength="841.8" clip-path="url(#terminal-1666082826-line-18)">██████████████████▏&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="459.2" textLength="12.2" clip-path="url(#terminal-1666082826-line-18)">
-</text><text class="terminal-1666082826-r35" x="12.2" y="483.6" textLength="61" clip-path="url(#terminal-1666082826-line-19)">Chats</text><text class="terminal-1666082826-r5" x="402.6" y="483.6" textLength="219.6" clip-path="url(#terminal-1666082826-line-19)">10097.328000000003</text><text class="terminal-1666082826-r36" x="658.8" y="483.6" textLength="841.8" clip-path="url(#terminal-1666082826-line-19)">████████████████████▊&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="483.6" textLength="12.2" clip-path="url(#terminal-1666082826-line-19)">
-</text><text class="terminal-1666082826-r37" x="12.2" y="508" textLength="85.4" clip-path="url(#terminal-1666082826-line-20)">Datavis</text><text class="terminal-1666082826-r5" x="402.6" y="508" textLength="207.4" clip-path="url(#terminal-1666082826-line-20)">10473.08499999999</text><text class="terminal-1666082826-r38" x="658.8" y="508" textLength="841.8" clip-path="url(#terminal-1666082826-line-20)">█████████████████████▌&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="508" textLength="12.2" clip-path="url(#terminal-1666082826-line-20)">
-</text><text class="terminal-1666082826-r39" x="12.2" y="532.4" textLength="109.8" clip-path="url(#terminal-1666082826-line-21)">music&#160;vis</text><text class="terminal-1666082826-r5" x="402.6" y="532.4" textLength="85.4" clip-path="url(#terminal-1666082826-line-21)">18318.1</text><text class="terminal-1666082826-r40" x="658.8" y="532.4" textLength="841.8" clip-path="url(#terminal-1666082826-line-21)">█████████████████████████████████████▊&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="532.4" textLength="12.2" clip-path="url(#terminal-1666082826-line-21)">
-</text><text class="terminal-1666082826-r41" x="12.2" y="556.8" textLength="36.6" clip-path="url(#terminal-1666082826-line-22)">AFK</text><text class="terminal-1666082826-r5" x="402.6" y="556.8" textLength="219.6" clip-path="url(#terminal-1666082826-line-22)">33478.236000000004</text><text class="terminal-1666082826-r42" x="658.8" y="556.8" textLength="841.8" clip-path="url(#terminal-1666082826-line-22)">█████████████████████████████████████████████████████████████████████</text><text class="terminal-1666082826-r3" x="1512.8" y="556.8" textLength="12.2" clip-path="url(#terminal-1666082826-line-22)">
-</text><text class="terminal-1666082826-r43" x="0" y="581.2" textLength="1512.8" clip-path="url(#terminal-1666082826-line-23)">Total&#160;&#160;&#160;1d&#160;&#160;&#160;7h&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1666082826-r3" x="1512.8" y="581.2" textLength="12.2" clip-path="url(#terminal-1666082826-line-23)">
+    <g class="terminal-1379582303-matrix">
+    <text class="terminal-1379582303-r1" x="12.2" y="20" textLength="146.4" clip-path="url(#terminal-1379582303-line-0)">category&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r1" x="195.2" y="20" textLength="170.8" clip-path="url(#terminal-1379582303-line-0)">total_duration</text><text class="terminal-1379582303-r3" x="1610.4" y="20" textLength="12.2" clip-path="url(#terminal-1379582303-line-0)">
+</text><text class="terminal-1379582303-r2" x="0" y="44.4" textLength="1610.4" clip-path="url(#terminal-1379582303-line-1)">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</text><text class="terminal-1379582303-r3" x="1610.4" y="44.4" textLength="12.2" clip-path="url(#terminal-1379582303-line-1)">
+</text><text class="terminal-1379582303-r4" x="12.2" y="68.8" textLength="122" clip-path="url(#terminal-1379582303-line-2)">Work&#160;admin</text><text class="terminal-1379582303-r5" x="402.6" y="68.8" textLength="36.6" clip-path="url(#terminal-1379582303-line-2)">0.0</text><text class="terminal-1379582303-r3" x="1610.4" y="68.8" textLength="12.2" clip-path="url(#terminal-1379582303-line-2)">
+</text><text class="terminal-1379582303-r7" x="12.2" y="93.2" textLength="73.2" clip-path="url(#terminal-1379582303-line-3)">photos</text><text class="terminal-1379582303-r5" x="402.6" y="93.2" textLength="61" clip-path="url(#terminal-1379582303-line-3)">2.007</text><text class="terminal-1379582303-r3" x="1610.4" y="93.2" textLength="12.2" clip-path="url(#terminal-1379582303-line-3)">
+</text><text class="terminal-1379582303-r8" x="12.2" y="117.6" textLength="36.6" clip-path="url(#terminal-1379582303-line-4)">zsh</text><text class="terminal-1379582303-r5" x="402.6" y="117.6" textLength="219.6" clip-path="url(#terminal-1379582303-line-4)">30.057000000000002</text><text class="terminal-1379582303-r3" x="1610.4" y="117.6" textLength="12.2" clip-path="url(#terminal-1379582303-line-4)">
+</text><text class="terminal-1379582303-r9" x="12.2" y="142" textLength="134.2" clip-path="url(#terminal-1379582303-line-5)">Refactoring</text><text class="terminal-1379582303-r5" x="402.6" y="142" textLength="85.4" clip-path="url(#terminal-1379582303-line-5)">112.226</text><text class="terminal-1379582303-r6" x="658.8" y="142" textLength="939.4" clip-path="url(#terminal-1379582303-line-5)">▎&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="142" textLength="12.2" clip-path="url(#terminal-1379582303-line-5)">
+</text><text class="terminal-1379582303-r10" x="12.2" y="166.4" textLength="85.4" clip-path="url(#terminal-1379582303-line-6)">configs</text><text class="terminal-1379582303-r5" x="402.6" y="166.4" textLength="219.6" clip-path="url(#terminal-1379582303-line-6)">246.49699999999999</text><text class="terminal-1379582303-r11" x="658.8" y="166.4" textLength="939.4" clip-path="url(#terminal-1379582303-line-6)">▌&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="166.4" textLength="12.2" clip-path="url(#terminal-1379582303-line-6)">
+</text><text class="terminal-1379582303-r12" x="12.2" y="190.8" textLength="146.4" clip-path="url(#terminal-1379582303-line-7)">Reading&#160;Docs</text><text class="terminal-1379582303-r5" x="402.6" y="190.8" textLength="73.2" clip-path="url(#terminal-1379582303-line-7)">276.55</text><text class="terminal-1379582303-r13" x="658.8" y="190.8" textLength="939.4" clip-path="url(#terminal-1379582303-line-7)">▋&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="190.8" textLength="12.2" clip-path="url(#terminal-1379582303-line-7)">
+</text><text class="terminal-1379582303-r14" x="12.2" y="215.2" textLength="73.2" clip-path="url(#terminal-1379582303-line-8)">Emails</text><text class="terminal-1379582303-r5" x="402.6" y="215.2" textLength="207.4" clip-path="url(#terminal-1379582303-line-8)">800.0440000000001</text><text class="terminal-1379582303-r15" x="658.8" y="215.2" textLength="939.4" clip-path="url(#terminal-1379582303-line-8)">█▊&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="215.2" textLength="12.2" clip-path="url(#terminal-1379582303-line-8)">
+</text><text class="terminal-1379582303-r16" x="12.2" y="239.6" textLength="97.6" clip-path="url(#terminal-1379582303-line-9)">beetcamp</text><text class="terminal-1379582303-r5" x="402.6" y="239.6" textLength="219.6" clip-path="url(#terminal-1379582303-line-9)">1330.6600000000003</text><text class="terminal-1379582303-r17" x="658.8" y="239.6" textLength="939.4" clip-path="url(#terminal-1379582303-line-9)">███&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="239.6" textLength="12.2" clip-path="url(#terminal-1379582303-line-9)">
+</text><text class="terminal-1379582303-r18" x="12.2" y="264" textLength="97.6" clip-path="url(#terminal-1379582303-line-10)">Finances</text><text class="terminal-1379582303-r5" x="402.6" y="264" textLength="219.6" clip-path="url(#terminal-1379582303-line-10)">1472.8700000000001</text><text class="terminal-1379582303-r19" x="658.8" y="264" textLength="939.4" clip-path="url(#terminal-1379582303-line-10)">███▍&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="264" textLength="12.2" clip-path="url(#terminal-1379582303-line-10)">
+</text><text class="terminal-1379582303-r20" x="12.2" y="288.4" textLength="85.4" clip-path="url(#terminal-1379582303-line-11)">Testing</text><text class="terminal-1379582303-r5" x="402.6" y="288.4" textLength="97.6" clip-path="url(#terminal-1379582303-line-11)">1665.453</text><text class="terminal-1379582303-r21" x="658.8" y="288.4" textLength="939.4" clip-path="url(#terminal-1379582303-line-11)">███▊&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="288.4" textLength="12.2" clip-path="url(#terminal-1379582303-line-11)">
+</text><text class="terminal-1379582303-r22" x="12.2" y="312.8" textLength="48.8" clip-path="url(#terminal-1379582303-line-12)">Term</text><text class="terminal-1379582303-r5" x="402.6" y="312.8" textLength="219.6" clip-path="url(#terminal-1379582303-line-12)">1693.4570000000012</text><text class="terminal-1379582303-r21" x="658.8" y="312.8" textLength="939.4" clip-path="url(#terminal-1379582303-line-12)">███▉&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="312.8" textLength="12.2" clip-path="url(#terminal-1379582303-line-12)">
+</text><text class="terminal-1379582303-r23" x="12.2" y="337.2" textLength="97.6" clip-path="url(#terminal-1379582303-line-13)">Browsing</text><text class="terminal-1379582303-r5" x="402.6" y="337.2" textLength="207.4" clip-path="url(#terminal-1379582303-line-13)">2779.837000000001</text><text class="terminal-1379582303-r24" x="658.8" y="337.2" textLength="939.4" clip-path="url(#terminal-1379582303-line-13)">██████▍&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="337.2" textLength="12.2" clip-path="url(#terminal-1379582303-line-13)">
+</text><text class="terminal-1379582303-r25" x="12.2" y="361.6" textLength="73.2" clip-path="url(#terminal-1379582303-line-14)">python</text><text class="terminal-1379582303-r5" x="402.6" y="361.6" textLength="207.4" clip-path="url(#terminal-1379582303-line-14)">4028.028999999998</text><text class="terminal-1379582303-r26" x="658.8" y="361.6" textLength="939.4" clip-path="url(#terminal-1379582303-line-14)">█████████▎&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="361.6" textLength="12.2" clip-path="url(#terminal-1379582303-line-14)">
+</text><text class="terminal-1379582303-r27" x="12.2" y="386" textLength="61" clip-path="url(#terminal-1379582303-line-15)">music</text><text class="terminal-1379582303-r5" x="402.6" y="386" textLength="207.4" clip-path="url(#terminal-1379582303-line-15)">5054.267999999997</text><text class="terminal-1379582303-r28" x="658.8" y="386" textLength="939.4" clip-path="url(#terminal-1379582303-line-15)">███████████▌&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="386" textLength="12.2" clip-path="url(#terminal-1379582303-line-15)">
+</text><text class="terminal-1379582303-r29" x="12.2" y="410.4" textLength="85.4" clip-path="url(#terminal-1379582303-line-16)">Editing</text><text class="terminal-1379582303-r5" x="402.6" y="410.4" textLength="207.4" clip-path="url(#terminal-1379582303-line-16)">5294.546999999998</text><text class="terminal-1379582303-r30" x="658.8" y="410.4" textLength="939.4" clip-path="url(#terminal-1379582303-line-16)">████████████▏&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="410.4" textLength="12.2" clip-path="url(#terminal-1379582303-line-16)">
+</text><text class="terminal-1379582303-r31" x="12.2" y="434.8" textLength="134.2" clip-path="url(#terminal-1379582303-line-17)">rich-tables</text><text class="terminal-1379582303-r5" x="402.6" y="434.8" textLength="207.4" clip-path="url(#terminal-1379582303-line-17)">7841.561999999998</text><text class="terminal-1379582303-r32" x="658.8" y="434.8" textLength="939.4" clip-path="url(#terminal-1379582303-line-17)">██████████████████&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="434.8" textLength="12.2" clip-path="url(#terminal-1379582303-line-17)">
+</text><text class="terminal-1379582303-r33" x="12.2" y="459.2" textLength="61" clip-path="url(#terminal-1379582303-line-18)">video</text><text class="terminal-1379582303-r5" x="402.6" y="459.2" textLength="97.6" clip-path="url(#terminal-1379582303-line-18)">8844.924</text><text class="terminal-1379582303-r34" x="658.8" y="459.2" textLength="939.4" clip-path="url(#terminal-1379582303-line-18)">████████████████████▎&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="459.2" textLength="12.2" clip-path="url(#terminal-1379582303-line-18)">
+</text><text class="terminal-1379582303-r35" x="12.2" y="483.6" textLength="61" clip-path="url(#terminal-1379582303-line-19)">Chats</text><text class="terminal-1379582303-r5" x="402.6" y="483.6" textLength="219.6" clip-path="url(#terminal-1379582303-line-19)">10097.328000000003</text><text class="terminal-1379582303-r36" x="658.8" y="483.6" textLength="939.4" clip-path="url(#terminal-1379582303-line-19)">███████████████████████▏&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="483.6" textLength="12.2" clip-path="url(#terminal-1379582303-line-19)">
+</text><text class="terminal-1379582303-r37" x="12.2" y="508" textLength="85.4" clip-path="url(#terminal-1379582303-line-20)">Datavis</text><text class="terminal-1379582303-r5" x="402.6" y="508" textLength="207.4" clip-path="url(#terminal-1379582303-line-20)">10473.08499999999</text><text class="terminal-1379582303-r38" x="658.8" y="508" textLength="939.4" clip-path="url(#terminal-1379582303-line-20)">████████████████████████&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="508" textLength="12.2" clip-path="url(#terminal-1379582303-line-20)">
+</text><text class="terminal-1379582303-r39" x="12.2" y="532.4" textLength="109.8" clip-path="url(#terminal-1379582303-line-21)">music&#160;vis</text><text class="terminal-1379582303-r5" x="402.6" y="532.4" textLength="85.4" clip-path="url(#terminal-1379582303-line-21)">18318.1</text><text class="terminal-1379582303-r40" x="658.8" y="532.4" textLength="939.4" clip-path="url(#terminal-1379582303-line-21)">██████████████████████████████████████████▏&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="532.4" textLength="12.2" clip-path="url(#terminal-1379582303-line-21)">
+</text><text class="terminal-1379582303-r41" x="12.2" y="556.8" textLength="36.6" clip-path="url(#terminal-1379582303-line-22)">AFK</text><text class="terminal-1379582303-r5" x="402.6" y="556.8" textLength="219.6" clip-path="url(#terminal-1379582303-line-22)">33478.236000000004</text><text class="terminal-1379582303-r42" x="658.8" y="556.8" textLength="939.4" clip-path="url(#terminal-1379582303-line-22)">█████████████████████████████████████████████████████████████████████████████</text><text class="terminal-1379582303-r3" x="1610.4" y="556.8" textLength="12.2" clip-path="url(#terminal-1379582303-line-22)">
+</text><text class="terminal-1379582303-r43" x="0" y="581.2" textLength="1610.4" clip-path="url(#terminal-1379582303-line-23)">Total&#160;&#160;&#160;1d&#160;&#160;&#160;7h&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-1379582303-r3" x="1610.4" y="581.2" textLength="12.2" clip-path="url(#terminal-1379582303-line-23)">
 </text>
     </g>
     </g>

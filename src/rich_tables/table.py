@@ -133,12 +133,13 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
     for comment in sorted(raw_global_comments, key=op.itemgetter("createdAt")):
         subtitle = format_with_color("review" if "state" in comment else "comment")
         global_comments.append(comment_panel(comment, subtitle=subtitle))
-    yield border_panel(
-        new_table(rows=it.zip_longest(*(iter(global_comments),) * 2)),
-        title="Reviews & Comments",
-    )
+    if global_comments:
+        yield border_panel(
+            new_table(rows=it.zip_longest(*(iter(global_comments),) * 2)),
+            title="Reviews & Comments",
+        )
 
-    all_comments = it.chain(map(op.itemgetter("comments"), pr.get("reviews", [])))
+    all_comments = it.chain(*map(op.itemgetter("comments"), pr.get("reviews", [])))
     files: List[ConsoleRenderable] = []
     for file, comments in it.groupby(
         sorted(all_comments, key=op.itemgetter("path", "diffHunk", "createdAt")),
@@ -407,7 +408,7 @@ def main():
         else:
             if isinstance(ret, Iterable):
                 for rend in ret:
-                    print(rend)
+                    console.print(rend)
             else:
                 console.print(ret)
 
