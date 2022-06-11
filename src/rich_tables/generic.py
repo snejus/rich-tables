@@ -174,10 +174,8 @@ def _list(data: List[Any], header: str = ""):
                 )
         vals_types = set(map(type, data[0].values()))
         if (
-            (len(keys) == 2 and len(vals_types.intersection({int, float, str})) == 2)
-            or "count_" in " ".join(keys)
-            or "sum_" in " ".join(keys)
-        ):
+            len(keys) == 2 and len(vals_types.intersection({int, float, str})) == 2
+        ) or any(map(lambda x: x in " ".join(keys), ("count_", "sum_", "duration"))):
             # [{"some_count": 10, "some_entity": "entity"}, ...]
             return counts_table(data, header=header)
 
@@ -188,6 +186,8 @@ def _list(data: List[Any], header: str = ""):
             for item in data:
                 table.add_dict_item(item, transform=flexitable)
         else:
+            for col in keys:
+                table.add_column(col)
             for item in data:
                 table.add_row(
                     flexitable(dict(zip(keys, map(lambda x: item.get(x, ""), keys))))
@@ -202,11 +202,13 @@ def _list(data: List[Any], header: str = ""):
                 table.add_row(flexitable(item))
 
     color = predictably_random_color(header)
-    table.header_style = "on grey3"
-    for col in table.columns:
-        if col.header:
-            new_header = DISPLAY_HEADER.get(col.header) or col.header
-            col.header = wrap(new_header, f"b {predictably_random_color(new_header)}")
+    if table.show_header:
+        table.header_style = "on grey3"
+        for col in table.columns:
+            if col.header:
+                # print(col.header)
+                new_header = DISPLAY_HEADER.get(col.header) or col.header
+                col.header = wrap(new_header, f"b {predictably_random_color(new_header)}")
 
     if header:
         table.show_header = False
