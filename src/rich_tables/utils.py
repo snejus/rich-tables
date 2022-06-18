@@ -349,7 +349,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
         "",
         (datetime.fromtimestamp(int(float(x))) - relativedelta(hours=1)).strftime(
             "%H:%M:%S"
-        ),
+            ) if x else "00:00",
     ),
     tracktotal=lambda x: (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
     if isinstance(x, Iterable) and not isinstance(x, str)
