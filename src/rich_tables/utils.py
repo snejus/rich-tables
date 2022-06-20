@@ -328,10 +328,11 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     catalognum=format_with_color,
     last_played=lambda x: time2human(x, use_colors=True, pad=False),
     avg_last_played=lambda x: time2human(x, acc=2, use_colors=True, pad=False),
-    added=lambda x: x
+    since=lambda x: x
     if isinstance(x, str)
     else datetime.fromtimestamp(x).strftime("%F %H:%M"),
     mtime=lambda x: re.sub(r"\] *", "]", time2human(x, pad=False)),
+    added=lambda x: re.sub(r"\] *", "]", time2human(x, pad=False)),
     bpm=lambda x: wrap(
         x,
         "green"
