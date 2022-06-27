@@ -90,7 +90,9 @@ def fmt_time(diff: timedelta, pad: bool = True) -> Iterable[str]:
 
 
 def duration2human(duration: SupportsFloat, acc: int = 1) -> str:
-    return " ".join(it.islice(fmt_time(timedelta(seconds=float(duration))), acc))
+    # return " ".join(it.islice(fmt_time(timedelta(seconds=float(duration))), acc))
+    diff = timedelta(seconds=float(duration))
+    return ":".join(map(lambda x: str(x).zfill(2), [diff.seconds // 3600, diff.seconds % 3600 // 60, diff.seconds % 60]))
 
 
 def time2human(
@@ -295,6 +297,8 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
         if item_max is not None:
             item_max = float(item_max)
             item_table_val = f"{num_type(item_count)}/{num_type(item_max)}"
+        elif "duration" in count_col_name:
+            item_table_val = duration2human(item_count, 2)
         else:
             item_table_val = str(num_type(item_count))
         table.add_row(

@@ -12,15 +12,8 @@ from rich.console import ConsoleRenderable, Group
 from rich.panel import Panel
 from rich.table import Table
 
-from .utils import (
-    DISPLAY_HEADER,
-    FIELDS_MAP,
-    border_panel,
-    new_table,
-    predictably_random_color,
-    simple_panel,
-    wrap
-)
+from .utils import (DISPLAY_HEADER, FIELDS_MAP, border_panel, new_table,
+                    predictably_random_color, simple_panel, wrap)
 
 JSONDict = Dict[str, Any]
 
@@ -107,7 +100,8 @@ def album_title(album: JSONDict) -> Table:
     name = re.sub(r"\].* - ", "]", album["album"])
     artist = album.get("albumartist") or album.get("artist")
     genre = album.get("genre") or ""
-    return new_table(rows=[[format_title(f"{name} by {artist}"), genre]])
+    released = album.get("released", "")
+    return new_table(rows=[[format_title(f"{name} by {artist}"), format_title(released), genre]])
 
 
 def album_info(tracks: List[JSONDict]) -> JSONDict:

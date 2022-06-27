@@ -4,29 +4,18 @@ from functools import singledispatch
 from typing import Any, Dict, Iterable, List, Type, Union
 
 from ordered_set import OrderedSet as ordset  # type: ignore[import]
-from rich import box, print
-from rich.align import Align
-from rich.console import ConsoleRenderable, Group
+from rich import box
+from rich.console import ConsoleRenderable
 from rich.errors import NotRenderableError
-from rich.layout import Layout
 from rich.table import Table
 
-from .utils import (
-    DISPLAY_HEADER,
-    FIELDS_MAP,
-    border_panel,
-    counts_table,
-    format_with_color,
-    make_console,
-    make_difftext,
-    new_table,
-    new_tree,
-    predictably_random_color,
-    simple_panel,
-    wrap
-)
+from .utils import (DISPLAY_HEADER, FIELDS_MAP, border_panel, counts_table,
+                    format_with_color, make_console, make_difftext, new_table,
+                    new_tree, predictably_random_color, simple_panel, wrap)
 
 JSONDict = Dict[str, Any]
+
+console = make_console()
 
 
 def add_to_table(
@@ -43,7 +32,7 @@ def add_to_table(
             args.append(key)
         # if isinstance(content, Iterable) and not isinstance(content, str):
         #     args.append(content)
-        # else:
+        #def static class method else:
         if isinstance(content, Iterable) and not isinstance(content, str):
             args.extend(content)
         else:
@@ -75,9 +64,6 @@ def _float(data: float, header: str = "") -> ConsoleRenderable:
 @flexitable.register
 def _renderable(data: ConsoleRenderable, header: str = "") -> ConsoleRenderable:
     return data
-
-
-console = make_console()
 
 
 @flexitable.register(dict)
@@ -186,8 +172,9 @@ def _list(data: List[Any], header: str = ""):
             for item in data:
                 table.add_dict_item(item, transform=flexitable)
         else:
-            for col in keys:
-                table.add_column(col)
+            table.show_header = False
+            # for col in keys:
+            #     table.add_column(col)
             for item in data:
                 table.add_row(
                     flexitable(dict(zip(keys, map(lambda x: item.get(x, ""), keys))))
@@ -208,7 +195,9 @@ def _list(data: List[Any], header: str = ""):
             if col.header:
                 # print(col.header)
                 new_header = DISPLAY_HEADER.get(col.header) or col.header
-                col.header = wrap(new_header, f"b {predictably_random_color(new_header)}")
+                col.header = wrap(
+                    new_header, f"b {predictably_random_color(new_header)}"
+                )
 
     if header:
         table.show_header = False
