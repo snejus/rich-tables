@@ -18,20 +18,9 @@ from rich.table import Table
 
 from .generic import flexitable
 from .music import albums_table, tracks_table
-from .utils import (
-    FIELDS_MAP,
-    border_panel,
-    format_with_color,
-    get_val,
-    make_console,
-    md_panel,
-    new_table,
-    new_tree,
-    predictably_random_color,
-    simple_panel,
-    time2human,
-    wrap
-)
+from .utils import (FIELDS_MAP, border_panel, format_with_color, get_val,
+                    make_console, md_panel, new_table, new_tree,
+                    predictably_random_color, simple_panel, time2human, wrap)
 
 JSONDict = Dict[str, Any]
 GroupsDict = Dict[str, List]
@@ -148,7 +137,9 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
         for diff_hunk, comments in it.groupby(comments, op.itemgetter("diffHunk")):
             files.append(
                 simple_panel(
-                    Group(syntax_panel(diff_hunk, "diff"), *map(comment_panel, comments)),
+                    Group(
+                        syntax_panel(diff_hunk, "diff"), *map(comment_panel, comments)
+                    ),
                     title=wrap(file, "b magenta"),
                 )
             )
@@ -170,7 +161,9 @@ def lights_table(lights: List[JSONDict]) -> Table:
         elif xy:
             color = conv.xy_to_hex(*xy)
             light["xy"] = wrap("   a", f"#{color} on #{color}")
-        table.add_row(*map(str, map(lambda x: light.get(x) or "", headers)), style=style)
+        table.add_row(
+            *map(str, map(lambda x: light.get(x) or "", headers)), style=style
+        )
     return table
 
 
@@ -179,7 +172,15 @@ def calendar_table(events: List[List]) -> Iterable[ConsoleRenderable]:
         if start.hour == end.hour == 0:
             return 0, 86400
         day_start_ts = start.replace(hour=0).timestamp()
-        return int(start.timestamp() - day_start_ts), int(end.timestamp() - day_start_ts)
+        return int(start.timestamp() - day_start_ts), int(
+            end.timestamp() - day_start_ts
+        )
+
+    status_map = dict(
+        needsAction="[b yellow] ? [/]",
+        accepted="[b green] ✔ [/]",
+        declined="[b red] ✖ [/]",
+    )
 
     calendars = set(map(op.itemgetter("calendar"), events))
     cal_to_color = dict(zip(calendars, map(predictably_random_color, calendars)))
@@ -193,7 +194,8 @@ def calendar_table(events: List[List]) -> Iterable[ConsoleRenderable]:
         orig_start = parse(event["start"])
         orig_end = parse(event["end"])
         h_after_midnight = (
-            24 * (orig_end - orig_start).days + ((orig_end - orig_start).seconds // 3600)
+            24 * (orig_end - orig_start).days
+            + ((orig_end - orig_start).seconds // 3600)
         ) - (24 - orig_start.hour)
 
         end = (orig_start + timedelta(days=1)).replace(hour=0, minute=0, second=0)
@@ -226,7 +228,8 @@ def calendar_table(events: List[List]) -> Iterable[ConsoleRenderable]:
                     **event,
                     **dict(
                         color=color,
-                        summary=wrap(
+                        summary=status_map[event["status"]]
+                        + wrap(
                             event["summary"], f"b {cal_to_color[event['calendar']]}"
                         ),
                         start=start,

@@ -146,18 +146,22 @@ def _list(data: List[Any], header: str = ""):
         if {"before", "after"}.issubset(keys):
             for idx in range(len(data)):
                 item = data[idx]
-                keys = item["before"].keys()
-                data[idx] = dict(
-                    zip(
-                        keys,
-                        map(
-                            lambda k: make_difftext(
-                                item["before"][k] or "", item["after"][k] or ""
-                            ),
+                before = item["before"]
+                if issubclass(before, str):
+                    data["diff"] = make_difftext(before, item["after"])
+                else:
+                    keys = before.keys()
+                    data[idx] = dict(
+                        zip(
                             keys,
-                        ),
+                            map(
+                                lambda k: make_difftext(
+                                    item["before"][k] or "", item["after"][k] or ""
+                                ),
+                                keys,
+                            ),
+                        )
                     )
-                )
         vals_types = set(map(type, data[0].values()))
         if (
             len(keys) == 2 and len(vals_types.intersection({int, float, str})) == 2
