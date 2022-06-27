@@ -8,18 +8,8 @@ from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from functools import partial
 from os import environ, path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    SupportsFloat,
-    Tuple,
-    Type,
-    Union
-)
+from typing import (Any, Callable, Dict, Iterable, List, Optional,
+                    SupportsFloat, Tuple, Type, Union)
 
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
@@ -92,7 +82,16 @@ def fmt_time(diff: timedelta, pad: bool = True) -> Iterable[str]:
 def duration2human(duration: SupportsFloat, acc: int = 1) -> str:
     # return " ".join(it.islice(fmt_time(timedelta(seconds=float(duration))), acc))
     diff = timedelta(seconds=float(duration))
-    return ":".join(map(lambda x: str(x).zfill(2), [diff.seconds // 3600, diff.seconds % 3600 // 60, diff.seconds % 60]))
+    return ":".join(
+        map(
+            lambda x: str(x).zfill(2),
+            [
+                diff.days * 24 + diff.seconds // 3600,
+                diff.seconds % 3600 // 60,
+                diff.seconds % 60,
+            ],
+        )
+    )
 
 
 def time2human(
@@ -110,7 +109,9 @@ def time2human(
     diff = time.time() - seconds
     fmted = " ".join(it.islice(fmt_time(timedelta(seconds=abs(diff)), pad), acc))
 
-    fut, past = ("[b green]{}[/]", "[b red]-{}[/]") if use_colors else ("in {}", "{} ago")
+    fut, past = (
+        ("[b green]{}[/]", "[b red]-{}[/]") if use_colors else ("in {}", "{} ago")
+    )
     return past.format(fmted) if diff > 0 else fut.format(fmted)
 
 
@@ -215,7 +216,9 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
     return border_panel(Markdown(content), **kwargs)
 
 
-def new_tree(values: Iterable[ConsoleRenderable] = [], title: str = "", **kwargs) -> Tree:
+def new_tree(
+    values: Iterable[ConsoleRenderable] = [], title: str = "", **kwargs
+) -> Tree:
     color = predictably_random_color(title or str(values))
     default: JSONDict = dict(guide_style=color)
     tree = Tree(wrap(title, "b"), **{**default, **kwargs})
@@ -354,7 +357,9 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
         "",
         (datetime.fromtimestamp(int(float(x))) - relativedelta(hours=1)).strftime(
             "%H:%M:%S"
-            ) if x else "00:00",
+        )
+        if x
+        else "00:00",
     ),
     tracktotal=lambda x: (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
     if isinstance(x, Iterable) and not isinstance(x, str)
