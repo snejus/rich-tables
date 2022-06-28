@@ -177,9 +177,10 @@ def calendar_table(events: List[List]) -> Iterable[ConsoleRenderable]:
         )
 
     status_map = dict(
-        needsAction="[b yellow] ? [/]",
+        needsAction="[b grey3] ? [/]",
         accepted="[b green] ✔ [/]",
         declined="[b red] ✖ [/]",
+        tentative="[b yellow] ? [/]",
     )
 
     calendars = set(map(op.itemgetter("calendar"), events))
