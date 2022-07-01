@@ -22,6 +22,7 @@ from rich.console import Console, ConsoleRenderable, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
+from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
 
@@ -29,11 +30,11 @@ JSONDict = Dict[str, Any]
 
 
 def wrap(text: str, tag: str) -> str:
-    return f"[{tag}]{text}[/{tag}]"
+    return f"[{tag}]{text}[/]"
 
 
 def format_new(string: str) -> str:
-    return wrap(re.sub(r"(^\s+$)", "[u green]\\1[/u green]", string), "b green")
+    return wrap(re.sub(r"(^\s+$)", "[u green]\\1[/]", string), "b green")
 
 
 def format_old(string: str) -> str:
@@ -95,7 +96,7 @@ def duration2human(duration: SupportsFloat, acc: int = 1) -> str:
 
 
 def time2human(
-    timestamp: Union[int, str], acc: int = 1, use_colors=False, pad: bool = True
+    timestamp: Union[int, str], acc: int = 1, use_colors=False, pad: bool = False
 ) -> str:
     if isinstance(timestamp, str):
         try:
@@ -134,8 +135,8 @@ def make_console(**kwargs):
 class NewTable(Table):
     def __init__(self, *args, **kwargs) -> None:
         ckwargs = dict(
-            overflow=kwargs.pop("overflow", "ellipsis"),
-            justify=kwargs.pop("justify", "left"),
+            overflow=kwargs.pop("overflow", "fold"),
+            justify=kwargs.pop("justify", "center"),
             vertical=kwargs.pop("vertical", "top"),
         )
         super().__init__(**kwargs)
@@ -187,7 +188,7 @@ def new_table(*args: Any, **kwargs: Any) -> NewTable:
 
 def predictably_random_color(string: str) -> str:
     random.seed(string)
-    rand = partial(random.randint, 60, 190)
+    rand = partial(random.randint, 50, 190)
     return "#{:0>2X}{:0>2X}{:0>2X}".format(rand(), rand(), rand())
 
 
@@ -213,7 +214,7 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
-    return border_panel(Markdown(content), **kwargs)
+    return simple_panel(Markdown(content, style="on black", code_theme="tango"), **kwargs)
 
 
 def new_tree(
@@ -247,7 +248,8 @@ def get_country(code: str) -> str:
 
 
 def colored_with_bg(string: str) -> str:
-    return wrap(f" {format_with_color(string)} ", "on #000000")
+    color = predictably_random_color(string)
+    return wrap(f" {string}[#000000 on #000000]a[/]", f"bold {color} on #000000")
 
 
 split_pat = re.compile(r"[;,] ")
@@ -292,8 +294,8 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
     total_max = max(all_counts)
 
     # ensure count_col is at the end
-    headers = (keys - {count_col_name, "total"}) | {count_col_name}
-    table = new_table(*headers, overflow="fold", vertical="middle")
+    headers = keys - {count_col_name, "total"}
+    table = new_table(*headers, "", count_col_name, overflow="fold", vertical="middle")
     for item in data:
         item_count = float(item.pop(count_col_name, 0))
         item_max = item.pop("total", None)
@@ -331,20 +333,25 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
             .split("; "),
         )
     ),
+    author=colored_with_bg,
+    body=md_panel,
     label=format_with_color,
+    labels=lambda x: " ".join(wrap(y["name"], f"b black on #{y['color']}") for y in x),
     catalognum=format_with_color,
-    last_played=lambda x: time2human(x, use_colors=True, pad=False),
-    avg_last_played=lambda x: time2human(x, acc=2, use_colors=True, pad=False),
+    last_played=lambda x: time2human(x, use_colors=True),
+    avg_last_played=lambda x: time2human(x, acc=2, use_colors=True),
     since=lambda x: x
     if isinstance(x, str)
     else datetime.fromtimestamp(x).strftime("%F %H:%M"),
-    mtime=lambda x: re.sub(r"\] *", "]", time2human(x, pad=False)),
-    added=lambda x: re.sub(r"\] *", "]", time2human(x, pad=False)),
+    mtime=time2human,
+    added=time2human,
+    createdAt=time2human,
+    committedDate=time2human,
     bpm=lambda x: wrap(
         x,
         "green"
         if int(x or 0) < 135
-        else "#000000"
+        else "b blink red"
         if int(x or 0) > 230
         else "red"
         if int(x or 0) > 165
