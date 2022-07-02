@@ -80,6 +80,7 @@ def _dict(data: Dict, header: str = ""):
 
     rends: List[ConsoleRenderable] = []
     for key, content in data.items():
+        print(key)
         add_to_table(rends, table, flexitable(content, key), key)
 
     # for rend in rends:
@@ -141,14 +142,16 @@ def _list(data: List[Any], header: str = ""):
 
     if only(data, dict):
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
-        keys = ordset(it.chain(*(tuple(d.keys()) for d in data)))
-        keys = ordset(filter(lambda k: any((d.get(k) for d in data)), keys))
-        if {"before", "after"}.issubset(keys):
+        all_keys = ordset(it.chain(*(tuple(d.keys()) for d in data)))
+        if {"before", "after"}.issubset(all_keys):
+            all_keys.add("diff")
             for idx in range(len(data)):
                 item = data[idx]
                 before = item["before"]
-                if issubclass(before, str):
-                    data["diff"] = make_difftext(before, item["after"])
+                if isinstance(before, str):
+                    item["diff"] = make_difftext(before, item["after"])
+                    item.pop("before")
+                    item.pop("after")
                 else:
                     keys = before.keys()
                     data[idx] = dict(
@@ -162,6 +165,7 @@ def _list(data: List[Any], header: str = ""):
                             ),
                         )
                     )
+        keys = ordset(filter(lambda k: any((d.get(k) for d in data)), all_keys))
         vals_types = set(map(type, data[0].values()))
         if (
             len(keys) == 2 and len(vals_types.intersection({int, float, str})) == 2

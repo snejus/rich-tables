@@ -153,34 +153,37 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
         get_val(pr, "commits"),
     )
     yield new_table(rows=[[simple_panel(info_table), md_panel(pr["body"])]])
-    reviews = pr["reviews"]
-    yield border_panel(
-        new_table(
-            "",
-            "",
-            "",
-            rows=[
-                map(lambda x: get_val(x, "author"), reviews),
-                map(
-                    lambda x: get_val(x, "createdAt") + " " + get_val(x, "state"),
-                    reviews,
-                ),
-                map(lambda x: get_val(x, "body"), reviews),
-            ],
-            justify="center",
-        ),
-        expand=True,
-    )
-    yield ""
+
+    # reviews = []
+    # for review in filter(
+    #     lambda x: x["body"] or x["state"] != "COMMENTED", pr["reviews"]
+    # ):
+    #     reviews.append(
+    #         simple_panel(
+    #             new_table(
+    #                 rows=[
+    #                     [get_val(review, "author")],
+    #                     [get_val(review, "createdAt") + " " + get_val(review, "state")],
+    #                     [get_val(review, "body")],
+    #                 ],
+    #                 justify="center",
+    #             )
+    #         )
+    #     )
+    # yield border_panel(
+    #     new_table(rows=it.zip_longest(*(iter(reviews),) * 3)),
+    #     title="Reviews",
+    # )
+    # yield ""
 
     global_comments: List[ConsoleRenderable] = []
-    raw_global_comments = filter(op.itemgetter("body"), pr["comments"])
+    raw_global_comments = filter(op.itemgetter("body"), pr["comments"] + pr["reviews"])
     for comment in sorted(raw_global_comments, key=op.itemgetter("createdAt")):
         subtitle = format_with_color("review" if "state" in comment else "comment")
         global_comments.append(comment_panel(comment, subtitle=subtitle))
     if global_comments:
         yield border_panel(
-            new_table(rows=it.zip_longest(*(iter(global_comments),) * 2)),
+            new_table(rows=it.zip_longest(*(iter(global_comments),) * 3)),
             title="Reviews & Comments",
         )
 

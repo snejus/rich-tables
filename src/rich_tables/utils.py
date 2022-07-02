@@ -136,7 +136,7 @@ class NewTable(Table):
     def __init__(self, *args, **kwargs) -> None:
         ckwargs = dict(
             overflow=kwargs.pop("overflow", "fold"),
-            justify=kwargs.pop("justify", "center"),
+            justify=kwargs.pop("justify", "left"),
             vertical=kwargs.pop("vertical", "top"),
         )
         super().__init__(**kwargs)
@@ -188,7 +188,7 @@ def new_table(*args: Any, **kwargs: Any) -> NewTable:
 
 def predictably_random_color(string: str) -> str:
     random.seed(string)
-    rand = partial(random.randint, 50, 190)
+    rand = partial(random.randint, 60, 190)
     return "#{:0>2X}{:0>2X}{:0>2X}".format(rand(), rand(), rand())
 
 
