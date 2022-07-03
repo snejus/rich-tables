@@ -80,7 +80,6 @@ def _dict(data: Dict, header: str = ""):
 
     rends: List[ConsoleRenderable] = []
     for key, content in data.items():
-        print(key)
         add_to_table(rends, table, flexitable(content, key), key)
 
     # for rend in rends:
