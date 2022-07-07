@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
 
 from dateutil.parser import parse
 from ordered_set import OrderedSet
+from rich import box
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group
@@ -16,14 +17,13 @@ from rich.panel import Panel
 from rich.rule import Rule
 from rich.syntax import Syntax
 from rich.table import Table
-from rich.text import Text
 
 from .generic import flexitable
 from .music import albums_table, tracks_table
 from .utils import (FIELDS_MAP, border_panel, colored_with_bg,
                     format_with_color, get_val, make_console, md_panel,
                     new_table, new_tree, predictably_random_color,
-                    simple_panel, time2human, wrap)
+                    progress_bar, simple_panel, time2human, wrap)
 
 JSONDict = Dict[str, Any]
 GroupsDict = Dict[str, List]
@@ -40,7 +40,7 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
     def comment_panel(comment: Dict[str, str], **kwargs) -> Panel:
         return md_panel(
             re.sub(r"(@[^ ]+)", r"**\1**", comment["body"]),
-            title=" ".join(map(lambda x: get_val(comment, x), ["author", "createdAt"])),
+            title=" ".join(get_val(comment, f) for f in ["author", "createdAt"]),
             **kwargs,
         )
 
@@ -69,7 +69,7 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
             {
                 "True": "b green",
                 "APPROVED": "b green",
-                "RESOLVED": "b green",
+                "RESOLVED": "s b green",
                 "OPEN": "b green",
                 "MERGED": "b magenta",
                 "PENDING": "b yellow",
@@ -154,38 +154,30 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
     )
     yield new_table(rows=[[simple_panel(info_table), md_panel(pr["body"])]])
 
-    # reviews = []
-    # for review in filter(
-    #     lambda x: x["body"] or x["state"] != "COMMENTED", pr["reviews"]
-    # ):
-    #     reviews.append(
-    #         simple_panel(
-    #             new_table(
-    #                 rows=[
-    #                     [get_val(review, "author")],
-    #                     [get_val(review, "createdAt") + " " + get_val(review, "state")],
-    #                     [get_val(review, "body")],
-    #                 ],
-    #                 justify="center",
-    #             )
-    #         )
-    #     )
-    # yield border_panel(
-    #     new_table(rows=it.zip_longest(*(iter(reviews),) * 3)),
-    #     title="Reviews",
-    # )
-    # yield ""
-
     global_comments: List[ConsoleRenderable] = []
     raw_global_comments = filter(op.itemgetter("body"), pr["comments"] + pr["reviews"])
     for comment in sorted(raw_global_comments, key=op.itemgetter("createdAt")):
-        subtitle = format_with_color("review" if "state" in comment else "comment")
-        global_comments.append(comment_panel(comment, subtitle=subtitle))
+        _type = "review" if "state" in comment else "comment"
+        color = predictably_random_color(_type)
+        subtitle = _type
+        global_comments.append(
+            comment_panel(
+                comment, subtitle=subtitle, border_style=color, box=box.ROUNDED
+            )
+        )
     if global_comments:
         yield border_panel(
             new_table(rows=it.zip_longest(*(iter(global_comments),) * 3)),
             title="Reviews & Comments",
         )
+
+    total_threads = len(pr["reviewThreads"])
+    resolved_threads = len(list(filter(lambda x: x["isResolved"], pr["reviewThreads"])))
+    yield border_panel(
+        progress_bar(resolved_threads, total_threads),
+        title=f"{resolved_threads} / {total_threads} resolved",
+        border_style="dim yellow",
+    )
 
     for thread in pr["reviewThreads"]:
         files: List[ConsoleRenderable] = []
@@ -196,32 +188,17 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
             ),
             lambda x: x.get("diffHunk"),
         ):
-            files.append(
-                new_table(
-                    rows=[
-                        [
-                            syntax_panel(diff_hunk, "diff"),
-                            border_panel(
-                                new_table(
-                                    rows=[[x] for x in map(comment_panel, comments)]
-                                )
-                            ),
-                        ]
-                    ]
-                )
-            )
+            comments_col = new_table(rows=[[x] for x in map(comment_panel, comments)])
+            diff = syntax_panel(diff_hunk, "diff")
+            files.append(new_table(rows=[[diff, border_panel(comments_col)]]))
+
         yield border_panel(
             new_table(rows=it.zip_longest(*(iter(files),) * 2)),
             border_style=res_border_style(thread["isResolved"], thread["isOutdated"]),
-            title=(
-                "        ".join(
-                    [
-                        wrap(thread["path"], "b magenta"),
-                        fmt_state("RESOLVED" if thread["isResolved"] else "PENDING"),
-                        fmt_state("OUTDATED") if thread["isOutdated"] else "",
-                    ]
-                )
-            ),
+            title=wrap(thread["path"], "b magenta")
+            + " "
+            + fmt_state("RESOLVED" if thread["isResolved"] else "PENDING"),
+            subtitle=fmt_state("OUTDATED") if thread["isOutdated"] else "",
         )
 
 

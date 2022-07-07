@@ -214,7 +214,7 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
-    return simple_panel(Markdown(content, style="on black", code_theme="tango"), **kwargs)
+    return simple_panel(Markdown(content), **kwargs)
 
 
 def new_tree(
@@ -259,7 +259,7 @@ def colored_split(string: str) -> str:
     return "  ".join(map(format_with_color, sorted(split_pat.split(string))))
 
 
-def progress_bar(count: float, total_max: float, item_max: Optional[float]) -> Bar:
+def progress_bar(count: float, total_max: float, item_max: Optional[float] = None) -> Bar:
     use_max = total_max
     if item_max is not None:
         use_max = item_max
