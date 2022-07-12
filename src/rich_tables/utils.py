@@ -395,7 +395,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     price=lambda x: colored_with_bg(str(x)),
     interview=md_panel,
     benefits=md_panel,
-    primary=colored_split,
+    primary=lambda x: colored_split if isinstance(x, str) else str(x),
     **{"from": format_with_color},
     to=format_with_color,
     creditText=md_panel,
