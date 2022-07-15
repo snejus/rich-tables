@@ -25,6 +25,7 @@ from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
+from string import punctuation, printable, ascii_uppercase, ascii_letters, ascii_lowercase
 
 JSONDict = Dict[str, Any]
 
@@ -55,7 +56,8 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    junk: str = " qwertyuiopasdfghjkllzxcvbnm"
+    junk: str = "".join(set(punctuation)) + " ",
+    # junk: str = "".join(set(printable)),
     # before: str, after: str, junk: str = r" \n"
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
@@ -66,6 +68,7 @@ def make_difftext(
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
+    print("".join(sorted(matcher.bjunk, key=lambda x: after.index(x))))
     return diff
 
 
@@ -386,7 +389,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
         x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
     ),
     tags=colored_split,
-    released=lambda x: x.replace("-00", ""),
+    released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
     desc=md_panel,
     calendar=format_with_color,
     source=format_with_color,
