@@ -5,6 +5,7 @@ import re
 import sys
 from datetime import datetime, timedelta
 from functools import partial, singledispatch
+from textwrap import fill
 from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
 
 from dateutil.parser import parse
@@ -39,8 +40,16 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
 
     def comment_panel(comment: Dict[str, str], **kwargs) -> Panel:
         return md_panel(
-            re.sub(r"(@[^ ]+)", r"**\1**", comment["body"]),
-            title=" ".join(get_val(comment, f) for f in ["author", "createdAt"]),
+            re.sub(
+                r"(@[^ ]+)",
+                r"**\1**",
+                "\n".join(
+                    map(lambda t: fill(t, width=57), comment["body"].splitlines())
+                ),
+            ),
+            title=" ".join(
+                get_val(comment, f) for f in ["state", "author", "createdAt"]
+            ),
             **kwargs,
         )
 
@@ -63,24 +72,25 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
         deletions = f"-{deleted}" if deleted else ""
         return [wrap(additions.rjust(5), "b green"), wrap(deletions.rjust(3), "b red")]
 
+    def state_color(state: str) -> str:
+        return {
+            "True": "b green",
+            True: "b green",
+            "APPROVED": "b green",
+            "RESOLVED": "s b green",
+            "OPEN": "b green",
+            "MERGED": "b magenta",
+            "PENDING": "b yellow",
+            "OUTDATED": "b yellow",
+            "COMMENTED": "b yellow",
+            "CHANGES_REQUESTED": "b yellow",
+            "REVIEW_REQUIRED": "b red",
+            "DISMISSED": "b red",
+            "False": "b red",
+        }.get(state, "default")
+
     def fmt_state(state: str) -> str:
-        return wrap(
-            state,
-            {
-                "True": "b green",
-                "APPROVED": "b green",
-                "RESOLVED": "s b green",
-                "OPEN": "b green",
-                "MERGED": "b magenta",
-                "PENDING": "b yellow",
-                "OUTDATED": "b yellow",
-                "COMMENTED": "b yellow",
-                "CHANGES_REQUESTED": "b yellow",
-                "REVIEW_REQUIRED": "b red",
-                "DISMISSED": "b red",
-                "False": "b red",
-            }.get(state, "default"),
-        )
+        return wrap(state, state_color(state))
 
     exclude = {
         "title",
@@ -91,6 +101,8 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
         "url",
         "files",
         "commits",
+        "isReadByViewer",
+        "repository",
     }
     FIELDS_MAP.update(
         {
@@ -98,7 +110,6 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
             "participants": lambda x: "  ".join(map(colored_with_bg, x)),
             "state": fmt_state,
             "reviewDecision": fmt_state,
-            "isReadByViewer": fmt_state,
             "updatedAt": lambda x: time2human(x, use_colors=True),
             "createdAt": lambda x: time2human(x, use_colors=True),
             "repository": lambda x: x.get("name"),
@@ -157,12 +168,14 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
     global_comments: List[ConsoleRenderable] = []
     raw_global_comments = filter(op.itemgetter("body"), pr["comments"] + pr["reviews"])
     for comment in sorted(raw_global_comments, key=op.itemgetter("createdAt")):
-        _type = "review" if "state" in comment else "comment"
-        color = predictably_random_color(_type)
-        subtitle = _type
+        state = comment.get("state")
+        if state is None:
+            _type = "review"
+        else:
+            _type = "comment"
         global_comments.append(
             comment_panel(
-                comment, subtitle=subtitle, border_style=color, box=box.ROUNDED
+                comment, subtitle=_type, border_style=state_color(state), box=box.SQUARE
             )
         )
     if global_comments:
@@ -172,6 +185,9 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
         )
 
     total_threads = len(pr["reviewThreads"])
+    if not total_threads:
+        return
+
     resolved_threads = len(list(filter(lambda x: x["isResolved"], pr["reviewThreads"])))
     yield border_panel(
         progress_bar(resolved_threads, total_threads),

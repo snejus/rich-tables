@@ -56,8 +56,8 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "".join(set(punctuation)) + " ",
-    # junk: str = "".join(set(printable)),
+    # junk: str = "".join(set(punctuation)) + " ",
+    junk: str = ascii_lowercase + "\n ",
     # before: str, after: str, junk: str = r" \n"
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
@@ -68,7 +68,7 @@ def make_difftext(
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
-    print("".join(sorted(matcher.bjunk, key=lambda x: after.index(x))))
+    # print("".join(sorted(matcher.bjunk, key=lambda x: after.index(x))))
     return diff
 
 
@@ -217,7 +217,7 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
-    return simple_panel(Markdown(content), **kwargs)
+    return simple_panel(Markdown(content.replace("suggestion", "python")), **kwargs)
 
 
 def new_tree(
@@ -255,7 +255,7 @@ def colored_with_bg(string: str) -> str:
     return wrap(f" {string}[#000000 on #000000]a[/]", f"bold {color} on #000000")
 
 
-split_pat = re.compile(r"[;,] ")
+split_pat = re.compile(r"[;,] | ")
 
 
 def colored_split(string: str) -> str:
@@ -337,7 +337,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
         )
     ),
     author=colored_with_bg,
-    body=md_panel,
+    bodyHTML=md_panel,
     label=format_with_color,
     labels=lambda x: " ".join(wrap(y["name"], f"b #{y['color']}") for y in x),
     catalognum=format_with_color,
@@ -409,6 +409,10 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     answer=md_panel,
     plays=lambda x: wrap(x, "b green"),
     skips=lambda x: wrap(x, "b red"),
+    name=lambda x: wrap(x, "b"),
+    description=lambda x: wrap(x, "i"),
+    kind=colored_split,
+    type_name=format_with_color,
 )
 
 DISPLAY_HEADER: Dict[str, str] = {
