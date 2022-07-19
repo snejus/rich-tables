@@ -53,19 +53,6 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
             **kwargs,
         )
 
-    def syntax_panel(content: str, lexer: str, **kwargs: Any) -> Panel:
-        return Panel(
-            Syntax(
-                content,
-                lexer,
-                theme="paraiso-dark",
-                background_color="black",
-                word_wrap=True,
-            ),
-            style=kwargs.get("style") or "black",
-            title=kwargs.get("title") or "",
-        )
-
     def fmt_add_del(file: JSONDict) -> List[str]:
         added, deleted = file["additions"], file["deletions"]
         additions = f"+{added}" if added else ""
@@ -103,6 +90,7 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
         "commits",
         "isReadByViewer",
         "repository",
+        "reviewRequests",
     }
     FIELDS_MAP.update(
         {
@@ -135,8 +123,7 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
                         [
                             *fmt_add_del(y),
                             get_val(y, "message"),
-                            get_val(y, "committedDate")
-                            # get_val(y, "status"),
+                            get_val(y, "committedDate"),
                         ]
                         for y in x
                     ]
@@ -144,19 +131,21 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
                 title="commits",
                 border_style=f"dim {predictably_random_color('commits')}",
             ),
+            "reviewRequests": lambda x: "  ".join(map(colored_with_bg, x)),
         }
     )
 
     pr = data[0]
     if pr and "additions" in pr:
-        pr[
-            "diff"
-        ] = f"[green]+{pr.pop('additions', '')}[/] [red]-{pr.pop('deletions', '')}[/]"
+        pr["files"].append(
+            dict(additions=pr.pop("additions", ""), deletions=pr.pop("deletions", ""))
+        )
 
     yield ""
-    title = pr.get("title")
+    title, name = pr["title"], pr["repository"]["name"]
     yield Rule(wrap(title, "b"), style=predictably_random_color(title))
-    yield format_with_color(pr["repository"]["name"])
+    yield Rule(wrap(name, "b"), style=predictably_random_color(name))
+
     keys = sorted(set(pr) - exclude)
     info_table = Group(
         new_table(rows=map(lambda x: (wrap(x, "b"), get_val(pr, x)), keys)),
@@ -169,10 +158,7 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
     raw_global_comments = filter(op.itemgetter("body"), pr["comments"] + pr["reviews"])
     for comment in sorted(raw_global_comments, key=op.itemgetter("createdAt")):
         state = comment.get("state")
-        if state is None:
-            _type = "review"
-        else:
-            _type = "comment"
+        _type = "review" if state is None else "comment"
         global_comments.append(
             comment_panel(
                 comment, subtitle=_type, border_style=state_color(state), box=box.SQUARE
@@ -184,6 +170,7 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
             title="Reviews & Comments",
         )
 
+    yield new_table(rows=[[get_val(pr, "reviewRequests")]])
     total_threads = len(pr["reviewThreads"])
     if not total_threads:
         return
@@ -205,7 +192,10 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
             lambda x: x.get("diffHunk"),
         ):
             comments_col = new_table(rows=[[x] for x in map(comment_panel, comments)])
-            diff = syntax_panel(diff_hunk, "diff")
+            kwargs = dict(
+                theme="paraiso-dark", background_color="black", word_wrap=True
+            )
+            diff = Syntax(diff_hunk, "diff", **kwargs)
             files.append(new_table(rows=[[diff, border_panel(comments_col)]]))
 
         yield border_panel(

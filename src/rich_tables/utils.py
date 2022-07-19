@@ -1,5 +1,4 @@
 import itertools as it
-import operator as op
 import random
 import re
 import time
@@ -8,10 +7,11 @@ from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from functools import partial
 from os import environ, path
+from string import ascii_lowercase
 from typing import (Any, Callable, Dict, Iterable, List, Optional,
                     SupportsFloat, Tuple, Type, Union)
 
-from dateutil.parser import parse
+from dateutil.parser import ParserError, parse
 from dateutil.relativedelta import relativedelta
 from ordered_set import OrderedSet as ordset
 from pycountry import countries
@@ -22,10 +22,8 @@ from rich.console import Console, ConsoleRenderable, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
-from string import punctuation, printable, ascii_uppercase, ascii_letters, ascii_lowercase
 
 JSONDict = Dict[str, Any]
 
@@ -104,7 +102,7 @@ def time2human(
     if isinstance(timestamp, str):
         try:
             seconds = parse(timestamp).timestamp()
-        except:
+        except ParserError:
             seconds = 0
     else:
         seconds = timestamp
@@ -217,7 +215,18 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
-    return simple_panel(Markdown(content.replace("suggestion", "python")), **kwargs)
+    return simple_panel(
+        Markdown(
+            # re.sub(
+            #     r"```\n",
+            #     "```python\n",
+            #     content.replace("suggestion", "python"),
+            #     count=1,
+            # )
+            content.replace("suggestion", "python"),
+        ),
+        **kwargs,
+    )
 
 
 def new_tree(
@@ -262,7 +271,9 @@ def colored_split(string: str) -> str:
     return "  ".join(map(format_with_color, sorted(split_pat.split(string))))
 
 
-def progress_bar(count: float, total_max: float, item_max: Optional[float] = None) -> Bar:
+def progress_bar(
+    count: float, total_max: float, item_max: Optional[float] = None
+) -> Bar:
     use_max = total_max
     if item_max is not None:
         use_max = item_max
