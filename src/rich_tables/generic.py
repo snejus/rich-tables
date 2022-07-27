@@ -167,7 +167,7 @@ def _list(data: List[Any], header: str = ""):
         keys = ordset(filter(lambda k: any((d.get(k) for d in data)), all_keys))
         vals_types = set(map(type, data[0].values()))
         if (
-            len(keys) == 2 and len(vals_types.intersection({int, float, str})) == 2
+            len(keys) in {2, 3} and len(vals_types.intersection({int, float, str})) == 2
         ) or len(keys) < 8 and any(map(lambda x: x in " ".join(keys), ("count_", "sum_", "duration"))):
             # [{"some_count": 10, "some_entity": "entity"}, ...]
             # print(keys)
