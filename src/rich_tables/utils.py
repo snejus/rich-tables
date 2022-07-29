@@ -424,6 +424,8 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     description=lambda x: wrap(x, "i"),
     kind=colored_split,
     type_name=format_with_color,
+    table=format_with_color,
+    endpoint=format_with_color,
 )
 
 DISPLAY_HEADER: Dict[str, str] = {
