@@ -11,6 +11,7 @@ from string import ascii_lowercase
 from typing import (Any, Callable, Dict, Iterable, List, Optional,
                     SupportsFloat, Tuple, Type, Union)
 
+import sqlparse
 from dateutil.parser import ParserError, parse
 from dateutil.relativedelta import relativedelta
 from ordered_set import OrderedSet as ordset
@@ -21,6 +22,7 @@ from rich.bar import Bar
 from rich.console import Console, ConsoleRenderable, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
+from rich.syntax import Syntax
 from rich.table import Table
 from rich.theme import Theme
 from rich.tree import Tree
@@ -426,6 +428,25 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     type_name=format_with_color,
     table=format_with_color,
     endpoint=format_with_color,
+    context=lambda x: Syntax(
+        x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
+    ),
+    sql=lambda x: Syntax(
+        x.replace("'", ""),
+        "sql",
+        theme="paraiso-dark",
+        background_color="black",
+        word_wrap=True,
+    ),
+    message=lambda x: Syntax(
+        sqlparse.format(
+            re.sub(r"..traceback_psycopg2.*", "", x).replace('"', ""),
+            reindent=True,
+        ),
+        lexer="sql",
+        theme="gruvbox-dark",
+        background_color="black",
+    ),
 )
 
 DISPLAY_HEADER: Dict[str, str] = {
