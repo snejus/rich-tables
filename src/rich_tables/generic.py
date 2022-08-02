@@ -32,7 +32,7 @@ def add_to_table(
             args.append(key)
         # if isinstance(content, Iterable) and not isinstance(content, str):
         #     args.append(content)
-        #def static class method else:
+        # def static class method else:
         if isinstance(content, Iterable) and not isinstance(content, str):
             args.extend(content)
         else:
@@ -146,35 +146,34 @@ def _list(data: List[Any], header: str = ""):
             all_keys.add("diff")
             for idx in range(len(data)):
                 item = data[idx]
-                before = item["before"]
+                before, after = item.pop("before", None), item.pop("after", None)
+                if isinstance(before, list):
+                    before, after = "\n".join(before), "\n".join(after)
+
                 if isinstance(before, str):
-                    item["diff"] = make_difftext(before, item["after"])
-                    item.pop("before")
-                    item.pop("after")
+                    item["diff"] = make_difftext(before, after, "\n ")
                 else:
                     keys = before.keys()
-                    data[idx] = dict(
-                        zip(
-                            keys,
-                            map(
-                                lambda k: make_difftext(
-                                    item["before"][k] or "", item["after"][k] or ""
-                                ),
-                                keys,
-                            ),
-                        )
-                    )
+                    data[idx] = {
+                        k: make_difftext(before[k] or "", after[k] or "") for k in keys
+                    }
+
         keys = ordset(filter(lambda k: any((d.get(k) for d in data)), all_keys))
         vals_types = set(map(type, data[0].values()))
         if (
-            len(keys) in {2, 3} and len(vals_types.intersection({int, float, str})) == 2
-        ) or len(keys) < 8 and any(map(lambda x: x in " ".join(keys), ("count_", "sum_", "duration"))):
+            (
+                len(keys) in {2, 3}
+                and len(vals_types.intersection({int, float, str})) == 2
+            )
+            or len(keys) < 8
+            and any(map(lambda x: x in " ".join(keys), ("count_", "sum_", "duration")))
+        ):
             # [{"some_count": 10, "some_entity": "entity"}, ...]
             # print(keys)
             # return
             return counts_table(data, header=header)
 
-        if len(keys) < 15:
+        if 1 < len(keys) < 15:
             for col in keys:
                 table.add_column(col)
 

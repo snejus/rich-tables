@@ -11,7 +11,7 @@ from string import ascii_lowercase
 from typing import (Any, Callable, Dict, Iterable, List, Optional,
                     SupportsFloat, Tuple, Type, Union)
 
-import sqlparse
+# import sqlparse
 from dateutil.parser import ParserError, parse
 from dateutil.relativedelta import relativedelta
 from ordered_set import OrderedSet as ordset
@@ -349,7 +349,11 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
             .split("; "),
         )
     ),
-    author=colored_with_bg,
+    author=lambda x: colored_with_bg(x)
+    if isinstance(x, str)
+    else x["login"]
+    if isinstance(x, dict)
+    else x,
     bodyHTML=md_panel,
     label=format_with_color,
     labels=lambda x: " ".join(wrap(y["name"], f"b #{y['color']}") for y in x),
@@ -438,15 +442,15 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
         background_color="black",
         word_wrap=True,
     ),
-    message=lambda x: Syntax(
-        sqlparse.format(
-            re.sub(r"..traceback_psycopg2.*", "", x).replace('"', ""),
-            reindent=True,
-        ),
-        lexer="sql",
-        theme="gruvbox-dark",
-        background_color="black",
-    ),
+    # message=lambda x: Syntax(
+    #     sqlparse.format(
+    #         re.sub(r"..traceback_psycopg2.*", "", x).replace('"', ""),
+    #         reindent=True,
+    #     ),
+    #     lexer="sql",
+    #     theme="gruvbox-dark",
+    #     background_color="black",
+    # ),
 )
 
 DISPLAY_HEADER: Dict[str, str] = {
