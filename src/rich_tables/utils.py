@@ -356,7 +356,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     else x,
     bodyHTML=md_panel,
     label=format_with_color,
-    labels=lambda x: " ".join(wrap(y["name"], f"b #{y['color']}") for y in x),
+    labels=lambda x: " ".join(wrap(y["name"], f"b #{y['color']}") for y in x) if isinstance(x, list) else x,
     catalognum=format_with_color,
     last_played=lambda x: time2human(x, use_colors=True),
     avg_last_played=lambda x: time2human(x, acc=2, use_colors=True),

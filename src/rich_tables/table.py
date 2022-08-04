@@ -250,7 +250,7 @@ def calendar_table(events: List[List]) -> Iterable[ConsoleRenderable]:
     cal_fmted = it.starmap(
         lambda x, y: wrap(f" {x} ", f"b black on {y}"), cal_to_color.items()
     )
-    print(Columns(cal_fmted, expand=True, equal=True, align="center"))
+    yield Columns(cal_fmted, expand=True, equal=False, align="center")
 
     new_events: List[JSONDict] = []
     for event in events:
@@ -293,7 +293,7 @@ def calendar_table(events: List[List]) -> Iterable[ConsoleRenderable]:
                         color=color,
                         summary=status_map[event["status"]]
                         + wrap(
-                            event["summary"], f"b {cal_to_color[event['calendar']]}"
+                                event["summary"] or "busy", f"b {cal_to_color[event['calendar']]}"
                         ),
                         start=start,
                         start_day=start.strftime("%d %a"),
