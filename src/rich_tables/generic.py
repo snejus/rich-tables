@@ -168,12 +168,9 @@ def _list(data: List[Any], header: str = ""):
             or len(keys) < 8
             and any(map(lambda x: x in " ".join(keys), ("count_", "sum_", "duration")))
         ):
-            # [{"some_count": 10, "some_entity": "entity"}, ...]
-            # print(keys)
-            # return
             return counts_table(data, header=header)
 
-        if 1 < len(keys) < 15:
+        if len(data) > 1 and 1 < len(keys) < 15:
             for col in keys:
                 table.add_column(col)
 
@@ -201,7 +198,6 @@ def _list(data: List[Any], header: str = ""):
         table.header_style = "on grey3"
         for col in table.columns:
             if col.header:
-                # print(col.header)
                 new_header = DISPLAY_HEADER.get(col.header) or col.header
                 col.header = wrap(
                     new_header, f"b {predictably_random_color(new_header)}"

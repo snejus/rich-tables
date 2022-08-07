@@ -22,8 +22,8 @@ from rich.table import Table
 from .generic import flexitable
 from .music import albums_table, tracks_table
 from .utils import (FIELDS_MAP, border_panel, colored_with_bg,
-                    format_with_color, get_val, make_console, md_panel,
-                    new_table, new_tree, predictably_random_color,
+                    format_with_color, get_val, make_console, make_difftext,
+                    md_panel, new_table, new_tree, predictably_random_color,
                     progress_bar, simple_panel, time2human, wrap)
 
 JSONDict = Dict[str, Any]
@@ -293,7 +293,8 @@ def calendar_table(events: List[List]) -> Iterable[ConsoleRenderable]:
                         color=color,
                         summary=status_map[event["status"]]
                         + wrap(
-                                event["summary"] or "busy", f"b {cal_to_color[event['calendar']]}"
+                            event["summary"] or "busy",
+                            f"b {cal_to_color[event['calendar']]}",
                         ),
                         start=start,
                         start_day=start.strftime("%d %a"),
@@ -457,26 +458,30 @@ def _draw_data_list(data: List[JSONDict], title: str = "") -> None:
 
 
 def main():
-    args = set()
+    args = []
     if len(sys.argv) > 1:
-        args.update(sys.argv[1:])
+        args.extend(sys.argv[1:])
 
-    data = load_data()
-    if "-j" in args:
-        console.print_json(data=data)
+    if args:
+        if args[0] == "diff":
+            print(make_difftext(*args[1:]))
     else:
-        try:
-            ret = draw_data(data)
-        except Exception as exc:
-            console.print(data)
-            console.print_exception(extra_lines=4, show_locals=True)
-            raise exc
+        data = load_data()
+        if "-j" in args:
+            console.print_json(data=data)
         else:
-            if isinstance(ret, Iterable):
-                for rend in ret:
-                    console.print(rend)
+            try:
+                ret = draw_data(data)
+            except Exception as exc:
+                console.print(data)
+                console.print_exception(extra_lines=4, show_locals=True)
+                raise exc
             else:
-                console.print(ret)
+                if isinstance(ret, Iterable):
+                    for rend in ret:
+                        console.print(rend)
+                else:
+                    console.print(ret)
 
 
 if __name__ == "__main__":
