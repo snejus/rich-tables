@@ -170,7 +170,7 @@ def _list(data: List[Any], header: str = ""):
         ):
             return counts_table(data, header=header)
 
-        if len(data) > 1 and 1 < len(keys) < 15:
+        if 1 < len(keys) < 15:
             for col in keys:
                 table.add_column(col)
 
