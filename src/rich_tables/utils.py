@@ -432,6 +432,9 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     type_name=format_with_color,
     table=format_with_color,
     endpoint=format_with_color,
+    issuetype=format_with_color,
+    priority=format_with_color,
+    status=format_with_color,
     context=lambda x: Syntax(
         x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
     ),
