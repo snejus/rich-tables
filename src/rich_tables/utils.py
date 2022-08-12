@@ -435,6 +435,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     issuetype=format_with_color,
     priority=format_with_color,
     status=format_with_color,
+    link=format_with_color,
     context=lambda x: Syntax(
         x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
     ),
