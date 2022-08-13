@@ -364,7 +364,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     if isinstance(x, str)
     else datetime.fromtimestamp(x).strftime("%F %H:%M"),
     mtime=time2human,
-    added=time2human,
+    # added=time2human,
     createdAt=time2human,
     committedDate=time2human,
     bpm=lambda x: wrap(
