@@ -3,11 +3,13 @@ import operator as op
 from functools import singledispatch
 from typing import Any, Dict, Iterable, List, Type, Union
 
-from ordered_set import OrderedSet as ordset  # type: ignore[import]
+from ordered_set import OrderedSet as ordset
 from rich import box
 from rich.console import ConsoleRenderable
 from rich.errors import NotRenderableError
 from rich.table import Table
+
+from rich.columns import Columns
 
 from .utils import (DISPLAY_HEADER, FIELDS_MAP, border_panel, counts_table,
                     format_with_color, make_console, make_difftext, new_table,
@@ -134,8 +136,12 @@ def _list(data: List[Any], header: str = ""):
         return all(map(lambda x: isinstance(x, _type), data_list))
 
     if only(data, str):
-        # ["hello", "hi", "bye", ...]
+        """["hello", "hi", "bye", ...]"""
         return " ".join(map(format_with_color, data))
+
+    if only(data, int):
+        """[1, 2, 3, ...]"""
+        return border_panel(Columns(str(x) for x in data))
 
     table = new_table(show_header=True, expand=False, box=None)
 
@@ -161,11 +167,12 @@ def _list(data: List[Any], header: str = ""):
         keys = ordset(filter(lambda k: any((d.get(k) for d in data)), all_keys))
         vals_types = set(map(type, data[0].values()))
         if (
-            len(keys) in {2, 3} and len(vals_types.intersection({int, float, str})) == 2
-        ) or (
-            len(keys) < 8
-            and all(x in " ".join(keys) for x in ["count_", "sum_", "duration"])
+            len(keys) in {2, 3} and len(vals_types.intersection({int, float})) == 2
         ):
+        #or (
+            # len(keys) < 8
+            # and all(x in " ".join(keys) for x in ["count_", "sum_", "duration"])
+        # ):
             return counts_table(data, header=header)
 
         if 1 < len(keys) < 15:
