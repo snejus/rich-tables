@@ -172,6 +172,7 @@ def new_table(*args: Any, **kwargs: Any) -> NewTable:
     default: JSONDict = dict(
         border_style="black",
         show_edge=False,
+        show_lines=False,
         show_header=False,
         highlight=True,
         row_styles=["white"],
@@ -434,9 +435,24 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     type_name=format_with_color,
     table=format_with_color,
     endpoint=format_with_color,
+
     issuetype=format_with_color,
+
     priority=format_with_color,
     status=format_with_color,
+    key=format_with_color,
+    assignee=format_with_color,
+
+    subtask_priority=format_with_color,
+    subtask_status=format_with_color,
+    subtask_key=format_with_color,
+    subtask_assignee=format_with_color,
+
+    epic_priority=format_with_color,
+    epic_status=format_with_color,
+    epic_key=format_with_color,
+    epic_assignee=format_with_color,
+
     link=format_with_color,
     context=lambda x: Syntax(
         x, "python", theme="paraiso-dark", background_color="black", word_wrap=True

@@ -5,11 +5,10 @@ from typing import Any, Dict, Iterable, List, Type, Union
 
 from ordered_set import OrderedSet as ordset
 from rich import box
-from rich.console import ConsoleRenderable
+from rich.columns import Columns
+from rich.console import ConsoleRenderable, Group
 from rich.errors import NotRenderableError
 from rich.table import Table
-
-from rich.columns import Columns
 
 from .utils import (DISPLAY_HEADER, FIELDS_MAP, border_panel, counts_table,
                     format_with_color, make_console, make_difftext, new_table,
@@ -25,16 +24,13 @@ def add_to_table(
 ):
     args = []
     if isinstance(content, ConsoleRenderable):
+        # if getattr(content, "title", None) and not content.title:
+        # content.title = key
         # rends.append(content)
-        if getattr(content, "title", None) and not content.title:
-            content.title = key
-        rends.append(content)
+        table.add_row(key, content)
     else:
         if key:
             args.append(key)
-        # if isinstance(content, Iterable) and not isinstance(content, str):
-        #     args.append(content)
-        # def static class method else:
         if isinstance(content, Iterable) and not isinstance(content, str):
             args.extend(content)
         else:
@@ -76,7 +72,7 @@ def _dict(data: Dict, header: str = ""):
         show_header=False,
         border_style="misty_rose1",
         box=box.MINIMAL,
-        expand=False,
+        expand=True,
     )
     table.columns[0].style = "bold misty_rose1"
 
@@ -84,54 +80,26 @@ def _dict(data: Dict, header: str = ""):
     for key, content in data.items():
         add_to_table(rends, table, flexitable(content, key), key)
 
-    # for rend in rends:
-    #     table.add_row(rend)
-    # rends = [table, *rends]
-
-    # lines: List[List[ConsoleRenderable]] = []
-    # line_width = 0
-    # for rend in rends:
-    #     width = console.measure(rend).maximum
-    #     if line_width + width < console.width:
-    #         if not lines:
-    #             lines.append([rend])
-    #         else:
-    #             lines[-1].append(rend)
-    #         line_width += width
-    #     else:
-    #         line_width = width
-    #         lines.append([rend])
-
-    # rend_lines: List[ConsoleRenderable] = []
-    # for line in lines:
-    #     if len(line) == 1:
-    #         rend_lines.append(line[0])
-    #     else:
-    #         rend_lines.append(
-    #             new_table(
-    #                 rows=[map(lambda x: Align.left(x, vertical="middle"), line)],
-    #                 expand=True,
-    #                 justify="left",
-    #             )
-    #         )
-
     if rends:
         # rend_table = new_table("", rows=[[rend] for rend in rends])
         # return border_panel(Group(table, rend_table), title=header)
-        return new_tree([table, *rends], title=header)
-    else:
-        return border_panel(table, title=header)
 
-    # if header:
-    #     return new_tree(rend_lines, title=header)
-    # else:
-    #     return rend_lines
-    # return Group(*rend_lines)
-    # return new_tree(rend_lines, title=header or key)
+        # table.add_rows([["", simple_panel(r)] for r in rends])
+        # return new_tree([table], title=header)
+        # print(header)
+        # return new_tree([table, *rends], title=header)
+        return new_tree([table, *rends])
+    else:
+        # return new_tree([table, *rends], title=header)
+        # return border_panel(table, title=header)
+        return border_panel(table)
 
 
 @flexitable.register(list)
 def _list(data: List[Any], header: str = ""):
+    if not data:
+        return None
+
     def only(data_list: Iterable[Any], _type: Type) -> bool:
         return all(map(lambda x: isinstance(x, _type), data_list))
 
@@ -143,10 +111,13 @@ def _list(data: List[Any], header: str = ""):
         """[1, 2, 3, ...]"""
         return border_panel(Columns(str(x) for x in data))
 
-    table = new_table(show_header=True, expand=False, box=None)
+    table = new_table(
+        show_header=True, expand=False, box=box.SIMPLE_HEAD, border_style="cyan"
+    )
 
     if only(data, dict):
         # [{"hello": 1, "hi": true}, {"hello": 100, "hi": true}]
+        data: List[Dict]
         all_keys = ordset(it.chain(*(tuple(d.keys()) for d in data)))
         if {"before", "after"}.issubset(all_keys):
             all_keys.add("diff")
@@ -165,22 +136,38 @@ def _list(data: List[Any], header: str = ""):
                     }
 
         keys = ordset(filter(lambda k: any((d.get(k) for d in data)), all_keys))
+        if not keys:
+            return None
         vals_types = set(map(type, data[0].values()))
         if (
             len(keys) in {2, 3} and len(vals_types.intersection({int, float})) == 2
+        ) or (
+            len(keys) < 8
+            and all(x in " ".join(keys) for x in ["count_", "sum_", "duration"])
         ):
-        #or (
-            # len(keys) < 8
-            # and all(x in " ".join(keys) for x in ["count_", "sum_", "duration"])
-        # ):
             return counts_table(data, header=header)
 
         if 1 < len(keys) < 15:
             for col in keys:
                 table.add_column(col)
+            # for item in data:
+            #     tree.add(str(item.keys()))
 
-            for item in data:
-                table.add_dict_item(item, transform=flexitable)
+            if "items" not in data[0]:
+                for item in data:
+                    table.add_dict_item(item, transform=flexitable)
+            else:
+                tree = new_tree()
+                for item in data:
+                    ntable = new_table()
+                    for col in keys:
+                        ntable.add_column(col)
+                    ntable.add_dict_item(item, transform=flexitable)
+                    items = item.pop("items", [])
+                    tree.add(flexitable([item]))
+                    if items and items[0]["subtask_key"] is not None:
+                        tree.add(border_panel(flexitable(items)))
+                table.add_row(tree)
         else:
             table.show_header = False
             # for col in keys:
@@ -200,16 +187,21 @@ def _list(data: List[Any], header: str = ""):
 
     color = predictably_random_color(header)
     if table.show_header:
-        table.header_style = "on grey3"
+        # table.header_style = "on grey3"
+        # table.expand = True
         for col in table.columns:
             if col.header:
                 new_header = DISPLAY_HEADER.get(col.header) or col.header
-                col.header = wrap(
-                    new_header, f"b {predictably_random_color(new_header)}"
-                )
+                col.header = wrap(new_header, f"{predictably_random_color(new_header)}")
 
+    table.show_header = False
     if header:
-        table.show_header = False
-        return border_panel(table, title=header, padding=1, border_style=f"dim {color}")
+        # table.show_header = False
+        # table.expand = True
+        # return table
+        # return border_panel(table, title=header, border_style=f"dim {color}")
+        # table.header = header
+        return table
+        # return simple_panel(table, expand=True, border_style=f"dim {color}")
     else:
-        return simple_panel(table)
+        return table
