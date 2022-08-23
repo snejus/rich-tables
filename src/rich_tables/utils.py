@@ -410,7 +410,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     ),
     tags=colored_split,
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
-    desc=md_panel,
+    # desc=md_panel,
     calendar=format_with_color,
     source=format_with_color,
     category=format_with_color,

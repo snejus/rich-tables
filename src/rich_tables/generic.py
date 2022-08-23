@@ -128,7 +128,7 @@ def _list(data: List[Any], header: str = ""):
                     before, after = "\n".join(before), "\n".join(after)
 
                 if isinstance(before, str):
-                    item["diff"] = make_difftext(before, after, "\n ")
+                    item["diff"] = make_difftext(before, after)
                 else:
                     keys = before.keys()
                     data[idx] = {
@@ -153,21 +153,21 @@ def _list(data: List[Any], header: str = ""):
             # for item in data:
             #     tree.add(str(item.keys()))
 
-            if "items" not in data[0]:
-                for item in data:
-                    table.add_dict_item(item, transform=flexitable)
-            else:
-                tree = new_tree()
-                for item in data:
-                    ntable = new_table()
-                    for col in keys:
-                        ntable.add_column(col)
-                    ntable.add_dict_item(item, transform=flexitable)
-                    items = item.pop("items", [])
-                    tree.add(flexitable([item]))
-                    if items and items[0]["subtask_key"] is not None:
-                        tree.add(border_panel(flexitable(items)))
-                table.add_row(tree)
+            # if "items" not in data[0]:
+            for item in data:
+                table.add_dict_item(item, transform=flexitable)
+            # else:
+            #     tree = new_tree()
+            #     for item in data:
+            #         ntable = new_table()
+            #         for col in keys:
+            #             ntable.add_column(col)
+            #         ntable.add_dict_item(item, transform=flexitable)
+            #         items = item.pop("items", [])
+            #         tree.add(flexitable([item]))
+            #         if items and items[0]["subtask_key"] is not None:
+            #             tree.add(border_panel(flexitable(items)))
+            #     table.add_row(tree)
         else:
             table.show_header = False
             # for col in keys:
