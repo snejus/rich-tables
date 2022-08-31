@@ -3,11 +3,11 @@ import random
 import re
 import time
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from functools import partial
 from os import environ, path
-from string import ascii_lowercase
+from string import ascii_lowercase, punctuation
 from typing import (Any, Callable, Dict, Iterable, List, Optional,
                     SupportsFloat, Tuple, Type, Union)
 
@@ -56,8 +56,8 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    # junk: str = "".join(set(punctuation)) + " ",
-    junk: str = ascii_lowercase + "\n ",
+    junk: str = "".join(set(punctuation)) + " ",
+    # junk: str = ascii_lowercase + "\n ",
     # before: str, after: str, junk: str = r" \n"
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
@@ -99,24 +99,28 @@ def duration2human(duration: SupportsFloat, acc: int = 1) -> str:
 
 
 def time2human(
-    timestamp: Union[int, str], acc: int = 1, use_colors=False, pad: bool = False
+    timestamp: Union[int, str], acc: int = 1, use_colors=True, pad: bool = False
 ) -> str:
     if isinstance(timestamp, str):
         try:
             seconds = parse(timestamp).timestamp()
         except ParserError:
-            seconds = 0
+            try:
+                seconds = int(float(timestamp))
+            except ValueError:
+                seconds = 0
     else:
         seconds = timestamp
     if not seconds:
         return "-"
+    strtime = str(datetime.fromtimestamp(int(seconds)))
     diff = time.time() - seconds
     fmted = " ".join(it.islice(fmt_time(timedelta(seconds=abs(diff)), pad), acc))
 
     fut, past = (
         ("[b green]{}[/]", "[b red]-{}[/]") if use_colors else ("in {}", "{} ago")
     )
-    return past.format(fmted) if diff > 0 else fut.format(fmted)
+    return strtime + " " + past.format(fmted) if diff > 0 else fut.format(fmted)
 
 
 def get_theme():
@@ -244,10 +248,6 @@ def new_tree(
     return tree
 
 
-def tstamp2timedate(timestamp: Optional[str], fmt: str = "%F %H:%M") -> str:
-    return datetime.fromtimestamp(int(float(timestamp or 0))).strftime(fmt)
-
-
 def get_country(code: str) -> str:
     try:
         country = (
@@ -336,6 +336,10 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
     return table
 
 
+def timestamp2isotime(timestamp: Optional[int]) -> str:
+    return datetime.fromtimestamp(timestamp or 0, tz=timezone.utc).time().isoformat()
+
+
 FIELDS_MAP: Dict[str, Callable] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
@@ -367,7 +371,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     if isinstance(x, str)
     else datetime.fromtimestamp(x).strftime("%F %H:%M"),
     mtime=time2human,
-    # added=time2human,
+    added=time2human,
     createdAt=time2human,
     committedDate=time2human,
     bpm=lambda x: wrap(
@@ -382,15 +386,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     ),
     style=format_with_color,
     genre=colored_split,
-    length=lambda x: re.sub(
-        r"^00:",
-        "",
-        (datetime.fromtimestamp(int(float(x))) - relativedelta(hours=1)).strftime(
-            "%H:%M:%S"
-        )
-        if x
-        else "00:00",
-    ),
+    length=timestamp2isotime,
     tracktotal=lambda x: (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
     if isinstance(x, Iterable) and not isinstance(x, str)
     else str(x),
@@ -435,24 +431,19 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     type_name=format_with_color,
     table=format_with_color,
     endpoint=format_with_color,
-
     issuetype=format_with_color,
-
     priority=format_with_color,
     status=format_with_color,
     key=format_with_color,
     assignee=format_with_color,
-
     subtask_priority=format_with_color,
     subtask_status=format_with_color,
     subtask_key=format_with_color,
     subtask_assignee=format_with_color,
-
     epic_priority=format_with_color,
     epic_status=format_with_color,
     epic_key=format_with_color,
     epic_assignee=format_with_color,
-
     link=format_with_color,
     context=lambda x: Syntax(
         x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
