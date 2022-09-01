@@ -139,13 +139,21 @@ def _list(data: List[Any], header: str = ""):
         if not keys:
             return None
         vals_types = set(map(type, data[0].values()))
+
         if (
-            len(keys) in {2, 3} and len(vals_types.intersection({int, float})) == 2
+            len(keys) in {2, 3} and len(vals_types.intersection({int, float, str})) == 2
         ) or (
             len(keys) < 8
             and all(x in " ".join(keys) for x in ["count_", "sum_", "duration"])
         ):
             return counts_table(data, header=header)
+        # if (
+        #     len(keys) in {2, 3} and len(vals_types.intersection({str, int, float})) == 2
+        # ) or (
+        #     len(keys) < 8
+        #     and all(x in " ".join(keys) for x in ["count_", "sum_", "duration"])
+        # ):
+        #     return counts_table(data, header=header)
 
         if 1 < len(keys) < 15:
             for col in keys:
