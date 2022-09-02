@@ -443,7 +443,8 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     epic_priority=format_with_color,
     epic_status=format_with_color,
     epic_key=format_with_color,
-    epic_assignee=format_with_color,
+    Category=format_with_color,
+    Description=format_with_color,
     link=format_with_color,
     context=lambda x: Syntax(
         x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
@@ -464,6 +465,12 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     #     theme="gruvbox-dark",
     #     background_color="black",
     # ),
+)
+FIELDS_MAP["Samanza Hussain"] = lambda x: wrap(
+    x, predictably_random_color("Samanza Hussain")
+)
+FIELDS_MAP["Francesca Hess"] = lambda x: wrap(
+    x, predictably_random_color("Francesca Hess")
 )
 
 DISPLAY_HEADER: Dict[str, str] = {
