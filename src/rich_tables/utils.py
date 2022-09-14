@@ -7,13 +7,12 @@ from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from functools import partial
 from os import environ, path
-from string import ascii_lowercase, punctuation
+from string import punctuation
 from typing import (Any, Callable, Dict, Iterable, List, Optional,
                     SupportsFloat, Tuple, Type, Union)
 
 # import sqlparse
 from dateutil.parser import ParserError, parse
-from dateutil.relativedelta import relativedelta
 from ordered_set import OrderedSet as ordset
 from pycountry import countries
 from rich import box
@@ -28,6 +27,7 @@ from rich.theme import Theme
 from rich.tree import Tree
 
 JSONDict = Dict[str, Any]
+SPLIT_PAT = re.compile(r"[;,] | ")
 
 
 def wrap(text: str, tag: str) -> str:
@@ -206,7 +206,7 @@ def format_with_color(name: str) -> str:
 
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
     default: JSONDict = dict(
-        title_align="left", subtitle_align="left", box=box.SIMPLE, expand=False
+        title_align="left", subtitle_align="right", box=box.SIMPLE, expand=False
     )
     if "title" in kwargs:
         kwargs["title"] = wrap(kwargs["title"], "b")
@@ -263,15 +263,19 @@ def get_country(code: str) -> str:
 
 
 def colored_with_bg(string: str) -> str:
-    color = predictably_random_color(string)
-    return wrap(f" {string}[#000000 on #000000]a[/]", f"bold {color} on #000000")
+    return wrap(f" {string} ", f"bold {predictably_random_color(string)} on #000000")
 
 
-split_pat = re.compile(r"[;,] | ")
+def _colored_split(strings: List[str]) -> str:
+    return "  ".join(map(format_with_color, strings))
+
+
+def unsorted_colored_split(string: str) -> str:
+    return _colored_split(SPLIT_PAT.split(string))
 
 
 def colored_split(string: str) -> str:
-    return "  ".join(map(format_with_color, sorted(split_pat.split(string))))
+    return _colored_split(sorted(SPLIT_PAT.split(string)))
 
 
 def progress_bar(
@@ -291,8 +295,12 @@ def progress_bar(
     return Bar(use_max, 0, count, color=color)
 
 
+def _get_val(value: Any, field: str) -> str:
+    return FIELDS_MAP[field](value) if value is not None else ""
+
+
 def get_val(obj: JSONDict, field: str) -> str:
-    return FIELDS_MAP[field](obj[field]) if obj.get(field, "") else ""
+    return _get_val(obj.get(field), field)
 
 
 def counts_table(data: List[JSONDict], header: str = "") -> Table:
@@ -359,6 +367,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     else x["login"]
     if isinstance(x, dict)
     else x,
+    user=format_with_color,
     bodyHTML=md_panel,
     label=format_with_color,
     labels=lambda x: " ".join(wrap(y["name"], f"b #{y['color']}") for y in x)

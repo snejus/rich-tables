@@ -6,7 +6,7 @@ import sys
 from datetime import datetime, timedelta
 from functools import partial, singledispatch
 from textwrap import fill
-from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 from dateutil.parser import parse
 from ordered_set import OrderedSet
@@ -21,7 +21,7 @@ from rich.table import Table
 
 from .generic import flexitable
 from .music import albums_table, tracks_table
-from .utils import (FIELDS_MAP, border_panel, colored_with_bg,
+from .utils import (FIELDS_MAP, _get_val, border_panel, colored_with_bg,
                     format_with_color, get_val, make_console, make_difftext,
                     md_panel, new_table, new_tree, predictably_random_color,
                     progress_bar, simple_panel, time2human, wrap)
@@ -38,19 +38,24 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
     def res_border_style(resolved: bool, outdated: bool) -> str:
         return "green" if resolved else "yellow" if resolved is False else ""
 
-    def comment_panel(comment: Dict[str, str], **kwargs) -> Panel:
+    def comment_panel(comment: JSONDict, **kwargs) -> Panel:
+        reactions = [
+            wrap(f":{r['content'].lower()}:", "bold") + " " + get_val(r, "user")
+            for r in comment.get("reactions", [])
+        ]
         return md_panel(
             re.sub(
                 r"(@[^ ]+)",
-                r"**\1**",
+                r"**`\1`**",
                 "\n".join(
                     map(lambda t: fill(t, width=57), comment["body"].splitlines())
                 ),
             ),
-            title=" ".join(
-                get_val(comment, f) for f in ["state", "author", "createdAt"]
-            ),
-            **kwargs,
+            **{
+                "title": " ".join(get_val(comment, f) for f in ["author", "createdAt"]),
+                "subtitle": "\n".join(reactions) + "\n",
+                **kwargs,
+            },
         )
 
     def fmt_add_del(file: JSONDict) -> List[str]:
@@ -61,19 +66,19 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
 
     def state_color(state: str) -> str:
         return {
-            "True": "b green",
-            True: "b green",
-            "APPROVED": "b green",
-            "RESOLVED": "s b green",
-            "OPEN": "b green",
-            "MERGED": "b magenta",
-            "PENDING": "b yellow",
-            "OUTDATED": "b yellow",
-            "COMMENTED": "b yellow",
-            "CHANGES_REQUESTED": "b yellow",
-            "REVIEW_REQUIRED": "b red",
-            "DISMISSED": "b red",
-            "False": "b red",
+            "True": "green",
+            True: "green",
+            "APPROVED": "green",
+            "RESOLVED": "s green",
+            "OPEN": "green",
+            "MERGED": "magenta",
+            "PENDING": "yellow",
+            "OUTDATED": "yellow",
+            "COMMENTED": "yellow",
+            "CHANGES_REQUESTED": "yellow",
+            "REVIEW_REQUIRED": "red",
+            "DISMISSED": "gray42",
+            "False": "red",
         }.get(state, "default")
 
     def fmt_state(state: str) -> str:
@@ -143,8 +148,9 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
 
     yield ""
     title, name = pr["title"], pr["repository"]["name"]
-    yield Rule(wrap(title, "b"), style=predictably_random_color(title))
     yield Rule(wrap(name, "b"), style=predictably_random_color(name))
+    yield ""
+    yield Rule(wrap(title, "b"), style=predictably_random_color(title))
 
     keys = sorted(set(pr) - exclude)
     info_table = Group(
@@ -155,19 +161,24 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
     yield new_table(rows=[[simple_panel(info_table), md_panel(pr["body"])]])
 
     global_comments: List[ConsoleRenderable] = []
-    raw_global_comments = filter(op.itemgetter("body"), pr["comments"] + pr["reviews"])
+    raw_global_comments = pr["comments"] + pr["reviews"]
     for comment in sorted(raw_global_comments, key=op.itemgetter("createdAt")):
-        state = comment.get("state")
-        _type = "review" if state is None else "comment"
-        global_comments.append(
-            comment_panel(
-                comment, subtitle=_type, border_style=state_color(state), box=box.SQUARE
+        state = comment.get("state", "COMMENTED")
+        subtitle = "comment"
+        if state != "COMMENTED":
+            subtitle = "review - " + wrap(state, f"b {state_color(state)}")
+        if state != "COMMENTED" or comment["body"]:
+            global_comments.append(
+                comment_panel(
+                    comment,
+                    subtitle=subtitle,
+                    border_style=predictably_random_color(comment["author"]),
+                    box=box.HEAVY,
+                )
             )
-        )
     if global_comments:
         yield border_panel(
-            new_table(rows=it.zip_longest(*(iter(global_comments),) * 3)),
-            title="Reviews & Comments",
+            new_table(rows=[[x] for x in global_comments]), title="Reviews & Comments"
         )
 
     yield new_table(rows=[[get_val(pr, "reviewRequests")]])
@@ -176,10 +187,13 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
         return
 
     resolved_threads = len(list(filter(lambda x: x["isResolved"], pr["reviewThreads"])))
-    yield border_panel(
-        progress_bar(resolved_threads, total_threads),
-        title=f"{resolved_threads} / {total_threads} resolved",
-        border_style="dim yellow",
+    table = new_table()
+    table.add_row(
+        border_panel(
+            progress_bar(resolved_threads, total_threads),
+            title=f"{resolved_threads} / {total_threads} resolved",
+            border_style="dim yellow",
+        )
     )
 
     for thread in pr["reviewThreads"]:
@@ -191,21 +205,32 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
             ),
             lambda x: x.get("diffHunk"),
         ):
-            comments_col = new_table(rows=[[x] for x in map(comment_panel, comments)])
-            kwargs = dict(
-                theme="paraiso-dark", background_color="black", word_wrap=True
+            rows = it.chain.from_iterable(
+                [[x], [""]] for x in map(comment_panel, comments)
             )
-            diff = Syntax(diff_hunk, "diff", **kwargs)
-            files.append(new_table(rows=[[diff, border_panel(comments_col)]]))
+            comments_col = new_table(rows=rows)
+            diff = Syntax(
+                diff_hunk,
+                "diff",
+                theme="paraiso-dark",
+                background_color="black",
+                word_wrap=True,
+            )
+            files.append(new_table(rows=[[diff, simple_panel(comments_col)]]))
 
-        yield border_panel(
-            new_table(rows=it.zip_longest(*(iter(files),) * 2)),
-            border_style=res_border_style(thread["isResolved"], thread["isOutdated"]),
-            title=wrap(thread["path"], "b magenta")
-            + " "
-            + fmt_state("RESOLVED" if thread["isResolved"] else "PENDING"),
-            subtitle=fmt_state("OUTDATED") if thread["isOutdated"] else "",
+        table.add_row(
+            border_panel(
+                new_table(rows=it.zip_longest(*(iter(files),) * 2)),
+                border_style=res_border_style(
+                    thread["isResolved"], thread["isOutdated"]
+                ),
+                title=wrap(thread["path"], "b magenta")
+                + " "
+                + fmt_state("RESOLVED" if thread["isResolved"] else "PENDING"),
+                subtitle=fmt_state("OUTDATED") if thread["isOutdated"] else "",
+            )
         )
+    yield border_panel(table)
 
 
 def lights_table(lights: List[JSONDict]) -> Table:
@@ -472,16 +497,15 @@ def main():
         else:
             try:
                 ret = draw_data(data)
-            except Exception as exc:
-                console.print(data)
-                console.print_exception(extra_lines=4, show_locals=True)
-                raise exc
-            else:
                 if isinstance(ret, Iterable):
                     for rend in ret:
                         console.print(rend)
                 else:
                     console.print(ret)
+            except Exception as exc:
+                console.print(data)
+                console.print_exception(extra_lines=4, show_locals=True)
+                raise exc
 
 
 if __name__ == "__main__":
