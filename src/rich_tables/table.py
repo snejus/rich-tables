@@ -3,38 +3,49 @@ import json
 import operator as op
 import re
 import sys
+import typing as t
 from datetime import datetime, timedelta
-from functools import partial, singledispatch
+from functools import singledispatch
 from textwrap import fill
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
-from dateutil.parser import parse
-from ordered_set import OrderedSet
 from rich import box
+from rich.align import Align
 from rich.bar import Bar
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, Group
+from rich.console import ConsoleRenderable
 from rich.panel import Panel
-from rich.rule import Rule
 from rich.syntax import Syntax
 from rich.table import Table
 
-from .generic import flexitable
-from .music import albums_table, tracks_table
-from .utils import (FIELDS_MAP, _get_val, border_panel, colored_with_bg,
-                    format_with_color, get_val, make_console, make_difftext,
-                    md_panel, new_table, new_tree, predictably_random_color,
-                    progress_bar, simple_panel, time2human, wrap)
+from rich_tables.generic import flexitable
+from rich_tables.music import albums_table
+from rich_tables.utils import (
+    FIELDS_MAP,
+    border_panel,
+    colored_with_bg,
+    format_with_color,
+    get_val,
+    make_console,
+    make_difftext,
+    md_panel,
+    new_table,
+    new_tree,
+    predictably_random_color,
+    progress_bar,
+    simple_panel,
+    time2human,
+    wrap,
+)
 
-JSONDict = Dict[str, Any]
-GroupsDict = Dict[str, List]
+JSONDict = t.Dict[str, t.Any]
+GroupsDict = t.Dict[str, t.List]
 
 
 console = make_console()
 print = console.print
 
 
-def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]:
+def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRenderable]]:
     def res_border_style(resolved: bool, outdated: bool) -> str:
         return "green" if resolved else "yellow" if resolved is False else ""
 
@@ -58,7 +69,7 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
             },
         )
 
-    def fmt_add_del(file: JSONDict) -> List[str]:
+    def fmt_add_del(file: JSONDict) -> t.List[str]:
         added, deleted = file["additions"], file["deletions"]
         additions = f"+{added}" if added else ""
         deletions = f"-{deleted}" if deleted else ""
@@ -95,16 +106,21 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
         "commits",
         "isReadByViewer",
         "repository",
+        "labels",
+        "reviewDecision",
+        "state",
         "reviewRequests",
     }
     FIELDS_MAP.update(
         {
-            "author": colored_with_bg,
-            "participants": lambda x: "  ".join(map(colored_with_bg, x)),
-            "state": fmt_state,
-            "reviewDecision": fmt_state,
-            "updatedAt": lambda x: time2human(x, use_colors=True),
-            "createdAt": lambda x: time2human(x, use_colors=True),
+            "state": lambda x: wrap(fmt_state(x), "b"),
+            "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
+            "dates": lambda x: new_table(
+                rows=[
+                    [wrap(r" ⬤ ", "b green"), time2human(x[0])],
+                    [wrap(r" ◯ ", "b yellow"), time2human(x[1])],
+                ]
+            ),
             "repository": lambda x: x.get("name"),
             "path": lambda x: wrap(x, "b"),
             "message": lambda x: wrap(x, "i"),
@@ -145,22 +161,59 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
         pr["files"].append(
             dict(additions=pr.pop("additions", ""), deletions=pr.pop("deletions", ""))
         )
+    pr["dates"] = (pr.pop("createdAt"), pr.pop("updatedAt"))
 
-    yield ""
     title, name = pr["title"], pr["repository"]["name"]
-    yield Rule(wrap(name, "b"), style=predictably_random_color(name))
-    yield ""
-    yield Rule(wrap(title, "b"), style=predictably_random_color(title))
-
+    repo_color = predictably_random_color(name)
+    decision_color = state_color(pr["reviewDecision"])
     keys = sorted(set(pr) - exclude)
-    info_table = Group(
-        new_table(rows=map(lambda x: (wrap(x, "b"), get_val(pr, x)), keys)),
-        get_val(pr, "files"),
-        get_val(pr, "commits"),
+    yield border_panel(
+        new_table(
+            rows=[
+                [
+                    wrap(
+                        re.sub(r"([A-Z]+-[0-9]+)", wrap(r"\1", "b"), title),
+                        state_color(pr["state"]),
+                    )
+                ],
+                [],
+                [Align.center(get_val(pr, "labels"), vertical="middle")],
+                [],
+                [
+                    Columns(
+                        map(
+                            lambda x: simple_panel(
+                                get_val(pr, x),
+                                title=wrap(x, "b"),
+                                title_align="center",
+                                expand=True,
+                                align="center",
+                                padding=1,
+                            ),
+                            keys,
+                        ),
+                        align="center",
+                        expand=True,
+                        equal=True,
+                        right_to_left=True,
+                    )
+                ],
+            ]
+        ),
+        title=wrap(name, f"b {repo_color}"),
+        box=box.DOUBLE_EDGE,
+        border_style=decision_color,
+        subtitle=f"[b][{decision_color}]{pr['reviewDecision']}[/] [#ffffff]//[/] {fmt_state(pr['state'])}[/]",
+        expand=True,
+        align="center",
+        title_align="center",
+        subtitle_align="center",
     )
-    yield new_table(rows=[[simple_panel(info_table), md_panel(pr["body"])]])
 
-    global_comments: List[ConsoleRenderable] = []
+    yield md_panel(pr["body"])
+    yield new_table(rows=[[get_val(pr, "files"), get_val(pr, "commits")]])
+
+    global_comments: t.List[ConsoleRenderable] = []
     raw_global_comments = pr["comments"] + pr["reviews"]
     for comment in sorted(raw_global_comments, key=op.itemgetter("createdAt")):
         state = comment.get("state", "COMMENTED")
@@ -197,7 +250,7 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
     )
 
     for thread in pr["reviewThreads"]:
-        files: List[ConsoleRenderable] = []
+        files: t.List[ConsoleRenderable] = []
         for diff_hunk, comments in it.groupby(
             sorted(
                 thread["comments"],
@@ -233,7 +286,7 @@ def pulls_table(data: List[JSONDict]) -> Iterable[Union[str, ConsoleRenderable]]
     yield border_panel(table)
 
 
-def lights_table(lights: List[JSONDict]) -> Table:
+def lights_table(lights: t.List[JSONDict]) -> Table:
     from rgbxy import Converter
 
     headers = lights[0].keys()
@@ -254,8 +307,8 @@ def lights_table(lights: List[JSONDict]) -> Table:
     return table
 
 
-def calendar_table(events: List[List]) -> Iterable[ConsoleRenderable]:
-    def get_start_end(start: datetime, end: datetime) -> Tuple[int, int]:
+def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
+    def get_start_end(start: datetime, end: datetime) -> t.Tuple[int, int]:
         if start.hour == end.hour == 0:
             return 0, 86400
         day_start_ts = start.replace(hour=0).timestamp()
@@ -277,10 +330,13 @@ def calendar_table(events: List[List]) -> Iterable[ConsoleRenderable]:
     )
     yield Columns(cal_fmted, expand=True, equal=False, align="center")
 
-    new_events: List[JSONDict] = []
+    new_events: t.List[JSONDict] = []
     for event in events:
-        orig_start = parse(event["start"])
-        orig_end = parse(event["end"])
+        start_iso, end_iso = event["start"], event["end"]
+        orig_start = datetime.fromisoformat(
+            start_iso.get("dateTime", start_iso.get("date"))
+        )
+        orig_end = datetime.fromisoformat(end_iso.get("dateTime", end_iso.get("date")))
         h_after_midnight = (
             24 * (orig_end - orig_start).days
             + ((orig_end - orig_start).seconds // 3600)
@@ -349,18 +405,17 @@ def calendar_table(events: List[List]) -> Iterable[ConsoleRenderable]:
         yield border_panel(table, title=month[1])
 
 
-def tasks_table(tasks: List[JSONDict]) -> None:
-    get_time = partial(time2human, use_colors=True)
+def tasks_table(tasks: t.List[JSONDict]) -> t.Iterator:
     fields_map: JSONDict = dict(
         id=str,
         urgency=lambda x: str(round(x, 1)),
         description=lambda x: x,
-        due=get_time,
-        end=get_time,
-        sched=get_time,
+        due=time2human,
+        end=time2human,
+        sched=time2human,
         tags=lambda x: " ".join(map(format_with_color, x or [])),
         project=format_with_color,
-        modified=get_time,
+        modified=time2human,
         annotations=lambda l: "\n".join(
             map(
                 lambda x: wrap(time2human(x["entry"]), "b")
@@ -401,7 +456,7 @@ def tasks_table(tasks: List[JSONDict]) -> None:
         id_to_desc[task["id"]] = desc
 
     group_by = tasks[0].get("group_by") or ""
-    headers = OrderedSet(["urgency", "id", *fields_map.keys()]) - {group_by}
+    headers = ["urgency", "id"] + [k for k in fields_map.keys() if k != group_by]
 
     for group, task_group in it.groupby(
         sorted(
@@ -438,7 +493,7 @@ def tasks_table(tasks: List[JSONDict]) -> None:
         yield panel(table, title=wrap(group, "b"), style=project_color)
 
 
-def load_data() -> Any:
+def load_data() -> t.Any:
     d = sys.stdin.read()
     try:
         data = json.loads(d)
@@ -451,35 +506,32 @@ def load_data() -> Any:
 
 
 @singledispatch
-def draw_data(data: Union[JSONDict, List], title: str = "") -> None:
-    console.print(data)
+def draw_data(data: t.Union[JSONDict, t.List], title: str = "") -> None:
+    pass
 
 
 @draw_data.register(dict)
-def _draw_data_dict(data: JSONDict) -> None:
-    if "values" in data:
-        return draw_data(data["values"], data.get("title") or "")
-    return flexitable(data)
+def _draw_data_dict(data: JSONDict) -> t.Iterator:
+    if "values" in data and "title" in data:
+        values, title = data["values"], data["title"]
+        calls: t.Dict[str, t.Callable] = {
+            "Pull Requests": pulls_table,
+            "Hue lights": lights_table,
+            "Calendar": calendar_table,
+            "Album": albums_table,
+            "Tasks": tasks_table,
+        }
+        if title in calls:
+            yield from calls[title](values)
+        else:
+            yield flexitable(values)
+    else:
+        yield flexitable(data)
 
 
 @draw_data.register(list)
-def _draw_data_list(data: List[JSONDict], title: str = "") -> None:
-    calls: Dict[str, Callable] = {
-        "Pull Requests": pulls_table,
-        "Hue lights": lights_table,
-        "Calendar": calendar_table,
-        "Album": albums_table,
-        "Music": tracks_table,
-        "Tasks": tasks_table,
-        "": flexitable,
-    }
-    try:
-        func = calls[title]
-    except KeyError:
-        return flexitable(data)
-    else:
-        ret = func(data)
-    return ret
+def _draw_data_list(data: t.List[JSONDict], title: str = "") -> t.Iterator:
+    yield flexitable(data)
 
 
 def main():
@@ -489,23 +541,17 @@ def main():
 
     if args:
         if args[0] == "diff":
-            print(make_difftext(*args[1:]))
+            console.print(make_difftext(*args[1:]))
     else:
         data = load_data()
         if "-j" in args:
             console.print_json(data=data)
         else:
             try:
-                ret = draw_data(data)
-                if isinstance(ret, Iterable):
-                    for rend in ret:
-                        console.print(rend)
-                else:
+                for ret in draw_data(data):
                     console.print(ret)
-            except Exception as exc:
-                console.print(data)
-                console.print_exception(extra_lines=4, show_locals=True)
-                raise exc
+            except Exception:
+                console.print_exception(show_locals=True)
 
 
 if __name__ == "__main__":

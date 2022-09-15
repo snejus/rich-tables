@@ -2,35 +2,39 @@ import itertools as it
 import operator as op
 import re
 from collections import defaultdict
-from functools import partial
+from functools import lru_cache, partial
 from typing import Any, Callable, Dict, Iterable, List, Tuple
 
-from ordered_set import OrderedSet
 from rich import box
 from rich.align import Align
 from rich.console import ConsoleRenderable, Group
 from rich.panel import Panel
 from rich.table import Table
 
-from .utils import (DISPLAY_HEADER, FIELDS_MAP, border_panel, new_table,
-                    predictably_random_color, simple_panel, wrap)
+from rich_tables.utils import (
+    DISPLAY_HEADER,
+    FIELDS_MAP,
+    border_panel,
+    new_table,
+    predictably_random_color,
+    simple_panel,
+    wrap,
+)
 
 JSONDict = Dict[str, Any]
 
-TRACK_FIELDS = OrderedSet(
-    [
-        "track",
-        "length",
-        "artist",
-        "title",
-        "bpm",
-        "last_played",
-        "plays",
-        "skips",
-        "helicopta",
-    ]
-)
-ALBUM_IGNORE = TRACK_FIELDS | {
+TRACK_FIELDS = [
+    "track",
+    "length",
+    "artist",
+    "title",
+    "bpm",
+    "last_played",
+    "plays",
+    "skips",
+    "helicopta",
+]
+ALBUM_IGNORE = set(TRACK_FIELDS) | {
     "album_color",
     "albumartist_color",
     "album",
@@ -56,14 +60,40 @@ def get_def(obj: JSONDict, default: Any = "") -> Callable[[str], Any]:
     return get_value
 
 
+@lru_cache(maxsize=128)
 def get_val(track: JSONDict, field: str) -> str:
-    return FIELDS_MAP[field](track[field]) if track.get(field) else ""
+    trackdict = dict(track)
+    return FIELDS_MAP[field](trackdict[field]) if trackdict.get(field) else ""
 
 
 def get_vals(
-    fields: OrderedSet[str], tracks: Iterable[JSONDict]
+    fields: Iterable[str], tracks: Iterable[JSONDict]
 ) -> Iterable[Iterable[str]]:
-    return map(lambda t: list(map(lambda f: get_val(t, f), fields)), tracks)
+    return [[get_val(tuple(t.items()), f) for f in fields] for t in tracks]
+
+
+def simple_tracks_table(tracks, fields, color, sort):
+    # type: (List[JSONDict], Iterable[str], str, bool) -> Table
+    return new_table(
+        rows=get_vals(
+            fields,
+            sorted(tracks, key=op.methodcaller("get", "track", "")) if sort else tracks,
+        ),
+        expand=False,
+    )
+
+
+def _tracks_table(tracks, fields, color, sort):
+    # type: (List[JSONDict], Iterable[str], str, bool) -> Table
+    return new_table(
+        *map(get_header, fields),
+        rows=get_vals(
+            fields,
+            sorted(tracks, key=op.methodcaller("get", "track", "")) if sort else tracks,
+        ),
+        border_style=color,
+        padding=(0, 0, 0, 1),
+    )
 
 
 def album_stats(tracks: List[JSONDict]) -> JSONDict:
@@ -101,18 +131,20 @@ def album_title(album: JSONDict) -> Table:
     artist = album.get("albumartist") or album.get("artist")
     genre = album.get("genre") or ""
     released = album.get("released", "")
-    return new_table(rows=[[format_title(f"{name} by {artist}"), format_title(released), genre]])
+    return new_table(
+        rows=[[format_title(f"{name} by {artist}"), format_title(released), genre]]
+    )
 
 
 def album_info(tracks: List[JSONDict]) -> JSONDict:
     first = tracks[0]
-    fields = set(first.keys()) - TRACK_FIELDS
+    fields = sorted([f for f in tracks[0] if f not in TRACK_FIELDS])
 
     album = defaultdict(str, zip(fields, op.itemgetter(*fields)(first)))
     album.update(**album_stats(tracks))
     add_colors(album)
     for field, val in filter(op.truth, sorted(album.items())):
-        album[field] = get_val(album, field)
+        album[field] = get_val(tuple(album.items()), field)
     album["album_title"] = album_title(album)
     return album
 
@@ -127,42 +159,10 @@ def album_info_table(album: JSONDict) -> Table:
     return table
 
 
-def simple_tracks_table(tracks, color="white", fields=TRACK_FIELDS, sort=False):
-    # type: (List[JSONDict], str, OrderedSet[str], bool) -> Table
-    return new_table(
-        rows=get_vals(
-            fields,
-            sorted(tracks, key=op.methodcaller("get", "track", "")) if sort else tracks,
-        ),
-        expand=False,
-    )
-
-
-def _tracks_table(tracks, color="white", fields=TRACK_FIELDS, sort=True):
-    # type: (List[JSONDict], str, OrderedSet[str], bool) -> Table
-    return new_table(
-        *map(get_header, fields.intersection(set(tracks[0]))),
-        rows=get_vals(
-            fields,
-            sorted(tracks, key=op.methodcaller("get", "track", "")) if sort else tracks,
-        ),
-        border_style=color,
-        padding=(0, 0, 0, 1),
-    )
-
-
 def tracklist_summary(album: JSONDict, fields: List[str]) -> List[str]:
     fields[0] = "tracktotal"
     mapping = dict(zip(fields, map(lambda f: album.get(f, ""), fields)))
     return list(op.itemgetter(*fields)(mapping))
-
-
-def track_fields(tracks: List[JSONDict]) -> OrderedSet[str]:
-    """Ignore the artist field if there is only one found."""
-    fields = TRACK_FIELDS.copy()
-    if len(tracks) > 1 and len(set(map(lambda x: x.get("artist"), tracks))) == 1:
-        fields.discard("artist")
-    return fields
 
 
 def simple_album_panel(tracks: List[JSONDict]) -> Panel:
@@ -182,26 +182,30 @@ def simple_album_panel(tracks: List[JSONDict]) -> Panel:
         )
         fields = TRACK_FIELDS
     else:
-        fields = OrderedSet(tracks[0])
-        fields.discard("albumtypes")
+        fields = dict.fromkeys(k for k in tracks[0] if k != "albumtypes")
 
     color = predictably_random_color(str(len(tracks)))
-    tracklist = simple_tracks_table(tracks, album["album_color"], fields)
+    tracklist = simple_tracks_table(tracks, fields, album["album_color"], sort=False)
     return border_panel(tracklist, title=title, style=color)
 
 
 def detailed_album_panel(tracks: List[JSONDict]) -> Panel:
     album = album_info(tracks)
 
-    t_fields = track_fields(tracks)
-    tracklist = _tracks_table(tracks, album["album_color"], t_fields)
+    # ignore the artist field if there is only one found
+    track_fields = [
+        t
+        for t in TRACK_FIELDS
+        if len(tracks) > 1 or len(set(map(lambda x: x.get("artist"), tracks))) == 1
+    ]
+    tracklist = _tracks_table(tracks, track_fields, album["album_color"], sort=True)
 
     _, track = max(map(op.itemgetter("last_played", "track"), tracks))
     if int(re.sub(r"\D", "", str(track).replace("A", "1"))) > 0:
         row_no = tracklist.columns[0]._cells.index(str(track))
         tracklist.rows[row_no].style = "b white on #000000"
         tracklist.add_row(
-            *tracklist_summary(album, list(t_fields)), style="d white on grey11"
+            *tracklist_summary(album, track_fields), style="d white on grey11"
         )
 
     comments = album.get("comments")
@@ -229,9 +233,5 @@ def albums_table(all_tracks: List[JSONDict]) -> Iterable[ConsoleRenderable]:
             track["album"] = "singles"
             track["albumartist"] = track["label"]
 
-    for album_name, tracks in it.groupby(all_tracks, get_album):
+    for album_name, tracks in it.groupby(sorted(all_tracks, key=get_album), get_album):
         yield detailed_album_panel(list(tracks))
-
-
-def tracks_table(all_tracks: List[JSONDict]) -> ConsoleRenderable:
-    return _tracks_table(all_tracks, "blue", OrderedSet(all_tracks[0]), sort=False)

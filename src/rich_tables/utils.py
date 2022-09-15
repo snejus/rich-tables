@@ -1,4 +1,3 @@
-import itertools as it
 import random
 import re
 import time
@@ -6,15 +5,24 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from functools import partial
+from itertools import islice
+from math import copysign
 from os import environ, path
 from string import punctuation
-from typing import (Any, Callable, Dict, Iterable, List, Optional,
-                    SupportsFloat, Tuple, Type, Union)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    SupportsFloat,
+    Tuple,
+    Type,
+    Union,
+)
 
-# import sqlparse
-from dateutil.parser import ParserError, parse
-from ordered_set import OrderedSet as ordset
-from pycountry import countries
+# import pycountry
 from rich import box
 from rich.align import Align
 from rich.bar import Bar
@@ -72,19 +80,7 @@ def make_difftext(
     return diff
 
 
-def fmt_time(diff: timedelta, pad: bool = True) -> Iterable[str]:
-    opts: List[Tuple[int, str]] = [
-        (diff.days, "d"),
-        (diff.seconds // 3600, "h"),
-        (diff.seconds % 3600 // 60, "min"),
-        (diff.seconds % 60, "s"),
-    ]
-    fmt = "{:>3}{}" if pad else "{}{}"
-    return it.starmap(fmt.format, filter(lambda x: x[0], opts))  # type: ignore
-
-
 def duration2human(duration: SupportsFloat, acc: int = 1) -> str:
-    # return " ".join(it.islice(fmt_time(timedelta(seconds=float(duration))), acc))
     diff = timedelta(seconds=float(duration))
     return ":".join(
         map(
@@ -98,29 +94,31 @@ def duration2human(duration: SupportsFloat, acc: int = 1) -> str:
     )
 
 
-def time2human(
-    timestamp: Union[int, str], acc: int = 1, use_colors=True, pad: bool = False
-) -> str:
-    if isinstance(timestamp, str):
-        try:
-            seconds = parse(timestamp).timestamp()
-        except ParserError:
-            try:
-                seconds = int(float(timestamp))
-            except ValueError:
-                seconds = 0
-    else:
-        seconds = timestamp
-    if not seconds:
-        return "-"
-    strtime = str(datetime.fromtimestamp(int(seconds)))
-    diff = time.time() - seconds
-    fmted = " ".join(it.islice(fmt_time(timedelta(seconds=abs(diff)), pad), acc))
-
-    fut, past = (
-        ("[b green]{}[/]", "[b red]-{}[/]") if use_colors else ("in {}", "{} ago")
+def fmt_time(seconds: int) -> Iterable[str]:
+    abs_seconds = abs(seconds)
+    return (
+        "{:>3}{}".format(int(copysign(num, seconds)), unit)
+        for num, unit in (
+            (abs_seconds // 86400, "d"),
+            (abs_seconds // 3600, "h"),
+            (abs_seconds % 3600 // 60, "m"),
+            (abs_seconds % 60, "s"),
+        )
+        if num
     )
-    return strtime + " " + past.format(fmted) if diff > 0 else fut.format(fmted)
+
+
+def time2human(timestamp: Union[int, str], acc: int = 1) -> str:
+    datetime = timestamp2datetime(timestamp)
+    diff = datetime.timestamp() - time.time()
+    fmted = " ".join(islice(fmt_time(int(diff)), acc))
+
+    if abs(diff) > 86000:
+        strtime = datetime.strftime("%F")
+    else:
+        strtime = datetime.strftime("%T")
+
+    return "[b {}]{}[/]".format("red" if diff < 0 else "green", fmted) + " " + strtime
 
 
 def get_theme():
@@ -250,13 +248,14 @@ def new_tree(
 
 def get_country(code: str) -> str:
     try:
-        country = (
-            countries.lookup(code)
-            .name.replace("Russian Federation", "Russia")
-            .replace("Czechia", "Czech Republic")
-            .replace("North Macedonia", "Macedonia")
-            .replace("Korea, Republic of", "South Korea")
-        )
+        # country = (
+        #     pycountry.countries.lookup(code)
+        #     .name.replace("Russian Federation", "Russia")
+        #     .replace("Czechia", "Czech Republic")
+        #     .replace("North Macedonia", "Macedonia")
+        #     .replace("Korea, Republic of", "South Korea")
+        # )
+        country = "Russia"
         return f":flag_for_{country.lower().replace(' ', '_')}: {country}"
     except LookupError:
         return "Worldwide"
@@ -304,7 +303,7 @@ def get_val(obj: JSONDict, field: str) -> str:
 
 
 def counts_table(data: List[JSONDict], header: str = "") -> Table:
-    keys = ordset(data[0])
+    keys = dict.fromkeys(data[0])
     count_col_name = "count"
     if count_col_name not in keys:
         first = data[0]
@@ -319,7 +318,7 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
     total_max = max(all_counts)
 
     # ensure count_col is at the end
-    headers = keys - {count_col_name, "total"}
+    headers = [k for k in keys if k not in {count_col_name, "total"}]
     table = new_table(*headers, "", count_col_name, overflow="fold", vertical="middle")
     for item in data:
         item_count = float(item.pop(count_col_name, 0))
@@ -344,8 +343,18 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
     return table
 
 
-def timestamp2isotime(timestamp: Optional[int]) -> str:
-    return datetime.fromtimestamp(timestamp or 0, tz=timezone.utc).time().isoformat()
+def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
+    if isinstance(timestamp, str) and "T" in timestamp:
+        return datetime.fromisoformat(timestamp.strip("Z"))
+    return datetime.fromtimestamp(int(float(timestamp or 0)), tz=timezone.utc)
+
+
+def timestamp2datetimestr(timestamp: Union[str, int, float, None]) -> str:
+    return timestamp2datetime(timestamp).strftime("%F %T")
+
+
+def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
+    return timestamp2datetime(timestamp).strftime("%T")
 
 
 FIELDS_MAP: Dict[str, Callable] = defaultdict(
@@ -362,20 +371,19 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
             .split("; "),
         )
     ),
-    author=lambda x: colored_with_bg(x)
-    if isinstance(x, str)
-    else x["login"]
-    if isinstance(x, dict)
-    else x,
+    author=colored_with_bg,
+    participants=lambda x: "  ".join(map(colored_with_bg, x)),
     user=format_with_color,
     bodyHTML=md_panel,
     label=format_with_color,
-    labels=lambda x: " ".join(wrap(y["name"], f"b #{y['color']}") for y in x)
+    labels=lambda x: wrap(
+        "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x), "b i"
+    )
     if isinstance(x, list)
-    else x,
+    else format_with_color(x),
     catalognum=format_with_color,
-    last_played=lambda x: time2human(x, use_colors=True),
-    avg_last_played=lambda x: time2human(x, acc=2, use_colors=True),
+    last_played=time2human,
+    avg_last_played=lambda x: time2human(x, acc=2),
     since=lambda x: x
     if isinstance(x, str)
     else datetime.fromtimestamp(x).strftime("%F %H:%M"),
@@ -395,7 +403,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     ),
     style=format_with_color,
     genre=colored_split,
-    length=timestamp2isotime,
+    length=timestamp2timestr,
     tracktotal=lambda x: (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
     if isinstance(x, Iterable) and not isinstance(x, str)
     else str(x),
