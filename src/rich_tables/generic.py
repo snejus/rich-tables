@@ -167,6 +167,10 @@ def _list(data: List[Any], main_header: str = ""):
                 table.add_column(col)
             for item in data:
                 table.add_dict_item(item, transform=flexitable)
+            for col in filter(op.truth, table.columns):
+                new_header = DISPLAY_HEADER.get(col.header) or col.header
+                col.header = wrap(new_header, f"{predictably_random_color(new_header)}")
+
         else:
             table = list_table(show_header=False)
             for item in data:
@@ -174,10 +178,5 @@ def _list(data: List[Any], main_header: str = ""):
                     flexitable(dict(zip(keys, map(lambda x: item.get(x, ""), keys))))
                 )
                 table.add_row("")
-
-    if table.show_header:
-        for col in filter(op.truth, table.columns):
-            new_header = DISPLAY_HEADER.get(col.header) or col.header
-            col.header = wrap(new_header, f"{predictably_random_color(new_header)}")
 
     return table
