@@ -35,7 +35,7 @@ from rich.theme import Theme
 from rich.tree import Tree
 
 JSONDict = Dict[str, Any]
-SPLIT_PAT = re.compile(r"[;,] | ")
+SPLIT_PAT = re.compile(r"[;,] ")
 
 
 def wrap(text: str, tag: str) -> str:
