@@ -247,18 +247,19 @@ def new_tree(
 
 
 def get_country(code: str) -> str:
-    try:
-        # country = (
-        #     pycountry.countries.lookup(code)
-        #     .name.replace("Russian Federation", "Russia")
-        #     .replace("Czechia", "Czech Republic")
-        #     .replace("North Macedonia", "Macedonia")
-        #     .replace("Korea, Republic of", "South Korea")
-        # )
-        country = "Russia"
-        return f":flag_for_{country.lower().replace(' ', '_')}: {country}"
-    except LookupError:
-        return "Worldwide"
+    return code
+    # try:
+    #     # country = (
+    #     #     pycountry.countries.lookup(code)
+    #     #     .name.replace("Russian Federation", "Russia")
+    #     #     .replace("Czechia", "Czech Republic")
+    #     #     .replace("North Macedonia", "Macedonia")
+    #     #     .replace("Korea, Republic of", "South Korea")
+    #     # )
+    #     country = "Russia"
+    #     return f":flag_for_{country.lower().replace(' ', '_')}: {country}"
+    # except LookupError:
+    #     return "Worldwide"
 
 
 def colored_with_bg(string: str) -> str:
