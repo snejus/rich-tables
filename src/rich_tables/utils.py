@@ -346,7 +346,10 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
 
 def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
     if isinstance(timestamp, str):
-        return datetime.fromisoformat(timestamp.strip("Z"))
+        try:
+            return datetime.fromisoformat(timestamp.strip("Z"))
+        except ValueError:
+            pass
     return datetime.fromtimestamp(int(float(timestamp or 0)), tz=timezone.utc)
 
 
