@@ -405,20 +405,24 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
         yield border_panel(table, title=month[1])
 
 
+def tasktime(datestr: str):
+    return time2human(datetime.strptime(datestr, "%Y%m%dT%H%M%SZ").timestamp())
+
+
 def tasks_table(tasks: t.List[JSONDict]) -> t.Iterator:
     fields_map: JSONDict = dict(
         id=str,
         urgency=lambda x: str(round(x, 1)),
         description=lambda x: x,
-        due=time2human,
-        end=time2human,
-        sched=time2human,
+        due=tasktime,
+        end=tasktime,
+        sched=tasktime,
         tags=lambda x: " ".join(map(format_with_color, x or [])),
         project=format_with_color,
-        modified=time2human,
+        modified=tasktime,
         annotations=lambda l: "\n".join(
             map(
-                lambda x: wrap(time2human(x["entry"]), "b")
+                lambda x: wrap(tasktime(x["entry"]), "b")
                 + ": "
                 + wrap(x["description"], "i"),
                 l,
