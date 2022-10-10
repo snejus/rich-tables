@@ -477,6 +477,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
         background_color="black",
         word_wrap=True,
     ),
+    file=lambda x: "/".join(map(format_with_color, x.split("/")))
     # message=lambda x: Syntax(
     #     sqlparse.format(
     #         re.sub(r"..traceback_psycopg2.*", "", x).replace('"', ""),

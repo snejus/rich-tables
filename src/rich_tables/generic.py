@@ -155,9 +155,11 @@ def _list(data: List[Any], main_header: str = ""):
 
         if (
             2 <= len(keys) <= 3 and len(vals_types.intersection({int, float, str})) == 2
-        ) or (
+        ) and (
             len(keys) < 8
-            and any(x in " ".join(keys) for x in ["count_", "_count", "sum_", "duration"])
+            and any(
+                x in " ".join(keys) for x in ["count_", "_count", "sum_", "duration"]
+            )
         ):
             return counts_table(data, header=main_header)
 
@@ -178,5 +180,9 @@ def _list(data: List[Any], main_header: str = ""):
                     flexitable(dict(zip(keys, map(lambda x: item.get(x, ""), keys))))
                 )
                 table.add_row("")
+    else:
+        table = list_table(show_header=False)
+        for d in data:
+            table.add_row(border_panel(flexitable(d)))
 
     return table
