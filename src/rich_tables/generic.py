@@ -19,6 +19,7 @@ from .utils import (
     new_table,
     new_tree,
     predictably_random_color,
+    simple_panel,
     wrap,
 )
 
@@ -98,7 +99,7 @@ def _dict(data: Dict, header: str = ""):
     else:
         # return new_tree([table, *rends], title=header)
         # return border_panel(table, title=header)
-        return border_panel(table)
+        return simple_panel(table)
 
 
 list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style="cyan")
