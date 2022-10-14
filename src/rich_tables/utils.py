@@ -141,12 +141,15 @@ class NewTable(Table):
     def __init__(self, *args, **kwargs) -> None:
         ckwargs = dict(
             overflow=kwargs.pop("overflow", "fold"),
-            justify=kwargs.pop("justify", "left"),
-            vertical=kwargs.pop("vertical", "top"),
+            justify=kwargs.pop("justify", "center"),
+            vertical=kwargs.pop("vertical", "middle"),
         )
         super().__init__(**kwargs)
-        for arg in args:
-            self.add_column(arg, **ckwargs)
+        for idx, arg in enumerate(args):
+            if idx == 0:
+                self.add_column(arg, **{**ckwargs, "justify": "right"})
+            else:
+                self.add_column(arg, **ckwargs)
 
     def add_rows(self, rows: Iterable) -> None:
         """Add multiple rows to the table."""
@@ -167,11 +170,13 @@ class NewTable(Table):
         self, item: JSONDict, transform: Callable = lambda x, y: x, **kwargs
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
-        self.add_row(*(transform(item.get(c, ""), c) for c in self.colnames), **kwargs)
+        self.add_row(
+            *(transform(item.get(c) or "", c) for c in self.colnames), **kwargs
+        )
 
 
-def new_table(*args: Any, **kwargs: Any) -> NewTable:
-    default: JSONDict = dict(
+def new_table(*headers: Any, **kwargs: Any) -> NewTable:
+    default = dict(
         border_style="black",
         show_edge=False,
         show_lines=False,
@@ -181,12 +186,12 @@ def new_table(*args: Any, **kwargs: Any) -> NewTable:
         expand=True,
         title_justify="left",
     )
-    if args:
+    if headers:
         default.update(
             header_style="bold misty_rose1", box=box.SIMPLE_HEAVY, show_header=True
         )
     rows = kwargs.pop("rows", [])
-    table = NewTable(*args, **{**default, **kwargs})
+    table = NewTable(*headers, **{**default, **kwargs})
     if rows:
         table.add_rows(rows)
     return table
@@ -194,8 +199,8 @@ def new_table(*args: Any, **kwargs: Any) -> NewTable:
 
 def predictably_random_color(string: str) -> str:
     random.seed(string)
-    rand = partial(random.randint, 60, 190)
-    return "#{:0>2X}{:0>2X}{:0>2X}".format(rand(), rand(), rand())
+    rand = partial(random.randint, 60, 200)
+    return "#{:02X}{:02X}{:02X}".format(rand(), rand(), rand())
 
 
 def format_with_color(name: str) -> str:
@@ -467,6 +472,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     Category=format_with_color,
     Description=format_with_color,
     link=format_with_color,
+    album=format_with_color,
     context=lambda x: Syntax(
         x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
     ),
