@@ -141,7 +141,7 @@ class NewTable(Table):
     def __init__(self, *args, **kwargs) -> None:
         ckwargs = dict(
             overflow=kwargs.pop("overflow", "fold"),
-            justify=kwargs.pop("justify", "center"),
+            justify=kwargs.pop("justify", "left"),
             vertical=kwargs.pop("vertical", "middle"),
         )
         super().__init__(**kwargs)

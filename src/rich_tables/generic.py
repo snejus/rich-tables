@@ -5,7 +5,7 @@ from typing import Any, Dict, Iterable, List, Union
 
 from rich import box
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, Group
+from rich.console import ConsoleRenderable
 from rich.errors import NotRenderableError
 from rich.table import Table
 
@@ -76,9 +76,6 @@ def _dict(data: Dict, header: str = ""):
     table = new_table(
         "",
         "",
-        show_lines=True,
-        show_edge=False,
-        show_header=False,
         border_style="misty_rose1",
         box=box.MINIMAL,
         expand=False,
@@ -89,17 +86,7 @@ def _dict(data: Dict, header: str = ""):
     for key, content in data.items():
         add_to_table(rends, table, flexitable(content, key), key)
 
-    # rend_table = new_table("", rows=[[rend] for rend in rends])
-    # return border_panel(Group(table), title=header)
-
-    # table.add_rows([["", simple_panel(r)] for r in rends])
-    # return new_tree([table], title=header)
-    # print(header)
-    # return new_tree([table, *rends], title=header)
-    # return new_tree([table, *rends], title=header)
-    # return border_panel(table, title=header)
     return border_panel(table)
-    # return table
 
 
 list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style="cyan")
