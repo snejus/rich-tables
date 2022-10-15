@@ -494,12 +494,6 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     #     background_color="black",
     # ),
 )
-FIELDS_MAP["Samanza Hussain"] = lambda x: wrap(
-    x, predictably_random_color("Samanza Hussain")
-)
-FIELDS_MAP["Francesca Hess"] = lambda x: wrap(
-    x, predictably_random_color("Francesca Hess")
-)
 
 DISPLAY_HEADER: Dict[str, str] = {
     "track": "#",
