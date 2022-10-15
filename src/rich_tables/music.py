@@ -61,7 +61,7 @@ def get_def(obj: JSONDict, default: Any = "") -> Callable[[str], Any]:
 
 
 @lru_cache(maxsize=128)
-def get_val(track: JSONDict, field: str) -> str:
+def get_val(track: JSONDict, field: str) -> Any:
     trackdict = dict(track)
     return FIELDS_MAP[field](trackdict[field]) if trackdict.get(field) else ""
 
@@ -97,8 +97,8 @@ def _tracks_table(tracks, fields, color, sort):
 
 
 def album_stats(tracks: List[JSONDict]) -> JSONDict:
-    def agg(field: str, default=0) -> Iterable:
-        return map(lambda x: x.get(field) or default, tracks)
+    def agg(field: str, default: int = 0) -> Iterable[int]:
+        return ((x.get(field) or default) for x in tracks)
 
     stats: JSONDict = dict(
         bpm=round(sum(agg("bpm")) / len(tracks)),

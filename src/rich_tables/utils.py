@@ -17,12 +17,10 @@ from typing import (
     List,
     Optional,
     SupportsFloat,
-    Tuple,
     Type,
     Union,
 )
 
-# import pycountry
 from rich import box
 from rich.align import Align
 from rich.bar import Bar
@@ -39,7 +37,7 @@ SPLIT_PAT = re.compile(r"[;,] ")
 
 
 def wrap(text: str, tag: str) -> str:
-    return f"[{tag}]{text}[/]"
+    return f"[{tag}]{text}"
 
 
 def format_new(string: str) -> str:
@@ -170,9 +168,7 @@ class NewTable(Table):
         self, item: JSONDict, transform: Callable = lambda x, y: x, **kwargs
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
-        self.add_row(
-            *(transform(item.get(c) or "", c) for c in self.colnames), **kwargs
-        )
+        self.add_row(*(transform(item.get(c) or "", c) for c in self.colnames), **kwargs)
 
 
 def new_table(*headers: Any, **kwargs: Any) -> NewTable:
@@ -233,15 +229,13 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
             #     content.replace("suggestion", "python"),
             #     count=1,
             # )
-            content.replace("suggestion", "python"),
+            content.replace("suggestion", "python")
         ),
         **kwargs,
     )
 
 
-def new_tree(
-    values: Iterable[ConsoleRenderable] = [], title: str = "", **kwargs
-) -> Tree:
+def new_tree(values: Iterable[ConsoleRenderable] = [], title: str = "", **kwargs) -> Tree:
     color = predictably_random_color(title or str(values))
     default: JSONDict = dict(guide_style=color)
     tree = Tree(wrap(title, "b"), **{**default, **kwargs})
@@ -283,9 +277,7 @@ def colored_split(string: str) -> str:
     return _colored_split(sorted(SPLIT_PAT.split(string)))
 
 
-def progress_bar(
-    count: float, total_max: float, item_max: Optional[float] = None
-) -> Bar:
+def progress_bar(count: float, total_max: float, item_max: Optional[float] = None) -> Bar:
     use_max = total_max
     if item_max is not None:
         use_max = item_max
@@ -366,7 +358,7 @@ def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
-FIELDS_MAP: Dict[str, Callable] = defaultdict(
+FIELDS_MAP: Dict[str, Callable[[str], ConsoleRenderable]] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
         map(
@@ -483,16 +475,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
         background_color="black",
         word_wrap=True,
     ),
-    file=lambda x: "/".join(map(format_with_color, x.split("/")))
-    # message=lambda x: Syntax(
-    #     sqlparse.format(
-    #         re.sub(r"..traceback_psycopg2.*", "", x).replace('"', ""),
-    #         reindent=True,
-    #     ),
-    #     lexer="sql",
-    #     theme="gruvbox-dark",
-    #     background_color="black",
-    # ),
+    file=lambda x: "/".join(map(format_with_color, x.split("/"))),
 )
 
 DISPLAY_HEADER: Dict[str, str] = {

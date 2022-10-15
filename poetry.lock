@@ -167,6 +167,14 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "multimethod"
+version = "1.5"
+description = "Multiple argument dispatching."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
 name = "mypy"
 version = "0.971"
 description = "Optional static typing for Python"
@@ -475,7 +483,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.3,<4"
-content-hash = "28d801802498e35eb8357e061721eeb1c6200289e1dfcdced23ab1e0a1005300"
+content-hash = "72e9e553d686badc21923ac2ed18de4f932470b8e41db2f007b0a783c86420b3"
 
 [metadata.files]
 astroid = [
@@ -616,6 +624,10 @@ lazy-object-proxy = [
 mccabe = [
     {file = "mccabe-0.7.0-py2.py3-none-any.whl", hash = "sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e"},
     {file = "mccabe-0.7.0.tar.gz", hash = "sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325"},
+]
+multimethod = [
+    {file = "multimethod-1.5-py3-none-any.whl", hash = "sha256:889bcc8feb34181fbfa70f78e92f4c1927f0361e5decef0d2770b6ed7984c41c"},
+    {file = "multimethod-1.5.tar.gz", hash = "sha256:b9c6f85ecf187f14a3951fff319643e1fac3086d757dec64f2469e1fd136b65d"},
 ]
 mypy = [
     {file = "mypy-0.971-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:f2899a3cbd394da157194f913a931edfd4be5f274a88041c9dc2d9cdcb1c315c"},

@@ -1,8 +1,9 @@
 import itertools as it
 import operator as op
-from functools import partial, singledispatch
+from functools import partial
 from typing import Any, Dict, Iterable, List, Union
 
+from multimethod import multimethod
 from rich import box
 from rich.columns import Columns
 from rich.console import ConsoleRenderable
@@ -17,9 +18,7 @@ from .utils import (
     format_with_color,
     make_difftext,
     new_table,
-    new_tree,
     predictably_random_color,
-    simple_panel,
     wrap,
 )
 
@@ -28,7 +27,7 @@ JSONDict = Dict[str, Any]
 
 def add_to_table(
     rends: List[ConsoleRenderable], table: Table, content: Any, key: str = ""
-):
+) -> None:
     args = []
     if isinstance(content, ConsoleRenderable):
         # if getattr(content, "title", None) and not content.title:
@@ -45,37 +44,29 @@ def add_to_table(
         table.add_row(*args)
 
 
-@singledispatch
+@multimethod
 def flexitable(
-    data: Union[JSONDict, List, ConsoleRenderable, str, int, float], header: str = ""
-) -> Any:
+    data: Union[JSONDict, ConsoleRenderable, str, int, float], header: str = ""
+) -> ConsoleRenderable:
     return data
 
 
-@flexitable.register(str)
-@flexitable.register(int)
-def _str(data: Union[str, int], header: str = "") -> ConsoleRenderable:
-    try:
-        return FIELDS_MAP[header](data)
-    except NotRenderableError:
-        return FIELDS_MAP[header](str(data))
+@flexitable.register
+def _(data: str, header: str = "") -> ConsoleRenderable:
+    return FIELDS_MAP[header](data)
 
 
 @flexitable.register
-def _float(data: float, header: str = "") -> ConsoleRenderable:
-    return FIELDS_MAP[header](str(data))
+def _(data: Union[int, float], header: str = "") -> ConsoleRenderable:
+    return flexitable(str(data), header)
 
 
 @flexitable.register
-def _renderable(data: ConsoleRenderable, header: str = "") -> ConsoleRenderable:
-    return data
-
-
-@flexitable.register(dict)
-def _dict(data: Dict, header: str = ""):
+def _(data: JSONDict, header: str = "") -> ConsoleRenderable:
     table = new_table(
         "",
         "",
+        show_header=False,
         border_style="misty_rose1",
         box=box.MINIMAL,
         expand=False,
@@ -92,8 +83,8 @@ def _dict(data: Dict, header: str = ""):
 list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style="cyan")
 
 
-@flexitable.register(list)
-def _list(data: List[Any], main_header: str = ""):
+@flexitable.register
+def _(data: List[Any], *args, **kwargs):
     if not data:
         return None
 
@@ -145,9 +136,7 @@ def _list(data: List[Any], main_header: str = ""):
             2 <= len(keys) <= 3 and len(vals_types.intersection({int, float, str})) == 2
         ) and (
             len(keys) < 8
-            and any(
-                x in " ".join(keys) for x in ["count_", "_count", "sum_", "duration"]
-            )
+            and any(x in " ".join(keys) for x in ["count_", "_count", "sum_", "duration"])
         ):
             return counts_table(data, header=main_header)
 
