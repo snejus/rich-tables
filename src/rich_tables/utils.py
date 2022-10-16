@@ -37,7 +37,7 @@ SPLIT_PAT = re.compile(r"[;,] ")
 
 
 def wrap(text: str, tag: str) -> str:
-    return f"[{tag}]{text}"
+    return f"[{tag}]{text}[/]"
 
 
 def format_new(string: str) -> str:

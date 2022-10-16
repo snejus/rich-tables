@@ -1,12 +1,16 @@
-# Hello
+# Rich tables
 
-### album
+* [Album](#album)
+* [Emails](#emails)
+
+
+# album
 ![image](svgs/album.svg)
 
-### emails
+# emails
 ![image](svgs/emails.svg)
 
-### timed
+# timed
 ![image](svgs/timed.svg)
 
 ### pr

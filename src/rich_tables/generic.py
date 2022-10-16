@@ -57,6 +57,11 @@ def _(data: str, header: str = "") -> ConsoleRenderable:
 
 
 @flexitable.register
+def _(data: None, header: str = "") -> ConsoleRenderable:
+    return flexitable(str(data), header)
+
+
+@flexitable.register
 def _(data: Union[int, float], header: str = "") -> ConsoleRenderable:
     return flexitable(str(data), header)
 
@@ -84,7 +89,7 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 
 
 @flexitable.register
-def _(data: List[Any], *args, **kwargs):
+def _(data: List[Any], main_header=None, **kwargs):
     if not data:
         return None
 
