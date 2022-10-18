@@ -168,7 +168,9 @@ class NewTable(Table):
         self, item: JSONDict, transform: Callable = lambda x, y: x, **kwargs
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
-        self.add_row(*(transform(item.get(c) or "", c) for c in self.colnames), **kwargs)
+        self.add_row(
+            *(transform(item.get(c) or "", c) for c in self.colnames), **kwargs
+        )
 
 
 def new_table(*headers: Any, **kwargs: Any) -> NewTable:
@@ -223,19 +225,22 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 def md_panel(content: str, **kwargs: Any) -> Panel:
     return simple_panel(
         Markdown(
+            content
             # re.sub(
             #     r"```\n",
             #     "```python\n",
             #     content.replace("suggestion", "python"),
             #     count=1,
             # )
-            content.replace("suggestion", "python")
+            # content.replace("suggestion", "python")
         ),
         **kwargs,
     )
 
 
-def new_tree(values: Iterable[ConsoleRenderable] = [], title: str = "", **kwargs) -> Tree:
+def new_tree(
+    values: Iterable[ConsoleRenderable] = [], title: str = "", **kwargs
+) -> Tree:
     color = predictably_random_color(title or str(values))
     default: JSONDict = dict(guide_style=color)
     tree = Tree(wrap(title, "b"), **{**default, **kwargs})
@@ -277,7 +282,9 @@ def colored_split(string: str) -> str:
     return _colored_split(sorted(SPLIT_PAT.split(string)))
 
 
-def progress_bar(count: float, total_max: float, item_max: Optional[float] = None) -> Bar:
+def progress_bar(
+    count: float, total_max: float, item_max: Optional[float] = None
+) -> Bar:
     use_max = total_max
     if item_max is not None:
         use_max = item_max
@@ -444,7 +451,8 @@ FIELDS_MAP: Dict[str, Callable[[str], ConsoleRenderable]] = defaultdict(
     plays=lambda x: wrap(x, "b green"),
     skips=lambda x: wrap(x, "b red"),
     name=lambda x: wrap(x, "b"),
-    description=lambda x: wrap(x, "i"),
+    description=md_panel,
+    body=md_panel,
     kind=colored_split,
     type_name=format_with_color,
     table=format_with_color,
@@ -463,9 +471,15 @@ FIELDS_MAP: Dict[str, Callable[[str], ConsoleRenderable]] = defaultdict(
     epic_key=format_with_color,
     Category=format_with_color,
     Description=format_with_color,
-    link=format_with_color,
+    link=lambda x: {
+        "blocks": lambda y: wrap(f" {y} ", "b black on red"),
+        "is blocked by": lambda y: wrap(y, "b red"),
+    }.get(x, lambda x: x)(x),
     album=format_with_color,
     context=lambda x: Syntax(
+        x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
+    ),
+    python=lambda x: Syntax(
         x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
     ),
     sql=lambda x: Syntax(

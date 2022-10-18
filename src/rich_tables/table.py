@@ -12,7 +12,7 @@ from rich import box
 from rich.align import Align
 from rich.bar import Bar
 from rich.columns import Columns
-from rich.console import ConsoleRenderable
+from rich.console import ConsoleRenderable, Group
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
@@ -54,12 +54,21 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
             wrap(f":{r['content'].lower()}:", "bold") + " " + get_val(r, "user")
             for r in comment.get("reactions", [])
         ]
-        return md_panel(
-            re.sub(
-                r"(@[^ ]+)",
-                r"**`\1`**",
-                "\n".join(map(lambda t: fill(t, width=57), comment["body"].splitlines())),
-            ),
+        text = comment["body"]
+        split = re.split(r"(?=```.*)```", text)
+        rends = []
+        # table = new_table()
+        for idx, content in enumerate(split):
+            if content:
+                if idx % 2 == 0:
+                    content = md_panel(content)
+                else:
+                    lang, codeblock = content.split("\n", 1)
+                    content = FIELDS_MAP[lang or "python"](text)
+                # table.add_row(content)
+                rends.append(content)
+        return simple_panel(
+            Group(*rends),
             **{
                 "title": " ".join(get_val(comment, f) for f in ["author", "createdAt"]),
                 "subtitle": "\n".join(reactions) + "\n",
@@ -127,7 +136,9 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
                     rows=[
                         [*fmt_add_del(y), get_val(y, "path")]
                         for y in sorted(
-                            x, key=lambda x: x["additions"] + x["deletions"], reverse=True
+                            x,
+                            key=lambda x: x["additions"] + x["deletions"],
+                            reverse=True,
                         )
                     ]
                 ),
@@ -166,15 +177,8 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
     yield border_panel(
         new_table(
             rows=[
-                [
-                    wrap(
-                        re.sub(r"([A-Z]+-[0-9]+)", wrap(r"\1", "b"), title),
-                        state_color(pr["state"]),
-                    )
-                ],
-                [],
+                [wrap(state_color(pr["state"]), "b")],
                 [Align.center(get_val(pr, "labels"), vertical="middle")],
-                [],
                 [
                     Columns(
                         map(
@@ -270,7 +274,9 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
         table.add_row(
             border_panel(
                 new_table(rows=it.zip_longest(*(iter(files),) * 2)),
-                border_style=res_border_style(thread["isResolved"], thread["isOutdated"]),
+                border_style=res_border_style(
+                    thread["isResolved"], thread["isOutdated"]
+                ),
                 title=wrap(thread["path"], "b magenta")
                 + " "
                 + fmt_state("RESOLVED" if thread["isResolved"] else "PENDING"),
@@ -295,7 +301,9 @@ def lights_table(lights: t.List[JSONDict]) -> Table:
         elif xy:
             color = conv.xy_to_hex(*xy)
             light["xy"] = wrap("   a", f"#{color} on #{color}")
-        table.add_row(*map(str, map(lambda x: light.get(x) or "", headers)), style=style)
+        table.add_row(
+            *map(str, map(lambda x: light.get(x) or "", headers)), style=style
+        )
     return table
 
 
@@ -304,7 +312,9 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
         if start.hour == end.hour == 0:
             return 0, 86400
         day_start_ts = start.replace(hour=0).timestamp()
-        return int(start.timestamp() - day_start_ts), int(end.timestamp() - day_start_ts)
+        return int(start.timestamp() - day_start_ts), int(
+            end.timestamp() - day_start_ts
+        )
 
     status_map = dict(
         needsAction="[b grey3] ? [/]",
@@ -328,7 +338,8 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
         )
         orig_end = datetime.fromisoformat(end_iso.get("dateTime", end_iso.get("date")))
         h_after_midnight = (
-            24 * (orig_end - orig_start).days + ((orig_end - orig_start).seconds // 3600)
+            24 * (orig_end - orig_start).days
+            + ((orig_end - orig_start).seconds // 3600)
         ) - (24 - orig_start.hour)
 
         end = (orig_start + timedelta(days=1)).replace(hour=0, minute=0, second=0)

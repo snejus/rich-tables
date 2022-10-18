@@ -10,6 +10,7 @@ python = ">=3.6.3,<4"
 
 rich = ">=12.3.0"
 rgbxy = ">=0.5"
+multimethod = "*"
 
 [tool.poetry.dev-dependencies]
 flake8 = ">=4.0.1"

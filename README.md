@@ -2,19 +2,21 @@
 
 * [Album](#album)
 * [Emails](#emails)
+* [Pr](#pr)
+* [Timed](#timed)
+* [Simple json](#simple_json)
+* [Nested json](#nested_json)
 
 
-# album
+## Album
 ![image](svgs/album.svg)
-
-# emails
+## Emails
 ![image](svgs/emails.svg)
-
-# timed
-![image](svgs/timed.svg)
-
-### pr
+## Pr
 ![image](svgs/pr.svg)
-
-### random JSON data
-![image](svgs/generic.svg)
+## Timed
+![image](svgs/timed.svg)
+## Simple_json
+![image](svgs/simple_json.svg)
+## Nested_json
+![image](svgs/nested_json.svg)
