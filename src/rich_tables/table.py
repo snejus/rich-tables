@@ -168,7 +168,7 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
         pr["files"].append(
             dict(additions=pr.pop("additions", ""), deletions=pr.pop("deletions", ""))
         )
-    pr["dates"] = (pr.pop("createdAt"), pr.pop("updatedAt"))
+    pr["dates"] = {"created": pr.pop("createdAt"), "updated": pr.pop("updatedAt")}
 
     title, name = pr["title"], pr["repository"]["name"]
     repo_color = predictably_random_color(name)
@@ -177,27 +177,26 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
     yield border_panel(
         new_table(
             rows=[
-                [wrap(state_color(pr["state"]), "b")],
+                [Align.center(wrap(title, state_color(pr["state"])))],
                 [Align.center(get_val(pr, "labels"), vertical="middle")],
-                [
-                    Columns(
-                        map(
-                            lambda x: simple_panel(
-                                get_val(pr, x),
-                                title=wrap(x, "b"),
-                                title_align="center",
-                                expand=True,
-                                align="center",
-                                padding=1,
-                            ),
-                            keys,
-                        ),
-                        align="center",
-                        expand=True,
-                        equal=True,
-                        right_to_left=True,
-                    )
-                ],
+                [flexitable([{k: v for k, v in pr.items() if k in keys}])]
+                # [
+                #     Columns(
+                #         map(
+                #             lambda x: simple_panel(
+                #                 get_val(pr, x),
+                #                 title=wrap(x, "b"),
+                #                 title_align="center",
+                #                 expand=True,
+                #                 align="center",
+                #             ),
+                #             keys,
+                #         ),
+                #         align="center",
+                #         expand=True,
+                #         equal=True,
+                #     )
+                # ],
             ]
         ),
         title=wrap(name, f"b {repo_color}"),

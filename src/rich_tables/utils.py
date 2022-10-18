@@ -168,9 +168,7 @@ class NewTable(Table):
         self, item: JSONDict, transform: Callable = lambda x, y: x, **kwargs
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
-        self.add_row(
-            *(transform(item.get(c) or "", c) for c in self.colnames), **kwargs
-        )
+        self.add_row(*(transform(item.get(c), c) for c in self.colnames), **kwargs)
 
 
 def new_table(*headers: Any, **kwargs: Any) -> NewTable:
@@ -365,7 +363,7 @@ def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
-FIELDS_MAP: Dict[str, Callable[[str], ConsoleRenderable]] = defaultdict(
+FIELDS_MAP: Dict[str, Callable[[str], Union[str, ConsoleRenderable]]] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
         map(
@@ -397,7 +395,10 @@ FIELDS_MAP: Dict[str, Callable[[str], ConsoleRenderable]] = defaultdict(
     else datetime.fromtimestamp(x).strftime("%F %H:%M"),
     mtime=time2human,
     added=time2human,
+    created=time2human,
     createdAt=time2human,
+    updated=time2human,
+    updatedAt=time2human,
     committedDate=time2human,
     bpm=lambda x: wrap(
         x,
@@ -417,7 +418,7 @@ FIELDS_MAP: Dict[str, Callable[[str], ConsoleRenderable]] = defaultdict(
     else str(x),
     country=get_country,
     data_source=format_with_color,
-    helicopta={1: wrap(" ", "b red"), 0: "", None: ""}.get,
+    helicopta=lambda x: wrap(" ", "b red") if int(x) else "",
     keywords=lambda x: " ".join(map(colored_with_bg, colored_split(x).split("  ")))
     if isinstance(x, str)
     else x,

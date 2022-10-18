@@ -55,11 +55,11 @@ def _(data: str, header: str = "") -> ConsoleRenderable:
 
 @flexitable.register
 def _(data: Union[int, float], header: str = "") -> str:
-    return str(data)
+    return flexitable(str(data), header)
 
 
 @flexitable.register
-def _(data: dict, header: str = "") -> ConsoleRenderable:
+def _(data: dict, header: Optional[str] = "") -> ConsoleRenderable:
     table = new_table(
         "",
         "",
@@ -91,7 +91,7 @@ def _(data: List[int], header: Optional[str] = None) -> ConsoleRenderable:
 
 
 @flexitable.register
-def _(data: List[JSONDict], main_header: Optional[str] = None) -> ConsoleRenderable:
+def _(data: List[JSONDict], header: Optional[str] = None) -> ConsoleRenderable:
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     if "before" in all_keys and "after" in all_keys:
         all_keys.update(diff=None)
@@ -122,7 +122,7 @@ def _(data: List[JSONDict], main_header: Optional[str] = None) -> ConsoleRendera
         len(keys) < 8
         and any(x in " ".join(keys) for x in ["count_", "_count", "sum_", "duration"])
     ):
-        return counts_table(data, header=main_header or "")
+        return counts_table(data, header=header or "")
 
     if 1 < len(keys) < 15:
         table = list_table(show_header=True)
@@ -137,9 +137,7 @@ def _(data: List[JSONDict], main_header: Optional[str] = None) -> ConsoleRendera
     else:
         table = list_table(show_header=False)
         for item in data:
-            table.add_row(
-                flexitable(dict(zip(keys, map(lambda x: item.get(x) or "", keys))))
-            )
+            table.add_row(flexitable(dict(zip(keys, map(lambda x: item.get(x), keys)))))
             table.add_row("")
 
     return table
