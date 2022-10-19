@@ -8,6 +8,7 @@ from rich import box
 from rich.columns import Columns
 from rich.console import ConsoleRenderable
 from rich.table import Table
+from rich.text import Text
 
 from .utils import (
     DISPLAY_HEADER,
@@ -67,14 +68,35 @@ def _(data: dict, header: Optional[str] = "") -> ConsoleRenderable:
         border_style="misty_rose1",
         box=box.MINIMAL,
         expand=False,
+        highlight=False,
     )
     table.columns[0].style = "bold misty_rose1"
+
+    all_keys = set(data.keys())
+    if "before" in all_keys and "after" in all_keys:
+        return Text.from_markup(
+            make_difftext(data["before"], data["after"], ".0123456789")
+        )
+        # all_keys.update(diff=None)
+        # for idx in range(len(data)):
+        #     item = data[idx]
+        #     before, after = item.pop("before", None), item.pop("after", None)
+        #     if isinstance(before, list):
+        #         before, after = "\n".join(before), "\n".join(after)
+
+        #     if isinstance(before, str):
+        #         item["diff"] = make_difftext(before, after)
+        #     else:
+        #         keys = before.keys()
+        #         data[idx] = {
+        #             k: make_difftext(before[k] or "", after[k] or "") for k in keys
+        #         }
 
     rends: List[ConsoleRenderable] = []
     for key, content in data.items():
         add_to_table(rends, table, flexitable(content, key), key)
 
-    return border_panel(table)
+    return border_panel(table, highlight=False)
 
 
 list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style="cyan")
@@ -93,27 +115,7 @@ def _(data: List[int], header: Optional[str] = None) -> ConsoleRenderable:
 @flexitable.register
 def _(data: List[JSONDict], header: Optional[str] = None) -> ConsoleRenderable:
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
-    if "before" in all_keys and "after" in all_keys:
-        all_keys.update(diff=None)
-        for idx in range(len(data)):
-            item = data[idx]
-            before, after = item.pop("before", None), item.pop("after", None)
-            if isinstance(before, list):
-                before, after = "\n".join(before), "\n".join(after)
-
-            if isinstance(before, str):
-                item["diff"] = make_difftext(before, after)
-            else:
-                keys = before.keys()
-                data[idx] = {
-                    k: make_difftext(before[k] or "", after[k] or "") for k in keys
-                }
-
-    # remove keys that are empty in all items
     keys = {k: None for k in all_keys if any((d.get(k) for d in data))}.keys()
-    # if not keys:
-    #     return None
-
     vals_types = set(map(type, data[0].values()))
 
     if (
@@ -125,7 +127,7 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> ConsoleRenderable:
         return counts_table(data, header=header or "")
 
     if 1 < len(keys) < 15:
-        table = list_table(show_header=True)
+        table = list_table()
         for col in keys:
             table.add_column(col)
         for item in data:

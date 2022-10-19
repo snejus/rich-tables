@@ -6,7 +6,6 @@ import sys
 import typing as t
 from datetime import datetime, timedelta
 from functools import singledispatch
-from textwrap import fill
 
 from rich import box
 from rich.align import Align

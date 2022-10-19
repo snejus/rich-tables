@@ -8,7 +8,7 @@ from functools import partial
 from itertools import islice
 from math import copysign
 from os import environ, path
-from string import punctuation
+from string import ascii_lowercase, digits, punctuation
 from typing import (
     Any,
     Callable,
@@ -24,7 +24,7 @@ from typing import (
 from rich import box
 from rich.align import Align
 from rich.bar import Bar
-from rich.console import Console, ConsoleRenderable, RenderableType
+from rich.console import Console, ConsoleRenderable, Group, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
@@ -63,7 +63,7 @@ def make_difftext(
     before: str,
     after: str,
     junk: str = "".join(set(punctuation)) + " ",
-    # junk: str = ascii_lowercase + "\n ",
+    # junk: str = ascii_lowercase + digits + punctuation + "\n ",
     # before: str, after: str, junk: str = r" \n"
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
@@ -165,7 +165,10 @@ class NewTable(Table):
         return {str(c.header): c._index for c in self.columns if c.header}
 
     def add_dict_item(
-        self, item: JSONDict, transform: Callable = lambda x, y: x, **kwargs
+        self,
+        item: JSONDict,
+        transform: Callable[[Any, str], Any] = lambda x, y: x,
+        **kwargs: Any,
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
         self.add_row(*(transform(item.get(c), c) for c in self.colnames), **kwargs)
@@ -437,7 +440,7 @@ FIELDS_MAP: Dict[str, Callable[[str], Union[str, ConsoleRenderable]]] = defaultd
     source=format_with_color,
     category=format_with_color,
     categories=colored_split,
-    price=lambda x: colored_with_bg(str(x)),
+    # price=lambda x: colored_with_bg(str(x)),
     interview=md_panel,
     benefits=md_panel,
     primary=lambda x: colored_split if isinstance(x, str) else str(x),
@@ -451,7 +454,7 @@ FIELDS_MAP: Dict[str, Callable[[str], Union[str, ConsoleRenderable]]] = defaultd
     answer=md_panel,
     plays=lambda x: wrap(x, "b green"),
     skips=lambda x: wrap(x, "b red"),
-    name=lambda x: wrap(x, "b"),
+    # name=lambda x: wrap(x, "b"),
     description=md_panel,
     body=md_panel,
     kind=colored_split,
@@ -472,6 +475,16 @@ FIELDS_MAP: Dict[str, Callable[[str], Union[str, ConsoleRenderable]]] = defaultd
     epic_key=format_with_color,
     Category=format_with_color,
     Description=format_with_color,
+    message=lambda x: border_panel(
+        Syntax(
+            x,
+            "python",
+            theme="paraiso-dark",
+            background_color="black",
+            word_wrap=True,
+            indent_guides=True,
+        )
+    ),
     link=lambda x: {
         "blocks": lambda y: wrap(f" {y} ", "b black on red"),
         "is blocked by": lambda y: wrap(y, "b red"),
