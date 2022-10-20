@@ -541,19 +541,25 @@ def main():
     if len(sys.argv) > 1:
         args.extend(sys.argv[1:])
 
-    if args:
-        if args[0] == "diff":
-            console.print(make_difftext(*args[1:]))
+    if args and args[0] == "diff":
+        console.print(make_difftext(*args[1:]))
+        return
+
+    if "-s" in set(args):
+        console.record = True
+
+    data = load_data()
+    if "-j" in args:
+        console.print_json(data=data)
     else:
-        data = load_data()
-        if "-j" in args:
-            console.print_json(data=data)
-        else:
-            try:
-                for ret in draw_data(data):
-                    console.print(ret)
-            except Exception:
-                console.print_exception(show_locals=True)
+        try:
+            for ret in draw_data(data):
+                console.print(ret)
+        except Exception:
+            console.print_exception(show_locals=True)
+
+    if "-s" in set(args):
+        console.save_html("saved.html")
 
 
 if __name__ == "__main__":

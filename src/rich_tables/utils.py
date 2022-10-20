@@ -400,6 +400,7 @@ FIELDS_MAP: Dict[str, Callable[[str], Union[str, ConsoleRenderable]]] = defaultd
     added=time2human,
     created=time2human,
     createdAt=time2human,
+    modified=time2human,
     updated=time2human,
     updatedAt=time2human,
     committedDate=time2human,

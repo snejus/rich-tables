@@ -68,7 +68,6 @@ def _(data: dict, header: Optional[str] = "") -> ConsoleRenderable:
         border_style="misty_rose1",
         box=box.MINIMAL,
         expand=False,
-        highlight=False,
     )
     table.columns[0].style = "bold misty_rose1"
 
@@ -127,7 +126,7 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> ConsoleRenderable:
         return counts_table(data, header=header or "")
 
     if 1 < len(keys) < 15:
-        table = list_table()
+        table = list_table(show_header=True)
         for col in keys:
             table.add_column(col)
         for item in data:
