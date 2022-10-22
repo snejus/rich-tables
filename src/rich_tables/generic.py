@@ -1,76 +1,61 @@
 import itertools as it
-import operator as op
 from functools import partial
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from multimethod import multimethod
 from rich import box
 from rich.columns import Columns
-from rich.console import ConsoleRenderable
-from rich.table import Table
+from rich.console import ConsoleRenderable, RenderableType
+from rich.markdown import Markdown
 from rich.text import Text
 
 from .utils import (
     DISPLAY_HEADER,
     FIELDS_MAP,
+    NewTable,
     border_panel,
     counts_table,
     format_with_color,
+    make_console,
     make_difftext,
     new_table,
     predictably_random_color,
     wrap,
+    simple_panel,
 )
 
 JSONDict = Dict[str, Any]
+console = make_console()
 
 
-def add_to_table(
-    rends: List[ConsoleRenderable], table: Table, content: Any, key: str = ""
-) -> None:
-    args = []
-    if isinstance(content, ConsoleRenderable):
-        # if getattr(content, "title", None) and not content.title:
-        # content.title = key
-        # rends.append(content)
-        table.add_row(key, content)
-    else:
-        if key:
-            args.append(key)
-        if isinstance(content, Iterable) and not isinstance(content, str):
-            args.extend(content)
-        else:
-            args.append(content)
-        table.add_row(*args)
+def mapping_view_table(**kwargs: Any) -> NewTable:
+    """A table with two columns
+    * First for bold field names
+    * Second one for values
+    """
+    table = new_table(border_style="misty_rose1", box=box.MINIMAL, expand=False)
+    table.add_column(justify="right", style="bold misty_rose1")
+    table.add_column()
+    return table
 
 
 @multimethod
-def flexitable(data: None, header: str = "") -> str:
+def flexitable(data: None, header: str = "") -> RenderableType:
     return str(data)
 
 
 @flexitable.register
-def _(data: str, header: str = "") -> ConsoleRenderable:
+def _(data: str, header: str = "") -> RenderableType:
     return FIELDS_MAP[header](data)
 
 
 @flexitable.register
-def _(data: Union[int, float], header: str = "") -> str:
+def _(data: Union[int, float], header: str = "") -> RenderableType:
     return flexitable(str(data), header)
 
 
 @flexitable.register
-def _(data: dict, header: Optional[str] = "") -> ConsoleRenderable:
-    table = new_table(
-        "",
-        "",
-        show_header=False,
-        border_style="misty_rose1",
-        box=box.MINIMAL,
-        expand=False,
-    )
-    table.columns[0].style = "bold misty_rose1"
-
+def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
     all_keys = set(data.keys())
     if "before" in all_keys and "after" in all_keys:
         return Text.from_markup(
@@ -91,11 +76,28 @@ def _(data: dict, header: Optional[str] = "") -> ConsoleRenderable:
         #             k: make_difftext(before[k] or "", after[k] or "") for k in keys
         #         }
 
-    rends: List[ConsoleRenderable] = []
+    table = mapping_view_table()
+    cols = []
     for key, content in data.items():
-        add_to_table(rends, table, flexitable(content, key), key)
+        if not content:
+            continue
 
-    return border_panel(table, highlight=False)
+        content = flexitable(content, key)
+        m = console.measure(content)
+        print(key, m, type(content))
+        console.print(content)
+        # if m.minimum == 313:
+        #     console.print(vars(content))
+        # console.measure(content),
+        # type(content),
+        # content.title if hasattr(content, "title") else "",
+        # )
+        if isinstance(content, ConsoleRenderable) and not isinstance(content, Markdown):
+            cols.append(border_panel(content, title=key))
+        else:
+            table.add_row(key, content)
+
+    return Columns([table, *cols], padding=(1, 1), align="center", width=3)
 
 
 list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style="cyan")
@@ -115,46 +117,45 @@ def _(data: List[int], header: Optional[str] = None) -> ConsoleRenderable:
 def _(data: List[JSONDict], header: Optional[str] = None) -> ConsoleRenderable:
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     keys = {k: None for k in all_keys if any((d.get(k) for d in data))}.keys()
-    vals_types = set(map(type, data[0].values()))
 
-    if (
-        2 <= len(keys) <= 3 and len(vals_types.intersection({int, float, str})) == 2
-    ) and (
-        len(keys) < 8
-        and any(x in " ".join(keys) for x in ["count_", "_count", "sum_", "duration"])
-    ):
+    if len(keys) >= 15:
+        table = list_table(show_header=False)
+        for item in data:
+            table.add_row(flexitable({k: v for k, v in item.items() if k in keys}))
+            table.add_row("")
+        return table
+
+    overlap = set(map(type, data[0].values())) & {int, float, str}
+    keysstr = " ".join(keys)
+    counting = any(x in keysstr for x in ["count_", "_count", "sum_", "duration"])
+    if len(overlap) == 2 and counting:
         return counts_table(data, header=header or "")
 
     if 1 < len(keys) < 15:
         table = list_table(show_header=True)
-        for col in keys:
-            table.add_column(col)
+        for key in keys:
+            table.add_column(key)
         for item in data:
             table.add_dict_item(item, transform=flexitable)
-        for col in filter(op.truth, table.columns):
-            new_header = DISPLAY_HEADER.get(col.header) or col.header
-            col.header = wrap(new_header, f"{predictably_random_color(new_header)}")
-
-    else:
-        table = list_table(show_header=False)
-        for item in data:
-            table.add_row(flexitable(dict(zip(keys, map(lambda x: item.get(x), keys)))))
-            table.add_row("")
+        for col, old in ((c, str(c.header)) for c in table.columns if c):
+            new = DISPLAY_HEADER.get(old) or old
+            col.header = wrap(new, f"{predictably_random_color(new)}")
 
     return table
 
 
-@flexitable.register
-def _(data: List[Any], main_header: Optional[str] = None) -> ConsoleRenderable:
-    table = list_table(show_header=True)
-    for item in filter(op.truth, data):
-        content = flexitable(item)
-        if isinstance(content, Iterable) and not isinstance(content, str):
-            table.add_row(*content)
-        else:
-            table.add_row(flexitable(item))
-    table = list_table(show_header=False)
-    for d in data:
-        table.add_row(border_panel(flexitable(d)))
+# @flexitable.register
+# def _(data: List[Any], main_header: Optional[str] = None) -> ConsoleRenderable:
+#     table = list_table(show_header=True)
+#     print("AnyList Table")
+#     for item in filter(op.truth, data):
+#         content = flexitable(item)
+#         if isinstance(content, Iterable) and not isinstance(content, str):
+#             table.add_row(*content)
+#         else:
+#             table.add_row(flexitable(item))
+# table = list_table(show_header=False)
+# for d in data:
+#     table.add_row(border_panel(flexitable(d)))
 
-    return table
+# return tabl

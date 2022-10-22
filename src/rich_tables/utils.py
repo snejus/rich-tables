@@ -24,7 +24,7 @@ from typing import (
 from rich import box
 from rich.align import Align
 from rich.bar import Bar
-from rich.console import Console, ConsoleRenderable, Group, RenderableType
+from rich.console import Console, ConsoleRenderable, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
@@ -37,6 +37,8 @@ SPLIT_PAT = re.compile(r"[;,] ")
 
 
 def wrap(text: str, tag: str) -> str:
+    if isinstance(text, str) and "[/]" not in text:
+        text = text.replace("[", "").replace("]", "")
     return f"[{tag}]{text}[/]"
 
 
@@ -62,8 +64,8 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "".join(set(punctuation)) + " ",
-    # junk: str = ascii_lowercase + digits + punctuation + "\n ",
+    # junk: str = "".join(set(punctuation)) + " ",
+    junk: str = ascii_lowercase + digits + punctuation + "\n ",
     # before: str, after: str, junk: str = r" \n"
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
@@ -119,50 +121,57 @@ def time2human(timestamp: Union[int, str], acc: int = 1) -> str:
     return "[b {}]{}[/]".format("red" if diff < 0 else "green", fmted) + " " + strtime
 
 
-def get_theme():
-    return Theme.read(
-        path.join(
-            environ.get("XDG_CONFIG_HOME") or path.expanduser("~/.config"),
-            "rich",
-            "config.ini",
-        )
+def get_theme() -> Optional[Theme]:
+    _path = path.join(
+        environ.get("XDG_CONFIG_HOME") or path.expanduser("~/.config"),
+        "rich",
+        "config.ini",
     )
+    if path.exists(_path):
+        return Theme.read(_path)
+    return None
 
 
-def make_console(**kwargs):
+def make_console(**kwargs: Any) -> Console:
     return Console(
         theme=get_theme(), force_terminal=True, force_interactive=True, **kwargs
     )
 
 
-class NewTable(Table):
-    def __init__(self, *args, **kwargs) -> None:
+class NewTable:
+    table: Table
+
+    def __init__(self, *args: str, **kwargs: Any) -> None:
         ckwargs = dict(
             overflow=kwargs.pop("overflow", "fold"),
             justify=kwargs.pop("justify", "left"),
             vertical=kwargs.pop("vertical", "middle"),
         )
-        super().__init__(**kwargs)
+        table = Table(**kwargs)
         for idx, arg in enumerate(args):
-            if idx == 0:
-                self.add_column(arg, **{**ckwargs, "justify": "right"})
-            else:
-                self.add_column(arg, **ckwargs)
+            table.add_column(arg, **ckwargs)
+        self.table = table
 
-    def add_rows(self, rows: Iterable) -> None:
+    def __getattribute__(self, name: str):
+        try:
+            return super().__getattribute__(name)
+        except AttributeError:
+            return getattr(self.table, name)
+
+    def add_rows(self, rows: Iterable[Iterable[RenderableType]]) -> None:
         """Add multiple rows to the table."""
         for row in rows:
-            self.add_row(*row)
+            self.table.add_row(*row)
 
     @property
     def colnames(self) -> List[str]:
         """Provide a mapping between columns names / ids and columns."""
-        return [str(c.header) for c in self.columns]
+        return [str(c.header) for c in self.table.columns]
 
     @property
     def colmap(self) -> Dict[str, int]:
         """Provide a mapping between columns names / ids and columns."""
-        return {str(c.header): c._index for c in self.columns if c.header}
+        return {str(c.header): c._index for c in self.table.columns if c.header}
 
     def add_dict_item(
         self,
@@ -171,18 +180,19 @@ class NewTable(Table):
         **kwargs: Any,
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
-        self.add_row(*(transform(item.get(c), c) for c in self.colnames), **kwargs)
+        vals = (transform(item.get(c), c) for c in self.colnames)
+        self.table.add_row(*vals, **kwargs)
 
 
-def new_table(*headers: Any, **kwargs: Any) -> NewTable:
+def new_table(*headers: str, **kwargs: Any) -> NewTable:
     default = dict(
         border_style="black",
         show_edge=False,
-        show_lines=False,
         show_header=False,
+        pad_edge=False,
         highlight=True,
         row_styles=["white"],
-        expand=True,
+        expand=False,
         title_justify="left",
     )
     if headers:
@@ -224,18 +234,16 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
-    return simple_panel(
-        Markdown(
-            content
-            # re.sub(
-            #     r"```\n",
-            #     "```python\n",
-            #     content.replace("suggestion", "python"),
-            #     count=1,
-            # )
-            # content.replace("suggestion", "python")
-        ),
-        **kwargs,
+    return Markdown(
+        content,
+        justify="left"
+        # re.sub(
+        #     r"```\n",
+        #     "```python\n",
+        #     content.replace("suggestion", "python"),
+        #     count=1,
+        # )
+        # content.replace("suggestion", "python")
     )
 
 

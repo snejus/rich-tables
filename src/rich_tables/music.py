@@ -127,7 +127,7 @@ def format_title(title: str) -> str:
 
 
 def album_title(album: JSONDict) -> Table:
-    name = re.sub(r"\].* - ", "]", album["album"])
+    name = album["album"]
     artist = album.get("albumartist") or album.get("artist")
     genre = album.get("genre") or ""
     released = album.get("released", "")
@@ -157,12 +157,6 @@ def album_info_table(album: JSONDict) -> Table:
     table = new_table(rows=map(lambda x: (get_header(x[0]), x[1]), items))
     table.columns[0].style = "b " + album["album_color"]
     return table
-
-
-def tracklist_summary(album: JSONDict, fields: List[str]) -> List[str]:
-    fields[0] = "tracktotal"
-    mapping = dict(zip(fields, map(lambda f: album.get(f, ""), fields)))
-    return list(op.itemgetter(*fields)(mapping))
 
 
 def simple_album_panel(tracks: List[JSONDict]) -> Panel:
@@ -205,7 +199,8 @@ def detailed_album_panel(tracks: List[JSONDict]) -> Panel:
         row_no = tracklist.columns[0]._cells.index(str(track))
         tracklist.rows[row_no].style = "b white on #000000"
         tracklist.add_row(
-            *tracklist_summary(album, track_fields), style="d white on grey11"
+            *[album.get(k) or "" for k in ["tracktotal", *track_fields[1:]]],
+            style="d white on grey11",
         )
 
     comments = album.get("comments")

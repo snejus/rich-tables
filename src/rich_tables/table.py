@@ -202,7 +202,7 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
         box=box.DOUBLE_EDGE,
         border_style=decision_color,
         subtitle=f"[b][{decision_color}]{pr['reviewDecision']}[/] [#ffffff]//[/] {fmt_state(pr['state'])}[/]",
-        expand=True,
+        expand=False,
         align="center",
         title_align="center",
         subtitle_align="center",
