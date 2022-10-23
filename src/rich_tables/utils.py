@@ -138,40 +138,31 @@ def make_console(**kwargs: Any) -> Console:
     )
 
 
-class NewTable:
-    table: Table
-
+class NewTable(Table):
     def __init__(self, *args: str, **kwargs: Any) -> None:
         ckwargs = dict(
             overflow=kwargs.pop("overflow", "fold"),
             justify=kwargs.pop("justify", "left"),
             vertical=kwargs.pop("vertical", "middle"),
         )
-        table = Table(**kwargs)
+        super().__init__(**kwargs)
         for idx, arg in enumerate(args):
-            table.add_column(arg, **ckwargs)
-        self.table = table
-
-    def __getattribute__(self, name: str):
-        try:
-            return super().__getattribute__(name)
-        except AttributeError:
-            return getattr(self.table, name)
+            self.add_column(arg, **ckwargs)
 
     def add_rows(self, rows: Iterable[Iterable[RenderableType]]) -> None:
         """Add multiple rows to the table."""
         for row in rows:
-            self.table.add_row(*row)
+            self.add_row(*row)
 
     @property
     def colnames(self) -> List[str]:
         """Provide a mapping between columns names / ids and columns."""
-        return [str(c.header) for c in self.table.columns]
+        return [str(c.header) for c in self.columns]
 
     @property
     def colmap(self) -> Dict[str, int]:
         """Provide a mapping between columns names / ids and columns."""
-        return {str(c.header): c._index for c in self.table.columns if c.header}
+        return {str(c.header): c._index for c in self.columns if c.header}
 
     def add_dict_item(
         self,
@@ -181,7 +172,7 @@ class NewTable:
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
         vals = (transform(item.get(c), c) for c in self.colnames)
-        self.table.add_row(*vals, **kwargs)
+        self.add_row(*vals, **kwargs)
 
 
 def new_table(*headers: str, **kwargs: Any) -> NewTable:

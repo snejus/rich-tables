@@ -30,7 +30,7 @@ def test_pulls(testcase):
     with open(os.path.join(JSON_DIR, f"{testcase}.json"), "r") as f:
         data = json.load(f)
 
-    console = make_console(record=True)
+    console = make_console(record=True, width=156)
     result = draw_data(data)
     if isinstance(result, Iterable):
         for res in result:

@@ -4,8 +4,9 @@ from typing import Any, Dict, List, Optional, Union
 
 from multimethod import multimethod
 from rich import box
+from rich.align import Align
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, RenderableType
+from rich.console import ConsoleRenderable, Group, RenderableType
 from rich.markdown import Markdown
 from rich.text import Text
 
@@ -20,8 +21,8 @@ from .utils import (
     make_difftext,
     new_table,
     predictably_random_color,
-    wrap,
     simple_panel,
+    wrap,
 )
 
 JSONDict = Dict[str, Any]
@@ -83,21 +84,33 @@ def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
             continue
 
         content = flexitable(content, key)
-        m = console.measure(content)
-        print(key, m, type(content))
-        console.print(content)
-        # if m.minimum == 313:
-        #     console.print(vars(content))
-        # console.measure(content),
-        # type(content),
-        # content.title if hasattr(content, "title") else "",
-        # )
         if isinstance(content, ConsoleRenderable) and not isinstance(content, Markdown):
             cols.append(border_panel(content, title=key))
+            # table.add_row(key, border_panel(content))
         else:
             table.add_row(key, content)
 
-    return Columns([table, *cols], padding=(1, 1), align="center", width=3)
+    cols.insert(0, simple_panel(table))
+    if header:
+        return Columns(cols)
+
+    cols.sort(key=lambda x: console.measure(x).maximum)
+    # return new_table(rows=it.zip_longest(*(iter(cols),) * 1))
+    table = new_table()
+    row, width = [], 0
+    for rend in cols:
+        this_width = console.measure(rend).maximum
+        if width + this_width > console.width:
+            # lines.append(simple_panel(new_table(rows=[row], padding=(0, 0))))
+            table.add_row(simple_panel(new_table(rows=[row], padding=(0, 0))))
+            row, width = [rend], this_width
+        else:
+            row.append(rend)
+            width += this_width
+    table.add_row(simple_panel(new_table(rows=[row], padding=(0, 0))))
+
+    # print(len(cols), len(lines))
+    return table
 
 
 list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style="cyan")
@@ -109,12 +122,12 @@ def _(data: List[str], header: Optional[str] = None) -> str:
 
 
 @flexitable.register
-def _(data: List[int], header: Optional[str] = None) -> ConsoleRenderable:
+def _(data: List[int], header: Optional[str] = None) -> RenderableType:
     return border_panel(Columns(str(x) for x in data))
 
 
 @flexitable.register
-def _(data: List[JSONDict], header: Optional[str] = None) -> ConsoleRenderable:
+def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     keys = {k: None for k in all_keys if any((d.get(k) for d in data))}.keys()
 
@@ -142,20 +155,3 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> ConsoleRenderable:
             col.header = wrap(new, f"{predictably_random_color(new)}")
 
     return table
-
-
-# @flexitable.register
-# def _(data: List[Any], main_header: Optional[str] = None) -> ConsoleRenderable:
-#     table = list_table(show_header=True)
-#     print("AnyList Table")
-#     for item in filter(op.truth, data):
-#         content = flexitable(item)
-#         if isinstance(content, Iterable) and not isinstance(content, str):
-#             table.add_row(*content)
-#         else:
-#             table.add_row(flexitable(item))
-# table = list_table(show_header=False)
-# for d in data:
-#     table.add_row(border_panel(flexitable(d)))
-
-# return tabl
