@@ -29,6 +29,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
+from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
 
@@ -37,8 +38,6 @@ SPLIT_PAT = re.compile(r"[;,] ")
 
 
 def wrap(text: str, tag: str) -> str:
-    if isinstance(text, str) and "[/]" not in text:
-        text = text.replace("[", "").replace("]", "")
     return f"[{tag}]{text}[/]"
 
 
@@ -65,8 +64,11 @@ def make_difftext(
     before: str,
     after: str,
     # junk: str = "".join(set(punctuation)) + " ",
-    junk: str = ascii_lowercase + digits + punctuation + "\n ",
-    # before: str, after: str, junk: str = r" \n"
+    # junk: str = ascii_lowercase + digits + punctuation + "\n ",
+    junk: str = digits
+    + """
+    """,
+    # junk: str = punctuation + " \n",
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
     after = re.sub(r"\\?\[", r"\\[", after)
@@ -504,6 +506,17 @@ FIELDS_MAP: Dict[str, Callable[[str], Union[str, ConsoleRenderable]]] = defaultd
         word_wrap=True,
     ),
     file=lambda x: "/".join(map(format_with_color, x.split("/"))),
+    log=lambda x: border_panel(
+        Syntax(
+            x,
+            "python",
+            theme="paraiso-dark",
+            background_color="black",
+            word_wrap=True,
+            indent_guides=True,
+        )
+    ),
+    diff=Text.from_markup,
 )
 
 DISPLAY_HEADER: Dict[str, str] = {
