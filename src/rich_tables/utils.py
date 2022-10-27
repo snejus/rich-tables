@@ -8,7 +8,14 @@ from functools import partial
 from itertools import islice
 from math import copysign
 from os import environ, path
-from string import ascii_lowercase, digits, punctuation
+from string import (
+    ascii_letters,
+    ascii_lowercase,
+    digits,
+    printable,
+    punctuation,
+    whitespace,
+)
 from typing import (
     Any,
     Callable,
@@ -64,10 +71,12 @@ def make_difftext(
     before: str,
     after: str,
     # junk: str = "".join(set(punctuation)) + " ",
-    # junk: str = ascii_lowercase + digits + punctuation + "\n ",
-    junk: str = digits
-    + """
-    """,
+    # junk: str = digits + punctuation + "\n",
+    # junk: str = ascii_letters + " " + punctuation
+    junk: str = whitespace + ascii_letters
+    # junk: str = digits
+    # + """
+    # """,
     # junk: str = punctuation + " \n",
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
@@ -253,7 +262,7 @@ def new_tree(
 
 
 def get_country(code: str) -> str:
-    return code
+    return format_with_color(code)
     # try:
     #     # country = (
     #     #     pycountry.countries.lookup(code)
