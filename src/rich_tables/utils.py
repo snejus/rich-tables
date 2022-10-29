@@ -454,7 +454,7 @@ FIELDS_MAP: Dict[str, Callable[[str], Union[str, ConsoleRenderable]]] = defaultd
     # price=lambda x: colored_with_bg(str(x)),
     interview=md_panel,
     benefits=md_panel,
-    primary=lambda x: colored_split if isinstance(x, str) else str(x),
+    primary=lambda x: colored_split(x) if isinstance(x, str) else str(x),
     **{"from": format_with_color},
     to=format_with_color,
     creditText=md_panel,

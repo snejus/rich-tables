@@ -136,7 +136,7 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
 
     overlap = set(map(type, data[0].values())) & {int, float, str}
     keysstr = " ".join(keys)
-    counting = any(x in keysstr for x in ["count_", "_count", "sum_", "duration"])
+    counting = any(x in keysstr for x in ["count", "sum_", "duration"])
     if len(overlap) == 2 and counting:
         return counts_table(data, header=header or "")
 

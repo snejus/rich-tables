@@ -37,7 +37,6 @@ from rich_tables.utils import (
 )
 
 JSONDict = t.Dict[str, t.Any]
-GroupsDict = t.Dict[str, t.List]
 
 
 console = make_console()
@@ -48,7 +47,7 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
     def res_border_style(resolved: bool, outdated: bool) -> str:
         return "green" if resolved else "yellow" if resolved is False else ""
 
-    def comment_panel(comment: JSONDict, **kwargs) -> Panel:
+    def comment_panel(comment: JSONDict, **kwargs: t.Any) -> Panel:
         reactions = [
             wrap(f":{r['content'].lower()}:", "bold") + " " + get_val(r, "user")
             for r in comment.get("reactions", [])
@@ -56,7 +55,6 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
         text = comment["body"]
         split = re.split(r"(?=```.*)```", text)
         rends = []
-        # table = new_table()
         for idx, content in enumerate(split):
             if content:
                 if idx % 2 == 0:
@@ -64,7 +62,6 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
                 else:
                     lang, codeblock = content.split("\n", 1)
                     content = FIELDS_MAP[lang or "python"](text)
-                # table.add_row(content)
                 rends.append(content)
         return simple_panel(
             Group(*rends),
@@ -254,7 +251,7 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
                 thread["comments"],
                 key=lambda x: (x.get("diffHunk", ""), x.get("createdAt", "")),
             ),
-            lambda x: x.get("diffHunk"),
+            lambda x: x.get("diffHunk") or "",
         ):
             rows = it.chain.from_iterable(
                 [[x], [""]] for x in map(comment_panel, comments)
@@ -332,9 +329,11 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
     for event in events:
         start_iso, end_iso = event["start"], event["end"]
         orig_start = datetime.fromisoformat(
-            start_iso.get("dateTime", start_iso.get("date"))
+            (start_iso.get("dateTime") or start_iso.get("date")).strip("Z")
         )
-        orig_end = datetime.fromisoformat(end_iso.get("dateTime", end_iso.get("date")))
+        orig_end = datetime.fromisoformat(
+            (end_iso.get("dateTime") or end_iso.get("date")).strip("Z")
+        )
         h_after_midnight = (
             24 * (orig_end - orig_start).days
             + ((orig_end - orig_start).seconds // 3600)
@@ -385,12 +384,15 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
             )
 
     keys = "summary", "start_time", "end_time", "bar"
-    for month, month_events in it.groupby(
+    month_events: t.Iterable[JSONDict]
+    for month_tuple, month_events in it.groupby(
         new_events, lambda x: (x["start"].month, x["start"].strftime("%Y %B"))
     ):
+        month_events = sorted(month_events, key=lambda x: x.get("start_day") or "")
+        _, year_and_month = month_tuple
         table = new_table(*keys, highlight=False, padding=0, show_header=False)
         for day, day_events in it.groupby(
-            sorted(month_events, key=lambda x: x["start_day"]), lambda x: x["start_day"]
+            month_events, lambda x: x.get("start_day") or ""
         ):
             table.add_row(wrap(day, "b i"))
             for event in day_events:
@@ -400,7 +402,7 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
                 else:
                     table.add_dict_item(event)
             table.add_row("")
-        yield border_panel(table, title=month[1])
+        yield border_panel(table, title=year_and_month)
 
 
 def tasktime(datestr: str):
@@ -542,7 +544,7 @@ def main():
         args.extend(sys.argv[1:])
 
     if args and args[0] == "diff":
-        console.print(make_difftext(*args[1:]))
+        console.print(make_difftext(*args[1:]), highlight=False)
         return
 
     if "-s" in set(args):
