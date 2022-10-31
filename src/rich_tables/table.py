@@ -390,6 +390,7 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
     ):
         month_events = sorted(month_events, key=lambda x: x.get("start_day") or "")
         _, year_and_month = month_tuple
+
         table = new_table(*keys, highlight=False, padding=0, show_header=False)
         for day, day_events in it.groupby(
             month_events, lambda x: x.get("start_day") or ""
