@@ -1,14 +1,12 @@
 import itertools as it
 from functools import partial
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional
 
 from multimethod import multimethod
 from rich import box
-from rich.align import Align
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, Group, RenderableType
+from rich.console import ConsoleRenderable, RenderableType
 from rich.markdown import Markdown
-from rich.text import Text
 
 from .utils import (
     DISPLAY_HEADER,
@@ -53,7 +51,7 @@ def _(data: str, header: str = "") -> RenderableType:
 
 
 @flexitable.register
-def _(data: Union[int, float], header: Optional[str] = "") -> RenderableType:
+def _(data: int, header: Optional[str] = "") -> RenderableType:
     return flexitable(str(data), header)
 
 

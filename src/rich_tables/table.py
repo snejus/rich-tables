@@ -260,15 +260,18 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
             diff = Syntax(
                 diff_hunk,
                 "diff",
-                theme="paraiso-dark",
-                background_color="black",
-                word_wrap=True,
+                theme="dracula",
+                background_color="#212733",
+                # word_wrap=True,
             )
-            files.append(new_table(rows=[[diff, simple_panel(comments_col)]]))
+            files.append(
+                new_table(rows=[[diff, simple_panel(comments_col)]], highlight=False)
+            )
 
         table.add_row(
             border_panel(
                 new_table(rows=it.zip_longest(*(iter(files),) * 2)),
+                highlight=False,
                 border_style=res_border_style(
                     thread["isResolved"], thread["isOutdated"]
                 ),

@@ -145,7 +145,11 @@ def get_theme() -> Optional[Theme]:
 
 def make_console(**kwargs: Any) -> Console:
     return Console(
-        theme=get_theme(), force_terminal=True, force_interactive=True, **kwargs
+        theme=get_theme(),
+        force_terminal=True,
+        force_interactive=True,
+        color_system="256",
+        **kwargs,
     )
 
 
@@ -278,7 +282,10 @@ def get_country(code: str) -> str:
 
 
 def colored_with_bg(string: str) -> str:
-    return wrap(f" {string} ", f"bold {predictably_random_color(string)} on #000000")
+    sep = wrap("a", "#000000 on #000000")
+    return (
+        sep + wrap(string, f"bold {predictably_random_color(string)} on #000000") + sep
+    )
 
 
 def _colored_split(strings: List[str]) -> str:
@@ -376,7 +383,7 @@ def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
-FIELDS_MAP: Dict[str, Callable[[str], Union[str, ConsoleRenderable]]] = defaultdict(
+FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
         map(
@@ -391,7 +398,7 @@ FIELDS_MAP: Dict[str, Callable[[str], Union[str, ConsoleRenderable]]] = defaultd
         )
     ),
     author=colored_with_bg,
-    participants=lambda x: "  ".join(map(colored_with_bg, x)),
+    # participants=lambda x: "  ".join(map(colored_with_bg, x)),
     user=format_with_color,
     bodyHTML=md_panel,
     label=format_with_color,
@@ -486,6 +493,8 @@ FIELDS_MAP: Dict[str, Callable[[str], Union[str, ConsoleRenderable]]] = defaultd
     epic_key=format_with_color,
     Category=format_with_color,
     Description=format_with_color,
+    symbol=format_with_color,
+    module=format_with_color,
     message=lambda x: border_panel(
         Syntax(
             x,
