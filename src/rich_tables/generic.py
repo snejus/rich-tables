@@ -1,6 +1,6 @@
 import itertools as it
 from functools import partial
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 from multimethod import multimethod
 from rich import box
@@ -51,7 +51,7 @@ def _(data: str, header: str = "") -> RenderableType:
 
 
 @flexitable.register
-def _(data: int, header: Optional[str] = "") -> RenderableType:
+def _(data: Union[int, float], header: Optional[str] = "") -> RenderableType:
     return flexitable(str(data), header)
 
 

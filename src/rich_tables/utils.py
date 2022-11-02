@@ -68,26 +68,15 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 
 
 def make_difftext(
-    before: str,
-    after: str,
-    # junk: str = "".join(set(punctuation)) + " ",
-    # junk: str = digits + punctuation + "\n",
-    # junk: str = ascii_letters + " " + punctuation
-    junk: str = whitespace + ascii_letters
-    # junk: str = digits
-    # + """
-    # """,
-    # junk: str = punctuation + " \n",
+    before: str, after: str, junk: str = whitespace + ascii_letters
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
     after = re.sub(r"\\?\[", r"\\[", after)
 
     matcher = SequenceMatcher(lambda x: x in junk, autojunk=False, a=before, b=after)
-    # matcher = SequenceMatcher(autojunk=False, a=before, b=after)
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
-    # print("".join(sorted(matcher.bjunk, key=lambda x: after.index(x))))
     return diff
 
 
@@ -414,6 +403,9 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     if isinstance(x, str)
     else datetime.fromtimestamp(x).strftime("%F %H:%M"),
     mtime=time2human,
+    dt=lambda x: time2human(x, 5),
+    start=time2human,
+    end=time2human,
     added=time2human,
     created=time2human,
     createdAt=time2human,
