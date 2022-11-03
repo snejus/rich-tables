@@ -260,8 +260,8 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
             diff = Syntax(
                 diff_hunk,
                 "diff",
-                theme="dracula",
-                background_color="#212733",
+                theme="paraiso-dark",
+                background_color="black",
                 # word_wrap=True,
             )
             files.append(

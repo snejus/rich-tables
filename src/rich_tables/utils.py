@@ -137,7 +137,6 @@ def make_console(**kwargs: Any) -> Console:
         theme=get_theme(),
         force_terminal=True,
         force_interactive=True,
-        color_system="256",
         **kwargs,
     )
 
@@ -487,6 +486,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     Description=format_with_color,
     symbol=format_with_color,
     module=format_with_color,
+    code=format_with_color,
     message=lambda x: border_panel(
         Syntax(
             x,

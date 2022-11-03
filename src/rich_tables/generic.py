@@ -126,7 +126,7 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     keys = {k: None for k in all_keys if any((d.get(k) for d in data))}.keys()
 
-    if len(keys) > 17:
+    if len(data) == 1 or len(keys) > 17:
         table = list_table(show_header=False)
         for item in data:
             table.add_row(flexitable({k: v for k, v in item.items() if k in keys}))
