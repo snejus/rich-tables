@@ -487,6 +487,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     symbol=format_with_color,
     module=format_with_color,
     code=format_with_color,
+    field=format_with_color,
     message=lambda x: border_panel(
         Syntax(
             x,
