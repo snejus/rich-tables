@@ -357,7 +357,7 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
 def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
     if isinstance(timestamp, str):
         try:
-            return datetime.fromisoformat(timestamp.strip("Z"))
+            return datetime.fromisoformat(re.sub(r"(\+.*|Z).*$", "", timestamp))
         except ValueError:
             pass
     return datetime.fromtimestamp(int(float(timestamp or 0)), tz=timezone.utc)
@@ -389,6 +389,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     # participants=lambda x: "  ".join(map(colored_with_bg, x)),
     user=format_with_color,
     bodyHTML=md_panel,
+    desc=md_panel,
     label=format_with_color,
     labels=lambda x: wrap(
         "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x), "b i"
@@ -444,7 +445,6 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     ),
     tags=colored_split,
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
-    # desc=md_panel,
     calendar=format_with_color,
     source=format_with_color,
     category=format_with_color,
@@ -487,7 +487,6 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     symbol=format_with_color,
     module=format_with_color,
     code=format_with_color,
-    field=format_with_color,
     message=lambda x: border_panel(
         Syntax(
             x,
@@ -517,6 +516,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
         word_wrap=True,
     ),
     file=lambda x: "/".join(map(format_with_color, x.split("/"))),
+    field=lambda x: ".".join(map(format_with_color, x.split("."))),
     log=lambda x: border_panel(
         Syntax(
             x,

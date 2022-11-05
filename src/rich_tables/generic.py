@@ -7,6 +7,7 @@ from rich import box
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, RenderableType
 from rich.markdown import Markdown
+from rich.panel import Panel
 
 from .utils import (
     DISPLAY_HEADER,
@@ -57,7 +58,6 @@ def _(data: Union[int, float], header: Optional[str] = "") -> RenderableType:
 
 @flexitable.register
 def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
-
     table = mapping_view_table()
     cols = []
     for key, content in data.items():
@@ -71,7 +71,7 @@ def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
         else:
             table.add_row(key, content)
 
-    cols.insert(0, simple_panel(table))
+    cols.insert(0, table)
     if header:
         return Columns(cols)
 
@@ -79,18 +79,18 @@ def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
     # return new_table(rows=it.zip_longest(*(iter(cols),) * 1))
     table = new_table()
     row, width = [], 0
+    rows: List[Panel] = []
     for rend in cols:
         this_width = console.measure(rend).maximum
         if width + this_width > console.width:
             # lines.append(simple_panel(new_table(rows=[row], padding=(0, 0))))
-            table.add_row(simple_panel(new_table(rows=[row], padding=(0, 0))))
+            rows.append(simple_panel(new_table(rows=[row], padding=(0, 0))))
             row, width = [rend], this_width
         else:
             row.append(rend)
             width += this_width
-    table.add_row(simple_panel(new_table(rows=[row], padding=(0, 0))))
-
-    # print(len(cols), len(lines))
+    rows.insert(-1, simple_panel(new_table(rows=[row], padding=(0, 0))))
+    table.add_rows([[r] for r in rows])
     return table
 
 

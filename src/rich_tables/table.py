@@ -502,12 +502,13 @@ def tasks_table(tasks: t.List[JSONDict]) -> t.Iterator:
 
 
 def load_data() -> t.Any:
-    d = sys.stdin.read()
+    text = re.sub(r"\x00", "", sys.stdin.read())
     try:
-        data = json.loads(d)
+        data = json.loads(text)
         assert data and (data.get("values") if "values" in data else True)
     except (json.JSONDecodeError, AssertionError):
-        console.print(wrap("No data", "b red"))
+        console.log(flexitable(text))
+        # console.log(wrap("No data", "b red"), log_locals=True)
         exit(1)
     else:
         return data
