@@ -527,7 +527,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
             indent_guides=True,
         )
     ),
-    diff=Text.from_markup,
+    diff=lambda x: Text.from_markup(x) if "[/]" in x else md_panel(x),
 )
 
 DISPLAY_HEADER: Dict[str, str] = {

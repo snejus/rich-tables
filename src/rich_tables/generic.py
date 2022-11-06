@@ -39,6 +39,23 @@ def mapping_view_table(**kwargs: Any) -> NewTable:
     return table
 
 
+def prepare_dict(item: JSONDict) -> JSONDict:
+    if "before" in item and "after" in item:
+        before, after = item.pop("before"), item.pop("after")
+        if not item.get("diff"):
+            if isinstance(before, list):
+                before, after = "\n".join(before), "\n".join(after)
+
+            if isinstance(before, str):
+                item["diff"] = make_difftext(before, after)
+            else:
+                keys = before.keys()
+                item["diff"] = {
+                    k: make_difftext(before[k] or "", after[k] or "") for k in keys
+                }
+    return item
+
+
 @multimethod
 def flexitable(data: None, header: str = "") -> RenderableType:
     return str(data)
@@ -110,23 +127,11 @@ def _(data: List[int], header: Optional[str] = None) -> RenderableType:
 
 @flexitable.register
 def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
-    if "before" in data[0] and "after" in data[0]:
-        for idx, item in enumerate(data):
-            before, after = item.pop("before"), item.pop("after")
-            if isinstance(before, list):
-                before, after = "\n".join(before), "\n".join(after)
-
-            if isinstance(before, str):
-                item["diff"] = make_difftext(before, after)
-            else:
-                keys = before.keys()
-                item = {k: make_difftext(before[k] or "", after[k] or "") for k in keys}
-            data[idx] = item
-
+    data = [prepare_dict(item) for item in data]
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     keys = {k: None for k in all_keys if any((d.get(k) for d in data))}.keys()
 
-    if len(data) == 1 or len(keys) > 17:
+    if len(keys) > 17:
         table = list_table(show_header=False)
         for item in data:
             table.add_row(flexitable({k: v for k, v in item.items() if k in keys}))
