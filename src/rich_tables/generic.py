@@ -63,8 +63,8 @@ def flexitable(data: None, header: str = "") -> RenderableType:
 
 @flexitable.register
 def _(data: str, header: str = "") -> RenderableType:
-    if "[/]" not in data:
-        data = data.replace("[", "").replace("]", "")
+    # if "[/]" not in data:
+    #     data = data.replace("[", "").replace("]", "")
     return FIELDS_MAP[header](data)
 
 

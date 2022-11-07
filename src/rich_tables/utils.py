@@ -487,6 +487,9 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     symbol=format_with_color,
     module=format_with_color,
     code=format_with_color,
+    new=lambda x: "[b green]:heavy_check_mark:[/]"
+    if x
+    else "[b red]:cross_mark_button:[/]",
     message=lambda x: border_panel(
         Syntax(
             x,

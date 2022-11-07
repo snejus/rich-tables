@@ -302,7 +302,7 @@ def lights_table(lights: t.List[JSONDict]) -> Table:
         table.add_row(
             *map(str, map(lambda x: light.get(x) or "", headers)), style=style
         )
-    return table
+    yield table
 
 
 def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
@@ -525,7 +525,7 @@ def _draw_data_dict(data: JSONDict) -> t.Iterator:
         values, title = data["values"], data["title"]
         calls: t.Dict[str, t.Callable] = {
             "Pull Requests": pulls_table,
-            # "Hue lights": lights_table,
+            "Hue lights": lights_table,
             "Calendar": calendar_table,
             "Album": albums_table,
             "Tasks": tasks_table,
