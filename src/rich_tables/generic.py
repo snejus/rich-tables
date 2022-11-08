@@ -8,6 +8,7 @@ from rich.columns import Columns
 from rich.console import ConsoleRenderable, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
+from rich.text import Text
 
 from .utils import (
     DISPLAY_HEADER,
@@ -51,7 +52,8 @@ def prepare_dict(item: JSONDict) -> JSONDict:
             else:
                 keys = before.keys()
                 item["diff"] = {
-                    k: make_difftext(before[k] or "", after[k] or "") for k in keys
+                    k: make_difftext(str(before[k] or ""), str(after[k] or ""))
+                    for k in keys
                 }
     return item
 
@@ -63,8 +65,8 @@ def flexitable(data: None, header: str = "") -> RenderableType:
 
 @flexitable.register
 def _(data: str, header: str = "") -> RenderableType:
-    # if "[/]" not in data:
-    #     data = data.replace("[", "").replace("]", "")
+    if "[/]" not in data:
+        data = data.replace("[", "").replace("]", "")
     return FIELDS_MAP[header](data)
 
 
@@ -75,6 +77,7 @@ def _(data: Union[int, float], header: Optional[str] = "") -> RenderableType:
 
 @flexitable.register
 def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
+    data = prepare_dict(data)
     table = mapping_view_table()
     cols = []
     for key, content in data.items():
@@ -92,7 +95,7 @@ def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
     if header:
         return Columns(cols)
 
-    cols.sort(key=lambda x: console.measure(x).maximum)
+    # cols.sort(key=lambda x: console.measure(x).maximum)
     # return new_table(rows=it.zip_longest(*(iter(cols),) * 1))
     table = new_table()
     row, width = [], 0
@@ -117,7 +120,7 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 @flexitable.register
 def _(data: List[str], header: str = "") -> RenderableType:
     call = FIELDS_MAP.get(header)
-    return call("\n".join(data)) if call else " ".join(map(format_with_color, data))
+    return call("\n".join(data)) if call else "\n".join(map(format_with_color, data))
 
 
 @flexitable.register
