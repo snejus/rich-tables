@@ -41,7 +41,7 @@ from rich.theme import Theme
 from rich.tree import Tree
 
 JSONDict = Dict[str, Any]
-SPLIT_PAT = re.compile(r"[;,] ")
+SPLIT_PAT = re.compile(r"[;,] ?")
 
 
 def wrap(text: str, tag: str) -> str:
@@ -230,7 +230,9 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 def md_panel(content: str, **kwargs: Any) -> Panel:
     return Markdown(
         content,
-        justify="left"
+        justify="left",
+        # inline_code_lexer="python",
+        # inline_code_theme="paraiso-dark"
         # re.sub(
         #     r"```\n",
         #     "```python\n",
@@ -277,7 +279,7 @@ def colored_with_bg(string: str) -> str:
 
 
 def _colored_split(strings: List[str]) -> str:
-    return "  ".join(map(format_with_color, strings))
+    return " ".join(map(format_with_color, strings))
 
 
 def unsorted_colored_split(string: str) -> str:
@@ -395,7 +397,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
         "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x), "b i"
     )
     if isinstance(x, list)
-    else format_with_color(x),
+    else colored_split(x),
     catalognum=format_with_color,
     last_played=time2human,
     avg_last_played=lambda x: time2human(x, acc=2),
@@ -411,6 +413,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     createdAt=time2human,
     modified=time2human,
     # updated=time2human,
+    wait=lambda x: " ".join(islice(fmt_time(int(float(x))), 1)),
     updatedAt=time2human,
     committedDate=time2human,
     bpm=lambda x: wrap(
@@ -440,6 +443,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     notes=md_panel,
     text=md_panel,
     instructions=md_panel,
+    comment=md_panel,
     comments=lambda x: md_panel(
         x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
     ),

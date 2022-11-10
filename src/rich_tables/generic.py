@@ -64,7 +64,14 @@ def flexitable(data: None, header: str = "") -> RenderableType:
 
 
 @flexitable.register
-def _(data: str, header: str = "") -> RenderableType:
+def _(data: str) -> RenderableType:
+    if "[/]" not in data:
+        data = data.replace("[", "").replace("]", "")
+    return " | ".join(map(format_with_color, data.split(" | ")))
+
+
+@flexitable.register
+def _(data: str, header: str) -> RenderableType:
     if "[/]" not in data:
         data = data.replace("[", "").replace("]", "")
     return FIELDS_MAP[header](data)
@@ -86,7 +93,7 @@ def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
 
         content = flexitable(content, key)
         if isinstance(content, ConsoleRenderable) and not isinstance(content, Markdown):
-            cols.append(border_panel(content, title=key))
+            cols.append(border_panel(content, title=flexitable(key)))
             # table.add_row(key, border_panel(content))
         else:
             table.add_row(key, content)
