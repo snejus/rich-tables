@@ -137,6 +137,7 @@ def make_console(**kwargs: Any) -> Console:
         theme=get_theme(),
         force_terminal=True,
         force_interactive=True,
+        emoji=True,
         **kwargs,
     )
 
@@ -413,7 +414,9 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     createdAt=time2human,
     modified=time2human,
     # updated=time2human,
-    wait=lambda x: " ".join(islice(fmt_time(int(float(x))), 1)),
+    wait_per_play=lambda x: wrap(
+        " ".join(islice(fmt_time(int(float(x))), 1)), "b green"
+    ),
     updatedAt=time2human,
     committedDate=time2human,
     bpm=lambda x: wrap(
