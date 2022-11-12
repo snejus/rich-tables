@@ -410,10 +410,10 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     start=time2human,
     end=time2human,
     added=time2human,
-    # # created=time2human,
+    created=time2human,
     createdAt=time2human,
     modified=time2human,
-    # updated=time2human,
+    updated=time2human,
     wait_per_play=lambda x: wrap(
         " ".join(islice(fmt_time(int(float(x))), 1)), "b green"
     ),
