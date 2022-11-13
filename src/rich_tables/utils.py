@@ -360,7 +360,9 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
 def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
     if isinstance(timestamp, str):
         try:
-            return datetime.fromisoformat(re.sub(r"(\+.*|Z).*$", "", timestamp))
+            return datetime.fromisoformat(
+                re.sub(r"(\+.*|Z).*$", "", timestamp.strip("'"))
+            )
         except ValueError:
             pass
     return datetime.fromtimestamp(int(float(timestamp or 0)), tz=timezone.utc)
