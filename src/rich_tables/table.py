@@ -12,6 +12,7 @@ from rich.align import Align
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group
+from rich.highlighter import ISO8601Highlighter
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
@@ -39,7 +40,7 @@ from rich_tables.utils import (
 JSONDict = t.Dict[str, t.Any]
 
 
-console = make_console()
+console = make_console(highlighter=ISO8601Highlighter())
 print = console.print
 
 
