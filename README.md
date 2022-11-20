@@ -6,6 +6,7 @@
 * [Timed](#timed)
 * [Nested json](#nested_json)
 * [Simple json](#simple_json)
+* [Hue](#hue)
 
 
 ## Album
@@ -20,3 +21,5 @@
 ![image](svgs/nested_json.svg)
 ## Simple_json
 ![image](svgs/simple_json.svg)
+## Hue
+![image](svgs/hue.svg)

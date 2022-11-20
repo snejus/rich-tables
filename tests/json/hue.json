@@ -1,0 +1,101 @@
+{
+  "title": "Hue lights",
+  "values": [
+    {
+      "id": "1",
+      "name": "Books",
+      "on": true,
+      "bri": 250,
+      "hue": 32633,
+      "sat": 251,
+      "effect": "colorloop",
+      "xy": [
+        0.3304,
+        0.3619
+      ],
+      "ct": 178,
+      "alert": "select",
+      "colormode": "hs",
+      "reachable": true
+    },
+    {
+      "id": "2",
+      "name": "Linehanger",
+      "on": true,
+      "bri": 250,
+      "hue": 61371,
+      "sat": 251,
+      "effect": "colorloop",
+      "xy": [
+        0.5581,
+        0.2601
+      ],
+      "ct": 500,
+      "alert": "select",
+      "colormode": "hs",
+      "reachable": true
+    },
+    {
+      "id": "3",
+      "name": "Mirror",
+      "on": false,
+      "bri": 250,
+      "hue": 50952,
+      "sat": 251,
+      "effect": "none",
+      "xy": [
+        0.2743,
+        0.1022
+      ],
+      "ct": 153,
+      "alert": "select",
+      "colormode": "hs",
+      "reachable": true
+    },
+    {
+      "id": "4",
+      "name": "Snakelight",
+      "on": true,
+      "bri": 250,
+      "hue": 56359,
+      "sat": 251,
+      "effect": "colorloop",
+      "xy": [
+        0.4231,
+        0.1808
+      ],
+      "ct": 310,
+      "alert": "select",
+      "colormode": "hs",
+      "reachable": true
+    },
+    {
+      "id": "5",
+      "name": "Poilsio kambarys",
+      "on": true,
+      "bri": 254,
+      "alert": "select",
+      "reachable": true
+    },
+    {
+      "id": "6",
+      "name": "Hue ambience candle 1",
+      "on": false,
+      "bri": 254,
+      "ct": 366,
+      "alert": "select",
+      "colormode": "ct",
+      "reachable": false
+    },
+    {
+      "id": "7",
+      "name": "Hue ambiance candle 2",
+      "on": false,
+      "bri": 254,
+      "ct": 366,
+      "alert": "select",
+      "colormode": "ct",
+      "reachable": false
+    }
+  ]
+}

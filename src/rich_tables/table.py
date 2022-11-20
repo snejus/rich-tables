@@ -12,7 +12,6 @@ from rich.align import Align
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group
-from rich.highlighter import ISO8601Highlighter
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
@@ -40,7 +39,7 @@ from rich_tables.utils import (
 JSONDict = t.Dict[str, t.Any]
 
 
-console = make_console(highlighter=ISO8601Highlighter())
+console = make_console()
 print = console.print
 
 
@@ -301,7 +300,7 @@ def lights_table(lights: t.List[JSONDict]) -> Table:
             color = conv.xy_to_hex(*xy)
             light["xy"] = wrap("   a", f"#{color} on #{color}")
         table.add_row(
-            *map(str, map(lambda x: light.get(x) or "", headers)), style=style
+            *map(str, map(lambda x: light.get(x, ""), headers)), style=style
         )
     yield table
 

@@ -425,7 +425,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
         x,
         "green"
         if int(x or 0) < 135
-        else "b blink red"
+        else "b red"
         if int(x or 0) > 230
         else "red"
         if int(x or 0) > 165
@@ -439,7 +439,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     else str(x),
     country=get_country,
     data_source=format_with_color,
-    helicopta=lambda x: wrap(" ", "b red") if int(x) else "",
+    helicopta=lambda x: wrap(" ", "b red") if x and int(x) else "",
     keywords=lambda x: " ".join(map(colored_with_bg, colored_split(x).split("  ")))
     if isinstance(x, str)
     else x,
