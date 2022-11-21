@@ -319,11 +319,18 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
         tentative="[b yellow] ? [/]",
     )
 
-    calendars = set(map(op.itemgetter("calendar"), events))
-    cal_to_color = dict(zip(calendars, map(predictably_random_color, calendars)))
-    cal_fmted = it.starmap(
-        lambda x, y: wrap(f" {x} ", f"b black on {y}"), cal_to_color.items()
-    )
+    cal_to_color = {e["calendar"]: e["backgroundColor"] for e in events}
+    if len(cal_to_color) > 1:
+        color_key = "calendar"
+        color_id_to_color = cal_to_color
+    else:
+        color_key = "colorId"
+        color_id_to_color = {
+            e[color_key]: predictably_random_color(e[color_key]) for e in events
+        }
+    for e in events:
+        e["color"] = color_id_to_color[e[color_key]]
+    cal_fmted = [wrap(f" {c} ", f"b black on {clr}") for c, clr in cal_to_color.items()]
     yield Columns(cal_fmted, expand=True, equal=False, align="center")
 
     new_events: t.List[JSONDict] = []
@@ -361,9 +368,7 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
                 continue
 
             color = (
-                "grey7"
-                if end.replace(tzinfo=None) < datetime.now()
-                else cal_to_color[event["calendar"]]
+                "grey7" if end.replace(tzinfo=None) < datetime.now() else event["color"]
             )
             new_events.append(
                 {
@@ -371,14 +376,14 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
                     **dict(
                         color=color,
                         summary=status_map[event["status"]]
-                        + wrap(
-                            event["summary"] or "busy",
-                            f"b {cal_to_color[event['calendar']]}",
-                        ),
+                        + wrap(event["summary"] or "busy", f"b {color}"),
                         start=start,
                         start_day=start.strftime("%d %a"),
                         start_time=wrap(start.strftime("%H:%M"), "white"),
                         end_time=wrap(end.strftime("%H:%M"), "white"),
+                        desc=border_panel(get_val(event, "desc"))
+                        if event["desc"]
+                        else "",
                         bar=Bar(86400, *get_start_end(start, end), color=color),
                     ),
                 }
@@ -403,6 +408,8 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
                     table.add_dict_item(event, style=event["color"] + " on grey7")
                 else:
                     table.add_dict_item(event)
+                    if event["desc"]:
+                        table.add_row("", "", "", event["desc"])
             table.add_row("")
         yield border_panel(table, title=year_and_month)
 

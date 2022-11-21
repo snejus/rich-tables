@@ -10,15 +10,19 @@ from rich_tables.utils import make_console
 
 JSON_DIR = "tests/json"
 SVG_DIR = "svgs"
-TEST_CASES = [x.replace(".json", "") for x in os.listdir(JSON_DIR)]
+TEST_CASES = sorted([x.replace(".json", "") for x in os.listdir(JSON_DIR)])
+
+
+def human(text: str) -> str:
+    return text.replace("_", " ").capitalize()
 
 
 @pytest.fixture(scope="session", autouse=True)
 def report():
     yield
 
-    toc = [f"* [{x.replace('_', ' ').capitalize()}](#{x})\n" for x in TEST_CASES]
-    svgs = [f"## {x.capitalize()}\n![image](svgs/{x}.svg)\n" for x in TEST_CASES]
+    toc = [f"* [{human(x)}](#{x})\n" for x in TEST_CASES]
+    svgs = [f"## {human(x)}\n![image](svgs/{x}.svg)\n" for x in TEST_CASES]
 
     with open("README.md", "w") as f:
         f.writelines(["# Rich tables\n\n", *toc, "\n\n", *svgs])
