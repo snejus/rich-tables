@@ -13,9 +13,7 @@ jobs:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
       - name: Generate requirements.txt
-        run: 
-          ./generate_requirements > requirements.txt
-          echo coveralls >> requirements.txt
+        run: ./generate_requirements > requirements.txt
       - name: Set up Python ${{ env.python }}
         uses: actions/setup-python@v3
         with:
@@ -23,7 +21,7 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: |
-          pip install --upgrade pip setuptools wheel
+          pip install --upgrade pip setuptools wheel coveralls
           pip install -r requirements.txt
           pip install -e .
       - name: Pytest
@@ -32,8 +30,6 @@ jobs:
         run: coveralls --service=github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: python${{ env.python }}
-          COVERALLS_PARALLEL: true
       - name: Flake8
         run: flake8 . --output-file flake.log --exit-zero
       - name: Pylint
@@ -43,16 +39,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  coveralls:
-    if: ${{ always() }}
-    name: Indicate completion to coveralls.io
-    needs: test
-    runs-on: ubuntu-latest
-    container: python:3-slim
-    steps:
-      - name: Finished
-        run: |
-          pip3 install --upgrade coveralls
-          coveralls --service=github --finish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
