@@ -359,12 +359,12 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
 
 def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
     if isinstance(timestamp, str):
-        try:
-            return datetime.fromisoformat(
-                re.sub(r"(\+.*|Z).*$", "", timestamp.strip("'"))
-            )
-        except ValueError:
-            pass
+        formats = ["%Y-%m-%dT%H:%M:%SZ", "%Y%m%dT%H%M%SZ"]
+        for fmt in formats:
+            try:
+                return datetime.strptime(timestamp, fmt)
+            except ValueError:
+                pass
     return datetime.fromtimestamp(int(float(timestamp or 0)), tz=timezone.utc)
 
 
@@ -406,12 +406,14 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     avg_last_played=lambda x: time2human(x, acc=2),
     since=lambda x: x
     if isinstance(x, str)
-    else datetime.fromtimestamp(x).strftime("%F %H:%M"),
+    else datetime.fromtimestamp(float(x)).strftime("%F %H:%M"),
     mtime=time2human,
     dt=lambda x: time2human(x, 5),
     start=time2human,
     end=time2human,
     added=time2human,
+    entry=time2human,
+    due=time2human,
     created=time2human,
     createdAt=lambda x: x if "[/]" in x else time2human(x),
     modified=time2human,
@@ -439,7 +441,8 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     else str(x),
     country=get_country,
     data_source=format_with_color,
-    helicopta=lambda x: wrap(" ", "b red") if x and int(x) else "",
+    helicopta=lambda x: ":fire: " if x and int(x) else "",
+    hidden=lambda x: ":shit: " if x and int(x) else None,
     keywords=lambda x: " ".join(map(colored_with_bg, colored_split(x).split("  ")))
     if isinstance(x, str)
     else x,
@@ -551,8 +554,9 @@ DISPLAY_HEADER: Dict[str, str] = {
     "mtime": "updated",
     "data_source": "source",
     "helicopta": "[dark red]:helicopter:[/]",
+    "hidden": ":no_entry:",
     "track_alt": ":cd:",
-    "catalognum": "📖",
+    "catalognum": ":pen: ",
     "plays": "[green]:play_button:[/]",
     "skips": "[red]:stop_button:[/]",
     "albumtypes": "types",

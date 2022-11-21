@@ -299,9 +299,7 @@ def lights_table(lights: t.List[JSONDict]) -> Table:
         elif xy:
             color = conv.xy_to_hex(*xy)
             light["xy"] = wrap("   a", f"#{color} on #{color}")
-        table.add_row(
-            *map(str, map(lambda x: light.get(x, ""), headers)), style=style
-        )
+        table.add_row(*map(str, map(lambda x: light.get(x, ""), headers)), style=style)
     yield table
 
 
@@ -464,7 +462,9 @@ def tasks_table(tasks: t.List[JSONDict]) -> t.Iterator:
         id_to_desc[task["id"]] = desc
 
     group_by = tasks[0].get("group_by") or ""
-    headers = ["urgency", "id"] + [k for k in fields_map.keys() if k != group_by]
+    headers = ["urgency", "id"] + [
+        k for k in fields_map.keys() if k not in {group_by, "id", "urgency"}
+    ]
 
     for group, task_group in it.groupby(
         sorted(

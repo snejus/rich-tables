@@ -33,6 +33,7 @@ TRACK_FIELDS = [
     "plays",
     "skips",
     "helicopta",
+    "hidden",
 ]
 ALBUM_IGNORE = set(TRACK_FIELDS) | {
     "album_color",

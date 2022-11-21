@@ -7,6 +7,7 @@
 * [Nested json](#nested_json)
 * [Simple json](#simple_json)
 * [Hue](#hue)
+* [Tasks](#tasks)
 
 
 ## Album
@@ -23,3 +24,5 @@
 ![image](svgs/simple_json.svg)
 ## Hue
 ![image](svgs/hue.svg)
+## Tasks
+![image](svgs/tasks.svg)
