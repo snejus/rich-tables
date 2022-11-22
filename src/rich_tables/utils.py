@@ -359,8 +359,8 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
 
 def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
     if isinstance(timestamp, str):
-        timestamp = re.sub("[.]\d+", "", timestamp)
-        formats = ["%Y-%m-%dT%H:%M:%SZ", "%Y%m%dT%H%M%SZ"]
+        timestamp = re.sub("[.]\d+", "", timestamp.strip("'"))
+        formats = ["%Y-%m-%dT%H:%M:%SZ", "%Y%m%dT%H%M%SZ", "%Y-%m-%d %H:%M:%S"]
         for fmt in formats:
             try:
                 return datetime.strptime(timestamp, fmt)
