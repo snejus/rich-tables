@@ -360,7 +360,12 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
 def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
     if isinstance(timestamp, str):
         timestamp = re.sub("[.]\d+", "", timestamp.strip("'"))
-        formats = ["%Y-%m-%dT%H:%M:%SZ", "%Y%m%dT%H%M%SZ", "%Y-%m-%d %H:%M:%S"]
+        formats = [
+            "%Y-%m-%dT%H:%M:%SZ",
+            "%Y%m%dT%H%M%SZ",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S%z",
+        ]
         for fmt in formats:
             try:
                 return datetime.strptime(timestamp, fmt)
@@ -525,6 +530,9 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     ),
     python=lambda x: Syntax(
         x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
+    ),
+    CreatedBy=lambda x: Syntax(
+        x.replace(";", "\n"), "sh", theme="paraiso-dark", background_color="black", word_wrap=True
     ),
     sql=lambda x: Syntax(
         x.replace("'", ""),
