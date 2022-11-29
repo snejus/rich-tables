@@ -108,19 +108,6 @@ def fmt_time(seconds: int) -> Iterable[str]:
     )
 
 
-def time2human(timestamp: Union[int, str], acc: int = 1) -> str:
-    datetime = timestamp2datetime(timestamp)
-    diff = datetime.timestamp() - time.time()
-    fmted = " ".join(islice(fmt_time(int(diff)), acc))
-
-    if abs(diff) > 86000:
-        strtime = datetime.strftime("%F")
-    else:
-        strtime = datetime.strftime("%T")
-
-    return "[b {}]{}[/]".format("red" if diff < 0 else "green", fmted) + " " + strtime
-
-
 def get_theme() -> Optional[Theme]:
     _path = path.join(
         environ.get("XDG_CONFIG_HOME") or path.expanduser("~/.config"),
@@ -382,6 +369,22 @@ def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
+def time2human(timestamp: Union[int, str], acc: int = 1) -> str:
+    try:
+        datetime = timestamp2datetime(timestamp)
+    except ValueError:
+        return timestamp
+    diff = datetime.timestamp() - time.time()
+    fmted = " ".join(islice(fmt_time(int(diff)), acc))
+
+    if abs(diff) > 86000:
+        strtime = datetime.strftime("%F")
+    else:
+        strtime = datetime.strftime("%T")
+
+    return "[b {}]{}[/]".format("red" if diff < 0 else "green", fmted) + " " + strtime
+
+
 FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
@@ -532,7 +535,11 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
         x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
     ),
     CreatedBy=lambda x: Syntax(
-        x.replace(";", "\n"), "sh", theme="paraiso-dark", background_color="black", word_wrap=True
+        x.replace(";", "\n"),
+        "sh",
+        theme="paraiso-dark",
+        background_color="black",
+        word_wrap=True,
     ),
     sql=lambda x: Syntax(
         x.replace("'", ""),
