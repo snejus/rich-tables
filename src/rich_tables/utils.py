@@ -4,18 +4,11 @@ import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
-from functools import partial
+from functools import lru_cache, partial
 from itertools import islice
 from math import copysign
 from os import environ, path
-from string import (
-    ascii_letters,
-    ascii_lowercase,
-    digits,
-    printable,
-    punctuation,
-    whitespace,
-)
+from string import ascii_letters, ascii_lowercase, digits, printable, whitespace
 from typing import (
     Any,
     Callable,
@@ -188,6 +181,7 @@ def new_table(*headers: str, **kwargs: Any) -> NewTable:
     return table
 
 
+@lru_cache(None)
 def predictably_random_color(string: str) -> str:
     random.seed(string)
     rand = partial(random.randint, 60, 200)
