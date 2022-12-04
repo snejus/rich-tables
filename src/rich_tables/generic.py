@@ -116,7 +116,7 @@ def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
         else:
             row.append(rend)
             width += this_width
-    rows.insert(-1, simple_panel(new_table(rows=[row], padding=(0, 0))))
+    rows.append(simple_panel(new_table(rows=[row], padding=(0, 0))))
     table.add_rows([[r] for r in rows])
     return table
 
