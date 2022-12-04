@@ -39,6 +39,7 @@ freezegun = ">=1.2.1"
 
 types-six = ">=1.16.2"
 types-freezegun = ">=1.1.9"
+flake8-mypy = ">=17.8.0"
 
 [tool.poetry.scripts]
 table = "rich_tables.table:main"

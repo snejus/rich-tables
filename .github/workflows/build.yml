@@ -31,7 +31,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Flake8
-        run: flake8 . --output-file flake.log --exit-zero
+        run: flake8 . --output-file flake.log --exit-zero --mypy-config setup.cfg
       - name: Pylint
         run: pylint --output pylint.log --exit-zero $(git ls-files '*.py')
       - name: SonarCloud Scan
