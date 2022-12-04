@@ -1,4 +1,5 @@
 import itertools as it
+import json
 from functools import partial
 from typing import Any, Dict, Iterable, List, Optional, Union
 
@@ -8,10 +9,8 @@ from rich.columns import Columns
 from rich.console import ConsoleRenderable, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
-from rich.text import Text
 
 from .utils import (
-    DISPLAY_HEADER,
     FIELDS_MAP,
     NewTable,
     border_panel,
@@ -20,6 +19,7 @@ from .utils import (
     make_console,
     make_difftext,
     new_table,
+    new_tree,
     predictably_random_color,
     simple_panel,
     wrap,
@@ -51,10 +51,13 @@ def prepare_dict(item: JSONDict) -> JSONDict:
                 item["diff"] = make_difftext(before, after)
             else:
                 keys = before.keys()
-                item["diff"] = {
-                    k: make_difftext(str(before[k] or ""), str(after[k] or ""))
-                    for k in keys
-                }
+                item["diff"] = json.dumps(
+                    {
+                        k: make_difftext(str(before[k] or ""), str(after[k] or ""))
+                        for k in keys
+                    },
+                    indent=2,
+                )
     return item
 
 
@@ -86,7 +89,7 @@ def _(data: Union[int, float], header: Optional[str] = "") -> RenderableType:
 def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
     data = prepare_dict(data)
     table = mapping_view_table()
-    cols = []
+    cols: List[RenderableType] = []
     for key, content in data.items():
         if not content:
             continue
@@ -94,7 +97,6 @@ def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
         content = flexitable(content, key)
         if isinstance(content, ConsoleRenderable) and not isinstance(content, Markdown):
             cols.append(border_panel(content, title=flexitable(key)))
-            # table.add_row(key, border_panel(content))
         else:
             table.add_row(key, content)
 
@@ -102,15 +104,13 @@ def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
     if header:
         return Columns(cols)
 
-    # cols.sort(key=lambda x: console.measure(x).maximum)
-    # return new_table(rows=it.zip_longest(*(iter(cols),) * 1))
     table = new_table()
+    row: List[RenderableType]
     row, width = [], 0
     rows: List[Panel] = []
     for rend in cols:
         this_width = console.measure(rend).maximum
         if width + this_width > console.width:
-            # lines.append(simple_panel(new_table(rows=[row], padding=(0, 0))))
             rows.append(simple_panel(new_table(rows=[row], padding=(0, 0))))
             row, width = [rend], this_width
         else:
@@ -141,28 +141,42 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     keys = {k: None for k in all_keys if any((d.get(k) for d in data))}.keys()
 
-    if len(keys) > 17:
-        table = list_table(show_header=False)
-        for item in data:
-            table.add_row(flexitable({k: v for k, v in item.items() if k in keys}))
-        return table
-
     overlap = set(map(type, data[0].values())) & {int, float, str}
     keysstr = " ".join(keys)
     counting = any(x in keysstr for x in ["count", "sum_", "duration"])
     if len(overlap) == 2 and counting:
         return counts_table(data, header=header or "")
 
+    def getval(value, key):
+        trans = flexitable(value, key)
+        if isinstance(trans, str):
+            return f"{wrap(key, 'b')}: {trans}"
+        if not trans:
+            return str(trans)
+        return trans
+
     table = list_table(show_header=True)
     for key in keys:
-        table.add_column(key)
-    for item in data:
-        table.add_dict_item(item, transform=flexitable)
-    for col, old in ((c, str(c.header)) for c in table.columns if c):
-        new = DISPLAY_HEADER.get(old) or old
-        col.header = wrap(new, f"{predictably_random_color(new)}")
+        table.add_column(key, header_style=predictably_random_color(key))
+    large_table = list_table()
+    for idx, item in enumerate(data):
+        if len(str(item.values())) > 500:
+            values = (
+                getval(*args)
+                for args in sorted(
+                    [(v, k) for k, v in item.items() if k in keys],
+                    key=lambda x: str(type(x[0])),
+                    reverse=True,
+                )
+            )
+            large_table.add_row(new_tree(values, header or str(idx)))
+        else:
+            table.add_dict_item(item, transform=flexitable)
 
-    return table
+    if table.rows and large_table.rows:
+        return new_table(rows=[[table], [large_table]])
+
+    return table if table.rows else large_table
 
 
 @flexitable.register

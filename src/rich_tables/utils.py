@@ -306,7 +306,7 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
             if key != "total" and isinstance(first[key], (int, float)):
                 count_col_name = key
 
-    all_counts = {float(i.get(count_col_name, 0)) for i in data}
+    all_counts = {float(i.get(count_col_name) or 0) for i in data}
     num_type: Type = float
     if len({c % 1 for c in all_counts}) == 1:
         num_type = int
@@ -316,7 +316,7 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
     headers = [k for k in keys if k not in {count_col_name, "total"}]
     table = new_table(*headers, "", count_col_name, overflow="fold", vertical="middle")
     for item in data:
-        item_count = float(item.pop(count_col_name, 0))
+        item_count = float(item.pop(count_col_name) or 0)
         item_max = item.pop("total", None)
         if item_max is not None:
             item_max = float(item_max)
@@ -435,7 +435,9 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
         else "red"
         if int(x or 0) > 165
         else "yellow",
-    ),
+    )
+    if isinstance(x, int)
+    else x,
     style=format_with_color,
     genre=colored_split,
     length=timestamp2timestr,
