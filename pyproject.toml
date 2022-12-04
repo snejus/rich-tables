@@ -1,9 +1,24 @@
 [tool.poetry]
 name = "rich-tables"
-version = "0.1.0"
+version = "0.1.2"
 description = "Ready-made rich tables for various purposes"
-authors = ["Šarūnas Nejus <snejus@protonmail.com>"]
+authors = ["Šarūnas Nejus <snejus@pm.me>"]
+readme = "README.md"
+license = "MIT"
+homepage = "https://github.com/snejus/rich-tables"
+repository = "https://github.com/snejus/rich-tables"
+
 packages = [{ from = "src", include = "rich_tables" }]
+
+keywords = ["json", "pretty", "rich", "console", "terminal"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Topic :: Utilities",
+]
 
 [tool.poetry.dependencies]
 python = ">=3.6.3,<4"
