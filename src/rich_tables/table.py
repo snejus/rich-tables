@@ -120,8 +120,8 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
             "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
             "dates": lambda x: new_table(
                 rows=[
-                    [wrap(r" ⬤ ", "b green"), time2human(x[0])],
-                    [wrap(r" ◯ ", "b yellow"), time2human(x[1])],
+                    [wrap(r" ⬤ ", "b green"), time2human(x["created"])],
+                    [wrap(r" ◯ ", "b yellow"), time2human(x["updated"])],
                 ]
             ),
             "repository": lambda x: x.get("name"),
@@ -173,26 +173,26 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
     yield border_panel(
         new_table(
             rows=[
-                [Align.center(wrap(title, state_color(pr["state"])))],
-                [Align.center(get_val(pr, "labels"), vertical="middle")],
-                [flexitable([{k: v for k, v in pr.items() if k in keys}])]
-                # [
-                #     Columns(
-                #         map(
-                #             lambda x: simple_panel(
-                #                 get_val(pr, x),
-                #                 title=wrap(x, "b"),
-                #                 title_align="center",
-                #                 expand=True,
-                #                 align="center",
-                #             ),
-                #             keys,
-                #         ),
-                #         align="center",
-                #         expand=True,
-                #         equal=True,
-                #     )
-                # ],
+                # [Align.center(wrap(title, state_color(pr["state"])))],
+                # [Align.center(get_val(pr, "labels"), vertical="middle")],
+                # [flexitable([{k: v for k, v in pr.items() if k in keys}])],
+                [
+                    Columns(
+                        map(
+                            lambda x: simple_panel(
+                                get_val(pr, x),
+                                title=wrap(x, "b"),
+                                title_align="center",
+                                expand=True,
+                                align="center",
+                            ),
+                            keys,
+                        ),
+                        align="center",
+                        expand=True,
+                        equal=True,
+                    )
+                ],
             ]
         ),
         title=wrap(name, f"b {repo_color}"),
