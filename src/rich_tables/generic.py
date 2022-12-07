@@ -69,14 +69,14 @@ def flexitable(data: None, header: str = "") -> RenderableType:
 @flexitable.register
 def _(data: str) -> RenderableType:
     # if "[/]" not in data:
-        # data = data.replace("[", "").replace("]", "")
+    # data = data.replace("[", "").replace("]", "")
     return " | ".join(map(format_with_color, data.split(" | ")))
 
 
 @flexitable.register
 def _(data: str, header: str) -> RenderableType:
     # if "[/]" not in data:
-        # data = data.replace("[", "").replace("]", "")
+    # data = data.replace("[", "").replace("]", "")
     return FIELDS_MAP[header](data)
 
 
@@ -139,7 +139,9 @@ def _(data: List[int], header: Optional[str] = None) -> RenderableType:
 def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
     data = [prepare_dict(item) for item in data]
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
-    keys = {k: None for k in all_keys if any((d.get(k) for d in data))}.keys()
+    keys = {
+        k: None for k in all_keys if any(((d.get(k) is not None) for d in data))
+    }.keys()
 
     overlap = set(map(type, data[0].values())) & {int, float, str}
     keysstr = " ".join(keys)
