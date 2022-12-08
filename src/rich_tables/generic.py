@@ -11,6 +11,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 
 from .utils import (
+    DISPLAY_HEADER,
     FIELDS_MAP,
     NewTable,
     border_panel,
@@ -174,6 +175,9 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
             large_table.add_row(new_tree(values, header or str(idx)))
         else:
             table.add_dict_item(item, transform=flexitable)
+    if table.show_header:
+        for col in table.columns:
+            col.header = DISPLAY_HEADER.get(col.header, col.header)
 
     if table.rows and large_table.rows:
         return new_table(rows=[[table], [large_table]])

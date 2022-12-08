@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from functools import singledispatch
 
 from rich import box
-from rich.align import Align
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group
@@ -166,7 +165,7 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
         )
     pr["dates"] = {"created": pr.pop("createdAt"), "updated": pr.pop("updatedAt")}
 
-    title, name = pr["title"], pr["repository"]["name"]
+    _, name = pr["title"], pr["repository"]["name"]
     repo_color = predictably_random_color(name)
     decision_color = state_color(pr["reviewDecision"])
     keys = sorted(set(pr) - exclude)
