@@ -155,6 +155,9 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
                 border_style=f"dim {predictably_random_color('commits')}",
             ),
             "reviewRequests": lambda x: "  ".join(map(colored_with_bg, x)),
+            "participants": lambda x: "\n".join(
+                map(format_with_color, map("{:^20}".format, x))
+            ),
         }
     )
 
@@ -192,19 +195,24 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
                         equal=True,
                     )
                 ],
+                [md_panel(pr["body"])],
             ]
         ),
         title=wrap(name, f"b {repo_color}"),
         box=box.DOUBLE_EDGE,
         border_style=decision_color,
-        subtitle=f"[b][{decision_color}]{pr['reviewDecision']}[/] [#ffffff]//[/] {fmt_state(pr['state'])}[/]",
+        subtitle=(
+            f"[b][{decision_color}]{pr['reviewDecision']}[/]"
+            + " [#ffffff]//[/] "
+            + f"{fmt_state(pr['state'])}[/]"
+        ),
         expand=False,
         align="center",
         title_align="center",
         subtitle_align="center",
     )
 
-    yield md_panel(pr["body"])
+    # yield md_panel(pr["body"])
     yield new_table(rows=[[get_val(pr, "files"), get_val(pr, "commits")]])
 
     global_comments: t.List[ConsoleRenderable] = []
