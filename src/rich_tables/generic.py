@@ -63,7 +63,7 @@ def prepare_dict(item: JSONDict) -> JSONDict:
 
 
 @multimethod
-def flexitable(data: None, header: str = "") -> RenderableType:
+def flexitable(data, header="") -> RenderableType:
     return str(data)
 
 
@@ -128,7 +128,11 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 @flexitable.register
 def _(data: List[str], header: str = "") -> RenderableType:
     call = FIELDS_MAP.get(header)
-    return call("\n".join(data)) if call else "\n".join(map(format_with_color, data))
+    return (
+        call("\n".join(data))
+        if call != str
+        else "\n".join(map(format_with_color, map(str, data)))
+    )
 
 
 @flexitable.register
