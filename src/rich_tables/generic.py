@@ -130,7 +130,7 @@ def _(data: List[str], header: str = "") -> RenderableType:
     call = FIELDS_MAP.get(header)
     return (
         call("\n".join(data))
-        if call != str
+        if call and call != str
         else "\n".join(map(format_with_color, map(str, data)))
     )
 

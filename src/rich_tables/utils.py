@@ -75,14 +75,14 @@ def make_difftext(
 
 def duration2human(duration: SupportsFloat, acc: int = 1) -> str:
     diff = timedelta(seconds=float(duration))
-    return ":".join(
-        map(
-            lambda x: str(x).zfill(2),
-            [
-                diff.days * 24 + diff.seconds // 3600,
-                diff.seconds % 3600 // 60,
-                diff.seconds % 60,
-            ],
+    days = f"{diff.days}d " if diff.days else ""
+    return "{:>12}".format(
+        days
+        + ":".join(
+            map(
+                lambda x: str(x).zfill(2),
+                [diff.seconds // 3600, diff.seconds % 3600 // 60, diff.seconds % 60],
+            )
         )
     )
 
@@ -314,7 +314,7 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
 
     # ensure count_col is at the end
     headers = [k for k in keys if k not in {count_col_name, "total"}]
-    table = new_table(*headers, "", count_col_name, overflow="fold", vertical="middle")
+    table = new_table(*headers, count_col_name, "")
     for item in data:
         item_count = float(item.pop(count_col_name) or 0)
         item_max = item.pop("total", None)
