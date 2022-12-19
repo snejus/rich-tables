@@ -380,7 +380,7 @@ def time2human(timestamp: Union[int, str], acc: int = 1) -> str:
 
 
 FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
-    lambda: str,
+    lambda: Text,
     albumtypes=lambda x: "; ".join(
         map(
             format_with_color,
