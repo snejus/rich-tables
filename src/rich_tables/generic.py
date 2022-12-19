@@ -1,5 +1,6 @@
 import itertools as it
 import json
+import re
 from functools import partial
 from typing import Any, Dict, Iterable, List, Optional, Union
 
@@ -149,10 +150,10 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
     }.keys()
 
     overlap = set(map(type, data[0].values())) & {int, float, str}
-    keysstr = " ".join(keys)
-    counting = any(x in keysstr for x in ["count", "sum_", "duration"])
-    if len(overlap) == 2 and counting:
-        return counts_table(data, header=header or "")
+    get_match = re.compile(r"count_|(count$)|sum_|duration").search
+    count_key = next(filter(None, map(get_match, keys)), None)
+    if len(overlap) == 2 and count_key:
+        return counts_table(data, count_key.string, header=header or "")
 
     def getval(value, key):
         trans = flexitable(value, key)

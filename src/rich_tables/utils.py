@@ -8,7 +8,7 @@ from functools import lru_cache, partial
 from itertools import islice
 from math import copysign
 from os import environ, path
-from string import ascii_letters, ascii_lowercase, digits, printable, whitespace
+from string import ascii_letters, whitespace
 from typing import (
     Any,
     Callable,
@@ -209,7 +209,7 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
     )
 
 
-def md_panel(content: str, **kwargs: Any) -> Panel:
+def md_panel(content: str, **kwargs: Any) -> Markdown:
     return Markdown(
         content,
         justify="left",
@@ -289,39 +289,33 @@ def progress_bar(
     return Bar(use_max, 0, count, color=color)
 
 
-def _get_val(value: Any, field: str) -> str:
+def _get_val(value: Any, field: str) -> RenderableType:
     return FIELDS_MAP[field](value) if value is not None else ""
 
 
-def get_val(obj: JSONDict, field: str) -> str:
+def get_val(obj: JSONDict, field: str) -> RenderableType:
     return _get_val(obj.get(field), field)
 
 
-def counts_table(data: List[JSONDict], header: str = "") -> Table:
+def counts_table(data: List[JSONDict], count_key: str, header: str = "") -> Table:
     keys = dict.fromkeys(data[0])
-    count_col_name = "count"
-    if count_col_name not in keys:
-        first = data[0]
-        for key in keys:
-            if key != "total" and isinstance(first[key], (int, float)):
-                count_col_name = key
 
-    all_counts = {float(i.get(count_col_name) or 0) for i in data}
+    all_counts = {float(i.get(count_key) or 0) for i in data}
     num_type: Type = float
     if len({c % 1 for c in all_counts}) == 1:
         num_type = int
     total_max = max(all_counts)
 
     # ensure count_col is at the end
-    headers = [k for k in keys if k not in {count_col_name, "total"}]
-    table = new_table(*headers, count_col_name, "")
+    headers = [k for k in keys if k not in {count_key, "total"}]
+    table = new_table(*headers, count_key, "")
     for item in data:
-        item_count = float(item.pop(count_col_name) or 0)
+        item_count = float(item.pop(count_key) or 0)
         item_max = item.pop("total", None)
         if item_max is not None:
             item_max = float(item_max)
             item_table_val = f"{num_type(item_count)}/{num_type(item_max)}"
-        elif "duration" in count_col_name:
+        elif "duration" in count_key:
             item_table_val = duration2human(item_count, 2)
         else:
             item_table_val = str(num_type(item_count))
@@ -330,7 +324,7 @@ def counts_table(data: List[JSONDict], header: str = "") -> Table:
             item_table_val,
             progress_bar(item_count, total_max, item_max=item_max),
         )
-    if count_col_name in {"duration", "total_duration"}:
+    if count_key in {"duration", "total_duration"}:
         table.caption = "Total " + duration2human(float(sum(all_counts)), 2)
         table.caption_justify = "left"
     if header:
@@ -379,8 +373,8 @@ def time2human(timestamp: Union[int, str], acc: int = 1) -> str:
     return "[b {}]{}[/]".format("red" if diff < 0 else "green", fmted) + " " + strtime
 
 
-FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
-    lambda: Text,
+FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
+    lambda: str,
     albumtypes=lambda x: "; ".join(
         map(
             format_with_color,
@@ -427,7 +421,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     updatedAt=time2human,
     committedDate=time2human,
     bpm=lambda x: wrap(
-        x,
+        str(x),
         "green"
         if int(x or 0) < 135
         else "b red"
@@ -447,7 +441,7 @@ FIELDS_MAP: Dict[str, Callable[[str], RenderableType]] = defaultdict(
     country=get_country,
     data_source=format_with_color,
     helicopta=lambda x: ":fire: " if x and int(x) else "",
-    hidden=lambda x: ":shit: " if x and int(x) else None,
+    hidden=lambda x: ":shit: " if x and int(x) else "",
     keywords=lambda x: " ".join(map(colored_with_bg, colored_split(x).split("  ")))
     if isinstance(x, str)
     else x,
