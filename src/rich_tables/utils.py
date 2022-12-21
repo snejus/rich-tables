@@ -229,7 +229,7 @@ def new_tree(
     values: Iterable[ConsoleRenderable] = [], title: str = "", **kwargs
 ) -> Tree:
     color = predictably_random_color(title or str(values))
-    default: JSONDict = dict(guide_style=color)
+    default: JSONDict = dict(guide_style=color, highlight=True)
     tree = Tree(wrap(title, "b"), **{**default, **kwargs})
 
     for val in values:

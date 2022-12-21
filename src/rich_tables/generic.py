@@ -163,9 +163,6 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
             return str(trans)
         return trans
 
-    small_table = list_table(show_header=True)
-    for key in keys:
-        small_table.add_column(key, header_style=predictably_random_color(key))
     large_table = list_table()
     for large, items in it.groupby(data, lambda i: len(str(i.values())) > 1000):
         if large:
@@ -178,18 +175,16 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
                         reverse=True,
                     )
                 )
-                large_table.add_rows([[new_tree(values, header)]])
+                large_table.add_row(border_panel(new_tree(values, "")))
         else:
-            # large_table.add_row(simple_panel(new_table(rows=[map(flexitable, items)])))
-            large_table.add_rows(map(flexitable, items))
-    # if small_table.show_header:
-    # for col in small_table.columns:
-    #     col.header = DISPLAY_HEADER.get(col.header, col.header)
-
-    # if small_table.rows and large_table.rows:
-    #     return new_table(rows=[[small_table], [large_table]])
-
-    # return small_table if small_table.rows else large_table
+            sub_table = list_table(show_header=True)
+            for key in keys:
+                sub_table.add_column(key, header_style=predictably_random_color(key))
+            for item in items:
+                sub_table.add_dict_item(item, transform=flexitable)
+            for col in sub_table.columns:
+                col.header = DISPLAY_HEADER.get(col.header, col.header)
+            large_table.add_row(sub_table)
     return large_table
 
 
