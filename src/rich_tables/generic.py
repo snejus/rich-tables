@@ -163,31 +163,34 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
             return str(trans)
         return trans
 
-    table = list_table(show_header=True)
+    small_table = list_table(show_header=True)
     for key in keys:
-        table.add_column(key, header_style=predictably_random_color(key))
+        small_table.add_column(key, header_style=predictably_random_color(key))
     large_table = list_table()
-    for idx, item in enumerate(data):
-        if len(str(item.values())) > 500:
-            values = (
-                getval(*args)
-                for args in sorted(
-                    [(v, k) for k, v in item.items() if k in keys],
-                    key=lambda x: str(type(x[0])),
-                    reverse=True,
+    for large, items in it.groupby(data, lambda i: len(str(i.values())) > 1000):
+        if large:
+            for item in items:
+                values = (
+                    getval(*args)
+                    for args in sorted(
+                        [(v, k) for k, v in item.items() if k in keys],
+                        key=lambda x: str(type(x[0])),
+                        reverse=True,
+                    )
                 )
-            )
-            large_table.add_row(new_tree(values, header or str(idx)))
+                large_table.add_rows([[new_tree(values, header)]])
         else:
-            table.add_dict_item(item, transform=flexitable)
-    if table.show_header:
-        for col in table.columns:
-            col.header = DISPLAY_HEADER.get(col.header, col.header)
+            # large_table.add_row(simple_panel(new_table(rows=[map(flexitable, items)])))
+            large_table.add_rows(map(flexitable, items))
+    # if small_table.show_header:
+    # for col in small_table.columns:
+    #     col.header = DISPLAY_HEADER.get(col.header, col.header)
 
-    if table.rows and large_table.rows:
-        return new_table(rows=[[table], [large_table]])
+    # if small_table.rows and large_table.rows:
+    #     return new_table(rows=[[small_table], [large_table]])
 
-    return table if table.rows else large_table
+    # return small_table if small_table.rows else large_table
+    return large_table
 
 
 @flexitable.register
