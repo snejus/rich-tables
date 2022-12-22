@@ -170,7 +170,7 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
                 values = (
                     getval(*args)
                     for args in sorted(
-                        [(v, k) for k, v in item.items() if k in keys],
+                        [(v or "", k) for k, v in item.items() if k in keys],
                         key=lambda x: str(type(x[0])),
                         reverse=True,
                     )

@@ -409,6 +409,7 @@ FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
     start=time2human,
     end=time2human,
     added=time2human,
+    date=time2human,
     entry=time2human,
     due=time2human,
     created=time2human,
