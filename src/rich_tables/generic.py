@@ -1,6 +1,8 @@
 import itertools as it
 import json
+import logging
 import re
+from datetime import datetime
 from functools import partial
 from typing import Any, Dict, Iterable, List, Optional, Union
 
@@ -8,8 +10,10 @@ from multimethod import multimethod
 from rich import box
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, RenderableType
+from rich.logging import RichHandler
 from rich.markdown import Markdown
 from rich.panel import Panel
+from rich.text import Text
 
 from .utils import (
     DISPLAY_HEADER,
@@ -29,6 +33,35 @@ from .utils import (
 
 JSONDict = Dict[str, Any]
 console = make_console()
+
+
+def time_fmt(current: datetime) -> Text:
+    diff = current - time_fmt.prev  # type: ignore [attr-defined]
+    time_fmt.prev = current  # type: ignore [attr-defined]
+    return Text(f"{diff.total_seconds() * 100:.2f}s")
+
+
+time_fmt.prev = datetime.now()  # type: ignore [attr-defined]
+
+
+log = logging.getLogger(__name__)
+if not log.handlers:
+    handler = RichHandler(
+        tracebacks_show_locals=True,
+        omit_repeated_times=False,
+        # log_time_format="%H:%M:%S.%f",
+        show_time=True,
+        log_time_format=time_fmt,
+    )
+    log.addHandler(handler)
+
+
+# log.setLevel("DEBUG")
+
+
+def debug(func, data):
+    log.debug(func.__annotations__["data"])
+    console.log(data)
 
 
 def mapping_view_table(**kwargs: Any) -> NewTable:
@@ -65,11 +98,13 @@ def prepare_dict(item: JSONDict) -> JSONDict:
 
 @multimethod
 def flexitable(data, header="") -> RenderableType:
+    debug(_, data)
     return str(data)
 
 
 @flexitable.register
 def _(data: str) -> RenderableType:
+    debug(_, data)
     if "[/]" not in data:
         data = data.replace("[", "⟦").replace("]", "⟧")
     return " | ".join(map(format_with_color, data.split(" | ")))
@@ -77,6 +112,7 @@ def _(data: str) -> RenderableType:
 
 @flexitable.register
 def _(data: str, header: str) -> RenderableType:
+    debug(_, data)
     if "[/]" not in data:
         data = data.replace("[", "⟦").replace("]", "⟧")
     return FIELDS_MAP[header](data)
@@ -84,11 +120,15 @@ def _(data: str, header: str) -> RenderableType:
 
 @flexitable.register
 def _(data: Union[int, float], header: Optional[str] = "") -> RenderableType:
+    debug(_, data)
+    log.debug("Union[int, float]")
     return flexitable(str(data), header)
 
 
 @flexitable.register
 def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
+    debug(_, data)
+    log.debug("JSONDict")
     data = prepare_dict(data)
     table = mapping_view_table()
     cols: List[RenderableType] = []
@@ -128,6 +168,7 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 
 @flexitable.register
 def _(data: List[str], header: str = "") -> RenderableType:
+    debug(_, data)
     call = FIELDS_MAP.get(header)
     return (
         call("\n".join(data))
@@ -138,12 +179,14 @@ def _(data: List[str], header: str = "") -> RenderableType:
 
 @flexitable.register
 def _(data: List[int], header: Optional[str] = None) -> RenderableType:
+    debug(_, data)
     return border_panel(Columns(str(x) for x in data))
 
 
 @flexitable.register
 def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
-    data = [prepare_dict(item) for item in data]
+    debug(_, data)
+    data = [prepare_dict(item) for item in data if item]
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     keys = {
         k: None for k in all_keys if any(((d.get(k) is not None) for d in data))
@@ -190,8 +233,11 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
 
 @flexitable.register
 def _(data: List[Any], header: Optional[str] = None) -> ConsoleRenderable:
+    if len(data) == 1:
+        return flexitable(data[0])
+    debug(_, data)
     table = list_table(show_header=False)
-    for item in data:
+    for item in filter(None, data):
         content = flexitable(item)
         if isinstance(content, Iterable) and not isinstance(content, str):
             table.add_row(*content)
