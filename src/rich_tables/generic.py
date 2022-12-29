@@ -1,6 +1,7 @@
 import itertools as it
 import json
 import logging
+import os
 import re
 from datetime import datetime
 from functools import partial
@@ -54,14 +55,14 @@ if not log.handlers:
         log_time_format=time_fmt,
     )
     log.addHandler(handler)
-
-
-# log.setLevel("DEBUG")
+    if os.getenv("DEBUG"):
+        log.setLevel("DEBUG")
 
 
 def debug(func, data):
-    log.debug(func.__annotations__["data"])
-    console.log(data)
+    if log.isEnabledFor(10):
+        log.debug(func.__annotations__["data"])
+        console.log(data)
 
 
 def mapping_view_table(**kwargs: Any) -> NewTable:
@@ -121,14 +122,12 @@ def _(data: str, header: str) -> RenderableType:
 @flexitable.register
 def _(data: Union[int, float], header: Optional[str] = "") -> RenderableType:
     debug(_, data)
-    log.debug("Union[int, float]")
     return flexitable(str(data), header)
 
 
 @flexitable.register
 def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
     debug(_, data)
-    log.debug("JSONDict")
     data = prepare_dict(data)
     table = mapping_view_table()
     cols: List[RenderableType] = []

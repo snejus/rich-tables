@@ -447,7 +447,7 @@ FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
     if isinstance(x, str)
     else x,
     ingr=lambda x: simple_panel(colored_split(x)),
-    # content=lambda x: md_panel(x) if isinstance(x, str) else x,
+    content=lambda x: md_panel(x) if isinstance(x, str) else x,
     notes=md_panel,
     text=md_panel,
     instructions=md_panel,
