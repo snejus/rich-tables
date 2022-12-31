@@ -435,6 +435,7 @@ FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
     else x,
     style=format_with_color,
     genre=colored_split,
+    group_source=lambda x: ", ".join(map(format_with_color, x)),
     length=timestamp2timestr,
     tracktotal=lambda x: (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
     if isinstance(x, Iterable) and not isinstance(x, str)
