@@ -324,6 +324,7 @@ def counts_table(data: List[JSONDict], count_key: str, header: str = "") -> Tabl
             item_table_val,
             progress_bar(item_count, total_max, item_max=item_max),
         )
+        break
     if count_key in {"duration", "total_duration"}:
         table.caption = "Total " + duration2human(float(sum(all_counts)), 2)
         table.caption_justify = "left"
