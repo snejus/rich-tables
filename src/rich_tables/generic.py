@@ -206,7 +206,7 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
         return trans
 
     large_table = list_table()
-    for large, items in it.groupby(data, lambda i: len(str(i.values())) > 1000):
+    for large, items in it.groupby(data, lambda i: len(str(i.values())) > 500):
         if large:
             for item in items:
                 values = (
