@@ -553,6 +553,9 @@ FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
         )
     ),
     diff=lambda x: Text.from_markup(x) if "[/]" in x else md_panel(x),
+    unified_diff=lambda x: Syntax(
+        x, "diff", theme="paraiso-dark", background_color="black", word_wrap=True
+    ),
 )
 
 DISPLAY_HEADER: Dict[str, str] = {
