@@ -21,6 +21,7 @@ from typing import (
     Union,
 )
 
+import sqlparse
 from rich import box
 from rich.align import Align
 from rich.bar import Bar
@@ -118,6 +119,7 @@ def make_console(**kwargs: Any) -> Console:
         force_terminal=True,
         force_interactive=True,
         emoji=True,
+        color_system="256",
         **kwargs,
     )
 
@@ -533,12 +535,16 @@ FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
         background_color="black",
         word_wrap=True,
     ),
-    sql=lambda x: Syntax(
-        x.replace("'", ""),
-        "sql",
-        theme="paraiso-dark",
-        background_color="black",
-        word_wrap=True,
+    sql=lambda x: border_panel(
+        Syntax(
+            sqlparse.format(
+                x.replace('"', ""), strip_comments=True, reindent_aligned=True
+            ),
+            "sql",
+            theme="gruvbox-dark",
+            background_color="black",
+            word_wrap=True,
+        )
     ),
     file=lambda x: "/".join(map(format_with_color, x.split("/"))),
     field=lambda x: ".".join(map(format_with_color, x.split("."))),

@@ -16,6 +16,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.text import Text
 
+from .sql import sql_table
 from .utils import (
     DISPLAY_HEADER,
     FIELDS_MAP,
@@ -196,6 +197,8 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
     count_key = next(filter(None, map(get_match, keys)), None)
     if len(overlap) == 2 and count_key:
         return counts_table(data, count_key.string, header=header or "")
+    elif "sql" in keys:
+        return sql_table(data)
 
     def getval(value, key):
         trans = flexitable(value, key)
