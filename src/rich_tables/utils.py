@@ -21,7 +21,6 @@ from typing import (
     Union,
 )
 
-import sqlparse
 from rich import box
 from rich.align import Align
 from rich.bar import Bar
@@ -336,7 +335,7 @@ def counts_table(data: List[JSONDict], count_key: str, header: str = "") -> Tabl
 
 def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
     if isinstance(timestamp, str):
-        timestamp = re.sub("[.]\d+", "", timestamp.strip("'"))
+        timestamp = re.sub(r"[.]\d+", "", timestamp.strip("'"))
         formats = [
             "%Y-%m-%dT%H:%M:%SZ",
             "%Y%m%dT%H%M%SZ",
@@ -411,7 +410,6 @@ FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
     start=time2human,
     end=time2human,
     added=time2human,
-    date=time2human,
     entry=time2human,
     due=time2human,
     created=time2human,
@@ -537,9 +535,7 @@ FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
     ),
     sql=lambda x: border_panel(
         Syntax(
-            sqlparse.format(
-                x.replace('"', ""), strip_comments=True, reindent_aligned=True
-            ),
+            x.replace('"', ""),
             "sql",
             theme="gruvbox-dark",
             background_color="black",
