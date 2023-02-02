@@ -170,6 +170,7 @@ def new_table(*headers: str, **kwargs: Any) -> NewTable:
         row_styles=["white"],
         expand=False,
         title_justify="left",
+        show_lines=False,
     )
     if headers:
         default.update(
