@@ -414,13 +414,15 @@ FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
     entry=time2human,
     due=time2human,
     created=time2human,
-    createdAt=lambda x: x if "[/]" in x else time2human(x),
+    # createdAt=lambda x: x if "[/]" in x else time2human(x),
+    # updatedAt=time2human,
+    createdAt=lambda x: x.replace("T", " ").replace("Z", ""),
+    updatedAt=lambda x: x.replace("T", " ").replace("Z", ""),
     modified=time2human,
     updated=time2human,
     wait_per_play=lambda x: wrap(
         " ".join(islice(fmt_time(int(float(x))), 1)), "b green"
     ),
-    updatedAt=time2human,
     committedDate=time2human,
     bpm=lambda x: wrap(
         str(x),
@@ -435,6 +437,7 @@ FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
     if isinstance(x, int)
     else x,
     style=format_with_color,
+    __typename=format_with_color,
     genre=colored_split,
     group_source=lambda x: ", ".join(map(format_with_color, x)),
     length=timestamp2timestr,
@@ -479,7 +482,7 @@ FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
     skips=lambda x: wrap(x, "b red"),
     # name=lambda x: wrap(x, "b"),
     description=md_panel,
-    body=md_panel,
+    # body=md_panel,
     event=format_with_color,
     kind=colored_split,
     type_name=format_with_color,
