@@ -118,7 +118,6 @@ def make_console(**kwargs: Any) -> Console:
         force_terminal=True,
         force_interactive=True,
         emoji=True,
-        color_system="256",
         **kwargs,
     )
 
