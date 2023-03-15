@@ -86,10 +86,10 @@ def prepare_dict(item: JSONDict) -> JSONDict:
             if isinstance(before, str):
                 item["diff"] = make_difftext(before, after)
             else:
-                keys = before.keys()
+                keys = before.keys() | after.keys()
                 item["diff"] = json.dumps(
                     {
-                        k: make_difftext(str(before[k] or ""), str(after[k] or ""))
+                        k: make_difftext(str(before.get(k)), str(after.get(k)))
                         for k in keys
                     },
                     indent=2,
