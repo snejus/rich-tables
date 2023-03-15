@@ -12,12 +12,12 @@ packages = [{ from = "src", include = "rich_tables" }]
 
 keywords = ["json", "pretty", "rich", "console", "terminal"]
 classifiers = [
-    "Development Status :: 1 - Planning",
-    "Environment :: Console",
-    "Intended Audience :: End Users/Desktop",
-    "Intended Audience :: System Administrators",
-    "Operating System :: OS Independent",
-    "Topic :: Utilities",
+  "Development Status :: 1 - Planning",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "Intended Audience :: System Administrators",
+  "Operating System :: OS Independent",
+  "Topic :: Utilities",
 ]
 
 [tool.poetry.dependencies]
@@ -28,7 +28,7 @@ rgbxy = ">=0.5"
 multimethod = "*"
 sqlparse = "*"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 flake8 = ">=4.0.1"
 mypy = ">=0.910"
 pylint = ">=2.13.7"
@@ -36,6 +36,7 @@ pylint = ">=2.13.7"
 pytest = ">=7"
 pytest-clarity = ">=1.0.1"
 pytest-cov = ">=3.0.0"
+pytest-sugar = "*"
 freezegun = ">=1.2.1"
 
 types-six = ">=1.16.2"

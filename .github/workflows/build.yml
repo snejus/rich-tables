@@ -1,7 +1,6 @@
 ---
 name: Code quality
-on:
-  push
+on: push
 jobs:
   test:
     env:
@@ -25,7 +24,7 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
       - name: Pytest
-        run: pytest
+        run: pytest -vv
       - name: Upload coverage data to coveralls.io
         run: coveralls --service=github
         env:
