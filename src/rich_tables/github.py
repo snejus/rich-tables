@@ -3,7 +3,7 @@ import operator as op
 import re
 import typing as t
 
-from rich import box
+from rich import box, print
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group
 from rich.panel import Panel
@@ -85,71 +85,121 @@ def comment_panel(comment: JSONDict, **kwargs: t.Any) -> Panel:
     )
 
 
-def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRenderable]]:
-    exclude = {
-        "title",
-        "body",
-        "reviews",
-        "comments",
-        "reviewThreads",
-        "url",
-        "files",
-        "commits",
-        "isReadByViewer",
-        "repository",
-        "labels",
-        "reviewDecision",
-        "state",
-        "reviewRequests",
-        "timelineItems",
-    }
-    FIELDS_MAP.update(
-        {
-            "state": lambda x: wrap(fmt_state(x), "b"),
-            "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
-            "dates": lambda x: new_table(
-                rows=[
-                    [wrap(r" ⬤ ", "b green"), time2human(x["created"])],
-                    [wrap(r" ◯ ", "b yellow"), time2human(x["updated"])],
-                ]
-            ),
-            "repository": lambda x: x.get("name"),
-            "path": lambda x: wrap(x, "b"),
-            "message": lambda x: wrap(x, "i"),
-            "files": lambda x: border_panel(
-                new_table(
-                    rows=[
-                        [*fmt_add_del(y), get_val(y, "path")]
-                        for y in sorted(
-                            x,
-                            key=lambda x: x["additions"] + x["deletions"],
-                            reverse=True,
-                        )
-                    ]
-                ),
-                title="files",
-                border_style=f"dim {predictably_random_color('files')}",
-            ),
-            "commits": lambda x: border_panel(
-                new_table(
-                    rows=[
-                        [
-                            *fmt_add_del(y),
-                            get_val(y, "message"),
-                            get_val(y, "committedDate"),
-                        ]
-                        for y in x
-                    ]
-                ),
-                title="commits",
-                border_style=f"dim {predictably_random_color('commits')}",
-            ),
-            "reviewRequests": lambda x: "  ".join(map(colored_with_bg, x)),
-            "participants": lambda x: "\n".join(
-                map(format_with_color, map("{:^20}".format, x))
-            ),
-        }
+def thread_panel(thread: JSONDict, files: t.List[ConsoleRenderable]) -> Panel:
+    return border_panel(
+        new_table(rows=it.zip_longest(*(iter(files),) * 2)),
+        highlight=False,
+        border_style=resolved_border_style(thread["isResolved"]),
+        title=wrap(thread["path"], "b magenta")
+        + " "
+        + fmt_state("RESOLVED" if thread["isResolved"] else "PENDING"),
+        subtitle=fmt_state("OUTDATED") if thread["isOutdated"] else "",
     )
+
+
+def diff_panel(title: str, rows: t.List[t.List[ConsoleRenderable]]) -> Panel:
+    return border_panel(
+        new_table(rows=rows),
+        title=title,
+        border_style=f"dim {predictably_random_color(title)}",
+    )
+
+
+PR_FIELDS_MAP = {
+    "state": lambda x: wrap(fmt_state(x), "b"),
+    "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
+    "dates": lambda x: new_table(
+        rows=[
+            [wrap(r" ⬤ ", "b green"), time2human(x["created"])],
+            [wrap(r" ◯ ", "b yellow"), time2human(x["updated"])],
+        ]
+    ),
+    "path": lambda x: wrap(x, "b"),
+    "message": lambda x: wrap(x, "i"),
+    "files": lambda files: diff_panel(
+        "files", [[*fmt_add_del(f), get_val(f, "path")] for f in files]
+    ),
+    "commits": lambda commits: diff_panel(
+        "commits",
+        [
+            [
+                *fmt_add_del(commit),
+                get_val(commit, "message"),
+                get_val(commit, "committedDate"),
+            ]
+            for commit in commits
+        ],
+    ),
+    "reviewRequests": lambda x: "  ".join(map(colored_with_bg, x)),
+    "participants": lambda x: "\n".join(
+        map(format_with_color, map("{:^20}".format, x))
+    ),
+}
+
+
+class Diff(t.TypedDict):
+    additions: int
+    deletions: int
+
+
+class File(Diff):
+    path: str
+
+
+class Commit(Diff):
+    committedDate: str
+    statusCheckRollup: str
+    message: str
+
+
+class Comment(t.TypedDict):
+    author: str
+    body: str
+    createdAt: str
+
+
+class Review(Comment):
+    state: str
+    comments: t.List[Comment]
+
+
+class ReviewThread(t.TypedDict):
+    path: str
+    line: int
+    isResolved: bool
+    isOutdated: bool
+    resolvedBy: str
+    diffSide: str
+    startLine: int
+    comments: t.List[Comment]
+
+
+class PullRequest(t.TypedDict):
+    additions: int
+    author: str
+    body: str
+    comments: t.List[Comment]
+    commits: t.List[Commit]
+    createdAt: str
+    deletions: int
+    files: t.List[File]
+    isReadByViewer: bool
+    labels: t.List[str]
+    participants: t.List[str]
+    repository: str
+    reviewDecision: str
+    reviewRequests: t.List[str]
+    reviewThreads: t.List[ReviewThread]
+    reviews: t.List[Review]
+    state: str
+    timelineItems: t.List[JSONDict]
+    title: str
+    updatedAt: str
+    url: str
+
+
+def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRenderable]]:
+    FIELDS_MAP.update(PR_FIELDS_MAP)
 
     pr = data[0]
     if pr and "additions" in pr:
@@ -158,27 +208,22 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
         )
     pr["dates"] = {"created": pr.pop("createdAt"), "updated": pr.pop("updatedAt")}
 
-    _, name = pr["title"], pr["repository"]["name"]
-    repo_color = predictably_random_color(name)
-    decision_color = state_color(pr["reviewDecision"])
-    keys = sorted(set(pr) - exclude)
+    repo, state, decision = pr["repository"], pr["state"], pr["reviewDecision"]
+    fields = "author", "dates", "participants"
     yield border_panel(
         new_table(
             rows=[
-                # [Align.center(wrap(title, state_color(pr["state"])))],
-                # [Align.center(get_val(pr, "labels"), vertical="middle")],
-                # [flexitable([{k: v for k, v in pr.items() if k in keys}])],
                 [
                     Columns(
                         map(
-                            lambda x: simple_panel(
-                                get_val(pr, x),
-                                title=wrap(x, "b"),
+                            lambda f: simple_panel(
+                                get_val(pr, f),
+                                title=wrap(f, "b"),
                                 title_align="center",
                                 expand=True,
                                 align="center",
                             ),
-                            keys,
+                            fields,
                         ),
                         align="center",
                         expand=True,
@@ -188,11 +233,13 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
                 [md_panel(pr["body"])],
             ]
         ),
-        title=wrap(name, f"b {repo_color}"),
+        title=wrap(repo, f"b {predictably_random_color(repo)}"),
         box=box.DOUBLE_EDGE,
-        border_style=decision_color,
+        border_style=state_color("MERGED")
+        if state == "MERGED"
+        else state_color(decision),
         subtitle=(
-            f"[b][{decision_color}]{pr['reviewDecision']}[/]"
+            f"[b][{state_color(decision)}]{decision}[/]"
             + " [#ffffff]//[/] "
             + f"{fmt_state(pr['state'])}[/]"
         ),
@@ -202,7 +249,6 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
         subtitle_align="center",
     )
 
-    # yield md_panel(pr["body"])
     yield new_table(rows=[[get_val(pr, "files"), get_val(pr, "commits")]])
 
     global_comments: t.List[ConsoleRenderable] = []
@@ -265,15 +311,5 @@ def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRender
                 new_table(rows=[[diff, simple_panel(comments_col)]], highlight=False)
             )
 
-        table.add_row(
-            border_panel(
-                new_table(rows=it.zip_longest(*(iter(files),) * 2)),
-                highlight=False,
-                border_style=resolved_border_style(thread["isResolved"]),
-                title=wrap(thread["path"], "b magenta")
-                + " "
-                + fmt_state("RESOLVED" if thread["isResolved"] else "PENDING"),
-                subtitle=fmt_state("OUTDATED") if thread["isOutdated"] else "",
-            )
-        )
+        table.add_row(thread_panel(thread, files))
     yield border_panel(table)
