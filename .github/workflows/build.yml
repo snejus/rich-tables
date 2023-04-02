@@ -20,7 +20,7 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: |
-          pip install --upgrade pip setuptools wheel coveralls
+          pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
           pip install -e .
       - name: Pytest
