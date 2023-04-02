@@ -302,7 +302,7 @@ class PullRequestTable(PullRequest):
                 list_table(
                     [
                         simple_panel(md_panel(review["body"])),
-                        *map(make_thread, review["threads"])
+                        *map(make_thread, review["threads"]),
                     ]
                 ),
                 subtitle=review["state"],
