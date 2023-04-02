@@ -290,7 +290,7 @@ def _get_val(value: Any, field: str) -> Any:
 
 @singledispatch
 def get_val(obj: Union[JSONDict, object], field: str) -> Any:
-    pass
+    """Definition of a generic get_val function."""
 
 
 @get_val.register

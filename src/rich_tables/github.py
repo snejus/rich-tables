@@ -1,3 +1,4 @@
+"""Functionality to display data from GitHub API."""
 import typing as t
 from collections import defaultdict
 from dataclasses import dataclass
@@ -177,6 +178,24 @@ def diff_panel(title: str, rows: t.List[t.List]) -> Panel:
     )
 
 
+def make_thread(thread: ReviewThread) -> Panel:
+    comments_col = list_table(
+        map(comment_panel, thread["comments"]), padding=(1, 0, 0, 0)
+    )
+    diff = Syntax(
+        thread["comments"][0]["diffHunk"],
+        "diff",
+        theme="paraiso-dark",
+        background_color="black",
+    )
+    return border_panel(
+        new_table(rows=[[diff, simple_panel(comments_col)]], highlight=False),
+        highlight=False,
+        border_style=resolved_border_style(thread["isResolved"]),
+        title=resolved_title(thread),
+    )
+
+
 PR_FIELDS_MAP = {
     "state": lambda x: wrap(fmt_state(x), "b"),
     "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
@@ -252,10 +271,8 @@ class PullRequestTable(PullRequest):
             box=box.DOUBLE_EDGE,
             border_style=state_color(self.pr_state),
             subtitle=(
-                (
-                    f"[b]{fmt_state(self.reviewDecision)}[white] // "
-                    + f"{fmt_state(self.state)}[/]"
-                )
+                f"[b]{fmt_state(self.reviewDecision)}[white] // "
+                + f"{fmt_state(self.state)}[/]"
             ),
             align="center",
             title_align="center",
@@ -278,23 +295,6 @@ class PullRequestTable(PullRequest):
             )
         )
 
-    def make_thread(self, thread: ReviewThread) -> Panel:
-        comments_col = list_table(
-            map(comment_panel, thread["comments"]), padding=(1, 0, 0, 0)
-        )
-        diff = Syntax(
-            thread["comments"][0]["diffHunk"],
-            "diff",
-            theme="paraiso-dark",
-            background_color="black",
-        )
-        return border_panel(
-            new_table(rows=[[diff, simple_panel(comments_col)]], highlight=False),
-            highlight=False,
-            border_style=resolved_border_style(thread["isResolved"]),
-            title=resolved_title(thread),
-        )
-
     @property
     def global_reviews(self) -> t.Iterator[Panel]:
         for review in self.reviews:
@@ -302,7 +302,7 @@ class PullRequestTable(PullRequest):
                 list_table(
                     [
                         simple_panel(md_panel(review["body"])),
-                        *map(self.make_thread, review["threads"]),
+                        *map(make_thread, review["threads"])
                     ]
                 ),
                 subtitle=review["state"],
