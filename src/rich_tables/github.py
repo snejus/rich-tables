@@ -1,13 +1,13 @@
-import itertools as it
-import operator as op
-import re
 import typing as t
+from collections import defaultdict
+from dataclasses import dataclass
 
-from rich import box, print
+from rich import box
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, Group
+from rich.console import ConsoleRenderable
 from rich.panel import Panel
 from rich.syntax import Syntax
+from rich.table import Table
 
 from rich_tables.utils import (
     FIELDS_MAP,
@@ -16,14 +16,89 @@ from rich_tables.utils import (
     colored_with_bg,
     format_with_color,
     get_val,
+    list_table,
     md_panel,
     new_table,
     predictably_random_color,
-    progress_bar,
     simple_panel,
     time2human,
     wrap,
 )
+
+
+class Diff(t.TypedDict):
+    additions: int
+    deletions: int
+
+
+class File(Diff):
+    path: str
+
+
+class Commit(Diff):
+    committedDate: str
+    statusCheckRollup: str
+    message: str
+
+
+class Reaction(t.TypedDict):
+    user: str
+    content: str
+
+
+class Content(t.TypedDict):
+    createdAt: str
+    author: str
+    body: str
+
+
+class IssueComment(Content):
+    reactions: t.List[Reaction]
+
+
+class ReviewComment(IssueComment):
+    outdated: bool
+    path: str
+    diffHunk: str
+    pullRequestReview: str
+
+
+class ReviewThread(t.TypedDict):
+    path: str
+    isResolved: bool
+    isOutdated: bool
+    resolvedBy: str
+    comments: t.List[ReviewComment]
+
+
+class Review(Content):
+    id: str
+    state: str
+    threads: t.List[ReviewThread]
+
+
+@dataclass
+class PullRequest:
+    id: str
+    additions: int
+    author: str
+    body: str
+    comments: t.List[IssueComment]
+    commits: t.List[Commit]
+    createdAt: str
+    deletions: int
+    files: t.List[File]
+    labels: t.List[str]
+    participants: t.List[str]
+    repository: str
+    reviewDecision: str
+    reviewRequests: t.List[str]
+    reviewThreads: t.List[ReviewThread]
+    reviews: t.List[Review]
+    state: str
+    title: str
+    updatedAt: str
+    url: str
 
 
 def fmt_add_del(file: JSONDict) -> t.List[str]:
@@ -52,52 +127,49 @@ def state_color(state: str) -> str:
 
 
 def fmt_state(state: str) -> str:
-    return wrap(state, state_color(state))
+    return wrap(state, f"b {state_color(state)}")
 
 
 def resolved_border_style(resolved: bool) -> str:
     return {True: "green", False: "yellow"}.get(resolved, "")
 
 
-def comment_panel(comment: JSONDict, **kwargs: t.Any) -> Panel:
+def top_level_comment_title(comment: Content) -> str:
+    return " ".join(get_val(comment, f) for f in ["state", "author", "createdAt"])
+
+
+def comment_panel(comment: IssueComment, **kwargs: t.Any) -> Panel:
     reactions = [
         wrap(f":{r['content'].lower()}:", "bold") + " " + get_val(r, "user")
         for r in comment.get("reactions", [])
     ]
-    text = comment["body"]
-    split = re.split(r"(?=```.*)```", text)
-    rends = []
-    for idx, content in enumerate(split):
-        if content:
-            if idx % 2 == 0:
-                content = md_panel(content)
-            else:
-                lang, codeblock = content.split("\n", 1)
-                content = FIELDS_MAP[lang or "python"](text)
-            rends.append(content)
-    return simple_panel(
-        Group(*rends),
-        **{
-            "title": " ".join(get_val(comment, f) for f in ["author", "createdAt"]),
-            "subtitle": "\n".join(reactions) + "\n",
-            **kwargs,
-        },
+    return md_panel(
+        comment["body"].replace("suggestion", "python"),
+        title=top_level_comment_title(comment),
+        subtitle="\n".join(reactions) + "\n",
+        **kwargs,
     )
 
 
-def thread_panel(thread: JSONDict, files: t.List[ConsoleRenderable]) -> Panel:
-    return border_panel(
-        new_table(rows=it.zip_longest(*(iter(files),) * 2)),
-        highlight=False,
-        border_style=resolved_border_style(thread["isResolved"]),
-        title=wrap(thread["path"], "b magenta")
-        + " "
-        + fmt_state("RESOLVED" if thread["isResolved"] else "PENDING"),
-        subtitle=fmt_state("OUTDATED") if thread["isOutdated"] else "",
+def resolved_title(thread: ReviewThread) -> str:
+    if thread["isResolved"]:
+        resolved = (
+            fmt_state("RESOLVED")
+            + wrap(" by ", "white")
+            + format_with_color(thread["resolvedBy"])
+        )
+    else:
+        resolved = fmt_state("PENDING")
+    return " ".join(
+        [
+            wrap(thread["path"], "b magenta"),
+            resolved,
+            fmt_state("OUTDATED") if thread["isOutdated"] else "",
+        ]
     )
 
 
-def diff_panel(title: str, rows: t.List[t.List[ConsoleRenderable]]) -> Panel:
+def diff_panel(title: str, rows: t.List[t.List]) -> Panel:
     return border_panel(
         new_table(rows=rows),
         title=title,
@@ -110,8 +182,8 @@ PR_FIELDS_MAP = {
     "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
     "dates": lambda x: new_table(
         rows=[
-            [wrap(r" ⬤ ", "b green"), time2human(x["created"])],
-            [wrap(r" ◯ ", "b yellow"), time2human(x["updated"])],
+            [wrap(r" ⬤ ", "b green"), time2human(x[0])],
+            [wrap(r" ◯ ", "b yellow"), time2human(x[1])],
         ]
     ),
     "path": lambda x: wrap(x, "b"),
@@ -132,184 +204,132 @@ PR_FIELDS_MAP = {
     ),
     "reviewRequests": lambda x: "  ".join(map(colored_with_bg, x)),
     "participants": lambda x: "\n".join(
-        map(format_with_color, map("{:^20}".format, x))
+        map(format_with_color, map("{:^20}".format, x))  # noqa
     ),
 }
 
 
-class Diff(t.TypedDict):
-    additions: int
-    deletions: int
+class PullRequestTable(PullRequest):
+    def make_info_subpanel(self, attr: str):
+        return simple_panel(
+            get_val(self, attr),
+            title=wrap(attr, "b"),
+            title_align="center",
+            expand=True,
+            align="center",
+        )
+
+    @property
+    def repo(self) -> str:
+        return wrap(self.repository, f"b {predictably_random_color(self.repository)}")
+
+    @property
+    def dates(self) -> t.Tuple[str, str]:
+        return self.createdAt, self.updatedAt
+
+    @property
+    def pr_state(self) -> str:
+        return "MERGED" if self.state == "MERGED" else self.reviewDecision
+
+    @property
+    def info(self) -> Panel:
+        fields = "author", "dates", "participants", "reviewRequests"
+        return border_panel(
+            new_table(
+                rows=[
+                    [
+                        Columns(
+                            map(self.make_info_subpanel, fields),
+                            align="center",
+                            expand=True,
+                            equal=True,
+                        )
+                    ],
+                    [md_panel(self.body)],
+                ]
+            ),
+            title=self.repo,
+            box=box.DOUBLE_EDGE,
+            border_style=state_color(self.pr_state),
+            subtitle=(
+                (
+                    f"[b]{fmt_state(self.reviewDecision)}[white] // "
+                    + f"{fmt_state(self.state)}[/]"
+                )
+            ),
+            align="center",
+            title_align="center",
+            subtitle_align="center",
+        )
+
+    @property
+    def files_commits(self) -> Table:
+        return new_table(rows=[[get_val(self, "files"), get_val(self, "commits")]])
+
+    @property
+    def global_comments(self) -> Panel:
+        return border_panel(
+            list_table(
+                (
+                    comment_panel(c, border_style="yellow", box=box.HEAVY)
+                    for c in self.comments
+                ),
+                title="Comments",
+            )
+        )
+
+    def make_thread(self, thread: ReviewThread) -> Panel:
+        comments_col = list_table(
+            map(comment_panel, thread["comments"]), padding=(1, 0, 0, 0)
+        )
+        diff = Syntax(
+            thread["comments"][0]["diffHunk"],
+            "diff",
+            theme="paraiso-dark",
+            background_color="black",
+        )
+        return border_panel(
+            new_table(rows=[[diff, simple_panel(comments_col)]], highlight=False),
+            highlight=False,
+            border_style=resolved_border_style(thread["isResolved"]),
+            title=resolved_title(thread),
+        )
+
+    @property
+    def global_reviews(self) -> t.Iterator[Panel]:
+        for review in self.reviews:
+            yield border_panel(
+                list_table(
+                    [
+                        simple_panel(md_panel(review["body"])),
+                        *map(self.make_thread, review["threads"]),
+                    ]
+                ),
+                subtitle=review["state"],
+                border_style=state_color(review["state"]),
+                title=top_level_comment_title(review),
+                box=box.HEAVY,
+            )
 
 
-class File(Diff):
-    path: str
-
-
-class Commit(Diff):
-    committedDate: str
-    statusCheckRollup: str
-    message: str
-
-
-class Comment(t.TypedDict):
-    author: str
-    body: str
-    createdAt: str
-
-
-class Review(Comment):
-    state: str
-    comments: t.List[Comment]
-
-
-class ReviewThread(t.TypedDict):
-    path: str
-    line: int
-    isResolved: bool
-    isOutdated: bool
-    resolvedBy: str
-    diffSide: str
-    startLine: int
-    comments: t.List[Comment]
-
-
-class PullRequest(t.TypedDict):
-    additions: int
-    author: str
-    body: str
-    comments: t.List[Comment]
-    commits: t.List[Commit]
-    createdAt: str
-    deletions: int
-    files: t.List[File]
-    isReadByViewer: bool
-    labels: t.List[str]
-    participants: t.List[str]
-    repository: str
-    reviewDecision: str
-    reviewRequests: t.List[str]
-    reviewThreads: t.List[ReviewThread]
-    reviews: t.List[Review]
-    state: str
-    timelineItems: t.List[JSONDict]
-    title: str
-    updatedAt: str
-    url: str
-
-
-def pulls_table(data: t.List[JSONDict]) -> t.Iterable[t.Union[str, ConsoleRenderable]]:
+def pulls_table(
+    data: t.List[PullRequest],
+) -> t.Iterable[t.Union[str, ConsoleRenderable]]:
     FIELDS_MAP.update(PR_FIELDS_MAP)
 
     pr = data[0]
-    if pr and "additions" in pr:
-        pr["files"].append(
-            dict(additions=pr.pop("additions", ""), deletions=pr.pop("deletions", ""))
-        )
-    pr["dates"] = {"created": pr.pop("createdAt"), "updated": pr.pop("updatedAt")}
+    pr_table = PullRequestTable(**pr)
+    pr_table.reviews = [
+        r for r in pr_table.reviews if r["state"] != "COMMENTED" or r["body"]
+    ]
+    yield pr_table.info
+    yield pr_table.files_commits
+    yield pr_table.global_comments
 
-    repo, state, decision = pr["repository"], pr["state"], pr["reviewDecision"]
-    fields = "author", "dates", "participants"
-    yield border_panel(
-        new_table(
-            rows=[
-                [
-                    Columns(
-                        map(
-                            lambda f: simple_panel(
-                                get_val(pr, f),
-                                title=wrap(f, "b"),
-                                title_align="center",
-                                expand=True,
-                                align="center",
-                            ),
-                            fields,
-                        ),
-                        align="center",
-                        expand=True,
-                        equal=True,
-                    )
-                ],
-                [md_panel(pr["body"])],
-            ]
-        ),
-        title=wrap(repo, f"b {predictably_random_color(repo)}"),
-        box=box.DOUBLE_EDGE,
-        border_style=state_color("MERGED")
-        if state == "MERGED"
-        else state_color(decision),
-        subtitle=(
-            f"[b][{state_color(decision)}]{decision}[/]"
-            + " [#ffffff]//[/] "
-            + f"{fmt_state(pr['state'])}[/]"
-        ),
-        expand=False,
-        align="center",
-        title_align="center",
-        subtitle_align="center",
-    )
+    review_id_to_threads = defaultdict(list)
+    for thread in pr_table.reviewThreads:
+        review_id_to_threads[thread["comments"][0]["pullRequestReview"]].append(thread)
+    for review in pr_table.reviews:
+        review["threads"] = review_id_to_threads[review["id"]]
 
-    yield new_table(rows=[[get_val(pr, "files"), get_val(pr, "commits")]])
-
-    global_comments: t.List[ConsoleRenderable] = []
-    raw_global_comments = pr["comments"] + pr["reviews"]
-    for comment in sorted(raw_global_comments, key=op.itemgetter("createdAt")):
-        state = comment.get("state", "COMMENTED")
-        subtitle = "comment"
-        if state != "COMMENTED":
-            subtitle = "review - " + wrap(state, f"b {state_color(state)}")
-        if state != "COMMENTED" or comment["body"]:
-            global_comments.append(
-                comment_panel(
-                    comment,
-                    subtitle=subtitle,
-                    border_style=predictably_random_color(comment["author"]),
-                    box=box.HEAVY,
-                )
-            )
-    if global_comments:
-        yield border_panel(
-            new_table(rows=[[x] for x in global_comments]), title="Reviews & Comments"
-        )
-
-    yield new_table(rows=[[get_val(pr, "reviewRequests")]])
-    total_threads = len(pr["reviewThreads"])
-    if not total_threads:
-        return
-
-    resolved_threads = len(list(filter(lambda x: x["isResolved"], pr["reviewThreads"])))
-    table = new_table()
-    table.add_row(
-        border_panel(
-            progress_bar(resolved_threads, total_threads),
-            title=f"{resolved_threads} / {total_threads} resolved",
-            border_style="dim yellow",
-        )
-    )
-
-    for thread in pr["reviewThreads"]:
-        files: t.List[ConsoleRenderable] = []
-        for diff_hunk, comments in it.groupby(
-            sorted(
-                thread["comments"],
-                key=lambda x: (x.get("diffHunk", ""), x.get("createdAt", "")),
-            ),
-            lambda x: x.get("diffHunk") or "",
-        ):
-            rows = it.chain.from_iterable(
-                [[x], [""]] for x in map(comment_panel, comments)
-            )
-            comments_col = new_table(rows=rows)
-            diff = Syntax(
-                diff_hunk,
-                "diff",
-                theme="paraiso-dark",
-                background_color="black",
-                # word_wrap=True,
-            )
-            files.append(
-                new_table(rows=[[diff, simple_panel(comments_col)]], highlight=False)
-            )
-
-        table.add_row(thread_panel(thread, files))
-    yield border_panel(table)
+    yield from pr_table.global_reviews

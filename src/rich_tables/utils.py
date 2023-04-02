@@ -4,7 +4,7 @@ import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
-from functools import lru_cache, partial
+from functools import lru_cache, partial, singledispatch
 from itertools import islice
 from math import copysign
 from os import environ, path
@@ -182,6 +182,10 @@ def new_table(*headers: str, **kwargs: Any) -> NewTable:
     return table
 
 
+def list_table(items: Iterable[Any], **kwargs) -> NewTable:
+    return new_table(rows=[[i] for i in items], **kwargs)
+
+
 @lru_cache(None)
 def predictably_random_color(string: str) -> str:
     random.seed(string)
@@ -210,19 +214,9 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
     )
 
 
-def md_panel(content: str, **kwargs: Any) -> Markdown:
-    return Markdown(
-        content,
-        justify="left",
-        # inline_code_lexer="python",
-        # inline_code_theme="paraiso-dark"
-        # re.sub(
-        #     r"```\n",
-        #     "```python\n",
-        #     content.replace("suggestion", "python"),
-        #     count=1,
-        # )
-        # content.replace("suggestion", "python")
+def md_panel(content: str, **kwargs: Any) -> Panel:
+    return simple_panel(
+        Markdown(content, justify=kwargs.pop("justify", "left")), **kwargs
     )
 
 
@@ -290,12 +284,23 @@ def progress_bar(
     return Bar(use_max, 0, count, color=color)
 
 
-def _get_val(value: Any, field: str) -> RenderableType:
+def _get_val(value: Any, field: str) -> Any:
     return FIELDS_MAP[field](value) if value is not None else ""
 
 
-def get_val(obj: JSONDict, field: str) -> RenderableType:
+@singledispatch
+def get_val(obj: Union[JSONDict, object], field: str) -> Any:
+    pass
+
+
+@get_val.register
+def get_val_from_dict(obj: dict, field: str) -> Any:
     return _get_val(obj.get(field), field)
+
+
+@get_val.register
+def get_val_from_object(obj: object, field: str) -> Any:
+    return _get_val(getattr(obj, field, None), field)
 
 
 def counts_table(data: List[JSONDict], count_key: str, header: str = "") -> Table:
@@ -374,7 +379,7 @@ def time2human(timestamp: Union[int, str], acc: int = 1) -> str:
     return "[b {}]{}[/]".format("red" if diff < 0 else "green", fmted) + " " + strtime
 
 
-FIELDS_MAP: Dict[str, Callable[[Any], RenderableType]] = defaultdict(
+FIELDS_MAP: Dict[str, Callable] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
         map(

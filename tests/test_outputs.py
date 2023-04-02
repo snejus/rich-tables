@@ -30,7 +30,7 @@ def report():
 
 @freeze_time("2022-04-01")
 @pytest.mark.parametrize("testcase", TEST_CASES)
-def test_pulls(testcase):
+def test_outputs(testcase):
     with open(os.path.join(JSON_DIR, f"{testcase}.json"), "r") as f:
         data = json.load(f)
 
