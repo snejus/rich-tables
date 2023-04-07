@@ -4,6 +4,7 @@
 * [Calendar](#calendar)
 * [Emails](#emails)
 * [Hue](#hue)
+* [Jira diff](#jira_diff)
 * [Nested json](#nested_json)
 * [Pr](#pr)
 * [Simple json](#simple_json)
@@ -19,6 +20,8 @@
 ![image](svgs/emails.svg)
 ## Hue
 ![image](svgs/hue.svg)
+## Jira diff
+![image](svgs/jira_diff.svg)
 ## Nested json
 ![image](svgs/nested_json.svg)
 ## Pr

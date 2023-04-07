@@ -8,7 +8,7 @@ from functools import lru_cache, partial, singledispatch
 from itertools import islice
 from math import copysign
 from os import environ, path
-from string import ascii_letters, whitespace
+from string import ascii_letters, digits, whitespace
 from typing import (
     Any,
     Callable,
@@ -61,7 +61,7 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 
 
 def make_difftext(
-    before: str, after: str, junk: str = whitespace + ascii_letters
+    before: str, after: str, junk: str = whitespace + ascii_letters + digits
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
     after = re.sub(r"\\?\[", r"\\[", after)

@@ -90,7 +90,7 @@ def prepare_dict(item: JSONDict) -> JSONDict:
                 item["diff"] = json.dumps(
                     {
                         k: make_difftext(str(before.get(k)), str(after.get(k)))
-                        for k in keys
+                        for k in sorted(keys)
                     },
                     indent=2,
                 )
