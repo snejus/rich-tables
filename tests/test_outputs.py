@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from typing import Iterable
 
 import pytest
@@ -14,18 +15,22 @@ TEST_CASES = sorted([x.replace(".json", "") for x in os.listdir(JSON_DIR)])
 
 
 def human(text: str) -> str:
-    return text.replace("_", " ").capitalize()
+    return text.replace("_", " ").capitalize().replace("json", "JSON")
 
 
 @pytest.fixture(scope="session", autouse=True)
-def report():
+def populate_readme():
     yield
 
-    toc = [f"* [{human(x)}](#{x})\n" for x in TEST_CASES]
-    svgs = [f"## {human(x)}\n![image](svgs/{x}.svg)\n" for x in TEST_CASES]
+    svgs = "\n\n".join(f"### {human(x)}\n![image](svgs/{x}.svg)" for x in TEST_CASES)
+
+    with open("README.md") as f:
+        readme = f.read()
+
+    readme = re.sub(r"(## Examples.).*", rf"\1{svgs}", readme, flags=re.M | re.S)
 
     with open("README.md", "w") as f:
-        f.writelines(["# Rich tables\n\n", *toc, "\n\n", *svgs])
+        f.write(readme)
 
 
 @freeze_time("2022-04-01")
