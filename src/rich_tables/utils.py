@@ -566,6 +566,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     unified_diff=lambda x: Syntax(
         x, "diff", theme="paraiso-dark", background_color="black", word_wrap=True
     ),
+    query=lambda x: Text(x, style="bold"),
 )
 
 DISPLAY_HEADER: Dict[str, str] = {

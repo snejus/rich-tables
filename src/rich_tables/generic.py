@@ -59,9 +59,9 @@ if not log.handlers:
         log.setLevel("DEBUG")
 
 
-def debug(func, data):
+def debug(_func, data):
     if log.isEnabledFor(10):
-        log.debug(func.__annotations__["data"])
+        log.debug(_func.__annotations__)
         console.log(data)
 
 
@@ -99,35 +99,37 @@ def prepare_dict(item: JSONDict) -> JSONDict:
 
 @multimethod
 def flexitable(data, header="") -> RenderableType:
-    debug(_, data)
+    debug(_flexitable, data)
     return str(data)
 
 
 @flexitable.register
-def _(data: str) -> RenderableType:
-    debug(_, data)
+def _str(data: str) -> RenderableType:
+    debug(_str, data)
     if "[/]" not in data:
         data = data.replace("[", "⟦").replace("]", "⟧")
     return " | ".join(map(format_with_color, data.split(" | ")))
 
 
 @flexitable.register
-def _(data: str, header: str) -> RenderableType:
-    debug(_, data)
+def _str_header(data: str, header: str) -> RenderableType:
+    debug(_str_header, data)
     if "[/]" not in data:
         data = data.replace("[", "⟦").replace("]", "⟧")
     return FIELDS_MAP[header](data)
 
 
 @flexitable.register
-def _(data: Union[int, float], header: Optional[str] = "") -> RenderableType:
-    debug(_, data)
+def _int_or_float(
+    data: Union[int, float], header: Optional[str] = ""
+) -> RenderableType:
+    debug(_int_or_float, data)
     return flexitable(str(data), header)
 
 
 @flexitable.register
-def _(data: JSONDict, header: Optional[str] = "") -> RenderableType:
-    debug(_, data)
+def _json_dict(data: JSONDict, header: Optional[str] = "") -> RenderableType:
+    debug(_json_dict, data)
     data = prepare_dict(data)
     table = mapping_view_table()
     cols: List[RenderableType] = []
@@ -166,8 +168,8 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 
 
 @flexitable.register
-def _(data: List[str], header: str = "") -> RenderableType:
-    debug(_, data)
+def _str_list(data: List[str], header: str = "") -> RenderableType:
+    debug(_str_list, data)
     call = FIELDS_MAP.get(header)
     return (
         call("\n".join(data))
@@ -177,14 +179,14 @@ def _(data: List[str], header: str = "") -> RenderableType:
 
 
 @flexitable.register
-def _(data: List[int], header: Optional[str] = None) -> RenderableType:
-    debug(_, data)
+def _int_list(data: List[int], header: Optional[str] = None) -> RenderableType:
+    debug(_int_list, data)
     return border_panel(Columns(str(x) for x in data))
 
 
 @flexitable.register
-def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
-    debug(_, data)
+def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
+    debug(_dict_list, data)
     data = [prepare_dict(item) for item in data if item]
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     keys = {
@@ -207,7 +209,7 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
             return f"{wrap(key, 'b')}: {trans}"
         if not trans:
             return str(trans)
-        return trans
+        return value
 
     large_table = list_table()
     for large, items in it.groupby(data, lambda i: len(str(i.values())) > 1200):
@@ -235,10 +237,10 @@ def _(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
 
 
 @flexitable.register
-def _(data: List[Any], header: Optional[str] = None) -> ConsoleRenderable:
+def _any_list(data: List[Any], header: Optional[str] = None) -> ConsoleRenderable:
     if len(data) == 1:
         return flexitable(data[0])
-    debug(_, data)
+    debug(_any_list, data)
     table = list_table(show_header=False)
     for item in filter(None, data):
         content = flexitable(item)
