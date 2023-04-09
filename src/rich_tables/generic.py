@@ -99,7 +99,7 @@ def prepare_dict(item: JSONDict) -> JSONDict:
 
 @multimethod
 def flexitable(data, header="") -> RenderableType:
-    debug(_flexitable, data)
+    debug(flexitable, data)
     return str(data)
 
 
