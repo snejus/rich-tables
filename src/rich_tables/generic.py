@@ -168,7 +168,7 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 
 
 @flexitable.register
-def _str_list(data: List[str], header: str = "") -> RenderableType:
+def _str_list(data: List[str], header: Optional[str] = None) -> RenderableType:
     debug(_str_list, data)
     call = FIELDS_MAP.get(header)
     return (
