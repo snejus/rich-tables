@@ -172,6 +172,8 @@ def tasktime(datestr: str):
 
 
 def tasks_table(tasks: t.List[JSONDict]) -> t.Iterator:
+    if not tasks:
+        return
     fields_map: JSONDict = dict(
         id=str,
         urgency=lambda x: str(round(x, 1)),
@@ -265,13 +267,15 @@ def load_data() -> t.Any:
     text = re.sub(r"\x00", "", sys.stdin.read())
     try:
         data = json.loads(text)
-        assert data and (data.get("values") if "values" in data else True)
-    except (json.JSONDecodeError, AssertionError):
-        console.log(flexitable(text))
-        # console.log(wrap("No data", "b red"), log_locals=True)
-        exit(1)
+        assert data
+    except json.JSONDecodeError:
+        msg = "Broken JSON"
+    except AssertionError:
+        msg = "No data"
     else:
         return data
+    console.log(wrap(msg, "b red"), log_locals=True)
+    exit(1)
 
 
 @singledispatch
