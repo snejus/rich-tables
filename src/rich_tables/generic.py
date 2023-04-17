@@ -209,7 +209,7 @@ def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Renderable
             return f"{wrap(key, 'b')}: {trans}"
         if not trans:
             return str(trans)
-        return value
+        return trans
 
     large_table = list_table()
     for large, items in it.groupby(data, lambda i: len(str(i.values())) > 1200):
