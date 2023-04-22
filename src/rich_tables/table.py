@@ -266,7 +266,7 @@ def tasks_table(tasks: t.List[JSONDict]) -> t.Iterator:
 def load_data() -> t.Any:
     text = re.sub(r"\x00", "", sys.stdin.read())
     try:
-        data = json.loads(text)
+        data = json.loads(text or "{}")
         assert data
     except json.JSONDecodeError:
         msg = "Broken JSON"
