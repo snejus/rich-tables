@@ -397,7 +397,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     # participants=lambda x: "  ".join(map(colored_with_bg, x)),
     user=format_with_color,
     bodyHTML=md_panel,
-    desc=md_panel,
+    # desc=md_panel,
     label=format_with_color,
     labels=lambda x: wrap(
         "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x), "b i"
