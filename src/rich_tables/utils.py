@@ -516,7 +516,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     message=lambda x: border_panel(
         Syntax(
             x,
-            "python",
+            "diff",
             theme="paraiso-dark",
             background_color="black",
             word_wrap=True,
