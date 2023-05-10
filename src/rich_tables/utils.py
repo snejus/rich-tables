@@ -8,7 +8,7 @@ from functools import lru_cache, partial, singledispatch
 from itertools import islice
 from math import copysign
 from os import environ, path
-from string import ascii_letters, digits, whitespace
+from string import punctuation, whitespace
 from typing import (
     Any,
     Callable,
@@ -61,12 +61,14 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 
 
 def make_difftext(
-    before: str, after: str, junk: str = whitespace + ascii_letters + digits
+    before: str, after: str, junk: str = set(punctuation + r"\n\t") - {"_"}
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
     after = re.sub(r"\\?\[", r"\\[", after)
 
-    matcher = SequenceMatcher(lambda x: x in junk, autojunk=False, a=before, b=after)
+    matcher = SequenceMatcher(
+        lambda x: x in junk, autojunk=False, a=before, b=after
+    )
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
