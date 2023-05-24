@@ -77,6 +77,9 @@ class Review(Content):
     state: str
     threads: t.List[ReviewThread]
 
+    def make(self):
+        return self["id"]
+
 
 @dataclass
 class PullRequest:
@@ -283,33 +286,29 @@ class PullRequestTable(PullRequest):
     def files_commits(self) -> Table:
         return new_table(rows=[[get_val(self, "files"), get_val(self, "commits")]])
 
-    @property
-    def global_comments(self) -> Panel:
-        return border_panel(
-            list_table(
-                (
-                    comment_panel(c, border_style="yellow", box=box.HEAVY)
-                    for c in self.comments
-                ),
-                title="Comments",
-            )
-        )
-
-    @property
-    def global_reviews(self) -> t.Iterator[Panel]:
-        for review in self.reviews:
-            yield border_panel(
+    @staticmethod
+    def format_comment(comment: t.Union[Review, IssueComment]) -> Panel:
+        if "id" in comment:
+            return border_panel(
                 list_table(
                     [
-                        simple_panel(md_panel(review["body"])),
-                        *map(make_thread, review["threads"]),
+                        simple_panel(md_panel(comment["body"])),
+                        *map(make_thread, comment["threads"]),
                     ]
                 ),
-                subtitle=review["state"],
-                border_style=state_color(review["state"]),
-                title=top_level_comment_title(review),
+                subtitle=comment["state"],
+                border_style=state_color(comment["state"]),
+                title=top_level_comment_title(comment),
                 box=box.HEAVY,
             )
+
+        return comment_panel(comment, border_style="yellow", box=box.HEAVY)
+
+    @property
+    def top_level_comments(self) -> Panel:
+        comments = sorted(self.reviews + self.comments, key=lambda c: c["createdAt"])
+        for comment in comments:
+            yield self.format_comment(comment)
 
 
 def pulls_table(
@@ -324,7 +323,6 @@ def pulls_table(
     ]
     yield pr_table.info
     yield pr_table.files_commits
-    yield pr_table.global_comments
 
     review_id_to_threads = defaultdict(list)
     for thread in pr_table.reviewThreads:
@@ -332,4 +330,4 @@ def pulls_table(
     for review in pr_table.reviews:
         review["threads"] = review_id_to_threads[review["id"]]
 
-    yield from pr_table.global_reviews
+    yield from pr_table.top_level_comments
