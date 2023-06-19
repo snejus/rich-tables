@@ -66,7 +66,7 @@ def make_difftext(
     before = re.sub(r"\\?\[", r"\\[", before)
     after = re.sub(r"\\?\[", r"\\[", after)
 
-    matcher = SequenceMatcher(lambda x: x in junk, autojunk=False, a=before, b=after)
+    matcher = SequenceMatcher(lambda x: x not in junk, autojunk=False, a=before, b=after)
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
