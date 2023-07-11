@@ -13,6 +13,7 @@ it's become the main handler for most of structured data that gets displayed in 
 terminal and is now one of my core every day tools.
 
 ## Releases
+
 It's WIP but installable through pip: `pip install rich-tables` - feel free test it but
 do not expect it to be stable yet.
 
@@ -20,6 +21,7 @@ If we have enough interest, I am more than happy to prepare a release with a som
 stable API.
 
 ## Some bits to be aware of
+
 ##### Most commits are made by a daily cron job
 
 You will find commits named
@@ -27,7 +29,7 @@ You will find commits named
     Automatic backup <date>
 
 There is a daily cronjob which checks my local copy of the repository for changes, commits
-and pushes them upstream. 
+and pushes them upstream.
 
 It got setup because this entire thing got built without intention - whenever I came
 across data that was not handled by `rich-tables`, I opened the code, quickly added the
@@ -35,51 +37,63 @@ logic and continued on with the original work without committing. Eventually, I'
 deal with a huge diff with a lot of unrelated changes.
 
 ##### Tests simply attempt to render data in each test case without making any assertions
-  * At least at this point I only want to know whether every piece of data is rendered
-    fine.
+
+- At least at this point I only want to know whether every piece of data is rendered
+  fine.
 
 ##### For each `tests/json/<name>.json` test case, the rendered output is saved to `svgs/<name>.svg` file
 
-* Allows to see the visual difference a certain change makes
-* Helps to detect unintended side effects: if we're expecting an update of `album.svg`
+- Allows to see the visual difference a certain change makes
+- Helps to detect unintended side effects: if we're expecting an update of `album.svg`
   **only** but see that `pr.svg` is also updated, we know something's not right
-* In commit details, GitHub shows visual difference for `svg` file changes
-  * This is very helpful when one is trying to track down the culprit behind some missing border
+- In commit details, GitHub shows visual difference for `svg` file changes
+  - This is very helpful when one is trying to track down the culprit behind some missing border
 
 ##### README is populated with pictures dynamically when tests pass
-* Once tests finish successfully, a subsection is added for every picture in the `svgs/`
+
+- Once tests finish successfully, a subsection is added for every picture in the `svgs/`
   folder (in the alphabetical order). `case.svg` would be found under the subsection
   `Case`.
-* This logic lives in a session-scoped `pytest` fixture, after the `yield` statement
-
+- This logic lives in [a session-scoped `pytest` fixture](https://github.com/snejus/rich-tables/blob/e25ac771a543b160c40dbed0764b579f0983a4c0/tests/test_outputs.py#L21-L33), after the `yield` statement
 
 ## Examples
+
 ### Album
+
 ![image](svgs/album.svg)
 
 ### Calendar
+
 ![image](svgs/calendar.svg)
 
 ### Emails
+
 ![image](svgs/emails.svg)
 
 ### Hue
+
 ![image](svgs/hue.svg)
 
 ### Jira diff
+
 ![image](svgs/jira_diff.svg)
 
 ### Nested JSON
+
 ![image](svgs/nested_json.svg)
 
 ### Pr
+
 ![image](svgs/pr.svg)
 
 ### Simple JSON
+
 ![image](svgs/simple_json.svg)
 
 ### Tasks
+
 ![image](svgs/tasks.svg)
 
 ### Timed
+
 ![image](svgs/timed.svg)

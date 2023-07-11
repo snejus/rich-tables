@@ -22,7 +22,7 @@ def human(text: str) -> str:
 def populate_readme():
     yield
 
-    svgs = "\n\n".join(f"### {human(x)}\n![image](svgs/{x}.svg)" for x in TEST_CASES)
+    svgs = "\n\n".join(f"### {human(x)}\n\n![image](svgs/{x}.svg)" for x in TEST_CASES)
 
     with open("README.md") as f:
         readme = f.read()
