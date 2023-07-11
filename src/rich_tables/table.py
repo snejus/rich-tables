@@ -272,7 +272,7 @@ def tasks_table(tasks: t.List[JSONDict], group_by: str = "") -> t.Iterator:
 
 
 def load_data() -> t.Any:
-    text = re.sub(r"\x00", "", sys.stdin.read())
+    text = sys.stdin.read().replace(r"\x00", "")
     try:
         data = json.loads(text or "{}")
         assert data
@@ -288,7 +288,7 @@ def load_data() -> t.Any:
 
 @singledispatch
 def draw_data(data: t.Union[JSONDict, t.List], title: str = "") -> None:
-    pass
+    return None
 
 
 @draw_data.register(dict)

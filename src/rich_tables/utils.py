@@ -8,7 +8,7 @@ from functools import lru_cache, partial, singledispatch
 from itertools import islice
 from math import copysign
 from os import environ, path
-from string import punctuation, whitespace, ascii_uppercase, ascii_letters, ascii_lowercase
+from string import ascii_letters, punctuation, whitespace
 from typing import (
     Any,
     Callable,
@@ -37,16 +37,20 @@ JSONDict = Dict[str, Any]
 SPLIT_PAT = re.compile(r"[;,] ?")
 
 
+BOLD_GREEN = "b green"
+BOLD_RED = "b red"
+
+
 def wrap(text: str, tag: str) -> str:
     return f"[{tag}]{text}[/]"
 
 
 def format_new(string: str) -> str:
-    return wrap(re.sub(r"(^\s+$)", "[u green]\\1[/]", string), "b green")
+    return wrap(re.sub(r"(^\s+$)", "[u green]\\1[/]", string), BOLD_GREEN)
 
 
 def format_old(string: str) -> str:
-    return wrap(string, "b s red")
+    return wrap(wrap(string, BOLD_RED), "s")
 
 
 def fmtdiff(change: str, before: str, after: str) -> str:
@@ -61,7 +65,9 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 
 
 def make_difftext(
-    before: str, after: str, junk: str = set(punctuation + whitespace + ascii_letters) - {"_"}
+    before: str,
+    after: str,
+    junk: str = "".join(set(punctuation + whitespace + ascii_letters) - {"_"}),
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
     after = re.sub(r"\\?\[", r"\\[", after)
@@ -367,7 +373,8 @@ def time2human(timestamp: Union[int, str], acc: int = 1) -> str:
     try:
         datetime = timestamp2datetime(timestamp)
     except ValueError:
-        return timestamp
+        return str(timestamp)
+
     diff = datetime.timestamp() - time.time()
     fmted = " ".join(islice(fmt_time(int(diff)), acc))
 
@@ -376,7 +383,7 @@ def time2human(timestamp: Union[int, str], acc: int = 1) -> str:
     else:
         strtime = datetime.strftime("%T")
 
-    return "[b {}]{}[/]".format("red" if diff < 0 else "green", fmted) + " " + strtime
+    return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN) + " " + strtime
 
 
 FIELDS_MAP: Dict[str, Callable] = defaultdict(
@@ -425,17 +432,17 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     modified=time2human,
     updated=time2human,
     wait_per_play=lambda x: wrap(
-        " ".join(islice(fmt_time(int(float(x))), 1)), "b green"
+        " ".join(islice(fmt_time(int(float(x))), 1)), BOLD_GREEN
     ),
     committedDate=time2human,
     bpm=lambda x: wrap(
         str(x),
-        "green"
-        if int(x or 0) < 135
-        else "b red"
-        if int(x or 0) > 230
+        BOLD_GREEN
+        if x < 135
+        else BOLD_RED
+        if x > 230
         else "red"
-        if int(x or 0) > 165
+        if x > 165
         else "yellow",
     )
     if isinstance(x, int)
@@ -482,8 +489,8 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     brand=format_with_color,
     mastering=format_with_color,
     answer=md_panel,
-    plays=lambda x: wrap(x, "b green"),
-    skips=lambda x: wrap(x, "b red"),
+    plays=lambda x: wrap(x, BOLD_GREEN),
+    skips=lambda x: wrap(x, BOLD_RED),
     # name=lambda x: wrap(x, "b"),
     description=md_panel,
     # body=md_panel,
@@ -510,9 +517,9 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     module=format_with_color,
     code=format_with_color,
     entity=format_with_color,
-    new=lambda x: "[b green]:heavy_check_mark:[/]"
+    new=lambda x: wrap(":heavy_check_mark:", BOLD_GREEN)
     if x
-    else "[b red]:cross_mark_button:[/]",
+    else wrap(":cross_mark_button:", BOLD_RED),
     message=lambda x: border_panel(
         Syntax(
             x,
@@ -525,7 +532,7 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     ),
     link=lambda x: {
         "blocks": lambda y: wrap(f" {y} ", "b black on red"),
-        "is blocked by": lambda y: wrap(y, "b red"),
+        "is blocked by": lambda y: wrap(y, BOLD_RED),
     }.get(x, lambda x: x)(x),
     album=format_with_color,
     context=lambda x: Syntax(
@@ -575,11 +582,11 @@ DISPLAY_HEADER: Dict[str, str] = {
     "last_played": ":timer_clock: ",
     "mtime": "updated",
     "data_source": "source",
-    "helicopta": "[dark red]:helicopter:[/]",
+    "helicopta": ":helicopter:",
     "hidden": ":no_entry:",
     "track_alt": ":cd:",
     "catalognum": ":pen: ",
-    "plays": "[green]:play_button:[/]",
-    "skips": "[red]:stop_button:[/]",
+    "plays": wrap(":play_button:", BOLD_GREEN),
+    "skips": wrap(":stop_button:", BOLD_RED),
     "albumtypes": "types",
 }
