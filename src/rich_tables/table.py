@@ -171,7 +171,7 @@ def tasktime(datestr: str):
     return time2human(datetime.strptime(datestr, "%Y%m%dT%H%M%SZ").timestamp())
 
 
-def tasks_table(tasks: t.List[JSONDict]) -> t.Iterator:
+def tasks_table(tasks: t.List[JSONDict], group_by: str = "") -> t.Iterator:
     if not tasks:
         return
     fields_map: JSONDict = dict(
@@ -201,12 +201,13 @@ def tasks_table(tasks: t.List[JSONDict]) -> t.Iterator:
         "started": "b green",
         "recurring": "i magenta",
     }
-    id_to_desc = uuid_to_id = {}
+    task_id_to_desc = {}
+    task_uuid_to_id = {}
     for task in tasks:
         task["sched"] = task.get("scheduled")
         if not task.get("id"):
             task["id"] = task["uuid"].split("-")[0]
-        uuid_to_id[task["uuid"]] = task["id"]
+        task_uuid_to_id[task["uuid"]] = task["id"]
 
         if task.get("start"):
             task["status"] = "started"
@@ -221,36 +222,43 @@ def tasks_table(tasks: t.List[JSONDict]) -> t.Iterator:
         desc = wrap(task["description"], status_map[task["status"]])
         if task.get("priority") == "H":
             desc = f"[b]([red]![/])[/] {desc}"
-        id_to_desc[task["id"]] = desc
+        task_id_to_desc[task["id"]] = desc
 
-    group_by = tasks[0].get("group_by") or ""
     headers = ["urgency", "id"] + [
         k for k in fields_map.keys() if k not in {group_by, "id", "urgency"}
     ]
 
-    for group, task_group in it.groupby(
-        sorted(
-            tasks,
-            key=lambda x: (x.get(group_by) or "", x.get("urgency") or 0),
-            reverse=True,
-        ),
-        lambda x: x.get(group_by) or f"no [b]{group_by}[/]",
-    ):
-        project_color = predictably_random_color(str(group))
+    group_names = [(t.get(group_by) or "") for t in tasks]
+    task_groups = [
+        (name, [t[1] for t in tasks])
+        for name, tasks in it.groupby(
+            sorted(zip(group_names, tasks), key=lambda x: x[0], reverse=True),
+            lambda x: x[0] or f"no {group_by}",
+        )
+    ]
+    for group_name, tasks in task_groups:
+        project_color = (
+            "b green"
+            if group_name == "started"
+            else predictably_random_color(str(group_name))
+        )
         table = new_table(padding=(0, 1, 0, 1))
-        for task in task_group:
-            task_obj = id_to_desc.get(task["id"])
-            if not task_obj:
+        for task in tasks:
+            desc = task_id_to_desc.get(task["id"]) or ""
+            if not desc:
                 continue
 
-            task_tree = new_tree(title=task_obj, guide_style=project_color)
+            task_tree = new_tree(title=desc, guide_style="white")
             ann = task.pop("annotations", None)
             if ann:
                 task_tree.add(FIELDS_MAP["annotations"](ann))
-            for kuid in task.get("depends") or []:
-                dep = id_to_desc.get(uuid_to_id.get(kuid))
-                if dep:
-                    task_tree.add(wrap(str(uuid_to_id[kuid]), "b") + " " + dep)
+            for dep_uuid in task.get("depends") or []:
+                dep_id = task_uuid_to_id.get(dep_uuid)
+                dep_description = task_id_to_desc.get(dep_id)
+                if dep_description:
+                    task_tree.add(
+                        str(dep_id) + " " + dep_description, guide_style="red"
+                    )
             task["description"] = task_tree
             table.add_row(*map(lambda x: get_val(task, x), headers))
 
@@ -259,8 +267,8 @@ def tasks_table(tasks: t.List[JSONDict]) -> t.Iterator:
                 next(filter(op.truth, col.cells))
             except StopIteration:
                 table.columns.remove(col)
-        panel = simple_panel if group == "started" else border_panel
-        yield panel(table, title=wrap(group, "b"), style=project_color)
+
+        yield border_panel(table, title=group_name, style=project_color)
 
 
 def load_data() -> t.Any:
@@ -286,7 +294,7 @@ def draw_data(data: t.Union[JSONDict, t.List], title: str = "") -> None:
 @draw_data.register(dict)
 def _draw_data_dict(data: JSONDict) -> t.Iterator:
     if "values" in data and "title" in data:
-        values, title = data["values"], data["title"]
+        values, title = data.pop("values", None), data.pop("title", None)
         calls: t.Dict[str, t.Callable] = {
             "Pull Requests": pulls_table,
             "Hue lights": lights_table,
@@ -295,7 +303,7 @@ def _draw_data_dict(data: JSONDict) -> t.Iterator:
             "Tasks": tasks_table,
         }
         if title in calls:
-            yield from calls[title](values)
+            yield from calls[title](values, **data)
         else:
             yield flexitable(values)
     else:
