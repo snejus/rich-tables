@@ -5,36 +5,55 @@ jobs:
   test:
     env:
       python: "3.9"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
-      - name: Generate requirements.txt
-        run: ./generate_requirements > requirements.txt
+
       - name: Set up Python ${{ env.python }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ env.python }}
-          cache: pip
+
       - name: Install dependencies
         run: |
-          pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt
-          pip install -e .
+          pip install poetry
+          poetry install
+
       - name: Pytest
-        run: pytest -vv
+        run: poetry run pytest -vv
+
       - name: Upload coverage data to coveralls.io
-        run: coveralls --service=github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          poetry run coveralls --service=github
+
       - name: Flake8
-        run: flake8 . --output-file flake.log --exit-zero --mypy-config setup.cfg
+        run: poetry run flake8 . --output-file flake.log --exit-zero --mypy-config setup.cfg
+
       - name: Pylint
-        run: pylint --output pylint.log --exit-zero $(git ls-files '*.py')
+        run: poetry run pylint --output pylint.log --exit-zero $(git ls-files '*.py')
+
+      - name: Set project version
+        run: echo PROJECT_VERSION="$(git describe | sed 's/-[^-]*$//')" >> $GITHUB_ENV
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=snejus
+            -Dsonar.projectKey=snejus_rich-tables
+            -Dsonar.projectVersion=${{ env.PROJECT_VERSION }}
+            -Dsonar.python.coverage.reportPaths=.reports/coverage.xml
+            -Dsonar.python.version=3.9
+            -Dsonar.python.xunit.reportPath=./pytest-main.xml
+            -Dsonar.python.flake8.reportPaths=flake.log
+            -Dsonar.python.pylint.reportPaths=pylint.log
+            -Dsonar.sources=src
+            -Dsonar.tests=tests
+            -Dsonar.test.inclusions=tests/**/*
+            -Dsonar.exclusions=tests/**/*
