@@ -520,16 +520,16 @@ FIELDS_MAP: Dict[str, Callable] = defaultdict(
     new=lambda x: wrap(":heavy_check_mark:", BOLD_GREEN)
     if x
     else wrap(":cross_mark_button:", BOLD_RED),
-    message=lambda x: border_panel(
-        Syntax(
-            x,
-            "diff",
-            theme="paraiso-dark",
-            background_color="black",
-            word_wrap=True,
-            indent_guides=True,
-        )
-    ),
+    # message=lambda x: border_panel(
+    #     Syntax(
+    #         x,
+    #         "diff",
+    #         theme="paraiso-dark",
+    #         background_color="black",
+    #         word_wrap=True,
+    #         indent_guides=True,
+    #     )
+    # ),
     link=lambda x: {
         "blocks": lambda y: wrap(f" {y} ", "b black on red"),
         "is blocked by": lambda y: wrap(y, BOLD_RED),
