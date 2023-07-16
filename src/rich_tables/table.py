@@ -321,8 +321,13 @@ def main():
         args.extend(sys.argv[1:])
 
     if args and args[0] == "diff":
-        console.print(make_difftext(*args[1:]), highlight=False)
-        return
+        arguments = args[1:]
+        try:
+            arguments = list(map(json.loads, arguments))
+        except json.JSONDecodeError:
+            pass
+
+        console.print(make_difftext(*arguments), highlight=False)
 
     if "-s" in set(args):
         console.record = True
