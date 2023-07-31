@@ -25,7 +25,6 @@ from rich_tables.utils import (
     new_table,
     new_tree,
     predictably_random_color,
-    simple_panel,
     time2human,
     wrap,
 )
