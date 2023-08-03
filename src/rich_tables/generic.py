@@ -239,6 +239,7 @@ def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Renderable
 
 
 @flexitable.register
+# def _any_list(data: List[Any], header: str) -> ConsoleRenderable:
 def _any_list(data: List[Any], header: Optional[str] = None) -> ConsoleRenderable:
     if len(data) == 1:
         return flexitable(data[0])
