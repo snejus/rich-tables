@@ -182,9 +182,8 @@ def diff_panel(title: str, rows: t.List[t.List]) -> Panel:
 
 
 def make_thread(thread: ReviewThread) -> Panel:
-    comments_col = list_table(
-        map(comment_panel, thread["comments"]), padding=(1, 0, 0, 0)
-    )
+    comments = thread["comments"][-1:] if thread["isResolved"] else thread["comments"]
+    comments_col = list_table(map(comment_panel, comments), padding=(1, 0, 0, 0))
     diff = Syntax(
         thread["comments"][0]["diffHunk"],
         "diff",
@@ -289,6 +288,13 @@ class PullRequestTable(PullRequest):
     @staticmethod
     def format_comment(comment: t.Union[Review, IssueComment]) -> Panel:
         if "id" in comment:
+            comment["threads"].sort(key=lambda t: t["isResolved"])
+            resolved_count = sum((t["isResolved"] for t in comment["threads"]))
+            total_count = len(comment["threads"])
+            status = wrap(" ⬤ " * resolved_count, "b green") + wrap(
+                " ◯ " * (total_count - resolved_count), "b red"
+            )
+
             return border_panel(
                 list_table(
                     [
@@ -298,15 +304,19 @@ class PullRequestTable(PullRequest):
                 ),
                 subtitle=comment["state"],
                 border_style=state_color(comment["state"]),
-                title=top_level_comment_title(comment),
+                title=top_level_comment_title(comment) + f" {status} resolved",
                 box=box.HEAVY,
             )
 
         return comment_panel(comment, border_style="yellow", box=box.HEAVY)
 
     @property
+    def reviews_and_comments(self) -> t.List[t.Union[Review, IssueComment]]:
+        return self.reviews + self.comments
+
+    @property
     def top_level_comments(self) -> Panel:
-        comments = sorted(self.reviews + self.comments, key=lambda c: c["createdAt"])
+        comments = sorted(self.reviews_and_comments, key=lambda c: c["createdAt"])
         for comment in comments:
             yield self.format_comment(comment)
 
