@@ -161,7 +161,7 @@ class NewTable(Table):
         **kwargs: Any,
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
-        vals = (transform(item.get(c), c) for c in self.colnames)
+        vals = (transform(item.get(c) or "", c) for c in self.colnames)
         self.add_row(*vals, **kwargs)
 
 
