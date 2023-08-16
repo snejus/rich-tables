@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rich-tables"
-version = "0.2.0"
+version = "0.3.0"
 description = "Ready-made rich tables for various purposes"
 authors = ["Šarūnas Nejus <snejus@pm.me>"]
 readme = "README.md"
@@ -24,9 +24,10 @@ classifiers = [
 python = ">=3.7,<4"
 
 rich = ">=12.3.0"
-rgbxy = ">=0.5"
 multimethod = "*"
-sqlparse = "*"
+
+rgbxy = { version = ">=0.5", optional = true }
+sqlparse = { version = "^0.4.4", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 flake8 = ">=4.0.1"
@@ -43,6 +44,10 @@ types-six = ">=1.16.2"
 types-freezegun = ">=1.1.9"
 flake8-mypy = ">=17.8.0"
 coveralls = ">=3.3.1"
+
+[tool.poetry.extras]
+hue = ["rgbxy"]
+sql = ["sqlparse"]
 
 [tool.poetry.scripts]
 table = "rich_tables.table:main"
