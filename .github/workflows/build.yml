@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install poetry
-          poetry install
+          poetry install --all-extras
 
       - name: Pytest
         run: poetry run pytest -vv
@@ -48,12 +48,13 @@ jobs:
             -Dsonar.organization=snejus
             -Dsonar.projectKey=snejus_rich-tables
             -Dsonar.projectVersion=${{ env.PROJECT_VERSION }}
+            -Dsonar.coverage.exclusions=tests/*
+            -Dsonar.exclusions=tests/*
             -Dsonar.python.coverage.reportPaths=.reports/coverage.xml
-            -Dsonar.python.version=3.9
-            -Dsonar.python.xunit.reportPath=./pytest-main.xml
             -Dsonar.python.flake8.reportPaths=flake.log
             -Dsonar.python.pylint.reportPaths=pylint.log
-            -Dsonar.sources=src
-            -Dsonar.tests=tests
-            -Dsonar.test.inclusions=tests/**/*
-            -Dsonar.exclusions=tests/**/*
+            -Dsonar.python.version=3.9
+            -Dsonar.python.xunit.reportPath=.reports/test-report.xml
+            -Dsonar.sources=rich_tables
+            -Dsonar.tests=rich_tables
+            -Dsonar.test.inclusions=tests/*
