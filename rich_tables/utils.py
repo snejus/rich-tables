@@ -369,7 +369,7 @@ def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
-def time2human(timestamp: Union[int, str], acc: int = 1) -> str:
+def time2human(timestamp: Union[int, str, float], acc: int = 1) -> str:
     try:
         datetime = timestamp2datetime(timestamp)
     except ValueError:

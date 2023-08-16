@@ -1,316 +1,310 @@
 {
   "title": "Tasks",
-  "values": [
-    {
-      "id": 3,
-      "description": "fix setuppy2pyproject using beetcamp",
-      "entry": "20201206T014713Z",
-      "modified": "20221120T224025Z",
-      "project": null,
-      "reviewed": "20211101T184517Z",
-      "status": "pending",
-      "uuid": "f7299f8a-dfa6-42d1-ab59-8ed92485fed1",
-      "tags": [
-        "fix",
-        "new",
-        "python"
-      ],
-      "urgency": 4,
-      "group_by": "project"
-    },
-    {
-      "id": 80,
-      "description": "Fix merge",
-      "entry": "20211211T183808Z",
-      "modified": "20211211T183808Z",
-      "project": "org.email",
-      "status": "pending",
-      "uuid": "2a7ee836-4b81-4934-a7a3-0f175335771a",
-      "urgency": 2.88493,
-      "group_by": "project"
-    },
-    {
-      "id": 123,
-      "description": "Fix discogs plugin for single tracks (searching)",
-      "entry": "20220528T022511Z",
-      "modified": "20220528T181925Z",
-      "priority": "H",
-      "project": "music.beets",
-      "status": "pending",
-      "uuid": "0b12ff9c-da93-424b-bb7f-812b2331a19d",
-      "depends": [
-        "412b4d21-5914-4a02-9a4f-a7c8e0fd1c92"
-      ],
-      "urgency": 3.96438,
-      "group_by": "project"
-    },
-    {
-      "id": 65,
-      "description": "Fix fromfilename plugin",
-      "entry": "20211028T151121Z",
-      "modified": "20211127T200648Z",
-      "project": "music.beets",
-      "reviewed": "20211101T193511Z",
-      "status": "pending",
-      "uuid": "7c0e7b45-7ad9-4ee2-8dcc-7b60fe9a4aae",
-      "urgency": 3,
-      "group_by": "project"
-    },
-    {
-      "id": 92,
-      "description": "Fix j link feedback link id",
-      "entry": "20210702T163530Z",
-      "modified": "20211101T194040Z",
-      "project": "jtool",
-      "reviewed": "20211101T194040Z",
-      "status": "pending",
-      "uuid": "bb032f36-dd41-480f-8026-52dd9bfcb0d7",
-      "tags": [
-        "fix"
-      ],
-      "urgency": 3.8,
-      "group_by": "project"
-    },
-    {
-      "id": 27,
-      "description": "Fix jira link summary id output",
-      "entry": "20210610T212128Z",
-      "modified": "20211101T185144Z",
-      "project": "jtool",
-      "reviewed": "20211101T185144Z",
-      "status": "pending",
-      "uuid": "f2a4b722-5ab7-4cab-9bdc-23e7c4d4c88f",
-      "tags": [
-        "fix"
-      ],
-      "urgency": 3.8,
-      "group_by": "project"
-    },
-    {
-      "id": 7,
-      "description": "Fix flake8-pytest-style changelog fetching",
-      "entry": "20210406T002338Z",
-      "modified": "20211101T190112Z",
-      "project": "changelog",
-      "reviewed": "20211101T190112Z",
-      "status": "pending",
-      "uuid": "a5eab49f-04de-43b8-8098-4bb5d3f60fa1",
-      "tags": [
-        "fix"
-      ],
-      "urgency": 3.8,
-      "group_by": "project"
-    },
-    {
-      "id": 158,
-      "description": "Fix artists and titles in \"Your Last Everything\"",
-      "entry": "20221119T061332Z",
-      "modified": "20221119T061348Z",
-      "project": "beetcamp.track",
-      "status": "pending",
-      "uuid": "b8cf2c55-90bb-47ed-93b8-36be247aad46",
-      "annotations": [
-        {
-          "entry": "20221119T061348Z",
-          "description": "https://biterecords.bandcamp.com/album/your-last-everything#p915136399"
-        }
-      ],
-      "tags": [
-        "album",
-        "artist",
-        "cleanup",
-        "title"
-      ],
-      "urgency": 2.80548,
-      "group_by": "project"
-    },
-    {
-      "id": 151,
-      "description": "Fix B.1 WALLFACE",
-      "entry": "20220901T192230Z",
-      "modified": "20220901T192230Z",
-      "project": "beetcamp.track",
-      "status": "pending",
-      "uuid": "daf98fe9-7250-46a8-b28d-ba334e6c5aca",
-      "tags": [
-        "track_alt"
-      ],
-      "urgency": 2.23836,
-      "group_by": "project"
-    },
-    {
-      "id": 127,
-      "description": "Fix CTRLS | RIESENFELD | MODAH artist on the track \"Under Covers\"",
-      "entry": "20220607T015809Z",
-      "modified": "20220607T015809Z",
-      "project": "beetcamp.track",
-      "status": "pending",
-      "uuid": "3a2416c7-f3bd-4b22-904d-277dab0e302a",
-      "tags": [
-        "artist",
-        "cleanup"
-      ],
-      "urgency": 2.80959,
-      "group_by": "project"
-    },
-    {
-      "id": 121,
-      "description": "Fix GUTKEINs https://gutkeinforu.bandcamp.com/track/2021-07-03-14h16m39 artist should not be 2021 - 07",
-      "entry": "20220521T094815Z",
-      "modified": "20220521T094815Z",
-      "project": "beetcamp.track",
-      "status": "pending",
-      "uuid": "7c8d61f2-0661-425a-9107-6040a51a7927",
-      "tags": [
-        "artist",
-        "title"
-      ],
-      "urgency": 2.90274,
-      "group_by": "project"
-    },
-    {
-      "id": 111,
-      "description": "Fix THE LOOP BEHEADER",
-      "entry": "20220418T202212Z",
-      "modified": "20220418T202212Z",
-      "project": "beetcamp.track",
-      "status": "pending",
-      "uuid": "4b4986e9-ef8e-4948-b277-f60f589ef531",
-      "tags": [
-        "artist",
-        "cleanup",
-        "title"
-      ],
-      "urgency": 3.18356,
-      "group_by": "project"
-    },
-    {
-      "id": 110,
-      "description": "Fix Traversable Message / Signals",
-      "entry": "20220418T195159Z",
-      "modified": "20220418T195159Z",
-      "project": "beetcamp.track",
-      "status": "pending",
-      "uuid": "2a38cfb9-8887-4f5b-849b-9b58fd8f966f",
-      "tags": [
-        "artist",
-        "cleanup",
-        "title"
-      ],
-      "urgency": 3.18356,
-      "group_by": "project"
-    },
-    {
-      "id": 157,
-      "description": "Fix naming in \"Various - examine-archive international sampler CD1 - 01\"",
-      "entry": "20221119T060946Z",
-      "modified": "20221119T060958Z",
-      "project": "beetcamp.album",
-      "status": "pending",
-      "uuid": "38bec1c0-9b7e-405c-b691-543c9c5f0793",
-      "annotations": [
-        {
-          "entry": "20221119T060958Z",
-          "description": "https://examine-archive.bandcamp.com/album/va-examine-archive-international-sampler"
-        }
-      ],
-      "tags": [
-        "album",
-        "artist",
-        "cleanup",
-        "title"
-      ],
-      "urgency": 2.80548,
-      "group_by": "project"
-    },
-    {
-      "id": 154,
-      "description": "Fix albumartist and artist in \"Bonus Track 1 : Paul Seul, Bonus Track 2 : Paul Seul, Paul\"",
-      "entry": "20221009T145626Z",
-      "modified": "20221009T145626Z",
-      "project": "beetcamp.album",
-      "status": "pending",
-      "uuid": "4186c054-4fbf-4438-b0e9-57e0d7cb2131",
-      "tags": [
-        "albumartist",
-        "artist",
-        "clean"
-      ],
-      "urgency": 2.23014,
-      "group_by": "project"
-    },
-    {
-      "id": 146,
-      "description": "Fix \"Moon Chasers by Umwelt vs\" album name",
-      "entry": "20220820T095603Z",
-      "modified": "20220820T095603Z",
-      "project": "beetcamp.album",
-      "status": "pending",
-      "uuid": "d4f48222-217c-4b1e-a869-268d73b1c3e4",
-      "tags": [
-        "album",
-        "cleanup"
-      ],
-      "urgency": 2.40411,
-      "group_by": "project"
-    },
-    {
-      "id": 108,
-      "description": "Fix soundcloud.com/konjunction",
-      "entry": "20220418T183125Z",
-      "modified": "20220418T183125Z",
-      "project": "beetcamp.album",
-      "status": "pending",
-      "uuid": "b83c8b27-a5df-4d64-9b15-3415ea15d0e5",
-      "tags": [
-        "mastering"
-      ],
-      "urgency": 2.98356,
-      "group_by": "project"
-    },
-    {
-      "id": 107,
-      "description": "Fix Stefano Rocchi at Niumen Studio",
-      "entry": "20220418T182806Z",
-      "modified": "20220418T182806Z",
-      "project": "beetcamp.album",
-      "status": "pending",
-      "uuid": "07964b0e-863f-437e-b5de-ca40c8a691ae",
-      "tags": [
-        "mastering"
-      ],
-      "urgency": 2.98356,
-      "group_by": "project"
-    },
-    {
-      "id": 106,
-      "description": "Fix Oliver Lieb in his analog mastering studio",
-      "entry": "20220418T181502Z",
-      "modified": "20220418T181502Z",
-      "project": "beetcamp.album",
-      "status": "pending",
-      "uuid": "e7ebe413-4f76-4dcf-971e-01366f9d477f",
-      "tags": [
-        "mastering"
-      ],
-      "urgency": 2.98356,
-      "group_by": "project"
-    },
-    {
-      "id": 78,
-      "description": "Fix duplicate description. See Alberich - Radio Op",
-      "entry": "20211211T175845Z",
-      "modified": "20211211T175845Z",
-      "project": "beetcamp.album",
-      "status": "pending",
-      "uuid": "63a69114-bed4-42c9-be25-c1eceb80cfb7",
-      "tags": [
-        "album",
-        "comments",
-        "dup"
-      ],
-      "urgency": 3.88493,
-      "group_by": "project"
-    }
-  ]
+  "values": {
+    "": [
+      {
+        "id": 3,
+        "description": "fix setuppy2pyproject using beetcamp",
+        "entry": "20201206T014713Z",
+        "modified": "20221120T224025Z",
+        "reviewed": "20211101T184517Z",
+        "status": "pending",
+        "uuid": "f7299f8a-dfa6-42d1-ab59-8ed92485fed1",
+        "tags": [
+          "fix",
+          "new",
+          "python"
+        ],
+        "urgency": 4,
+        "group_by": "project"
+      }
+    ],
+    "changelog": [
+      {
+        "id": 7,
+        "description": "Fix flake8-pytest-style changelog fetching",
+        "entry": "20210406T002338Z",
+        "modified": "20211101T190112Z",
+        "reviewed": "20211101T190112Z",
+        "status": "pending",
+        "uuid": "a5eab49f-04de-43b8-8098-4bb5d3f60fa1",
+        "tags": [
+          "fix"
+        ],
+        "urgency": 3.8,
+        "group_by": "project"
+      }
+    ],
+    "org.email": [
+      {
+        "id": 80,
+        "description": "Fix merge",
+        "entry": "20211211T183808Z",
+        "modified": "20211211T183808Z",
+        "status": "pending",
+        "uuid": "2a7ee836-4b81-4934-a7a3-0f175335771a",
+        "urgency": 2.88493,
+        "group_by": "project"
+      }
+    ],
+    "jtool": [
+      {
+        "id": 92,
+        "description": "Fix j link feedback link id",
+        "entry": "20210702T163530Z",
+        "modified": "20211101T194040Z",
+        "reviewed": "20211101T194040Z",
+        "status": "pending",
+        "uuid": "bb032f36-dd41-480f-8026-52dd9bfcb0d7",
+        "tags": [
+          "fix"
+        ],
+        "urgency": 3.8,
+        "group_by": "project"
+      },
+      {
+        "id": 27,
+        "description": "Fix jira link summary id output",
+        "entry": "20210610T212128Z",
+        "modified": "20211101T185144Z",
+        "reviewed": "20211101T185144Z",
+        "status": "pending",
+        "uuid": "f2a4b722-5ab7-4cab-9bdc-23e7c4d4c88f",
+        "tags": [
+          "fix"
+        ],
+        "urgency": 3.8,
+        "group_by": "project"
+      }
+    ],
+    "music.beets": [
+      {
+        "id": 123,
+        "description": "Fix discogs plugin for single tracks (searching)",
+        "entry": "20220528T022511Z",
+        "modified": "20220528T181925Z",
+        "priority": "H",
+        "status": "pending",
+        "uuid": "0b12ff9c-da93-424b-bb7f-812b2331a19d",
+        "depends": [
+          "412b4d21-5914-4a02-9a4f-a7c8e0fd1c92"
+        ],
+        "urgency": 3.96438,
+        "group_by": "project"
+      },
+      {
+        "id": 65,
+        "description": "Fix fromfilename plugin",
+        "entry": "20211028T151121Z",
+        "modified": "20211127T200648Z",
+        "reviewed": "20211101T193511Z",
+        "status": "pending",
+        "uuid": "7c0e7b45-7ad9-4ee2-8dcc-7b60fe9a4aae",
+        "urgency": 3,
+        "group_by": "project"
+      }
+    ],
+    "beetcamp.track": [
+      {
+        "id": 158,
+        "description": "Fix artists and titles in \"Your Last Everything\"",
+        "entry": "20221119T061332Z",
+        "modified": "20221119T061348Z",
+        "status": "pending",
+        "uuid": "b8cf2c55-90bb-47ed-93b8-36be247aad46",
+        "annotations": [
+          {
+            "entry": "20221119T061348Z",
+            "description": "https://biterecords.bandcamp.com/album/your-last-everything#p915136399"
+          }
+        ],
+        "tags": [
+          "album",
+          "artist",
+          "cleanup",
+          "title"
+        ],
+        "urgency": 2.80548,
+        "group_by": "project"
+      },
+      {
+        "id": 151,
+        "description": "Fix B.1 WALLFACE",
+        "entry": "20220901T192230Z",
+        "modified": "20220901T192230Z",
+        "status": "pending",
+        "uuid": "daf98fe9-7250-46a8-b28d-ba334e6c5aca",
+        "tags": [
+          "track_alt"
+        ],
+        "urgency": 2.23836,
+        "group_by": "project"
+      },
+      {
+        "id": 127,
+        "description": "Fix CTRLS | RIESENFELD | MODAH artist on the track \"Under Covers\"",
+        "entry": "20220607T015809Z",
+        "modified": "20220607T015809Z",
+        "status": "pending",
+        "uuid": "3a2416c7-f3bd-4b22-904d-277dab0e302a",
+        "tags": [
+          "artist",
+          "cleanup"
+        ],
+        "urgency": 2.80959,
+        "group_by": "project"
+      },
+      {
+        "id": 121,
+        "description": "Fix GUTKEINs https://gutkeinforu.bandcamp.com/track/2021-07-03-14h16m39 artist should not be 2021 - 07",
+        "entry": "20220521T094815Z",
+        "modified": "20220521T094815Z",
+        "status": "pending",
+        "uuid": "7c8d61f2-0661-425a-9107-6040a51a7927",
+        "tags": [
+          "artist",
+          "title"
+        ],
+        "urgency": 2.90274,
+        "group_by": "project"
+      },
+      {
+        "id": 111,
+        "description": "Fix THE LOOP BEHEADER",
+        "entry": "20220418T202212Z",
+        "modified": "20220418T202212Z",
+        "status": "pending",
+        "uuid": "4b4986e9-ef8e-4948-b277-f60f589ef531",
+        "tags": [
+          "artist",
+          "cleanup",
+          "title"
+        ],
+        "urgency": 3.18356,
+        "group_by": "project"
+      },
+      {
+        "id": 110,
+        "description": "Fix Traversable Message / Signals",
+        "entry": "20220418T195159Z",
+        "modified": "20220418T195159Z",
+        "status": "pending",
+        "uuid": "2a38cfb9-8887-4f5b-849b-9b58fd8f966f",
+        "tags": [
+          "artist",
+          "cleanup",
+          "title"
+        ],
+        "urgency": 3.18356,
+        "group_by": "project"
+      }
+    ],
+    "beetcamp.album": [
+      {
+        "id": 157,
+        "description": "Fix naming in \"Various - examine-archive international sampler CD1 - 01\"",
+        "entry": "20221119T060946Z",
+        "modified": "20221119T060958Z",
+        "status": "pending",
+        "uuid": "38bec1c0-9b7e-405c-b691-543c9c5f0793",
+        "annotations": [
+          {
+            "entry": "20221119T060958Z",
+            "description": "https://examine-archive.bandcamp.com/album/va-examine-archive-international-sampler"
+          }
+        ],
+        "tags": [
+          "album",
+          "artist",
+          "cleanup",
+          "title"
+        ],
+        "urgency": 2.80548,
+        "group_by": "project"
+      },
+      {
+        "id": 154,
+        "description": "Fix albumartist and artist in \"Bonus Track 1 : Paul Seul, Bonus Track 2 : Paul Seul, Paul\"",
+        "entry": "20221009T145626Z",
+        "modified": "20221009T145626Z",
+        "status": "pending",
+        "uuid": "4186c054-4fbf-4438-b0e9-57e0d7cb2131",
+        "tags": [
+          "albumartist",
+          "artist",
+          "clean"
+        ],
+        "urgency": 2.23014,
+        "group_by": "project"
+      },
+      {
+        "id": 146,
+        "description": "Fix \"Moon Chasers by Umwelt vs\" album name",
+        "entry": "20220820T095603Z",
+        "modified": "20220820T095603Z",
+        "status": "pending",
+        "uuid": "d4f48222-217c-4b1e-a869-268d73b1c3e4",
+        "tags": [
+          "album",
+          "cleanup"
+        ],
+        "urgency": 2.40411,
+        "group_by": "project"
+      },
+      {
+        "id": 108,
+        "description": "Fix soundcloud.com/konjunction",
+        "entry": "20220418T183125Z",
+        "modified": "20220418T183125Z",
+        "status": "pending",
+        "uuid": "b83c8b27-a5df-4d64-9b15-3415ea15d0e5",
+        "tags": [
+          "mastering"
+        ],
+        "urgency": 2.98356,
+        "group_by": "project"
+      },
+      {
+        "id": 107,
+        "description": "Fix Stefano Rocchi at Niumen Studio",
+        "entry": "20220418T182806Z",
+        "modified": "20220418T182806Z",
+        "status": "pending",
+        "uuid": "07964b0e-863f-437e-b5de-ca40c8a691ae",
+        "tags": [
+          "mastering"
+        ],
+        "urgency": 2.98356,
+        "group_by": "project"
+      },
+      {
+        "id": 106,
+        "description": "Fix Oliver Lieb in his analog mastering studio",
+        "entry": "20220418T181502Z",
+        "modified": "20220418T181502Z",
+        "status": "pending",
+        "uuid": "e7ebe413-4f76-4dcf-971e-01366f9d477f",
+        "tags": [
+          "mastering"
+        ],
+        "urgency": 2.98356,
+        "group_by": "project"
+      },
+      {
+        "id": 78,
+        "description": "Fix duplicate description. See Alberich - Radio Op",
+        "entry": "20211211T175845Z",
+        "modified": "20211211T175845Z",
+        "status": "pending",
+        "uuid": "63a69114-bed4-42c9-be25-c1eceb80cfb7",
+        "tags": [
+          "album",
+          "comments",
+          "dup"
+        ],
+        "urgency": 3.88493,
+        "group_by": "project"
+      }
+    ]
+  }
 }

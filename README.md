@@ -57,7 +57,6 @@ deal with a huge diff with a lot of unrelated changes.
 - This logic lives in [a session-scoped `pytest` fixture](https://github.com/snejus/rich-tables/blob/e25ac771a543b160c40dbed0764b579f0983a4c0/tests/test_outputs.py#L21-L33), after the `yield` statement
 
 ## Examples
-
 ### Album
 
 ![image](svgs/album.svg)

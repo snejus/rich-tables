@@ -1,7 +1,5 @@
 import itertools as it
 import json
-import operator as op
-import re
 import sys
 import typing as t
 from datetime import datetime, timedelta
@@ -166,32 +164,28 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
         yield border_panel(table, title=year_and_month)
 
 
-def tasktime(datestr: str):
+def tasktime(datestr: str) -> str:
     return time2human(datetime.strptime(datestr, "%Y%m%dT%H%M%SZ").timestamp())
 
 
-def tasks_table(tasks: t.List[JSONDict], group_by: str = "") -> t.Iterator:
+def tasks_table(tasks: t.Dict[str, t.List[JSONDict]]) -> t.Iterator:
     if not tasks:
         return
-    fields_map: JSONDict = dict(
-        id=str,
-        urgency=lambda x: str(round(x, 1)),
-        description=lambda x: x,
-        due=tasktime,
-        end=tasktime,
-        sched=tasktime,
-        tags=lambda x: " ".join(map(format_with_color, x or [])),
-        project=format_with_color,
-        modified=tasktime,
-        annotations=lambda l: "\n".join(
-            map(
-                lambda x: wrap(tasktime(x["entry"]), "b")
-                + ": "
-                + wrap(x["description"], "i"),
-                l,
-            )
+    fields_map: JSONDict = {
+        "id": str,
+        "urgency": lambda x: str(round(x, 1)),
+        "description": lambda x: x,
+        "due": tasktime,
+        "end": tasktime,
+        "sched": tasktime,
+        "tags": lambda x: " ".join(map(format_with_color, x or [])),
+        "project": format_with_color,
+        "modified": tasktime,
+        "annotations": lambda ann: "\n".join(
+            wrap(tasktime(a["entry"]), "b") + ": " + wrap(a["description"], "i")
+            for a in ann
         ),
-    )
+    }
     FIELDS_MAP.update(fields_map)
     status_map = {
         "completed": "b s black on green",
@@ -200,74 +194,52 @@ def tasks_table(tasks: t.List[JSONDict], group_by: str = "") -> t.Iterator:
         "started": "b green",
         "recurring": "i magenta",
     }
-    task_id_to_desc = {}
-    task_uuid_to_id = {}
-    for task in tasks:
-        task["sched"] = task.get("scheduled")
-        if not task.get("id"):
-            task["id"] = task["uuid"].split("-")[0]
-        task_uuid_to_id[task["uuid"]] = task["id"]
+    uuid_to_desc = {}
+    all_tasks = list(it.chain.from_iterable(tasks.values()))
+    for task in (r for r in all_tasks if r.get("recur") and r["status"] != "recurring"):
+        task["status"] = "recurring"
+        task["description"] += f" ({task})"
 
+    for task in all_tasks:
+        task["sched"] = task.get("scheduled")
         if task.get("start"):
             task["status"] = "started"
 
-        recur = task.get("recur")
-        if recur:
-            if task.get("status") == "recurring":
-                continue
-            else:
-                task["status"] = "recurring"
-                task["description"] += f" ({recur})"
         desc = wrap(task["description"], status_map[task["status"]])
         if task.get("priority") == "H":
             desc = f"[b]([red]![/])[/] {desc}"
-        task_id_to_desc[task["id"]] = desc
 
-    headers = ["urgency", "id"] + [
-        k for k in fields_map.keys() if k not in {group_by, "id", "urgency"}
-    ]
+        uuid_to_desc[task["uuid"]] = desc
 
-    group_names = [(t.get(group_by) or "") for t in tasks]
-    task_groups = [
-        (name, [t[1] for t in tasks])
-        for name, tasks in it.groupby(
-            sorted(zip(group_names, tasks), key=lambda x: x[0], reverse=True),
-            lambda x: x[0] or f"no {group_by}",
-        )
-    ]
-    for group_name, tasks in task_groups:
-        project_color = (
-            "b green"
-            if group_name == "started"
-            else predictably_random_color(str(group_name))
-        )
+    headers = ["urgency", "id", *(fields_map.keys() - {"id", "urgency"})]
+    headers = [h for h in headers if any(t.get(h) for t in all_tasks)]
+
+    for group_name, task_list in tasks.items():
         table = new_table(padding=(0, 1, 0, 1))
-        for task in tasks:
-            desc = task_id_to_desc.get(task["id"]) or ""
-            if not desc:
-                continue
+        for task in task_list:
+            task_tree = new_tree(title=uuid_to_desc[task["uuid"]], guide_style="white")
 
-            task_tree = new_tree(title=desc, guide_style="white")
             ann = task.pop("annotations", None)
             if ann:
                 task_tree.add(FIELDS_MAP["annotations"](ann))
-            for dep_uuid in task.get("depends") or []:
-                dep_id = task_uuid_to_id.get(dep_uuid)
-                dep_description = task_id_to_desc.get(dep_id)
-                if dep_description:
-                    task_tree.add(
-                        str(dep_id) + " " + dep_description, guide_style="red"
-                    )
+            dep_uuids = task.get("depends") or []
+            for dep_line in (
+                f"[b]{u}[/b] {uuid_to_desc[u]}"
+                for u in set(dep_uuids) & uuid_to_desc.keys()
+            ):
+                task_tree.add(dep_line, guide_style="red")
             task["description"] = task_tree
-            table.add_row(*map(lambda x: get_val(task, x), headers))
+            table.add_row(*(get_val(task, h) for h in headers))
 
-        for col in table.columns.copy():
-            try:
-                next(filter(op.truth, col.cells))
-            except StopIteration:
-                table.columns.remove(col)
-
-        yield border_panel(table, title=group_name, style=project_color)
+        yield border_panel(
+            table,
+            title=group_name,
+            style=(
+                "b green"
+                if group_name == "started"
+                else predictably_random_color(str(group_name))
+            ),
+        )
 
 
 def load_data() -> t.Any:
