@@ -136,7 +136,7 @@ def _json_dict(data: JSONDict, header: Optional[str] = "") -> RenderableType:
     table = mapping_view_table()
     cols: List[RenderableType] = []
     for key, content in data.items():
-        if not content:
+        if content is None or isinstance(content, list) and not content:
             continue
 
         content = flexitable(content, key)
