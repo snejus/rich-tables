@@ -114,42 +114,40 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
             [orig_start, *map(midnight, range(1, days_count + 1))],
             [*map(eod, range(days_count)), orig_end],
         ):
-            if start == end:
-                continue
-
             color = (
                 "grey7" if end.replace(tzinfo=None) < datetime.now() else event["color"]
+            )
+            title = status_map[event["status"]] + wrap(
+                event["summary"] or "busy", f"b {color}"
             )
             new_events.append(
                 {
                     **event,
-                    **dict(
-                        color=color,
-                        summary=status_map[event["status"]]
-                        + wrap(event["summary"] or "busy", f"b {color}"),
-                        start=start,
-                        start_day=start.strftime("%d %a"),
-                        start_time=wrap(start.strftime("%H:%M"), "white"),
-                        end_time=wrap(end.strftime("%H:%M"), "white"),
-                        desc=border_panel(get_val(event, "desc"))
-                        if event["desc"]
-                        else "",
-                        bar=Bar(86400, *get_start_end(start, end), color=color),
+                    "color": color,
+                    "name": (
+                        border_panel(get_val(event, "desc"), title=title)
+                        if False
+                        else title
                     ),
+                    "start": start,
+                    "start_day": start.strftime("%d %a"),
+                    "start_time": wrap(start.strftime("%H:%M"), "white"),
+                    "end_time": wrap(end.strftime("%H:%M"), "white"),
+                    "desc": (),
+                    "bar": Bar(86400, *get_start_end(start, end), color=color),
+                    "summary": event["summary"] or "",
                 }
             )
 
-    keys = "summary", "start_time", "end_time", "bar"
+    keys = "name", "start_time", "end_time", "bar"
     month_events: t.Iterable[JSONDict]
-    for month_tuple, month_events in it.groupby(
-        new_events, lambda x: (x["start"].month, x["start"].strftime("%Y %B"))
+    for year_and_month, month_events in it.groupby(
+        new_events, lambda x: x["start"].strftime("%Y %B")
     ):
-        month_events = sorted(month_events, key=lambda x: x.get("start_day") or "")
-        _, year_and_month = month_tuple
-
         table = new_table(*keys, highlight=False, padding=0, show_header=False)
         for day, day_events in it.groupby(
-            month_events, lambda x: x.get("start_day") or ""
+            sorted(month_events, key=lambda x: x.get("start_day") or ""),
+            lambda x: x.get("start_day") or "",
         ):
             table.add_row(wrap(day, "b i"))
             for event in day_events:
@@ -158,8 +156,6 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
                     table.add_dict_item(event, style=event["color"] + " on grey7")
                 else:
                     table.add_dict_item(event)
-                    if event["desc"]:
-                        table.add_row("", "", "", event["desc"])
             table.add_row("")
         yield border_panel(table, title=year_and_month)
 
