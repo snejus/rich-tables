@@ -378,15 +378,12 @@ def time2human(timestamp: Union[int, str, float], acc: int = 1) -> str:
     diff = datetime.timestamp() - time.time()
     fmted = " ".join(islice(fmt_time(int(diff)), acc))
 
-    if abs(diff) > 86000:
-        strtime = datetime.strftime("%F")
-    else:
-        strtime = datetime.strftime("%T")
+    strtime = datetime.strftime("%F" if abs(diff) > 86000 else "%T")
 
     return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN) + " " + strtime
 
 
-FIELDS_MAP: Dict[str, Callable] = defaultdict(
+FIELDS_MAP: Dict[str, Callable[..., ...] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
         map(
