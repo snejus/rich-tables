@@ -383,7 +383,7 @@ def time2human(timestamp: Union[int, str, float], acc: int = 1) -> str:
     return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN) + " " + strtime
 
 
-FIELDS_MAP: Dict[str, Callable[..., ...] = defaultdict(
+FIELDS_MAP: Dict[str, Callable] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
         map(

@@ -135,7 +135,7 @@ def fmt_state(state: str) -> str:
 
 
 def resolved_border_style(resolved: bool) -> str:
-    return {True: "green", False: "yellow"}.get(resolved, "")
+    return "green" if resolved else "yellow"
 
 
 def top_level_comment_title(comment: Content) -> str:

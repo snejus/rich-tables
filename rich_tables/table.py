@@ -133,7 +133,7 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
                     "start_day": start.strftime("%d %a"),
                     "start_time": wrap(start.strftime("%H:%M"), "white"),
                     "end_time": wrap(end.strftime("%H:%M"), "white"),
-                    "desc": (),
+                    "desc": event["description"],
                     "bar": Bar(86400, *get_start_end(start, end), color=color),
                     "summary": event["summary"] or "",
                 }
