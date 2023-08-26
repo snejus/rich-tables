@@ -126,14 +126,16 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
                     "color": color,
                     "name": (
                         border_panel(get_val(event, "desc"), title=title)
-                        if False
+                        if event["desc"]
                         else title
                     ),
                     "start": start,
                     "start_day": start.strftime("%d %a"),
                     "start_time": wrap(start.strftime("%H:%M"), "white"),
                     "end_time": wrap(end.strftime("%H:%M"), "white"),
-                    "desc": event["description"],
+                    "desc": (
+                        border_panel(get_val(event, "desc")) if event["desc"] else ""
+                    ),
                     "bar": Bar(86400, *get_start_end(start, end), color=color),
                     "summary": event["summary"] or "",
                 }
@@ -156,6 +158,8 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
                     table.add_dict_item(event, style=event["color"] + " on grey7")
                 else:
                     table.add_dict_item(event)
+                    # if event["desc"]:
+                    #     table.add_row("", "", "", event["desc"])
             table.add_row("")
         yield border_panel(table, title=year_and_month)
 
