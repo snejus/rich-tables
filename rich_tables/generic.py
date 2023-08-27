@@ -5,7 +5,7 @@ import os
 import re
 from datetime import datetime
 from functools import partial
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Union
 
 from multimethod import multimethod
 from rich import box
@@ -13,7 +13,6 @@ from rich.columns import Columns
 from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
 from rich.markdown import Markdown
-from rich.panel import Panel
 from rich.text import Text
 
 from .utils import (
@@ -32,8 +31,12 @@ from .utils import (
     wrap,
 )
 
+if TYPE_CHECKING:
+    from rich.panel import Panel
+
 JSONDict = Dict[str, Any]
 console = make_console()
+COUNT_FIELD = re.compile(r"count_|(count$)|sum_|duration")
 
 
 def time_fmt(current: datetime) -> Text:
@@ -59,13 +62,13 @@ if not log.handlers:
         log.setLevel("DEBUG")
 
 
-def debug(_func, data):
+def debug(_func: Callable[..., Any], data: Any) -> None:
     if log.isEnabledFor(10):
         log.debug(_func.__annotations__)
         console.log(data)
 
 
-def mapping_view_table(**kwargs: Any) -> NewTable:
+def mapping_view_table() -> NewTable:
     """A table with two columns
     * First for bold field names
     * Second one for values
@@ -100,7 +103,7 @@ def prepare_dict(item: JSONDict) -> JSONDict:
 
 
 @multimethod
-def flexitable(data, header) -> RenderableType:
+def flexitable(data: Any, header: str) -> RenderableType:
     debug(flexitable, data)
     return str(data)
 
@@ -172,7 +175,7 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 @flexitable.register
 def _str_list(data: List[str], header: Optional[str] = None) -> RenderableType:
     debug(_str_list, data)
-    call = FIELDS_MAP.get(header)
+    call = FIELDS_MAP.get(str(header))
     return (
         call("\n".join(data))
         if call and call != str
@@ -196,7 +199,7 @@ def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Renderable
     }.keys()
 
     overlap = set(map(type, data[0].values())) & {int, float, str}
-    get_match = re.compile(r"count_|(count$)|sum_|duration").search
+    get_match = COUNT_FIELD.search
     count_key = next(filter(None, map(get_match, keys)), None)
     if len(overlap) == 2 and count_key:
         return counts_table(data, count_key.string, header=header or "")
@@ -205,7 +208,7 @@ def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Renderable
 
         return sql_table(data)
 
-    def getval(value, key):
+    def getval(value: Any, key: str) -> RenderableType:
         trans = flexitable(value, key)
         if isinstance(trans, str):
             return f"{wrap(key, 'b')}: {trans}"
@@ -233,7 +236,7 @@ def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Renderable
             for item in items:
                 sub_table.add_dict_item(item, transform=flexitable)
             for col in sub_table.columns:
-                col.header = DISPLAY_HEADER.get(col.header, col.header)
+                col.header = DISPLAY_HEADER.get(str(col.header), col.header)
             large_table.add_row(sub_table)
     return large_table
 

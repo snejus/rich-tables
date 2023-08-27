@@ -67,7 +67,9 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "".join(set(punctuation + whitespace + ascii_letters) - {"_", ":", "5", "7"}),
+    junk: str = "".join(
+        set(punctuation + whitespace + ascii_letters) - {"_", ":", "5", "7"}
+    ),
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
     after = re.sub(r"\\?\[", r"\\[", after)
@@ -226,9 +228,7 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
     )
 
 
-def new_tree(
-    values: Iterable[ConsoleRenderable] = [], title: str = "", **kwargs
-) -> Tree:
+def new_tree(values: Iterable[RenderableType] = [], title: str = "", **kwargs) -> Tree:
     color = predictably_random_color(title or str(values))
     default: JSONDict = dict(guide_style=color, highlight=True)
     tree = Tree(wrap(title, "b"), **{**default, **kwargs})
@@ -383,7 +383,7 @@ def time2human(timestamp: Union[int, str, float], acc: int = 1) -> str:
     return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN) + " " + strtime
 
 
-FIELDS_MAP: Dict[str, Callable] = defaultdict(
+FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
         map(

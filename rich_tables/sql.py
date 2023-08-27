@@ -121,7 +121,7 @@ def report_queries(queries: List[JSONDict]) -> None:
         #     console.print(utils.simple_panel(duplicates, expand=True))
 
 
-def sql_table(data: List[JSONDict]):
+def sql_table(data: List[JSONDict]) -> utils.NewTable:
     return utils.list_table(
         (utils._get_val(item["sql"], "sql") for idx, item in enumerate(data))
     )
