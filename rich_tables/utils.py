@@ -24,7 +24,7 @@ from typing import (
 from rich import box
 from rich.align import Align
 from rich.bar import Bar
-from rich.console import Console, ConsoleRenderable, RenderableType
+from rich.console import Console, RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
@@ -60,16 +60,14 @@ def fmtdiff(change: str, before: str, after: str) -> str:
         return format_old(before)
     elif change == "replace":
         return format_old(before) + format_new(after)
-    else:
-        return wrap(before, "dim")
+
+    return wrap(before, "dim")
 
 
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "".join(
-        set(punctuation + whitespace + ascii_letters) - {"_", ":", "5", "7"}
-    ),
+    junk: str = "".join(set(punctuation + whitespace + ascii_letters) - {"_", ":"}),
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
     after = re.sub(r"\\?\[", r"\\[", after)
@@ -81,18 +79,11 @@ def make_difftext(
     return diff
 
 
-def duration2human(duration: SupportsFloat, acc: int = 1) -> str:
+def duration2human(duration: SupportsFloat) -> str:
     diff = timedelta(seconds=float(duration))
     days = f"{diff.days}d " if diff.days else ""
-    return "{:>12}".format(
-        days
-        + ":".join(
-            map(
-                lambda x: str(x).zfill(2),
-                [diff.seconds // 3600, diff.seconds % 3600 // 60, diff.seconds % 60],
-            )
-        )
-    )
+    time_parts = [diff.seconds // 3600, diff.seconds % 3600 // 60, diff.seconds % 60]
+    return "{:>12}".format(days + ":".join(map("{0:0>2}".format, time_parts)))
 
 
 def fmt_time(seconds: int) -> Iterable[str]:
@@ -132,11 +123,11 @@ def make_console(**kwargs: Any) -> Console:
 
 class NewTable(Table):
     def __init__(self, *args: str, **kwargs: Any) -> None:
-        ckwargs = dict(
-            overflow=kwargs.pop("overflow", "fold"),
-            justify=kwargs.pop("justify", "left"),
-            vertical=kwargs.pop("vertical", "middle"),
-        )
+        ckwargs = {
+            "overflow": kwargs.pop("overflow", "fold"),
+            "justify": kwargs.pop("justify", "left"),
+            "vertical": kwargs.pop("vertical", "middle"),
+        }
         super().__init__(**kwargs)
         for idx, arg in enumerate(args):
             self.add_column(arg, **ckwargs)
@@ -159,7 +150,7 @@ class NewTable(Table):
     def add_dict_item(
         self,
         item: JSONDict,
-        transform: Callable[[Any, str], Any] = lambda x, y: x,
+        transform: Callable[[Any, str], Any] = lambda x, _: x,
         **kwargs: Any,
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
@@ -168,17 +159,17 @@ class NewTable(Table):
 
 
 def new_table(*headers: str, **kwargs: Any) -> NewTable:
-    default = dict(
-        border_style="black",
-        show_edge=False,
-        show_header=False,
-        pad_edge=False,
-        highlight=True,
-        row_styles=["white"],
-        expand=False,
-        title_justify="left",
-        show_lines=False,
-    )
+    default = {
+        "border_style": "black",
+        "show_edge": False,
+        "show_header": False,
+        "pad_edge": False,
+        "highlight": True,
+        "row_styles": ["white"],
+        "expand": False,
+        "title_justify": "left",
+        "show_lines": False,
+    }
     if headers:
         default.update(
             header_style="bold misty_rose1", box=box.SIMPLE_HEAVY, show_header=True
@@ -190,7 +181,7 @@ def new_table(*headers: str, **kwargs: Any) -> NewTable:
     return table
 
 
-def list_table(items: Iterable[Any], **kwargs) -> NewTable:
+def list_table(items: Iterable[Any], **kwargs: Any) -> NewTable:
     return new_table(rows=[[i] for i in items], **kwargs)
 
 
@@ -206,9 +197,12 @@ def format_with_color(name: str) -> str:
 
 
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    default: JSONDict = dict(
-        title_align="left", subtitle_align="right", box=box.SIMPLE, expand=False
-    )
+    default: JSONDict = {
+        "title_align": "left",
+        "subtitle_align": "right",
+        "box": box.SIMPLE,
+        "expand": False,
+    }
     if "title" in kwargs:
         kwargs["title"] = wrap(kwargs["title"], "b")
     if kwargs.pop("align", "") == "center":
@@ -218,7 +212,7 @@ def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
 
 def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
     return simple_panel(
-        content, **{**dict(box=box.ROUNDED, border_style="dim"), **kwargs}
+        content, **{"box": box.ROUNDED, "border_style": "dim", **kwargs}
     )
 
 
@@ -228,9 +222,11 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
     )
 
 
-def new_tree(values: Iterable[RenderableType] = [], title: str = "", **kwargs) -> Tree:
+def new_tree(
+    values: Iterable[RenderableType] = [], title: str = "", **kwargs: Any
+) -> Tree:
     color = predictably_random_color(title or str(values))
-    default: JSONDict = dict(guide_style=color, highlight=True)
+    default: JSONDict = {"guide_style": color, "highlight": True}
     tree = Tree(wrap(title, "b"), **{**default, **kwargs})
 
     for val in values:
@@ -240,18 +236,6 @@ def new_tree(values: Iterable[RenderableType] = [], title: str = "", **kwargs) -
 
 def get_country(code: str) -> str:
     return format_with_color(code)
-    # try:
-    #     # country = (
-    #     #     pycountry.countries.lookup(code)
-    #     #     .name.replace("Russian Federation", "Russia")
-    #     #     .replace("Czechia", "Czech Republic")
-    #     #     .replace("North Macedonia", "Macedonia")
-    #     #     .replace("Korea, Republic of", "South Korea")
-    #     # )
-    #     country = "Russia"
-    #     return f":flag_for_{country.lower().replace(' ', '_')}: {country}"
-    # except LookupError:
-    #     return "Worldwide"
 
 
 def colored_with_bg(string: str) -> str:
@@ -283,7 +267,7 @@ def progress_bar(
     random.seed(str(total_max))
     rand = partial(random.randint, 50, 180)
 
-    def norm():
+    def norm() -> int:
         return round(rand() * ratio)
 
     color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
@@ -328,16 +312,16 @@ def counts_table(data: List[JSONDict], count_key: str, header: str = "") -> Tabl
             item_max = float(item_max)
             item_table_val = f"{num_type(item_count)}/{num_type(item_max)}"
         elif "duration" in count_key:
-            item_table_val = duration2human(item_count, 2)
+            item_table_val = duration2human(item_count)
         else:
             item_table_val = str(num_type(item_count))
         table.add_row(
-            *map(lambda x: get_val(item, x), headers),
+            *(get_val(item, h) for h in headers),
             item_table_val,
             progress_bar(item_count, total_max, item_max=item_max),
         )
     if count_key in {"duration", "total_duration"}:
-        table.caption = "Total " + duration2human(float(sum(all_counts)), 2)
+        table.caption = "Total " + duration2human(float(sum(all_counts)))
         table.caption_justify = "left"
     if header:
         table.title = header
@@ -383,6 +367,15 @@ def time2human(timestamp: Union[int, str, float], acc: int = 1) -> str:
     return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN) + " " + strtime
 
 
+def syntax(*args: Any, **kwargs: Any) -> Syntax:
+    default = {
+        "theme": "paraiso-dark",
+        "background_color": "black",
+        "word_wrap": True,
+    }
+    return Syntax(*args, **{**default, **kwargs})
+
+
 FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
     albumtypes=lambda x: "; ".join(
@@ -398,10 +391,8 @@ FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
         )
     ),
     author=colored_with_bg,
-    # participants=lambda x: "  ".join(map(colored_with_bg, x)),
     user=format_with_color,
     bodyHTML=md_panel,
-    # desc=md_panel,
     label=format_with_color,
     labels=lambda x: wrap(
         "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x), "b i"
@@ -422,8 +413,6 @@ FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     entry=time2human,
     due=time2human,
     created=time2human,
-    # createdAt=lambda x: x if "[/]" in x else time2human(x),
-    # updatedAt=time2human,
     createdAt=lambda x: x.replace("T", " ").replace("Z", ""),
     updatedAt=lambda x: x.replace("T", " ").replace("Z", ""),
     modified=time2human,
@@ -434,13 +423,15 @@ FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     committedDate=time2human,
     bpm=lambda x: wrap(
         str(x),
-        BOLD_GREEN
-        if x < 135
-        else BOLD_RED
-        if x > 230
-        else "red"
-        if x > 165
-        else "yellow",
+        (
+            BOLD_GREEN
+            if x < 135
+            else BOLD_RED
+            if x > 230
+            else "red"
+            if x > 165
+            else "yellow"
+        ),
     )
     if isinstance(x, int)
     else x,
@@ -474,21 +465,19 @@ FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     source=format_with_color,
     category=format_with_color,
     categories=colored_split,
-    # price=lambda x: colored_with_bg(str(x)),
     interview=md_panel,
     benefits=md_panel,
     primary=lambda x: colored_split(x) if isinstance(x, str) else str(x),
     **{"from": format_with_color},
     to=format_with_color,
     creditText=md_panel,
-    duration=lambda x: duration2human(x, 2) if isinstance(x, (int, float)) else x,
-    total_duration=lambda x: duration2human(x, 2),
+    duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
+    total_duration=lambda x: duration2human(x),
     brand=format_with_color,
     mastering=format_with_color,
     answer=md_panel,
     plays=lambda x: wrap(x, BOLD_GREEN),
     skips=lambda x: wrap(x, BOLD_RED),
-    # name=lambda x: wrap(x, "b"),
     description=md_panel,
     body=lambda x: x + "\n",
     event=format_with_color,
@@ -517,62 +506,24 @@ FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     new=lambda x: wrap(":heavy_check_mark:", BOLD_GREEN)
     if x
     else wrap(":cross_mark_button:", BOLD_RED),
-    # message=lambda x: border_panel(
-    #     Syntax(
-    #         x,
-    #         "diff",
-    #         theme="paraiso-dark",
-    #         background_color="black",
-    #         word_wrap=True,
-    #         indent_guides=True,
-    #     )
-    # ),
-    link=lambda x: {
-        "blocks": lambda y: wrap(f" {y} ", "b black on red"),
-        "is blocked by": lambda y: wrap(y, BOLD_RED),
-    }.get(x, lambda x: x)(x),
+    link=lambda name: (
+        wrap(f" {name} ", "b black on red")
+        if name == "blocks"
+        else wrap(name, BOLD_RED)
+        if name == "is blocked by"
+        else name
+    ),
     album=format_with_color,
-    context=lambda x: Syntax(
-        x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
-    ),
-    python=lambda x: Syntax(
-        x, "python", theme="paraiso-dark", background_color="black", word_wrap=True
-    ),
-    CreatedBy=lambda x: Syntax(
-        x.replace(";", "\n"),
-        "sh",
-        theme="paraiso-dark",
-        background_color="black",
-        word_wrap=True,
-    ),
-    sql=lambda x: border_panel(
-        Syntax(
-            x.replace('"', ""),
-            "sql",
-            theme="gruvbox-dark",
-            background_color="black",
-            word_wrap=True,
-        )
-    ),
+    context=lambda x: syntax(x, "python"),
+    python=lambda x: syntax(x, "python"),
+    CreatedBy=lambda x: syntax(x.replace(";", "\n"), "sh"),
+    sql=lambda x: border_panel(syntax(x.replace('"', ""), "sql")),
     file=lambda x: "/".join(map(format_with_color, x.split("/"))),
     field=lambda x: ".".join(map(format_with_color, x.split("."))),
-    log=lambda x: border_panel(
-        Syntax(
-            x,
-            "python",
-            theme="paraiso-dark",
-            background_color="black",
-            word_wrap=True,
-            indent_guides=True,
-        )
-    ),
+    log=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
+    unified_diff=lambda x: syntax(x, "diff"),
+    diffHunk=lambda x: syntax(x, "diff"),
     diff=lambda x: Text.from_markup(x) if "[/]" in x else md_panel(x),
-    unified_diff=lambda x: Syntax(
-        x, "diff", theme="paraiso-dark", background_color="black", word_wrap=True
-    ),
-    diffHunk=lambda x: Syntax(
-        x, "diff", theme="paraiso-dark", background_color="black", word_wrap=True
-    ),
     query=lambda x: Text(x, style="bold"),
 )
 

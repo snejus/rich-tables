@@ -9,6 +9,7 @@ from rich.console import ConsoleRenderable
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
+from typing_extensions import TypedDict
 
 from rich_tables.utils import (
     FIELDS_MAP,
@@ -27,7 +28,7 @@ from rich_tables.utils import (
 )
 
 
-class Diff(t.TypedDict):
+class Diff(TypedDict):
     additions: int
     deletions: int
 
@@ -42,12 +43,12 @@ class Commit(Diff):
     message: str
 
 
-class Reaction(t.TypedDict):
+class Reaction(TypedDict):
     user: str
     content: str
 
 
-class Content(t.TypedDict):
+class Content(TypedDict):
     createdAt: str
     author: str
     body: str
@@ -64,7 +65,7 @@ class ReviewComment(IssueComment):
     pullRequestReview: str
 
 
-class ReviewThread(t.TypedDict):
+class ReviewThread(TypedDict):
     path: str
     isResolved: bool
     isOutdated: bool
@@ -231,7 +232,7 @@ PR_FIELDS_MAP = {
 
 
 class PullRequestTable(PullRequest):
-    def make_info_subpanel(self, attr: str):
+    def make_info_subpanel(self, attr: str) -> Panel:
         return simple_panel(
             get_val(self, attr),
             title=wrap(attr, "b"),
@@ -315,7 +316,7 @@ class PullRequestTable(PullRequest):
         return self.reviews + self.comments
 
     @property
-    def top_level_comments(self) -> Panel:
+    def top_level_comments(self) -> t.Iterable[Panel]:
         comments = sorted(self.reviews_and_comments, key=lambda c: c["createdAt"])
         for comment in comments:
             yield self.format_comment(comment)

@@ -1116,4 +1116,4 @@ sql = ["sqlparse"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7,<4"
-content-hash = "90f1345a84df3b9e5073959c97142fa67c5cf5a1f140e7eba69ea567ceedc6fd"
+content-hash = "b920448e568f9dddfbef8a5038f37d0e35fd09f511981d4e431a5111313856e2"
