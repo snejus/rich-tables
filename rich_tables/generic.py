@@ -133,7 +133,7 @@ def _int_or_float(
 
 
 @flexitable.register
-def _json_dict(data: JSONDict, header: Optional[str] = "") -> RenderableType:
+def _json_dict(data: JSONDict) -> RenderableType:
     debug(_json_dict, data)
     data = prepare_dict(data)
     table = mapping_view_table()
@@ -149,8 +149,8 @@ def _json_dict(data: JSONDict, header: Optional[str] = "") -> RenderableType:
             table.add_row(key, content)
 
     cols.insert(0, table)
-    if header:
-        return Columns(cols)
+    # if header:
+    #     return Columns(cols)
 
     table = new_table()
     row: List[RenderableType]
