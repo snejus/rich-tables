@@ -142,11 +142,6 @@ class NewTable(Table):
         """Provide a mapping between columns names / ids and columns."""
         return [str(c.header) for c in self.columns]
 
-    @property
-    def colmap(self) -> Dict[str, int]:
-        """Provide a mapping between columns names / ids and columns."""
-        return {str(c.header): c._index for c in self.columns if c.header}
-
     def add_dict_item(
         self,
         item: JSONDict,
@@ -249,10 +244,6 @@ def _colored_split(strings: List[str]) -> str:
     return " ".join(map(format_with_color, strings))
 
 
-def unsorted_colored_split(string: str) -> str:
-    return _colored_split(SPLIT_PAT.split(string))
-
-
 def colored_split(string: str) -> str:
     return _colored_split(sorted(SPLIT_PAT.split(string)))
 
@@ -284,12 +275,12 @@ def get_val(obj: Union[JSONDict, object], field: str) -> Any:
 
 
 @get_val.register
-def get_val_from_dict(obj: dict, field: str) -> Any:
+def _(obj: dict, field: str) -> Any:
     return _get_val(obj.get(field), field)
 
 
 @get_val.register
-def get_val_from_object(obj: object, field: str) -> Any:
+def _(obj: object, field: str) -> Any:
     return _get_val(getattr(obj, field, None), field)
 
 
@@ -343,10 +334,6 @@ def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
             except ValueError:
                 pass
     return datetime.fromtimestamp(int(float(timestamp or 0)), tz=timezone.utc)
-
-
-def timestamp2datetimestr(timestamp: Union[str, int, float, None]) -> str:
-    return timestamp2datetime(timestamp).strftime("%F %T")
 
 
 def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:

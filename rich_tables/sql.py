@@ -92,35 +92,6 @@ def report_sql_query(data: JSONDict) -> None:
     return utils.FIELDS_MAP["sql"](data)
 
 
-def get_duplicates(queries: JSONDict) -> JSONDict:
-    data = [{f: q[f] for f in ("operation", "tables", "joins")} for q in queries]
-    table_groups = groupby(sorted(data, key=lambda q: q["tables"]))
-    with_counts = [{**data, "count": len(list(it))} for data, it in table_groups]
-    return sorted(
-        filter(lambda q: q["count"] > 1, with_counts), key=lambda q: q["count"]
-    )
-
-
-def report_queries(queries: List[JSONDict]) -> None:
-    queries = list(filter(lambda q: q.get("tables"), queries))
-    if queries:
-        # duplicates = get_duplicates(queries)
-        for query in queries:
-            span = float(query["span"])
-            query["time"] = "{:>7.2f}".format(round(query["time"] + span, 2))
-            query["span"] = utils.wrap(
-                f"{span:>5.2f}",
-                "green" if span < 1 else "yellow" if span < 10 else "red",
-            )
-
-        # if duplicates:
-
-        #     console.print(
-        #         Rule(utils.wrap("Duplicate queries", "bold"), style="dim cyan")
-        #     )
-        #     console.print(utils.simple_panel(duplicates, expand=True))
-
-
 def sql_table(data: List[JSONDict]) -> utils.NewTable:
     return utils.list_table(
         (utils._get_val(item["sql"], "sql") for idx, item in enumerate(data))

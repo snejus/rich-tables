@@ -78,9 +78,6 @@ class Review(Content):
     state: str
     threads: t.List[ReviewThread]
 
-    def make(self):
-        return self["id"]
-
 
 @dataclass
 class PullRequest:
@@ -244,10 +241,6 @@ class PullRequestTable(PullRequest):
     @property
     def repo(self) -> str:
         return wrap(self.repository, f"b {predictably_random_color(self.repository)}")
-
-    @property
-    def dates(self) -> t.Tuple[str, str]:
-        return self.createdAt, self.updatedAt
 
     @property
     def pr_state(self) -> str:
