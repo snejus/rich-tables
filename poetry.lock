@@ -20,28 +20,6 @@ typing-extensions = {version = ">=3.10", markers = "python_version < \"3.10\""}
 wrapt = ">=1.11,<2"
 
 [[package]]
-name = "attrs"
-version = "23.1.0"
-description = "Classes Without Boilerplate"
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "attrs-23.1.0-py3-none-any.whl", hash = "sha256:1f28b4522cdc2fb4256ac1a020c78acf9cba2c6b461ccd2c126f3aa8e8335d04"},
-    {file = "attrs-23.1.0.tar.gz", hash = "sha256:6279836d581513a26f1bf235f9acd333bc9115683f14f7e8fae46c98fc50e015"},
-]
-
-[package.dependencies]
-importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
-
-[package.extras]
-cov = ["attrs[tests]", "coverage[toml] (>=5.3)"]
-dev = ["attrs[docs,tests]", "pre-commit"]
-docs = ["furo", "myst-parser", "sphinx", "sphinx-notfound-page", "sphinxcontrib-towncrier", "towncrier", "zope-interface"]
-tests = ["attrs[tests-no-zope]", "zope-interface"]
-tests-no-zope = ["cloudpickle", "hypothesis", "mypy (>=1.1.1)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "pytest-xdist[psutil]"]
-
-[[package]]
 name = "certifi"
 version = "2023.7.22"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -294,23 +272,6 @@ importlib-metadata = {version = ">=1.1.0,<4.3", markers = "python_version < \"3.
 mccabe = ">=0.7.0,<0.8.0"
 pycodestyle = ">=2.9.0,<2.10.0"
 pyflakes = ">=2.5.0,<2.6.0"
-
-[[package]]
-name = "flake8-mypy"
-version = "17.8.0"
-description = "A plugin for flake8 integrating mypy."
-category = "dev"
-optional = false
-python-versions = "*"
-files = [
-    {file = "flake8-mypy-17.8.0.tar.gz", hash = "sha256:47120db63aff631ee1f84bac6fe8e64731dc66da3efc1c51f85e15ade4a3ba18"},
-    {file = "flake8_mypy-17.8.0-py35.py36-none-any.whl", hash = "sha256:cff009f4250e8391bf48990093cff85802778c345c8449d6498b62efefeebcbc"},
-]
-
-[package.dependencies]
-attrs = "*"
-flake8 = ">=3.0.0"
-mypy = "*"
 
 [[package]]
 name = "freezegun"
@@ -1116,4 +1077,4 @@ sql = ["sqlparse"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7,<4"
-content-hash = "b920448e568f9dddfbef8a5038f37d0e35fd09f511981d4e431a5111313856e2"
+content-hash = "538a38929fc1f26469c368b25881d290779c702dcffad0c9a7f80f1c217ec587"
