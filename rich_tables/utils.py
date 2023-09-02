@@ -67,12 +67,14 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "".join(set(punctuation + whitespace + ascii_letters) - {"_", ":"}),
+    junk: str = "".join(set(punctuation) - {"_", ":"}),
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
     after = re.sub(r"\\?\[", r"\\[", after)
 
-    matcher = SequenceMatcher(lambda x: x in junk, autojunk=False, a=before, b=after)
+    matcher = SequenceMatcher(
+        lambda x: x not in junk, autojunk=False, a=before, b=after
+    )
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
