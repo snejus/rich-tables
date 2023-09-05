@@ -367,6 +367,8 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 
 FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
+    albumtype=format_with_color,
+    media=format_with_color,
     albumtypes=lambda x: "; ".join(
         map(
             format_with_color,

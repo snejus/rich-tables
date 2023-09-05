@@ -133,7 +133,7 @@ def _int_or_float(
 
 
 @flexitable.register
-def _json_dict(data: JSONDict) -> RenderableType:
+def _json_dict(data: JSONDict, header: Optional[str] = None) -> RenderableType:
     debug(_json_dict, data)
     data = prepare_dict(data)
     table = mapping_view_table()
@@ -192,6 +192,8 @@ def _int_list(data: List[int], header: Optional[str] = None) -> RenderableType:
 @flexitable.register
 def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
     debug(_dict_list, data)
+    if len(data) == 1:
+        return flexitable(data[0])
     data = [prepare_dict(item) for item in data if item]
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     keys = {
