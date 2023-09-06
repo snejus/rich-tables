@@ -8,7 +8,7 @@ from functools import lru_cache, partial, singledispatch
 from itertools import islice
 from math import copysign
 from os import environ, path
-from string import ascii_letters, punctuation, whitespace
+from string import punctuation
 from typing import (
     Any,
     Callable,
@@ -34,7 +34,7 @@ from rich.theme import Theme
 from rich.tree import Tree
 
 JSONDict = Dict[str, Any]
-SPLIT_PAT = re.compile(r"[;,] ?")
+SPLIT_PAT = re.compile(r"[;,\n] ?")
 
 
 BOLD_GREEN = "b green"
@@ -403,7 +403,7 @@ FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     added=time2human,
     entry=time2human,
     due=time2human,
-    created=time2human,
+    # created=time2human,
     createdAt=lambda x: x.replace("T", " ").replace("Z", ""),
     updatedAt=lambda x: x.replace("T", " ").replace("Z", ""),
     modified=time2human,
@@ -455,7 +455,7 @@ FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     calendar=format_with_color,
     source=format_with_color,
     category=format_with_color,
-    categories=colored_split,
+    categories=_colored_split,
     interview=md_panel,
     benefits=md_panel,
     primary=lambda x: colored_split(x) if isinstance(x, str) else str(x),
@@ -469,7 +469,7 @@ FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     answer=md_panel,
     plays=lambda x: wrap(x, BOLD_GREEN),
     skips=lambda x: wrap(x, BOLD_RED),
-    description=md_panel,
+    # description=md_panel,
     body=lambda x: x + "\n",
     event=format_with_color,
     kind=colored_split,

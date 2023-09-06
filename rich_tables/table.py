@@ -311,7 +311,7 @@ def main():
             for ret in draw_data(data):
                 console.print(ret)
         except Exception:
-            console.print_exception(show_locals=True)
+            console.print_exception(show_locals=True, width=console.width)
 
     if "-s" in set(args):
         console.save_html("saved.html")

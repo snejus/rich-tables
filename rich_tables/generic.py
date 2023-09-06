@@ -62,10 +62,13 @@ if not log.handlers:
         log.setLevel("DEBUG")
 
 
-def debug(_func: Callable[..., Any], data: Any) -> None:
+def debug(_func: Callable[..., Any], data: Any, header: Optional[str] = None) -> None:
     if log.isEnabledFor(10):
         log.debug(_func.__annotations__)
-        console.log(data)
+        if header:
+            console.log(f"[b]{header}[/]: {data}")
+        else:
+            console.log(data)
 
 
 def mapping_view_table() -> NewTable:
@@ -174,7 +177,7 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 
 @flexitable.register
 def _str_list(data: List[str], header: Optional[str] = None) -> RenderableType:
-    debug(_str_list, data)
+    debug(_str_list, data, header)
     call = FIELDS_MAP.get(str(header))
     return (
         call("\n".join(data))
