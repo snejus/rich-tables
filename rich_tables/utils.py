@@ -156,6 +156,7 @@ class NewTable(Table):
 
 
 def new_table(*headers: str, **kwargs: Any) -> NewTable:
+    # print("creating new table")
     default = {
         "border_style": "black",
         "show_edge": False,
@@ -194,6 +195,7 @@ def format_with_color(name: str) -> str:
 
 
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
+    # print(f"creating new panel with title {kwargs.get('title')}")
     default: JSONDict = {
         "title_align": "left",
         "subtitle_align": "right",

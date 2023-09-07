@@ -66,7 +66,8 @@ def debug(_func: Callable[..., Any], data: Any, header: Optional[str] = None) ->
     if log.isEnabledFor(10):
         log.debug(_func.__annotations__)
         if header:
-            console.log(f"[b]{header}[/]: {data}")
+            console.log(f"[b]{header}[/]")
+            console.log(data)
         else:
             console.log(data)
 
@@ -137,7 +138,7 @@ def _int_or_float(
 
 @flexitable.register
 def _json_dict(data: JSONDict, header: Optional[str] = None) -> RenderableType:
-    debug(_json_dict, data)
+    debug(_json_dict, data, header)
     data = prepare_dict(data)
     table = mapping_view_table()
     cols: List[RenderableType] = []
@@ -162,12 +163,12 @@ def _json_dict(data: JSONDict, header: Optional[str] = None) -> RenderableType:
     for rend in cols:
         this_width = console.measure(rend).maximum
         if width + this_width > console.width:
-            rows.append(simple_panel(new_table(rows=[row], padding=(0, 0))))
+            rows.append(new_table(rows=[row], padding=(0, 0)))
             row, width = [rend], this_width
         else:
             row.append(rend)
             width += this_width
-    rows.append(simple_panel(new_table(rows=[row], padding=(0, 0))))
+    rows.append(new_table(rows=[row], padding=(0, 0)))
     table.add_rows([[r] for r in rows])
     return table
 
@@ -182,7 +183,7 @@ def _str_list(data: List[str], header: Optional[str] = None) -> RenderableType:
     return (
         call("\n".join(data))
         if call and call != str
-        else "\n".join(map(format_with_color, map(str, data)))
+        else ", ".join(map(format_with_color, map(str, data)))
     )
 
 
@@ -194,7 +195,7 @@ def _int_list(data: List[int], header: Optional[str] = None) -> RenderableType:
 
 @flexitable.register
 def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
-    debug(_dict_list, data)
+    debug(_dict_list, data, header)
     if len(data) == 1:
         return flexitable(data[0])
     data = [prepare_dict(item) for item in data if item]
@@ -221,6 +222,7 @@ def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Renderable
             return str(trans)
         return trans
 
+    # large_table = list_table(title=header)
     large_table = list_table()
     for large, items in it.groupby(data, lambda i: len(str(i.values())) > 1200):
         if large:
