@@ -13,7 +13,10 @@ from rich.columns import Columns
 from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
 from rich.markdown import Markdown
+from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
+from typing_extensions import reveal_type
 
 from .utils import (
     DISPLAY_HEADER,
@@ -30,9 +33,6 @@ from .utils import (
     simple_panel,
     wrap,
 )
-
-if TYPE_CHECKING:
-    from rich.panel import Panel
 
 JSONDict = Dict[str, Any]
 console = make_console()
@@ -129,11 +129,10 @@ def _str_header(data: str, header: str) -> RenderableType:
 
 
 @flexitable.register
-def _int_or_float(
-    data: Union[int, float], header: Optional[str] = ""
-) -> RenderableType:
+def _int_or_float(data: Union[int, float], header: str) -> ConsoleRenderable:
     debug(_int_or_float, data)
-    return flexitable(str(data), header)
+    # reveal_type(flexitable(["hi"], header))
+    return str(data)
 
 
 @flexitable.register
@@ -147,6 +146,7 @@ def _json_dict(data: JSONDict, header: Optional[str] = None) -> RenderableType:
             continue
 
         content = flexitable(content, key)
+        # reveal_type(content)
         if isinstance(content, ConsoleRenderable) and not isinstance(content, Markdown):
             cols.append(border_panel(content, title=flexitable(key)))
         else:
@@ -188,15 +188,15 @@ def _str_list(data: List[str], header: Optional[str] = None) -> RenderableType:
 
 
 @flexitable.register
-def _int_list(data: List[int], header: Optional[str] = None) -> RenderableType:
+def _int_list(data: List[int], header: Optional[str] = None) -> Panel:
     debug(_int_list, data)
     return border_panel(Columns(str(x) for x in data))
 
 
 @flexitable.register
-def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> RenderableType:
+def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Table:
     debug(_dict_list, data, header)
-    if len(data) == 1:
+    if len(data) == 1 and len(data[0]) > 10:
         return flexitable(data[0])
     data = [prepare_dict(item) for item in data if item]
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
