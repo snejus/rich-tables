@@ -131,8 +131,7 @@ def _str_header(data: str, header: str) -> RenderableType:
 @flexitable.register
 def _int_or_float(data: Union[int, float], header: str) -> ConsoleRenderable:
     debug(_int_or_float, data)
-    # reveal_type(flexitable(["hi"], header))
-    return str(data)
+    return flexitable(str(data), header)
 
 
 @flexitable.register

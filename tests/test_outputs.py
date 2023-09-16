@@ -19,7 +19,7 @@ def human(text: str) -> str:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def populate_readme():
+def populate_readme() -> None:
     yield
 
     svgs = "\n\n".join(f"### {human(x)}\n\n![image](svgs/{x}.svg)" for x in TEST_CASES)
@@ -27,7 +27,7 @@ def populate_readme():
     with open("README.md") as f:
         readme = f.read()
 
-    readme = re.sub(r"(## Examples.).*", rf"\1{svgs}", readme, flags=re.M | re.S)
+    readme = re.sub(r"(## Examples).*", rf"\1\n\n{svgs}", readme, flags=re.M | re.S)
 
     with open("README.md", "w") as f:
         f.write(readme)
@@ -35,7 +35,7 @@ def populate_readme():
 
 @freeze_time("2022-04-01")
 @pytest.mark.parametrize("testcase", TEST_CASES)
-def test_outputs(testcase):
+def test_outputs(testcase: str) -> None:
     with open(os.path.join(JSON_DIR, f"{testcase}.json"), "r") as f:
         data = json.load(f)
 
