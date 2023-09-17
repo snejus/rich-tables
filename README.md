@@ -71,6 +71,10 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/calendar.svg)
 
+### Diff
+
+![image](svgs/diff.svg)
+
 ### Emails
 
 ![image](svgs/emails.svg)

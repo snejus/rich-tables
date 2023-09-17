@@ -5,7 +5,7 @@ import os
 import re
 from datetime import datetime
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Union
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tuple, Union
 
 from multimethod import multimethod
 from rich import box
@@ -16,7 +16,6 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from typing_extensions import reveal_type
 
 from .utils import (
     DISPLAY_HEADER,
@@ -85,24 +84,7 @@ def mapping_view_table() -> NewTable:
 
 def prepare_dict(item: JSONDict) -> JSONDict:
     if "before" in item and "after" in item:
-        before, after = item.pop("before"), item.pop("after")
-        if not item.get("diff"):
-            if isinstance(before, list):
-                before, after = "\n".join(before), "\n".join(after)
-
-            if isinstance(before, str):
-                item["diff"] = make_difftext(before, after)
-            elif isinstance(before, dict) and isinstance(after, dict):
-                keys = before.keys() | after.keys()
-                item["diff"] = json.dumps(
-                    {
-                        k: make_difftext(str(before.get(k)), str(after.get(k)))
-                        for k in sorted(keys)
-                    },
-                    indent=2,
-                )
-            else:
-                item["diff"] = make_difftext(str(before), str(after))
+        item["diff"] = (item.pop("before"), item.pop("after"))
     return item
 
 
@@ -132,6 +114,12 @@ def _str_header(data: str, header: str) -> RenderableType:
 def _int_or_float(data: Union[int, float], header: str) -> ConsoleRenderable:
     debug(_int_or_float, data)
     return flexitable(str(data), header)
+
+
+@flexitable.register
+def _tuple(data: Tuple[Any, ...], header: str) -> ConsoleRenderable:
+    debug(_tuple, data)
+    return FIELDS_MAP[header](data)
 
 
 @flexitable.register

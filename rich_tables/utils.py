@@ -1,3 +1,4 @@
+import json
 import random
 import re
 import time
@@ -5,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from functools import lru_cache, partial, singledispatch
-from itertools import islice
+from itertools import islice, starmap, zip_longest
 from math import copysign
 from os import environ, path
 from string import punctuation
@@ -21,6 +22,7 @@ from typing import (
     Union,
 )
 
+from multimethod import multimethod
 from rich import box
 from rich.align import Align
 from rich.bar import Bar
@@ -367,8 +369,44 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
     return Syntax(*args, **{**default, **kwargs})
 
 
+@multimethod
+def diff(before: Any, after: Any) -> Any:
+    return make_difftext(str(before), str(after))
+
+
+@diff.register
+def _(before: Any, after: None) -> str:
+    return wrap(before, BOLD_RED)
+
+
+@diff.register
+def _(before: None, after: Any) -> str:
+    return wrap(after, BOLD_GREEN)
+
+
+@diff.register
+def _(before: list, after: list) -> Any:
+    return list(starmap(diff, zip_longest(before, after)))
+
+
+@diff.register
+def _(before: dict, after: dict) -> Any:
+    data = {}
+    keys = sorted(before.keys() | after.keys())
+    for key in keys:
+        if key not in before:
+            data[wrap(key, BOLD_GREEN)] = wrap(after[key], BOLD_GREEN)
+        elif key not in after:
+            data[wrap(key, BOLD_RED)] = wrap(before[key], BOLD_RED)
+        else:
+            data[key] = diff(before.get(key), after.get(key))
+
+    return data
+
+
 FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
+    diff=lambda x: Text.from_markup(json.dumps(diff(*x), indent=2).replace('"', "")),
     albumtype=format_with_color,
     media=format_with_color,
     albumtypes=lambda x: "; ".join(
@@ -518,7 +556,7 @@ FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
     log=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     unified_diff=lambda x: syntax(x, "diff"),
     diffHunk=lambda x: syntax(x, "diff"),
-    diff=lambda x: Text.from_markup(x) if "[/]" in x else md_panel(x),
+    # diff=lambda x: Text.from_markup(x) if "[/]" in x else md_panel(x),
     query=lambda x: Text(x, style="bold"),
 )
 
