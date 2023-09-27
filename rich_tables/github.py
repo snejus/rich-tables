@@ -154,14 +154,15 @@ def comment_panel(comment: IssueComment, **kwargs: t.Any) -> Panel:
 
 
 def resolved_title(thread: ReviewThread) -> str:
-    if thread["isResolved"]:
-        resolved = (
+    resolved = (
+        (
             fmt_state("RESOLVED")
             + wrap(" by ", "white")
             + format_with_color(thread["resolvedBy"])
         )
-    else:
-        resolved = fmt_state("PENDING")
+        if thread["isResolved"]
+        else fmt_state("PENDING")
+    )
     return " ".join(
         [
             wrap(thread["path"], "b magenta"),
@@ -223,7 +224,7 @@ PR_FIELDS_MAP = {
     ),
     "reviewRequests": lambda x: "  ".join(map(colored_with_bg, x)),
     "participants": lambda x: "\n".join(
-        map(format_with_color, map("{:^20}".format, x))  # noqa
+        map(format_with_color, map("{:^20}".format, x))
     ),
 }
 

@@ -1,11 +1,10 @@
 import itertools as it
-import json
 import logging
 import os
 import re
 from datetime import datetime
-from functools import partial
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from functools import lru_cache, partial
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from multimethod import multimethod
 from rich import box
@@ -14,6 +13,7 @@ from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
 from rich.markdown import Markdown
 from rich.panel import Panel
+from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
@@ -25,7 +25,6 @@ from .utils import (
     counts_table,
     format_with_color,
     make_console,
-    make_difftext,
     new_table,
     new_tree,
     predictably_random_color,
@@ -36,6 +35,9 @@ from .utils import (
 JSONDict = Dict[str, Any]
 console = make_console()
 COUNT_FIELD = re.compile(r"count_|(count$)|sum_|duration")
+
+global indent
+indent = ""
 
 
 def time_fmt(current: datetime) -> Text:
@@ -61,14 +63,25 @@ if not log.handlers:
         log.setLevel("DEBUG")
 
 
-def debug(_func: Callable[..., Any], data: Any, header: Optional[str] = None) -> None:
+def debug(
+    _func: Callable[..., Any], data: Any = None, header: Optional[str] = None
+) -> None:
+    global indent
     if log.isEnabledFor(10):
-        log.debug(_func.__annotations__)
-        if header:
-            console.log(f"[b]{header}[/]")
-            console.log(data)
-        else:
-            console.log(data)
+        print(indent + f"Function \033[1;31m{_func.__name__}\033[0m")
+        print(
+            indent
+            + f"Types: \033[1;33m{dict(tuple(_func.__annotations__.items())[:-1])}\033[0m"
+        )
+        print(indent + f"Header: \033[1m{header}\033[0m, Data: \033[1m{data}\033[0m")
+
+    indent += "│ "
+
+
+def undebug(type: Type, data: Any) -> None:
+    global indent
+    indent = indent[:-2]
+    print(indent + "└─ " + f"Returning {type} for {data}")
 
 
 def mapping_view_table() -> NewTable:
@@ -91,7 +104,9 @@ def prepare_dict(item: JSONDict) -> JSONDict:
 @multimethod
 def flexitable(data: Any, header: str) -> RenderableType:
     debug(flexitable, data)
-    return str(data)
+    value = str(data)
+    undebug(type(value), data)
+    return value
 
 
 @flexitable.register
@@ -99,7 +114,10 @@ def _str(data: str) -> RenderableType:
     debug(_str, data)
     if "[/]" not in data:
         data = data.replace("[", "⟦").replace("]", "⟧")
-    return " | ".join(map(format_with_color, data.split(" | ")))
+
+    value = " | ".join(map(format_with_color, data.split(" | ")))
+    undebug(type(value), data)
+    return value
 
 
 @flexitable.register
@@ -107,19 +125,26 @@ def _str_header(data: str, header: str) -> RenderableType:
     debug(_str_header, data)
     if "[/]" not in data:
         data = data.replace("[", "⟦").replace("]", "⟧")
-    return FIELDS_MAP[header](data)
+
+    value = FIELDS_MAP[header](data)
+    undebug(type(value), data)
+    return value
 
 
 @flexitable.register
 def _int_or_float(data: Union[int, float], header: str) -> ConsoleRenderable:
     debug(_int_or_float, data)
-    return flexitable(str(data), header)
+    value = FIELDS_MAP[header](str(data))
+    undebug(type(value), data)
+    return value
 
 
 @flexitable.register
 def _tuple(data: Tuple[Any, ...], header: str) -> ConsoleRenderable:
     debug(_tuple, data)
-    return FIELDS_MAP[header](data)
+    value = FIELDS_MAP[header](data)
+    undebug(type(value), data)
+    return value
 
 
 @flexitable.register
@@ -157,6 +182,9 @@ def _json_dict(data: JSONDict, header: Optional[str] = None) -> RenderableType:
             width += this_width
     rows.append(new_table(rows=[row], padding=(0, 0)))
     table.add_rows([[r] for r in rows])
+
+    value = table
+    undebug(type(value), data)
     return table
 
 
@@ -167,86 +195,101 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 def _str_list(data: List[str], header: Optional[str] = None) -> RenderableType:
     debug(_str_list, data, header)
     call = FIELDS_MAP.get(str(header))
-    return (
+    value = (
         call("\n".join(data))
         if call and call != str
         else ", ".join(map(format_with_color, map(str, data)))
     )
+    undebug(type(value), data)
+    return value
 
 
 @flexitable.register
 def _int_list(data: List[int], header: Optional[str] = None) -> Panel:
     debug(_int_list, data)
-    return border_panel(Columns(str(x) for x in data))
+    value = border_panel(Columns(str(x) for x in data))
+    undebug(type(value), data)
+    return value
 
 
 @flexitable.register
 def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Table:
     debug(_dict_list, data, header)
     if len(data) == 1 and len(data[0]) > 10:
-        return flexitable(data[0])
-    data = [prepare_dict(item) for item in data if item]
-    all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
-    keys = {
-        k: None for k in all_keys if any(((d.get(k) is not None) for d in data))
-    }.keys()
+        value = flexitable(data[0])
+    else:
+        data = [prepare_dict(item) for item in data if item]
+        all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
+        keys = {
+            k: None for k in all_keys if any(((d.get(k) is not None) for d in data))
+        }.keys()
 
-    overlap = set(map(type, data[0].values())) & {int, float, str}
-    get_match = COUNT_FIELD.search
-    count_key = next(filter(None, map(get_match, keys)), None)
-    if len(overlap) == 2 and count_key:
-        return counts_table(data, count_key.string, header=header or "")
-    elif "sql" in keys:
-        from .sql import sql_table
+        overlap = set(map(type, data[0].values())) & {int, float, str}
+        get_match = COUNT_FIELD.search
+        count_key = next(filter(None, map(get_match, keys)), None)
+        if len(overlap) == 2 and count_key:
+            value = counts_table(data, count_key.string, header=header or "")
+        elif "sql" in keys:
+            from .sql import sql_table
 
-        return sql_table(data)
-
-    def getval(value: Any, key: str) -> RenderableType:
-        trans = flexitable(value, key)
-        if isinstance(trans, str):
-            return f"{wrap(key, 'b')}: {trans}"
-        if not trans:
-            return str(trans)
-        return trans
-
-    # large_table = list_table(title=header)
-    large_table = list_table()
-    for large, items in it.groupby(data, lambda i: len(str(i.values())) > 1200):
-        if large:
-            for item in items:
-                values = (
-                    getval(*args)
-                    for args in sorted(
-                        [(v or "", k) for k, v in item.items() if k in keys],
-                        key=lambda x: str(type(x[0])),
-                        reverse=True,
-                    )
-                )
-                large_table.add_row(border_panel(new_tree(values, "")))
+            value = sql_table(data)
         else:
-            sub_table = list_table(show_header=True)
-            for key in keys:
-                sub_table.add_column(key, header_style=predictably_random_color(key))
-            for item in items:
-                sub_table.add_dict_item(item, transform=flexitable)
-            for col in sub_table.columns:
-                col.header = DISPLAY_HEADER.get(str(col.header), col.header)
-            large_table.add_row(sub_table)
-    return large_table
+
+            def getval(value: Any, key: str) -> RenderableType:
+                trans = flexitable(value, key)
+                if isinstance(trans, str):
+                    return f"{wrap(key, 'b')}: {trans}"
+                if not trans:
+                    return str(trans)
+                return trans
+
+            # large_table = list_table(title=header)
+            large_table = list_table()
+            for large, items in it.groupby(data, lambda i: len(str(i.values())) > 1200):
+                if large:
+                    for item in items:
+                        values = (
+                            getval(*args)
+                            for args in sorted(
+                                [(v or "", k) for k, v in item.items() if k in keys],
+                                key=lambda x: str(type(x[0])),
+                                reverse=True,
+                            )
+                        )
+                        large_table.add_row(border_panel(new_tree(values, "")))
+                else:
+                    sub_table = list_table(show_header=True)
+                    for key in keys:
+                        sub_table.add_column(
+                            key, header_style=predictably_random_color(key)
+                        )
+                    for item in items:
+                        sub_table.add_dict_item(item, transform=flexitable)
+                    for col in sub_table.columns:
+                        col.header = DISPLAY_HEADER.get(str(col.header), col.header)
+                    large_table.add_row(sub_table)
+
+                value = large_table
+
+    undebug(type(value), data)
+    return value
 
 
 @flexitable.register
 # def _any_list(data: List[Any], header: str) -> ConsoleRenderable:
 def _any_list(data: List[Any], header: Optional[str] = None) -> ConsoleRenderable:
     if len(data) == 1:
-        return flexitable(data[0])
-    debug(_any_list, data)
-    table = list_table(show_header=False)
-    for item in filter(None, data):
-        content = flexitable(item)
-        if isinstance(content, Iterable) and not isinstance(content, str):
-            table.add_row(*content)
-        else:
-            table.add_row(content)
+        value = flexitable(data[0])
+    else:
+        debug(_any_list, data)
+        table = list_table(show_header=False)
+        for item in filter(None, data):
+            content = flexitable(item)
+            if isinstance(content, Iterable) and not isinstance(content, str):
+                table.add_row(*content)
+            else:
+                table.add_row(content)
 
-    return simple_panel(table)
+        value = simple_panel(table)
+    undebug(type(value), data)
+    return value
