@@ -81,7 +81,8 @@ def debug(
 def undebug(type: Type, data: Any) -> None:
     global indent
     indent = indent[:-2]
-    print(indent + "└─ " + f"Returning {type} for {data}")
+    if log.isEnabledFor(10):
+        print(indent + "└─ " + f"Returning {type} for {data}")
 
 
 def mapping_view_table() -> NewTable:
