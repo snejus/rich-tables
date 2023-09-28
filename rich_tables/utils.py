@@ -16,6 +16,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    MutableMapping,
     Optional,
     SupportsFloat,
     Type,
@@ -404,7 +405,7 @@ def _(before: dict, after: dict) -> Any:
     return data
 
 
-FIELDS_MAP: Dict[str, Callable[..., RenderableType]] = defaultdict(
+FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
     diff=lambda x: Text.from_markup(json.dumps(diff(*x), indent=2).replace('"', "")),
     albumtype=format_with_color,
