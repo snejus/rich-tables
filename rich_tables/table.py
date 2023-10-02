@@ -1,14 +1,16 @@
 import itertools as it
 import json
 import sys
-import typing as t
+from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import singledispatch
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple, Union
 
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import ConsoleRenderable
 from rich.table import Table
+from rich.panel import Panel
 
 from rich_tables.generic import flexitable
 from rich_tables.github import pulls_table
@@ -27,14 +29,14 @@ from rich_tables.utils import (
     wrap,
 )
 
-JSONDict = t.Dict[str, t.Any]
+JSONDict = Dict[str, Any]
 
 
 console = make_console()
 print = console.print
 
 
-def lights_table(lights: t.List[JSONDict]) -> Table:
+def lights_table(lights: List[JSONDict]) -> Table:
     from rgbxy import Converter
 
     headers = lights[0].keys()
@@ -49,12 +51,12 @@ def lights_table(lights: t.List[JSONDict]) -> Table:
         elif xy:
             color = conv.xy_to_hex(*xy)
             light["xy"] = wrap("   a", f"#{color} on #{color}")
-        table.add_row(*map(str, map(lambda x: light.get(x, ""), headers)), style=style)
+        table.add_row(*map(str, (light.get(x, "") for x in headers)), style=style)
     yield table
 
 
-def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
-    def get_start_end(start: datetime, end: datetime) -> t.Tuple[int, int]:
+def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
+    def get_start_end(start: datetime, end: datetime) -> Tuple[int, int]:
         if start.hour == end.hour == 0:
             return 0, 86400
         day_start_ts = start.replace(hour=0).timestamp()
@@ -62,12 +64,12 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
             end.timestamp() - day_start_ts
         )
 
-    status_map = dict(
-        needsAction="[b grey3] ? [/]",
-        accepted="[b green] ✔ [/]",
-        declined="[b red] ✖ [/]",
-        tentative="[b yellow] ? [/]",
-    )
+    status_map = {
+        "needsAction": "[b grey3] ? [/]",
+        "accepted": "[b green] ✔ [/]",
+        "declined": "[b red] ✖ [/]",
+        "tentative": "[b yellow] ? [/]",
+    }
 
     cal_to_color = {e["calendar"]: e["backgroundColor"] for e in events}
     if len(cal_to_color) > 1:
@@ -83,7 +85,7 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
     cal_fmted = [wrap(f" {c} ", f"b black on {clr}") for c, clr in cal_to_color.items()]
     yield Columns(cal_fmted, expand=True, equal=False, align="center")
 
-    new_events: t.List[JSONDict] = []
+    new_events: List[JSONDict] = []
     for event in events:
         start_iso, end_iso = event["start"], event["end"]
         orig_start = datetime.fromisoformat(
@@ -142,7 +144,7 @@ def calendar_table(events: t.List[JSONDict]) -> t.Iterable[ConsoleRenderable]:
             )
 
     keys = "name", "start_time", "end_time", "bar"
-    month_events: t.Iterable[JSONDict]
+    month_events: Iterable[JSONDict]
     for year_and_month, month_events in it.groupby(
         new_events, lambda x: x["start"].strftime("%Y %B")
     ):
@@ -168,7 +170,7 @@ def tasktime(datestr: str) -> str:
     return time2human(datetime.strptime(datestr, "%Y%m%dT%H%M%SZ").timestamp())
 
 
-def tasks_table(tasks: t.Dict[str, t.List[JSONDict]]) -> t.Iterator:
+def tasks_table(tasks: Dict[str, List[JSONDict]]) -> Iterator[Panel]:
     if not tasks:
         return
     fields_map: JSONDict = {
@@ -242,7 +244,7 @@ def tasks_table(tasks: t.Dict[str, t.List[JSONDict]]) -> t.Iterator:
         )
 
 
-def load_data() -> t.Any:
+def load_data() -> Any:
     text = sys.stdin.read().replace(r"\x00", "")
     try:
         data = json.loads(text or "{}")
@@ -258,15 +260,15 @@ def load_data() -> t.Any:
 
 
 @singledispatch
-def draw_data(data: t.Union[JSONDict, t.List], title: str = "") -> None:
+def draw_data(data: Union[JSONDict, List[JSONDict]]) -> Any:
     return None
 
 
 @draw_data.register(dict)
-def _draw_data_dict(data: JSONDict) -> t.Iterator:
+def _draw_data_dict(data: JSONDict) -> Iterator[ConsoleRenderable]:
     if "values" in data and "title" in data:
         values, title = data.pop("values", None), data.pop("title", None)
-        calls: t.Dict[str, t.Callable] = {
+        calls: Dict[str, Callable[List[JSONDict], Iterator[ConsoleRenderable]]] = {
             "Pull Requests": pulls_table,
             "Hue lights": lights_table,
             "Calendar": calendar_table,
@@ -282,39 +284,37 @@ def _draw_data_dict(data: JSONDict) -> t.Iterator:
 
 
 @draw_data.register(list)
-def _draw_data_list(data: t.List[JSONDict], title: str = "") -> t.Iterator:
+def _draw_data_list(data: List[JSONDict]) -> Iterator[ConsoleRenderable]:
     yield flexitable(data)
 
 
-def main():
+def main() -> None:
     args = []
     if len(sys.argv) > 1:
         args.extend(sys.argv[1:])
 
     if args and args[0] == "diff":
         arguments = args[1:]
-        try:
+        with suppress(json.JSONDecodeError):
             arguments = list(map(json.loads, arguments))
-        except json.JSONDecodeError:
-            pass
 
         console.print(make_difftext(*arguments), highlight=False)
-
-    if "-s" in set(args):
-        console.record = True
-
-    data = load_data()
-    if "-j" in args:
-        console.print_json(data=data)
     else:
-        try:
-            for ret in draw_data(data):
-                console.print(ret)
-        except Exception:
-            console.print_exception(show_locals=True, width=console.width)
+        if "-s" in set(args):
+            console.record = True
 
-    if "-s" in set(args):
-        console.save_html("saved.html")
+        data = load_data()
+        if "-j" in args:
+            console.print_json(data=data)
+        else:
+            try:
+                for ret in draw_data(data):
+                    console.print(ret)
+            except Exception:
+                console.print_exception(show_locals=True, width=console.width)
+
+        if "-s" in set(args):
+            console.save_html("saved.html")
 
 
 if __name__ == "__main__":
