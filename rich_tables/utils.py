@@ -159,7 +159,7 @@ class NewTable(Table):
 
 
 def new_table(*headers: str, **kwargs: Any) -> NewTable:
-    # print("creating new table")
+    print(f"creating new table, headers: {headers}")
     default = {
         "border_style": "black",
         "show_edge": False,
@@ -198,7 +198,7 @@ def format_with_color(name: str) -> str:
 
 
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    # print(f"creating new panel with title {kwargs.get('title')}")
+    print(f"creating new panel with title {kwargs.get('title')}")
     default: JSONDict = {
         "title_align": "left",
         "subtitle_align": "right",
@@ -512,7 +512,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     answer=md_panel,
     plays=lambda x: wrap(x, BOLD_GREEN),
     skips=lambda x: wrap(x, BOLD_RED),
-    # description=md_panel,
+    description=md_panel,
     body=lambda x: x + "\n",
     event=format_with_color,
     kind=colored_split,

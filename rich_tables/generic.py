@@ -3,9 +3,10 @@ import logging
 import os
 import re
 from datetime import datetime
-from functools import lru_cache, partial
+from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
+import snoop
 from multimethod import multimethod
 from rich import box
 from rich.columns import Columns
@@ -13,7 +14,6 @@ from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
 from rich.markdown import Markdown
 from rich.panel import Panel
-from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
@@ -31,6 +31,8 @@ from .utils import (
     simple_panel,
     wrap,
 )
+
+snoop.install(color=True)
 
 JSONDict = Dict[str, Any]
 console = make_console()
@@ -68,11 +70,8 @@ def debug(
 ) -> None:
     global indent
     if log.isEnabledFor(10):
-        print(indent + f"Function \033[1;31m{_func.__name__}\033[0m")
-        print(
-            indent
-            + f"Types: \033[1;33m{dict(tuple(_func.__annotations__.items())[:-1])}\033[0m"
-        )
+        types = f"\033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m"
+        print(indent + f"Function \033[1;31m{_func.__name__}\033[0m, types: {types}")
         print(indent + f"Header: \033[1m{header}\033[0m, Data: \033[1m{data}\033[0m")
 
     indent += "│ "
@@ -278,6 +277,7 @@ def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Table:
 
 @flexitable.register
 # def _any_list(data: List[Any], header: str) -> ConsoleRenderable:
+@snoop
 def _any_list(data: List[Any], header: Optional[str] = None) -> ConsoleRenderable:
     if len(data) == 1:
         value = flexitable(data[0])

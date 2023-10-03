@@ -9,8 +9,8 @@ from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple, Union
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import ConsoleRenderable
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 from rich_tables.generic import flexitable
 from rich_tables.github import pulls_table
@@ -18,10 +18,10 @@ from rich_tables.music import albums_table
 from rich_tables.utils import (
     FIELDS_MAP,
     border_panel,
+    diff,
     format_with_color,
     get_val,
     make_console,
-    make_difftext,
     new_table,
     new_tree,
     predictably_random_color,
@@ -298,7 +298,7 @@ def main() -> None:
         with suppress(json.JSONDecodeError):
             arguments = list(map(json.loads, arguments))
 
-        console.print(make_difftext(*arguments), highlight=False)
+        print(FIELDS_MAP["diff"](arguments), highlight=False)
     else:
         if "-s" in set(args):
             console.record = True
