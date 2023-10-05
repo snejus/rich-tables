@@ -1,27 +1,14 @@
-import json
 import random
 import re
 import time
-from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
-from functools import lru_cache, partial, singledispatch
+from functools import lru_cache, partial
 from itertools import islice, starmap, zip_longest
 from math import copysign
 from os import environ, path
 from string import punctuation
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    MutableMapping,
-    Optional,
-    SupportsFloat,
-    Type,
-    Union,
-)
+from typing import Any, Callable, Dict, Iterable, List, Optional, SupportsFloat, Union
 
 from multimethod import multimethod
 from rich import box
@@ -32,7 +19,6 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
-from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
 
@@ -159,7 +145,7 @@ class NewTable(Table):
 
 
 def new_table(*headers: str, **kwargs: Any) -> NewTable:
-    print(f"creating new table, headers: {headers}")
+    # print(f"creating new table, headers: {headers}")
     default = {
         "border_style": "black",
         "show_edge": False,
@@ -198,7 +184,7 @@ def format_with_color(name: str) -> str:
 
 
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    print(f"creating new panel with title {kwargs.get('title')}")
+    # print(f"creating new panel with title {kwargs.get('title')}")
     default: JSONDict = {
         "title_align": "left",
         "subtitle_align": "right",
@@ -270,60 +256,6 @@ def progress_bar(
 
     color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
     return Bar(use_max, 0, count, color=color)
-
-
-def _get_val(value: Any, field: str) -> Any:
-    return FIELDS_MAP[field](value) if value is not None else ""
-
-
-@singledispatch
-def get_val(obj: Union[JSONDict, object], field: str) -> Any:
-    """Definition of a generic get_val function."""
-
-
-@get_val.register
-def _(obj: dict, field: str) -> Any:
-    return _get_val(obj.get(field), field)
-
-
-@get_val.register
-def _(obj: object, field: str) -> Any:
-    return _get_val(getattr(obj, field, None), field)
-
-
-def counts_table(data: List[JSONDict], count_key: str, header: str = "") -> Table:
-    keys = dict.fromkeys(data[0])
-
-    all_counts = {float(i.get(count_key) or 0) for i in data}
-    num_type: Type = float
-    if len({c % 1 for c in all_counts}) == 1:
-        num_type = int
-    total_max = max(all_counts)
-
-    # ensure count_col is at the end
-    headers = [k for k in keys if k not in {count_key, "total"}]
-    table = new_table(*headers, count_key, "")
-    for item in data:
-        item_count = float(item.pop(count_key) or 0)
-        item_max = item.pop("total", None)
-        if item_max is not None:
-            item_max = float(item_max)
-            item_table_val = f"{num_type(item_count)}/{num_type(item_max)}"
-        elif "duration" in count_key:
-            item_table_val = duration2human(item_count)
-        else:
-            item_table_val = str(num_type(item_count))
-        table.add_row(
-            *(get_val(item, h) for h in headers),
-            item_table_val,
-            progress_bar(item_count, total_max, item_max=item_max),
-        )
-    if count_key in {"duration", "total_duration"}:
-        table.caption = "Total " + duration2human(float(sum(all_counts)))
-        table.caption_justify = "left"
-    if header:
-        table.title = header
-    return table
 
 
 def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
@@ -403,175 +335,3 @@ def _(before: dict, after: dict) -> Any:
             data[key] = diff(before.get(key), after.get(key))
 
     return data
-
-
-FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
-    lambda: str,
-    diff=lambda x: Text.from_markup(json.dumps(diff(*x), indent=2).replace('"', "")),
-    albumtype=format_with_color,
-    media=format_with_color,
-    albumtypes=lambda x: "; ".join(
-        map(
-            format_with_color,
-            {
-                "album; compilation": "comp",
-                "dj-mix; broadcast": "dj-mix",
-                "broadcast; dj-mix": "dj-mix",
-            }
-            .get(x, x)
-            .split("; "),
-        )
-    ),
-    author=colored_with_bg,
-    user=format_with_color,
-    bodyHTML=md_panel,
-    label=format_with_color,
-    labels=lambda x: wrap(
-        "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x), "b i"
-    )
-    if isinstance(x, list)
-    else colored_split(x),
-    catalognum=format_with_color,
-    last_played=time2human,
-    avg_last_played=lambda x: time2human(x, acc=2),
-    since=lambda x: x
-    if isinstance(x, str)
-    else datetime.fromtimestamp(float(x)).strftime("%F %H:%M"),
-    mtime=time2human,
-    dt=lambda x: time2human(x, 5),
-    start=time2human,
-    end=time2human,
-    added=time2human,
-    entry=time2human,
-    due=time2human,
-    # created=time2human,
-    first_active=time2human,
-    last_active=time2human,
-    createdAt=lambda x: x.replace("T", " ").replace("Z", ""),
-    updatedAt=lambda x: x.replace("T", " ").replace("Z", ""),
-    modified=time2human,
-    updated=time2human,
-    wait_per_play=lambda x: wrap(
-        " ".join(islice(fmt_time(int(float(x))), 1)), BOLD_GREEN
-    ),
-    committedDate=time2human,
-    bpm=lambda x: wrap(
-        str(x),
-        (
-            BOLD_GREEN
-            if x < 135
-            else BOLD_RED
-            if x > 230
-            else "red"
-            if x > 165
-            else "yellow"
-        ),
-    )
-    if isinstance(x, int)
-    else x,
-    style=format_with_color,
-    __typename=format_with_color,
-    genre=colored_split,
-    group_source=lambda x: ", ".join(map(format_with_color, x)),
-    length=timestamp2timestr,
-    tracktotal=lambda x: (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
-    if isinstance(x, Iterable) and not isinstance(x, str)
-    else str(x),
-    country=get_country,
-    data_source=format_with_color,
-    helicopta=lambda x: ":fire: " if x and int(x) else "",
-    hidden=lambda x: ":shit: " if x and int(x) else "",
-    keywords=lambda x: " ".join(map(colored_with_bg, colored_split(x).split("  ")))
-    if isinstance(x, str)
-    else x,
-    ingr=lambda x: simple_panel(colored_split(x)),
-    content=lambda x: md_panel(x) if isinstance(x, str) else x,
-    notes=md_panel,
-    text=md_panel,
-    instructions=md_panel,
-    comment=md_panel,
-    comments=lambda x: md_panel(
-        x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
-    ),
-    tags=colored_split,
-    released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
-    calendar=format_with_color,
-    source=format_with_color,
-    category=format_with_color,
-    categories=_colored_split,
-    interview=md_panel,
-    benefits=md_panel,
-    primary=lambda x: colored_split(x) if isinstance(x, str) else str(x),
-    **{"from": format_with_color},
-    to=format_with_color,
-    creditText=md_panel,
-    duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
-    total_duration=lambda x: duration2human(x),
-    brand=format_with_color,
-    mastering=format_with_color,
-    answer=md_panel,
-    plays=lambda x: wrap(x, BOLD_GREEN),
-    skips=lambda x: wrap(x, BOLD_RED),
-    description=md_panel,
-    body=lambda x: x + "\n",
-    event=format_with_color,
-    kind=colored_split,
-    type_name=format_with_color,
-    table=format_with_color,
-    endpoint=format_with_color,
-    issuetype=format_with_color,
-    priority=format_with_color,
-    status=format_with_color,
-    key=format_with_color,
-    assignee=format_with_color,
-    subtask_priority=format_with_color,
-    subtask_status=format_with_color,
-    subtask_key=format_with_color,
-    subtask_assignee=format_with_color,
-    epic_priority=format_with_color,
-    epic_status=format_with_color,
-    epic_key=format_with_color,
-    Category=format_with_color,
-    Description=format_with_color,
-    symbol=format_with_color,
-    module=format_with_color,
-    code=format_with_color,
-    entity=format_with_color,
-    new=lambda x: wrap(":heavy_check_mark:", BOLD_GREEN)
-    if x
-    else wrap(":cross_mark_button:", BOLD_RED),
-    link=lambda name: (
-        wrap(f" {name} ", "b black on red")
-        if name == "blocks"
-        else wrap(name, BOLD_RED)
-        if name == "is blocked by"
-        else name
-    ),
-    album=format_with_color,
-    context=lambda x: syntax(x, "python"),
-    python=lambda x: syntax(x, "python"),
-    CreatedBy=lambda x: syntax(x.replace(";", "\n"), "sh"),
-    sql=lambda x: border_panel(syntax(x.replace('"', ""), "sql")),
-    file=lambda x: "/".join(map(format_with_color, x.split("/"))),
-    field=lambda x: ".".join(map(format_with_color, x.split("."))),
-    log=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
-    unified_diff=lambda x: syntax(x, "diff"),
-    diffHunk=lambda x: syntax(x, "diff"),
-    # diff=lambda x: Text.from_markup(x) if "[/]" in x else md_panel(x),
-    query=lambda x: Text(x, style="bold"),
-)
-
-DISPLAY_HEADER: Dict[str, str] = {
-    "track": "#",
-    "bpm": "🚀",
-    "last_played": ":timer_clock: ",
-    "mtime": "updated",
-    "data_source": "source",
-    "helicopta": ":helicopter:",
-    "hidden": ":no_entry:",
-    "track_alt": ":cd:",
-    "catalognum": ":pen: ",
-    "plays": wrap(":play_button:", BOLD_GREEN),
-    "skips": wrap(":stop_button:", BOLD_RED),
-    "albumtypes": "types",
-}

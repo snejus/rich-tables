@@ -11,15 +11,8 @@ from rich.console import ConsoleRenderable, Group
 from rich.panel import Panel
 from rich.table import Table
 
-from rich_tables.utils import (
-    DISPLAY_HEADER,
-    FIELDS_MAP,
-    border_panel,
-    new_table,
-    predictably_random_color,
-    simple_panel,
-    wrap,
-)
+from .fields import DISPLAY_HEADER, FIELDS_MAP
+from .utils import border_panel, new_table, predictably_random_color, simple_panel, wrap
 
 JSONDict = Dict[str, Any]
 

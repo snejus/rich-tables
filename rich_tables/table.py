@@ -12,15 +12,13 @@ from rich.console import ConsoleRenderable
 from rich.panel import Panel
 from rich.table import Table
 
-from rich_tables.generic import flexitable
-from rich_tables.github import pulls_table
-from rich_tables.music import albums_table
-from rich_tables.utils import (
-    FIELDS_MAP,
+from .fields import FIELDS_MAP, get_val
+from .generic import flexitable
+from .github import pulls_table
+from .music import albums_table
+from .utils import (
     border_panel,
-    diff,
     format_with_color,
-    get_val,
     make_console,
     new_table,
     new_tree,

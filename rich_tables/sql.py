@@ -1,13 +1,10 @@
 import re
 from collections import defaultdict
-from itertools import groupby
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import sqlparse
-from rich.rule import Rule
-from rich.syntax import Syntax
 
-from . import utils
+from .utils import colored_with_bg, format_with_color
 
 QUERY_PARTS = [
     re.compile(
@@ -23,7 +20,6 @@ ORDER_BY_PARTS_PAT = re.compile(r"([^. ]+)(?:(?:\.)([^ ]+))*(?:(?: )(ASC|DESC))"
 REINDENT = False
 
 JSONDict = Dict[str, Any]
-console = utils.make_console()
 
 
 def fmt_ordering(column: str) -> str:
@@ -35,33 +31,14 @@ def fmt_ordering(column: str) -> str:
             if r[3] == "ASC"
             else ""
         )
-        + utils.format_with_color(r[1])
-        + (f".{utils.colored_with_bg(r[2])}" if r[2] else ""),
+        + format_with_color(r[1])
+        + (f".{colored_with_bg(r[2])}" if r[2] else ""),
         column,
     )
 
 
 def fmt_joins(column: str) -> str:
-    return re.sub(
-        r"JOIN (.+)", lambda r: "JOIN " + utils.format_with_color(r[1]), column
-    )
-
-
-utils.FIELDS_MAP.update(
-    tables=utils.colored_split,
-    operation=utils.colored_split,
-    joins=lambda x: "\n".join(map(fmt_joins, x.split(", "))),
-    order_by=lambda x: " ".join(map(fmt_ordering, re.split(r",\s+", x))),
-    sql=lambda x: utils.border_panel(
-        Syntax(
-            sqlparse.format(x.replace('"', ""), strip_comments=True, reindent=True),
-            "sql",
-            theme="gruvbox-dark",
-            background_color="black",
-            word_wrap=True,
-        )
-    ),
-)
+    return re.sub(r"JOIN (.+)", lambda r: "JOIN " + format_with_color(r[1]), column)
 
 
 def parse_sql_query(sql: str, span: float) -> dict:
@@ -88,23 +65,21 @@ def parse_sql_query(sql: str, span: float) -> dict:
     return query
 
 
-def report_sql_query(data: JSONDict) -> None:
-    return utils.FIELDS_MAP["sql"](data)
+# def report_sql_query(data: JSONDict) -> None:
+#     return FIELDS_MAP["sql"](data)
 
 
-def sql_table(data: List[JSONDict]) -> utils.NewTable:
-    return utils.list_table(
-        (utils._get_val(item["sql"], "sql") for idx, item in enumerate(data))
-    )
-    # parsed_data = [
-    #     parse_sql_query(item["sql"], item["exclusive_time"]) for item in data
-    # ]
-    # summary_table = utils.new_table("id", *parsed_data[0].keys())
-    # for idx, item in enumerate(parsed_data):
-    #     item = {"id": str(idx), **{k: utils._get_val(v, k) for k, v in item.items()}}
-    #     summary_table.add_dict_item(item)
+# def sql_table(data: List[JSONDict]) -> NewTable:
+#     return list_table((get_val(item["sql"], "sql") for idx, item in enumerate(data)))
+# parsed_data = [
+#     parse_sql_query(item["sql"], item["exclusive_time"]) for item in data
+# ]
+# summary_table = utils.new_table("id", *parsed_data[0].keys())
+# for idx, item in enumerate(parsed_data):
+#     item = {"id": str(idx), **{k: utils._get_val(v, k) for k, v in item.items()}}
+#     summary_table.add_dict_item(item)
 
-    # item["sql"] = report_sql_query(item["sql"])
-    # for col in new_table.get_columns():
-    #     pass
-    # return utils.simple_panel(utils.new_table(rows=[[sql_table], [summary_table]]))
+# item["sql"] = report_sql_query(item["sql"])
+# for col in new_table.get_columns():
+#     pass
+# return utils.simple_panel(utils.new_table(rows=[[sql_table], [summary_table]]))

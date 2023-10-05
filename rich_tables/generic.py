@@ -17,12 +17,10 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
+from .fields import DISPLAY_HEADER, FIELDS_MAP, counts_table
 from .utils import (
-    DISPLAY_HEADER,
-    FIELDS_MAP,
     NewTable,
     border_panel,
-    counts_table,
     format_with_color,
     make_console,
     new_table,
@@ -132,7 +130,7 @@ def _str_header(data: str, header: str) -> RenderableType:
 
 
 @flexitable.register
-def _int_or_float(data: Union[int, float], header: str) -> ConsoleRenderable:
+def _int_or_float(data: Union[int, float], header: str) -> RenderableType:
     debug(_int_or_float, data)
     value = FIELDS_MAP[header](str(data))
     undebug(type(value), data)
@@ -140,7 +138,7 @@ def _int_or_float(data: Union[int, float], header: str) -> ConsoleRenderable:
 
 
 @flexitable.register
-def _tuple(data: Tuple[Any, ...], header: str) -> ConsoleRenderable:
+def _tuple(data: Tuple[Any, ...], header: str) -> RenderableType:
     debug(_tuple, data)
     value = FIELDS_MAP[header](data)
     undebug(type(value), data)
@@ -171,7 +169,7 @@ def _json_dict(data: JSONDict, header: Optional[str] = None) -> RenderableType:
     table = new_table()
     row: List[RenderableType]
     row, width = [], 0
-    rows: List[Panel] = []
+    rows: List[RenderableType] = []
     for rend in cols:
         this_width = console.measure(rend).maximum
         if width + this_width > console.width:
@@ -278,9 +276,9 @@ def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Table:
 @flexitable.register
 # def _any_list(data: List[Any], header: str) -> ConsoleRenderable:
 @snoop
-def _any_list(data: List[Any], header: Optional[str] = None) -> ConsoleRenderable:
+def _any_list(data: List[Any], header: Optional[str] = None) -> RenderableType:
     if len(data) == 1:
-        value = flexitable(data[0])
+        value = flexitable(data[0], header)
     else:
         debug(_any_list, data)
         table = list_table(show_header=False)

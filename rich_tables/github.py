@@ -11,13 +11,12 @@ from rich.syntax import Syntax
 from rich.table import Table
 from typing_extensions import TypedDict
 
-from rich_tables.utils import (
-    FIELDS_MAP,
+from .fields import FIELDS_MAP, get_val
+from .utils import (
     JSONDict,
     border_panel,
     colored_with_bg,
     format_with_color,
-    get_val,
     list_table,
     md_panel,
     new_table,
