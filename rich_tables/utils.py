@@ -147,7 +147,6 @@ class NewTable(Table):
 def new_table(*headers: str, **kwargs: Any) -> NewTable:
     # print(f"creating new table, headers: {headers}")
     default = {
-        "border_style": "black",
         "show_edge": False,
         "show_header": False,
         "pad_edge": False,
@@ -155,7 +154,9 @@ def new_table(*headers: str, **kwargs: Any) -> NewTable:
         "row_styles": ["white"],
         "expand": False,
         "title_justify": "left",
-        "show_lines": False,
+        "style": "magenta",
+        "border_style": "magenta",
+        "box": box.ROUNDED,
     }
     if headers:
         default.update(
@@ -190,6 +191,7 @@ def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
         "subtitle_align": "right",
         "box": box.SIMPLE,
         "expand": False,
+        "border_style": "red",
     }
     if "title" in kwargs:
         kwargs["title"] = wrap(kwargs["title"], "b")

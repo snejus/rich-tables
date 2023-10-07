@@ -1,6 +1,7 @@
 import itertools as it
 import json
 import sys
+from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import singledispatch
@@ -245,7 +246,7 @@ def tasks_table(tasks: Dict[str, List[JSONDict]]) -> Iterator[Panel]:
 def load_data() -> Any:
     text = sys.stdin.read().replace(r"\x00", "")
     try:
-        data = json.loads(text or "{}")
+        data = json.loads(text or "{}", object_hook=OrderedDict)
         assert data
     except json.JSONDecodeError:
         msg = "Broken JSON"

@@ -6,9 +6,10 @@ from datetime import datetime
 from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
-import snoop
+# import snoop
 from multimethod import multimethod
 from rich import box
+from rich.align import Align
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
@@ -30,7 +31,7 @@ from .utils import (
     wrap,
 )
 
-snoop.install(color=True)
+# snoop.install(color=True)
 
 JSONDict = Dict[str, Any]
 console = make_console()
@@ -87,7 +88,7 @@ def mapping_view_table() -> NewTable:
     * First for bold field names
     * Second one for values
     """
-    table = new_table(border_style="misty_rose1", box=box.MINIMAL, expand=False)
+    table = new_table(border_style="cyan", style="cyan", box=box.MINIMAL, expand=False)
     table.add_column(justify="right", style="bold misty_rose1")
     table.add_column()
     return table
@@ -166,19 +167,27 @@ def _json_dict(data: JSONDict, header: Optional[str] = None) -> RenderableType:
     # if header:
     #     return Columns(cols)
 
-    table = new_table()
+    table = new_table(padding=(0, 0))
     row: List[RenderableType]
     row, width = [], 0
     rows: List[RenderableType] = []
     for rend in cols:
         this_width = console.measure(rend).maximum
         if width + this_width > console.width:
-            rows.append(new_table(rows=[row], padding=(0, 0)))
+            rows.append(
+                Align.center(
+                    Columns(row, equal=True, padding=(0, 0)),
+                    vertical="middle",
+                )
+            )
             row, width = [rend], this_width
         else:
             row.append(rend)
             width += this_width
-    rows.append(new_table(rows=[row], padding=(0, 0)))
+
+    rows.append(
+        Align.center(Columns(row, equal=True, padding=(0, 0)), vertical="middle")
+    )
     table.add_rows([[r] for r in rows])
 
     value = table
@@ -275,7 +284,7 @@ def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Table:
 
 @flexitable.register
 # def _any_list(data: List[Any], header: str) -> ConsoleRenderable:
-@snoop
+# @snoop
 def _any_list(data: List[Any], header: Optional[str] = None) -> RenderableType:
     if len(data) == 1:
         value = flexitable(data[0], header)
