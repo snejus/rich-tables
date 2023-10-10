@@ -319,7 +319,7 @@ class PullRequestTable(PullRequest):
         kwargs["reviews"] = [
             Review(**r, threads=threads_by_review_id.get(r["id"], []))
             for r in reviews
-            if r["body"]
+            # if r["body"]
         ]
         return cls(**kwargs)
 
