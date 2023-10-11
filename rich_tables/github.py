@@ -305,13 +305,11 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
 class PullRequestTable(PullRequest):
     reviews: List[Review]
     comments: List[IssueComment]
-    review_threads: List[ReviewThread]
 
     @classmethod
     def make(cls, reviews: List[JSONDict], **kwargs: Any) -> "PullRequestTable":
         kwargs["comments"] = [IssueComment(**c) for c in kwargs["comments"]]
         threads = [ReviewThread.make(**rt) for rt in kwargs["reviewThreads"]]
-        kwargs["review_threads"] = threads
         threads.sort(key=lambda t: t.review_id)
         threads_by_review_id = {
             r: list(trs) for r, trs in groupby(threads, lambda t: t.review_id)
@@ -375,18 +373,13 @@ class PullRequestTable(PullRequest):
 
     @property
     def contents(self) -> List[PanelMixin]:
-        return [*self.reviews, *self.comments, *self.review_threads]
+        return [*self.reviews, *self.comments]
 
     @property
     def panels(self) -> Iterable[Panel]:
         comments = sorted(self.contents, key=lambda c: c.createdAt)
         for comment in comments:
             yield comment.panel
-
-    @property
-    def all_review_threads(self) -> Iterable[Panel]:
-        for thread in self.review_threads:
-            yield thread.panel
 
 
 def pulls_table(
