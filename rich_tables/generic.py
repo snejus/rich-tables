@@ -175,10 +175,10 @@ def _json_dict(data: JSONDict, header: Optional[str] = None) -> RenderableType:
         this_width = console.measure(rend).maximum
         if width + this_width > console.width:
             rows.append(
-                Align.center(
-                    Columns(row, equal=True, padding=(0, 0)),
-                    vertical="middle",
-                )
+                # Align.center(
+                Columns(row, equal=True, padding=(0, 0)),
+                # vertical="middle",
+                # )
             )
             row, width = [rend], this_width
         else:
