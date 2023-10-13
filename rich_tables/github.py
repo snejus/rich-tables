@@ -243,6 +243,7 @@ def state_color(state: str) -> str:
         "RESOLVED": "s green",
         "OPEN": "green",
         "MERGED": "magenta",
+        "CLOSED": "b red",
         "PENDING": "yellow",
         "OUTDATED": "yellow",
         "COMMENTED": "yellow",
