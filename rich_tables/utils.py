@@ -154,8 +154,8 @@ def new_table(*headers: str, **kwargs: Any) -> NewTable:
         "row_styles": ["white"],
         "expand": False,
         "title_justify": "left",
-        "style": "magenta",
-        "border_style": "magenta",
+        "style": "black",
+        "border_style": "black",
         "box": box.ROUNDED,
     }
     if headers:
@@ -207,9 +207,10 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
-    return simple_panel(
-        Markdown(content, justify=kwargs.pop("justify", "left")), **kwargs
-    )
+    return Markdown(content, justify=kwargs.pop("justify", "left"))
+    # return simple_panel(
+    #     Markdown(content, justify=kwargs.pop("justify", "left")), **kwargs
+    # )
 
 
 def new_tree(

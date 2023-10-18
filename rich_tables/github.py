@@ -152,7 +152,8 @@ class ReviewThread(PanelMixin):
 
     @property
     def panel(self) -> Panel:
-        comments = self.comments[-1:] if self.isResolved else self.comments
+        # comments = self.comments[-1:] if self.isResolved else self.comments
+        comments = self.comments
         comments_col = list_table(
             (c.get_panel() for c in comments), padding=(1, 0, 0, 0)
         )
@@ -318,7 +319,8 @@ class PullRequestTable(PullRequest):
         kwargs["reviews"] = [
             Review(**r, threads=threads_by_review_id.get(r["id"], []))
             for r in reviews
-            # if r["body"]
+            if threads_by_review_id.get(r["id"], [])
+            # if r["state"] != "COMMENTED"
         ]
         return cls(**kwargs)
 

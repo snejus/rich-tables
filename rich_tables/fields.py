@@ -148,9 +148,9 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     body=lambda x: x + "\n",
     # message=Text,
     new=lambda x: (
-        wrap(":heavy_check_mark:", BOLD_GREEN)
+        wrap(":heavy_check_mark: ", BOLD_GREEN)
         if x
-        else wrap(":cross_mark_button:", BOLD_RED)
+        else wrap(":cross_mark_button: ", BOLD_RED)
     ),
     link=lambda name: (
         wrap(f" {name} ", "b black on red")
@@ -271,12 +271,12 @@ DISPLAY_HEADER: Dict[str, str] = {
     "last_played": ":timer_clock: ",
     "mtime": "updated",
     "data_source": "source",
-    "helicopta": ":helicopter:",
-    "hidden": ":no_entry:",
-    "track_alt": ":cd:",
+    "helicopta": ":helicopter: ",
+    "hidden": ":no_entry: ",
+    "track_alt": ":cd: ",
     "catalognum": ":pen: ",
-    "plays": wrap(":play_button:", BOLD_GREEN),
-    "skips": wrap(":stop_button:", BOLD_RED),
+    "plays": wrap(":play_button: ", BOLD_GREEN),
+    "skips": wrap(":stop_button: ", BOLD_RED),
     "albumtypes": "types",
 }
 
