@@ -319,8 +319,7 @@ class PullRequestTable(PullRequest):
         kwargs["reviews"] = [
             Review(**r, threads=threads_by_review_id.get(r["id"], []))
             for r in reviews
-            if threads_by_review_id.get(r["id"], [])
-            # if r["state"] != "COMMENTED"
+            if threads_by_review_id.get(r["id"], []) or r["state"] != "COMMENTED"
         ]
         return cls(**kwargs)
 
@@ -332,6 +331,10 @@ class PullRequestTable(PullRequest):
             expand=True,
             align="center",
         )
+
+    @property
+    def name(self) -> str:
+        return wrap(self.title, f"b {predictably_random_color(self.title)}")
 
     @property
     def repo(self) -> str:
@@ -358,7 +361,7 @@ class PullRequestTable(PullRequest):
                     [md_panel(self.body)],
                 ]
             ),
-            title=self.repo,
+            title=f"{self.name} @ {self.repo}",
             box=box.DOUBLE_EDGE,
             border_style=state_color(self.pr_state),
             subtitle=(
