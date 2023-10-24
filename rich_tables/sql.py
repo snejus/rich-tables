@@ -44,7 +44,9 @@ def fmt_joins(column: str) -> str:
 def parse_sql_query(sql: str, span: float) -> dict:
     sql = sql.replace('"', "")
     kwargs = {"strip_comments": True}
-    kwargs["reindent" if REINDENT else "reindent_aligned"] = True
+    # kwargs["reindent" if REINDENT else "reindent_aligned"] = True
+    kwargs["reindent_aligned"] = False
+    kwargs["reindent"] = False
     sql = sqlparse.format(sql, **kwargs)
     query = defaultdict(str, span=round(span, 2), sql=sql)
     query = {

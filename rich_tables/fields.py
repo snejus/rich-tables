@@ -72,7 +72,7 @@ def counts_table(data: List[JSONDict], count_key: str, header: str = "") -> Tabl
 
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
-    diff=lambda x: Text.from_markup(json.dumps(diff(*x), indent=2).replace('"', "")),
+    # diff=lambda x: Text.from_markup(json.dumps(diff(*x), indent=2).replace('"', "")),
     albumtypes=lambda x: "; ".join(
         map(
             format_with_color,
@@ -256,7 +256,13 @@ except ModuleNotFoundError:
 else:
     FIELDS_MAP["sql"] = lambda x: border_panel(
         Syntax(
-            sqlparse.format(x.replace('"', ""), strip_comments=True, reindent=True),
+            sqlparse.format(
+                x.replace('"', ""),
+                indent_columns=False,
+                strip_whitespace=True,
+                strip_comments=True,
+                reindent=True,
+            ),
             "sql",
             theme="gruvbox-dark",
             background_color="black",
