@@ -72,7 +72,7 @@ def counts_table(data: List[JSONDict], count_key: str, header: str = "") -> Tabl
 
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
-    # diff=lambda x: Text.from_markup(json.dumps(diff(*x), indent=2).replace('"', "")),
+    diff=lambda x: Text.from_markup(json.dumps(diff(*x), indent=2).replace('"', "")),
     albumtypes=lambda x: "; ".join(
         map(
             format_with_color,
@@ -221,14 +221,14 @@ fields_by_func = {
         "committedDate",
         "# created",
         "due",
-        "end",
+        # "end",
         "entry",
         "first_active",
         "last_active",
         "last_played",
         "modified",
         "mtime",
-        "start",
+        # "start",
         "updated",
     ),
     md_panel: (
