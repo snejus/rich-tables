@@ -23,7 +23,7 @@ from rich.theme import Theme
 from rich.tree import Tree
 
 JSONDict = Dict[str, Any]
-SPLIT_PAT = re.compile(r"[;,\n] ?")
+SPLIT_PAT = re.compile(r"[;,] ?")
 
 
 BOLD_GREEN = "b green"
@@ -140,7 +140,7 @@ class NewTable(Table):
         **kwargs: Any,
     ) -> None:
         """Take the required columns / keys from the given dictionary item."""
-        vals = (transform(item.get(c) or "", c) for c in self.colnames)
+        vals = (transform(item.get(c, ""), c) for c in self.colnames)
         self.add_row(*vals, **kwargs)
 
 

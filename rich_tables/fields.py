@@ -10,6 +10,7 @@ from rich.console import RenderableType
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
+from rich.columns import Columns
 
 from .sql import fmt_joins, fmt_ordering
 from .utils import (
@@ -172,6 +173,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     query=lambda x: Text(x, style="bold"),
     joins=lambda x: "\n".join(map(fmt_joins, x.split(", "))),
     order_by=lambda x: " ".join(map(fmt_ordering, re.split(r",\s+", x))),
+    default_start_time=format_with_color,
+    default_end_time=format_with_color,
 )
 fields_by_func = {
     format_with_color: (
@@ -194,6 +197,7 @@ fields_by_func = {
         "epic_status",
         "event",
         "from",
+        "full_name",
         "issuetype",
         "key",
         "label",
@@ -202,6 +206,7 @@ fields_by_func = {
         "module",
         "priority",
         "project",
+        "short_name",
         "source",
         "status",
         "style",
@@ -219,14 +224,14 @@ fields_by_func = {
     time2human: (
         "added",
         "committedDate",
-        "# created",
+        # "created",
         "due",
         # "end",
         "entry",
         "first_active",
         "last_active",
         "last_played",
-        "modified",
+        # "modified",
         "mtime",
         # "start",
         "updated",
@@ -243,7 +248,16 @@ fields_by_func = {
         "notes",
         "text",
     ),
-    colored_split: ("error", "genre", "kind", "operation", "tables", "tags"),
+    colored_split: (
+        "error",
+        "genre",
+        "kind",
+        "operation",
+        "tables",
+        "tags",
+        # "practice_ids"
+        # "post_addresses",
+    ),
 }
 for func, fields in fields_by_func.items():
     for field in fields:

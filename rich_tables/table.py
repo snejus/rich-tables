@@ -251,7 +251,7 @@ def load_data() -> Any:
     except json.JSONDecodeError:
         msg = "Broken JSON"
     except AssertionError:
-        msg = "No data"
+        exit(0)
     else:
         return data
     console.log(wrap(msg, "b red"), log_locals=True)
