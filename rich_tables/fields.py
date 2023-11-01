@@ -180,6 +180,7 @@ fields_by_func = {
     format_with_color: (
         "album",
         "albumtype",
+        "area",
         "assignee",
         "brand",
         "calendar",
@@ -243,6 +244,7 @@ fields_by_func = {
         "# comment",
         "creditText",
         "description",
+        "desc",
         "instructions",
         "interview",
         "notes",
@@ -255,6 +257,7 @@ fields_by_func = {
         "operation",
         "tables",
         "tags",
+        "Interests",
         # "practice_ids"
         # "post_addresses",
     ),
