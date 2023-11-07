@@ -6,11 +6,11 @@ from functools import singledispatch
 from itertools import islice, product
 from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Type, Union
 
+from rich.columns import Columns
 from rich.console import RenderableType
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
-from rich.columns import Columns
 
 from .sql import fmt_joins, fmt_ordering
 from .utils import (
@@ -278,12 +278,13 @@ else:
                 indent_columns=False,
                 strip_whitespace=True,
                 strip_comments=True,
-                reindent=True,
+                # reindent=True,
+                reindent_aligned=True,
             ),
             "sql",
             theme="gruvbox-dark",
             background_color="black",
-            word_wrap=True,
+            word_wrap=False,
         )
     )
 

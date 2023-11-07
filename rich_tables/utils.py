@@ -106,7 +106,7 @@ def make_console(**kwargs: Any) -> Console:
     return Console(
         theme=get_theme(),
         force_terminal=True,
-        force_interactive=True,
+        force_interactive=False,
         emoji=True,
         **kwargs,
     )
@@ -120,7 +120,7 @@ class NewTable(Table):
             "vertical": kwargs.pop("vertical", "middle"),
         }
         super().__init__(**kwargs)
-        for idx, arg in enumerate(args):
+        for arg in args:
             self.add_column(arg, **ckwargs)
 
     def add_rows(self, rows: Iterable[Iterable[RenderableType]]) -> None:
@@ -207,10 +207,15 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
-    return Markdown(content, justify=kwargs.pop("justify", "left"))
-    # return simple_panel(
-    #     Markdown(content, justify=kwargs.pop("justify", "left")), **kwargs
-    # )
+    return simple_panel(
+        Markdown(
+            content,
+            inline_code_theme="nord-darker",
+            code_theme="nord-darker",
+            justify=kwargs.pop("justify", "left"),
+        ),
+        **kwargs,
+    )
 
 
 def new_tree(

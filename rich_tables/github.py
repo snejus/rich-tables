@@ -81,7 +81,7 @@ class IssueComment(PanelMixin, Content):
             list_table([simple_panel(md_panel(self.body))]),
             border_style="b yellow",
             title=self.title,
-            box=box.HEAVY,
+            box=box.ROUNDED,
         )
 
 
@@ -91,6 +91,11 @@ class ReviewComment(IssueComment):
     path: str
     diffHunk: str
     pullRequestReview: str
+
+    @classmethod
+    def make(cls, reactions: List[JSONDict], **kwargs: Any) -> "ReviewComment":
+        kwargs["reactions"] = [Reaction(**c) for c in reactions]
+        return cls(**kwargs)
 
     @property
     def diff(self) -> Syntax:
@@ -117,7 +122,7 @@ class ReviewThread(PanelMixin):
 
     @classmethod
     def make(cls, comments: List[JSONDict], **kwargs: Any) -> "ReviewThread":
-        kwargs["comments"] = [ReviewComment(**c) for c in comments]
+        kwargs["comments"] = [ReviewComment.make(**c) for c in comments]
         return cls(**kwargs)
 
     @property
