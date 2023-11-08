@@ -241,7 +241,7 @@ fields_by_func = {
         "answer",
         "benefits",
         "bodyHTML",
-        "# comment",
+        "comment",
         "creditText",
         "description",
         "desc",

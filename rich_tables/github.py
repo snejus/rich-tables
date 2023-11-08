@@ -1,6 +1,6 @@
 """Functionality to display data from GitHub API."""
 from dataclasses import dataclass
-from itertools import groupby
+from itertools import chain, groupby
 from typing import Any, Callable, Iterable, List, Mapping, Union
 
 from rich import box
@@ -78,7 +78,7 @@ class IssueComment(PanelMixin, Content):
     @property
     def panel(self) -> Panel:
         return border_panel(
-            list_table([simple_panel(md_panel(self.body))]),
+            list_table([md_panel(self.body)]),
             border_style="b yellow",
             title=self.title,
             box=box.ROUNDED,
@@ -102,6 +102,10 @@ class ReviewComment(IssueComment):
         return Syntax(
             self.diffHunk, "diff", theme="paraiso-dark", background_color="black"
         )
+
+    @property
+    def review_id(self) -> str:
+        return self.pullRequestReview
 
     def get_panel(self, **kwargs: Any) -> Panel:
         return md_panel(
@@ -127,7 +131,7 @@ class ReviewThread(PanelMixin):
 
     @property
     def review_id(self) -> str:
-        return self.comments[0].pullRequestReview
+        return self.comments[0].review_id
 
     @property
     def createdAt(self) -> str:
@@ -157,7 +161,6 @@ class ReviewThread(PanelMixin):
 
     @property
     def panel(self) -> Panel:
-        # comments = self.comments[-1:] if self.isResolved else self.comments
         comments = self.comments
         comments_col = list_table(
             (c.get_panel() for c in comments), padding=(1, 0, 0, 0)
@@ -168,7 +171,7 @@ class ReviewThread(PanelMixin):
                 highlight=False,
             ),
             highlight=False,
-            border_style=resolved_border_style(self.isResolved),
+            border_style="green" if self.isResolved else "yellow",
             title=self.title,
         )
 
@@ -178,6 +181,7 @@ class Review(PanelMixin, Content):
     id: str
     state: str
     threads: List[ReviewThread]
+    comments: List[ReviewComment]
 
     @property
     def panel(self) -> Panel:
@@ -185,7 +189,11 @@ class Review(PanelMixin, Content):
 
         return border_panel(
             list_table(
-                [simple_panel(md_panel(self.body)), *(t.panel for t in self.threads)]
+                [
+                    md_panel(self.body),
+                    *(t.panel for t in self.threads),
+                    *(c.panel for c in self.comments),
+                ]
             ),
             subtitle=self.state,
             border_style=state_color(self.state),
@@ -264,10 +272,6 @@ def fmt_state(state: str) -> str:
     return wrap(state, f"b {state_color(state)}")
 
 
-def resolved_border_style(resolved: bool) -> str:
-    return "green" if resolved else "yellow"
-
-
 def diff_panel(title: str, rows: List[List[str]]) -> Panel:
     return border_panel(
         new_table(rows=rows),
@@ -317,14 +321,28 @@ class PullRequestTable(PullRequest):
     def make(cls, reviews: List[JSONDict], **kwargs: Any) -> "PullRequestTable":
         kwargs["comments"] = [IssueComment(**c) for c in kwargs["comments"]]
         threads = [ReviewThread.make(**rt) for rt in kwargs["reviewThreads"]]
+        review_comments = list(chain.from_iterable((t.comments for t in threads)))
+        review_comments.sort(key=lambda c: c.review_id)
+        comments_by_review_id = {
+            r: list(c) for r, c in groupby(review_comments, lambda c: c.review_id)
+        }
         threads.sort(key=lambda t: t.review_id)
         threads_by_review_id = {
             r: list(trs) for r, trs in groupby(threads, lambda t: t.review_id)
         }
         kwargs["reviews"] = [
-            Review(**r, threads=threads_by_review_id.get(r["id"], []))
+            Review(
+                **r,
+                threads=threads_by_review_id.get(r["id"], []),
+                comments=comments_by_review_id.get(r["id"], []),
+            )
             for r in reviews
-            if threads_by_review_id.get(r["id"], []) or r["state"] != "COMMENTED"
+            if (
+                r["id"]
+                in threads_by_review_id
+                # or r["state"] != "COMMENTED"
+                # or r["body"]
+            )
         ]
         return cls(**kwargs)
 
@@ -364,6 +382,7 @@ class PullRequestTable(PullRequest):
                         )
                     ],
                     [md_panel(self.body)],
+                    [self.files_commits],
                 ]
             ),
             title=f"{self.name} @ {self.repo}",
@@ -401,5 +420,4 @@ def pulls_table(
     pr = data[0]
     pr_table = PullRequestTable.make(**pr)
     yield pr_table.info
-    yield pr_table.files_commits
     yield from pr_table.panels
