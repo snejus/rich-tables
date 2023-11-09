@@ -146,7 +146,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     total_duration=lambda x: duration2human(x),
     plays=lambda x: wrap(x, BOLD_GREEN),
     skips=lambda x: wrap(x, BOLD_RED),
-    body=lambda x: x + "\n",
+    # body=lambda x: x + "\n",
     # message=Text,
     new=lambda x: (
         wrap(":heavy_check_mark: ", BOLD_GREEN)

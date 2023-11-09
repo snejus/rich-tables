@@ -27,6 +27,76 @@ from .utils import (
 )
 
 
+def fmt_add_del(file: JSONDict) -> List[str]:
+    added, deleted = file["additions"], file["deletions"]
+    additions = f"+{added}" if added else ""
+    deletions = f"-{deleted}" if deleted else ""
+    return [wrap(additions.rjust(5), "b green"), wrap(deletions.rjust(3), "b red")]
+
+
+def state_color(state: str) -> str:
+    return {
+        "True": "green",
+        True: "green",
+        "APPROVED": "green",
+        "RESOLVED": "s green",
+        "OPEN": "green",
+        "MERGED": "magenta",
+        "CLOSED": "b red",
+        "PENDING": "yellow",
+        "OUTDATED": "yellow",
+        "COMMENTED": "yellow",
+        "CHANGES_REQUESTED": "#ffa500",
+        "REVIEW_REQUIRED": "red",
+        "DISMISSED": "gray42",
+        "False": "red",
+    }.get(state, "default")
+
+
+def fmt_state(state: str) -> str:
+    return wrap(state, f"b {state_color(state)}")
+
+
+def diff_panel(title: str, rows: List[List[str]]) -> Panel:
+    return border_panel(
+        new_table(rows=rows),
+        title=title,
+        border_style=f"dim {predictably_random_color(title)}",
+    )
+
+
+PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
+    "state": lambda x: wrap(fmt_state(x), "b"),
+    "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
+    "dates": lambda x: new_table(
+        rows=[
+            [wrap(r" ⬤ ", "b green"), time2human(x[0])],
+            [wrap(r" ◯ ", "b yellow"), time2human(x[1])],
+        ]
+    ),
+    "path": lambda x: wrap(x, "b"),
+    "message": lambda x: wrap(x, "i"),
+    "files": lambda files: diff_panel(
+        "files", [[*fmt_add_del(f), get_val(f, "path")] for f in files]
+    ),
+    "commits": lambda commits: diff_panel(
+        "commits",
+        [
+            [
+                *fmt_add_del(commit),
+                get_val(commit, "message"),
+                get_val(commit, "committedDate"),
+            ]
+            for commit in commits
+        ],
+    ),
+    "reviewRequests": lambda x: "  ".join(map(colored_with_bg, x)),
+    "participants": lambda x: "\n".join(
+        map(format_with_color, map("{:^20}".format, x))
+    ),
+}
+
+
 class Diff(TypedDict):
     additions: int
     deletions: int
@@ -188,13 +258,7 @@ class Review(PanelMixin, Content):
         self.threads.sort(key=lambda t: t.isResolved)
 
         return border_panel(
-            list_table(
-                [
-                    md_panel(self.body),
-                    *(t.panel for t in self.threads),
-                    *(c.panel for c in self.comments),
-                ]
-            ),
+            list_table([md_panel(self.body), *(t.panel for t in self.threads)]),
             subtitle=self.state,
             border_style=state_color(self.state),
             title=self.title,
@@ -240,76 +304,6 @@ class PullRequest:
     title: str
     updatedAt: str
     url: str
-
-
-def fmt_add_del(file: JSONDict) -> List[str]:
-    added, deleted = file["additions"], file["deletions"]
-    additions = f"+{added}" if added else ""
-    deletions = f"-{deleted}" if deleted else ""
-    return [wrap(additions.rjust(5), "b green"), wrap(deletions.rjust(3), "b red")]
-
-
-def state_color(state: str) -> str:
-    return {
-        "True": "green",
-        True: "green",
-        "APPROVED": "green",
-        "RESOLVED": "s green",
-        "OPEN": "green",
-        "MERGED": "magenta",
-        "CLOSED": "b red",
-        "PENDING": "yellow",
-        "OUTDATED": "yellow",
-        "COMMENTED": "yellow",
-        "CHANGES_REQUESTED": "#ffa500",
-        "REVIEW_REQUIRED": "red",
-        "DISMISSED": "gray42",
-        "False": "red",
-    }.get(state, "default")
-
-
-def fmt_state(state: str) -> str:
-    return wrap(state, f"b {state_color(state)}")
-
-
-def diff_panel(title: str, rows: List[List[str]]) -> Panel:
-    return border_panel(
-        new_table(rows=rows),
-        title=title,
-        border_style=f"dim {predictably_random_color(title)}",
-    )
-
-
-PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
-    "state": lambda x: wrap(fmt_state(x), "b"),
-    "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
-    "dates": lambda x: new_table(
-        rows=[
-            [wrap(r" ⬤ ", "b green"), time2human(x[0])],
-            [wrap(r" ◯ ", "b yellow"), time2human(x[1])],
-        ]
-    ),
-    "path": lambda x: wrap(x, "b"),
-    "message": lambda x: wrap(x, "i"),
-    "files": lambda files: diff_panel(
-        "files", [[*fmt_add_del(f), get_val(f, "path")] for f in files]
-    ),
-    "commits": lambda commits: diff_panel(
-        "commits",
-        [
-            [
-                *fmt_add_del(commit),
-                get_val(commit, "message"),
-                get_val(commit, "committedDate"),
-            ]
-            for commit in commits
-        ],
-    ),
-    "reviewRequests": lambda x: "  ".join(map(colored_with_bg, x)),
-    "participants": lambda x: "\n".join(
-        map(format_with_color, map("{:^20}".format, x))
-    ),
-}
 
 
 @dataclass
