@@ -66,6 +66,7 @@ def diff_panel(title: str, rows: List[List[str]]) -> Panel:
 
 
 PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
+    "statusCheckRollup": lambda x: {"SUCCESS": ":green_square:", None: ""}[x],
     "state": lambda x: wrap(fmt_state(x), "b"),
     "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
     "dates": lambda x: new_table(
@@ -78,17 +79,6 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
     "message": lambda x: wrap(x, "i"),
     "files": lambda files: diff_panel(
         "files", [[*fmt_add_del(f), get_val(f, "path")] for f in files]
-    ),
-    "commits": lambda commits: diff_panel(
-        "commits",
-        [
-            [
-                *fmt_add_del(commit),
-                get_val(commit, "message"),
-                get_val(commit, "committedDate"),
-            ]
-            for commit in commits
-        ],
     ),
     "reviewRequests": lambda x: "  ".join(map(colored_with_bg, x)),
     "participants": lambda x: "\n".join(
@@ -106,10 +96,37 @@ class File(Diff):
     path: str
 
 
-class Commit(Diff):
+@dataclass
+class Commit:
+    additions: int
+    deletions: int
     committedDate: str
-    statusCheckRollup: str
     message: str
+    statusCheckRollup: str
+
+    @property
+    def diff(self) -> List[str]:
+        additions = f"+{self.additions}" if self.additions else ""
+        deletions = f"-{self.deletions}" if self.deletions else ""
+        return [wrap(additions.rjust(5), "b green"), wrap(deletions.rjust(3), "b red")]
+
+    @property
+    def parts(self) -> List[str]:
+        return [
+            *self.diff,
+            get_val(self, "statusCheckRollup"),
+            get_val(self, "message"),
+            get_val(self, "committedDate"),
+        ]
+
+
+@dataclass
+class Commits:
+    commits: List[Commit]
+
+    @property
+    def panel(self) -> Panel:
+        return diff_panel("commits", [commit.parts for commit in self.commits])
 
 
 @dataclass
@@ -289,7 +306,7 @@ class PullRequest:
     author: str
     body: str
     comments: List[IssueComment]
-    commits: List[Commit]
+    commits: Commits
     createdAt: str
     deletions: int
     files: List[File]
@@ -313,6 +330,7 @@ class PullRequestTable(PullRequest):
 
     @classmethod
     def make(cls, reviews: List[JSONDict], **kwargs: Any) -> "PullRequestTable":
+        kwargs["commits"] = Commits([Commit(**c) for c in kwargs["commits"]])
         kwargs["comments"] = [IssueComment(**c) for c in kwargs["comments"]]
         threads = [ReviewThread.make(**rt) for rt in kwargs["reviewThreads"]]
         review_comments = list(chain.from_iterable((t.comments for t in threads)))
@@ -332,10 +350,9 @@ class PullRequestTable(PullRequest):
             )
             for r in reviews
             if (
-                r["id"]
-                in threads_by_review_id
-                # or r["state"] != "COMMENTED"
-                # or r["body"]
+                r["id"] in threads_by_review_id
+                or r["state"] != "COMMENTED"
+                or r["body"]
             )
         ]
         return cls(**kwargs)
@@ -393,7 +410,7 @@ class PullRequestTable(PullRequest):
 
     @property
     def files_commits(self) -> Table:
-        return new_table(rows=[[get_val(self, "files"), get_val(self, "commits")]])
+        return new_table(rows=[[get_val(self, "files"), self.commits.panel]])
 
     @property
     def contents(self) -> List[PanelMixin]:
