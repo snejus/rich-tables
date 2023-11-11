@@ -66,7 +66,11 @@ def diff_panel(title: str, rows: List[List[str]]) -> Panel:
 
 
 PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
-    "statusCheckRollup": lambda x: {"SUCCESS": ":green_square:", None: ""}[x],
+    "statusCheckRollup": lambda x: {
+        "SUCCESS": ":green_square:",
+        "FAILURE": ":red_square:",
+        None: "",
+    }[x],
     "state": lambda x: wrap(fmt_state(x), "b"),
     "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
     "dates": lambda x: new_table(
