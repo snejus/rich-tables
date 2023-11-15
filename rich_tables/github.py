@@ -69,6 +69,7 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
     "statusCheckRollup": lambda x: {
         "SUCCESS": ":green_square:",
         "FAILURE": ":red_square:",
+        "PENDING": ":yellow_square:",
         None: "",
     }[x],
     "state": lambda x: wrap(fmt_state(x), "b"),
