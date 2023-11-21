@@ -66,8 +66,8 @@ def counts_table(data: List[JSONDict], count_key: str, header: str = "") -> Tabl
     if count_key in {"duration", "total_duration"}:
         table.caption = "Total " + duration2human(float(sum(all_counts)))
         table.caption_justify = "left"
-    if header:
-        table.title = header
+    # if header:
+    #     table.title = header
     return table
 
 
