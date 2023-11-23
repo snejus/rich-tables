@@ -46,7 +46,7 @@ def state_color(state: str) -> str:
         "PENDING": "yellow",
         "OUTDATED": "yellow",
         "COMMENTED": "yellow",
-        "CHANGES_REQUESTED": "#ffa500",
+        "CHANGES_REQUESTED": "b red",
         "REVIEW_REQUIRED": "red",
         "DISMISSED": "gray42",
         "False": "red",
