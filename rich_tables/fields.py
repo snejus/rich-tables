@@ -3,10 +3,8 @@ import re
 from collections import defaultdict
 from datetime import datetime
 from functools import singledispatch
-from itertools import islice, product
 from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Type, Union
 
-from rich.columns import Columns
 from rich.console import RenderableType
 from rich.syntax import Syntax
 from rich.table import Table
@@ -36,38 +34,34 @@ from .utils import (
 )
 
 
-def counts_table(data: List[JSONDict], count_key: str, header: str = "") -> Table:
+def counts_table(data: List[JSONDict], count_header: str) -> Table:
     keys = dict.fromkeys(data[0])
 
-    all_counts = {float(i.get(count_key) or 0) for i in data}
-    num_type: Type = float
-    if len({c % 1 for c in all_counts}) == 1:
-        num_type = int
-    total_max = max(all_counts)
+    all_counts = {float(i.get(count_header) or 0) for i in data}
+    num_type = int if len({c % 1 for c in all_counts}) == 1 else float
+    max_value = max(all_counts)
 
-    # ensure count_col is at the end
-    headers = [k for k in keys if k not in {count_key, "total"}]
-    table = new_table(*headers, count_key, "")
+    # ensure count_header is at the end
+    headers = [k for k in keys if k not in {count_header, "total"}]
+    table = new_table(*headers, count_header, "")
     for item in data:
-        item_count = float(item.pop(count_key) or 0)
+        item_count = float(item.pop(count_header) or 0)
         item_max = item.pop("total", None)
         if item_max is not None:
             item_max = float(item_max)
             item_table_val = f"{num_type(item_count)}/{num_type(item_max)}"
-        elif "duration" in count_key:
+        elif "duration" in count_header:
             item_table_val = duration2human(item_count)
         else:
             item_table_val = str(num_type(item_count))
         table.add_row(
             *(get_val(item, h) for h in headers),
             item_table_val,
-            progress_bar(item_count, total_max, item_max=item_max),
+            progress_bar(item_count, max_value, item_max=item_max),
         )
-    if count_key in {"duration", "total_duration"}:
+    if count_header in {"duration", "total_duration"}:
         table.caption = "Total " + duration2human(float(sum(all_counts)))
         table.caption_justify = "left"
-    # if header:
-    #     table.title = header
     return table
 
 

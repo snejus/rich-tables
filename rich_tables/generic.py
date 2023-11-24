@@ -9,7 +9,6 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, U
 # import snoop
 from multimethod import multimethod
 from rich import box
-from rich.align import Align
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
@@ -228,7 +227,7 @@ def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Table:
         get_match = COUNT_FIELD.search
         count_key = next(filter(None, map(get_match, keys)), None)
         if len(overlap) == 2 and count_key:
-            value = counts_table(data, count_key.string, header=header or "")
+            value = counts_table(data, count_key.string)
         elif "sql" in keys:
             from .sql import sql_table
 

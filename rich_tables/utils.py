@@ -250,13 +250,13 @@ def colored_split(string: str) -> str:
 
 
 def progress_bar(
-    count: float, total_max: float, item_max: Optional[float] = None
+    count: float, max_value: float, item_max: Optional[float] = None
 ) -> Bar:
-    use_max = total_max
+    use_max = max_value
     if item_max is not None:
         use_max = item_max
     ratio = count / use_max if use_max else 0
-    random.seed(str(total_max))
+    random.seed(str(max_value))
     rand = partial(random.randint, 50, 180)
 
     def norm() -> int:
