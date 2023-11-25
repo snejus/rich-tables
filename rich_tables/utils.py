@@ -249,21 +249,28 @@ def colored_split(string: str) -> str:
     return _colored_split(sorted(SPLIT_PAT.split(string)))
 
 
-def progress_bar(
-    count: float, max_value: float, item_max: Optional[float] = None
-) -> Bar:
-    use_max = max_value
-    if item_max is not None:
-        use_max = item_max
-    ratio = count / use_max if use_max else 0
-    random.seed(str(max_value))
-    rand = partial(random.randint, 50, 180)
+def progress_bar(size: float, width: float, end: Optional[float] = None) -> Bar:
+    if end is None:
+        end = size
+        size = width
+        bgcolor = "black"
+    else:
+        bgcolor = "white"
+    ratio = end / size
+
+    random.seed(str(width))
+    rand = partial(random.randint, 55, 200)
 
     def norm() -> int:
         return round(rand() * ratio)
 
+    # def desaturate( q q
+
     color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
-    return Bar(use_max, 0, count, color=color)
+    print(f"{end=} {size=} {width=}")
+    return Bar(
+        size=size, begin=0, width=int(width), end=end, color=color, bgcolor=bgcolor
+    )
 
 
 def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:

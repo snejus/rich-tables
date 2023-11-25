@@ -1,7 +1,6 @@
 import itertools as it
 import logging
 import os
-import re
 from datetime import datetime
 from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
@@ -17,7 +16,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from .fields import DISPLAY_HEADER, FIELDS_MAP, counts_table
+from .fields import DISPLAY_HEADER, FIELDS_MAP, MATCH_COUNT_HEADER, counts_table
 from .utils import (
     NewTable,
     border_panel,
@@ -34,10 +33,11 @@ from .utils import (
 
 JSONDict = Dict[str, Any]
 console = make_console()
-COUNT_FIELD = re.compile(r"count_|(count$)|sum_|duration")
 
 global indent
 indent = ""
+
+MAX_DICT_SIZE = 500
 
 
 def time_fmt(current: datetime) -> Text:
@@ -224,38 +224,42 @@ def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Table:
         }.keys()
 
         overlap = set(map(type, data[0].values())) & {int, float, str}
-        get_match = COUNT_FIELD.search
-        count_key = next(filter(None, map(get_match, keys)), None)
-        if len(overlap) == 2 and count_key:
-            value = counts_table(data, count_key.string)
+
+        if len(overlap) == 2 and any(MATCH_COUNT_HEADER.search(k) for k in keys):
+            value = counts_table(data)
         elif "sql" in keys:
             from .sql import sql_table
 
             value = sql_table(data)
         else:
 
-            def getval(value: Any, key: str) -> RenderableType:
+            def getval(value: Any, key: str) -> Iterable[RenderableType]:
                 trans = flexitable(value, key)
                 if isinstance(trans, str):
-                    return f"{wrap(key, 'b')}: {trans}"
-                if not trans:
-                    return str(trans)
-                return trans
+                    yield f"{wrap(key, 'b')}: {trans}"
+                elif not trans:
+                    yield str(trans)
+                else:
+                    yield f"{wrap(key, 'b')}:"
+                    yield trans
 
             # large_table = list_table(title=header)
             large_table = list_table()
-            for large, items in it.groupby(data, lambda i: len(str(i.values())) > 1200):
+            for large, items in it.groupby(
+                data, lambda i: len(str(i.values())) > MAX_DICT_SIZE
+            ):
                 if large:
                     for item in items:
-                        values = (
-                            getval(*args)
-                            for args in sorted(
+                        values = it.starmap(
+                            getval,
+                            sorted(
                                 [(v or "", k) for k, v in item.items() if k in keys],
-                                key=lambda x: str(type(x[0])),
+                                key=lambda x, *_: str(type(x)),
                                 reverse=True,
-                            )
+                            ),
                         )
-                        large_table.add_row(border_panel(new_tree(values, "")))
+                        tree = new_tree(it.chain.from_iterable(values), "")
+                        large_table.add_row(border_panel(tree))
                 else:
                     sub_table = list_table(show_header=True)
                     for key in keys:

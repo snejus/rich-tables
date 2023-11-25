@@ -33,31 +33,44 @@ from .utils import (
     wrap,
 )
 
+MATCH_COUNT_HEADER = re.compile(r"duration|_(sum|count)$")
 
-def counts_table(data: List[JSONDict], count_header: str) -> Table:
-    keys = dict.fromkeys(data[0])
 
-    all_counts = {float(i.get(count_header) or 0) for i in data}
+def counts_table(data: List[JSONDict]) -> Table:
+    count_header = ""
+    subcount_header = None
+    ordered_headers = []
+    for key in data[0]:
+        if MATCH_COUNT_HEADER.search(key):
+            count_header = key
+        elif key.endswith("_subcount"):
+            subcount_header = key
+        else:
+            ordered_headers.append(key)
+
+    all_counts = [float(i[count_header]) for i in data]
     num_type = int if len({c % 1 for c in all_counts}) == 1 else float
     max_value = max(all_counts)
 
-    # ensure count_header is at the end
-    headers = [k for k in keys if k not in {count_header, "total"}]
-    table = new_table(*headers, count_header, "")
-    for item in data:
-        item_count = float(item.pop(count_header) or 0)
-        item_max = item.pop("total", None)
-        if item_max is not None:
-            item_max = float(item_max)
-            item_table_val = f"{num_type(item_count)}/{num_type(item_max)}"
+    # ensure subcount and count headers are at the end
+    if subcount_header:
+        count_header = f"{subcount_header}/{count_header}"
+    ordered_headers.append(count_header)
+
+    table = new_table(*ordered_headers, "")
+    for item, count in zip(data, all_counts):
+        subcount = None
+        if subcount_header:
+            subcount = float(item[subcount_header])
+            item_table_val = f"{num_type(subcount)}/{num_type(count)}"
         elif "duration" in count_header:
-            item_table_val = duration2human(item_count)
+            item_table_val = duration2human(count)
         else:
-            item_table_val = str(num_type(item_count))
+            item_table_val = str(num_type(count))
         table.add_row(
-            *(get_val(item, h) for h in headers),
+            *(get_val(item, h) for h in ordered_headers),
             item_table_val,
-            progress_bar(item_count, max_value, item_max=item_max),
+            progress_bar(end=subcount, width=max_value, size=count),
         )
     if count_header in {"duration", "total_duration"}:
         table.caption = "Total " + duration2human(float(sum(all_counts)))

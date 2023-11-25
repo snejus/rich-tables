@@ -5,13 +5,16 @@ from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import singledispatch
+from traceback import format_exc, format_tb
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple, Union
 
+from multimethod import DispatchError
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import ConsoleRenderable
 from rich.panel import Panel
 from rich.table import Table
+from rich.traceback import install
 
 from .fields import FIELDS_MAP, get_val
 from .generic import flexitable
@@ -32,6 +35,7 @@ JSONDict = Dict[str, Any]
 
 
 console = make_console()
+install(console=console)
 print = console.print
 
 
@@ -309,8 +313,10 @@ def main() -> None:
             try:
                 for ret in draw_data(data):
                     console.print(ret)
-            except Exception:
-                console.print_exception(show_locals=True, width=console.width)
+            except DispatchError as e:
+                if e.__cause__:
+                    raise e.__cause__ from None
+                raise
 
         if "-s" in set(args):
             console.save_html("saved.html")
