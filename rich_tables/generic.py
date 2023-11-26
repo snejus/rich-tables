@@ -191,7 +191,7 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 
 
 @flexitable.register
-def _str_list(data: List[str], header: Optional[str] = None) -> RenderableType:
+def _str_list(data: List[str], header: str) -> RenderableType:
     debug(_str_list, data, header)
     call = FIELDS_MAP.get(str(header))
     value = (
@@ -204,7 +204,7 @@ def _str_list(data: List[str], header: Optional[str] = None) -> RenderableType:
 
 
 @flexitable.register
-def _int_list(data: List[int], header: Optional[str] = None) -> Panel:
+def _int_list(data: List[int], header: str) -> Panel:
     debug(_int_list, data)
     value = border_panel(Columns(str(x) for x in data))
     undebug(type(value), data)
@@ -212,67 +212,74 @@ def _int_list(data: List[int], header: Optional[str] = None) -> Panel:
 
 
 @flexitable.register
-def _dict_list(data: List[JSONDict], header: Optional[str] = None) -> Table:
+def _dict_list(data: List[JSONDict], header: str = None) -> Table:
     debug(_dict_list, data, header)
     if len(data) == 1 and len(data[0]) > 10:
         value = flexitable(data[0])
     else:
         data = [prepare_dict(item) for item in data if item]
         all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
-        keys = {
-            k: None for k in all_keys if any(((d.get(k) is not None) for d in data))
-        }.keys()
-
-        overlap = set(map(type, data[0].values())) & {int, float, str}
-
-        if len(overlap) == 2 and any(MATCH_COUNT_HEADER.search(k) for k in keys):
-            value = counts_table(data)
-        elif "sql" in keys:
-            from .sql import sql_table
-
-            value = sql_table(data)
+        if not all_keys:
+            value = ""
         else:
+            keys = {
+                k: None for k in all_keys if any(((d.get(k) is not None) for d in data))
+            }.keys()
 
-            def getval(value: Any, key: str) -> Iterable[RenderableType]:
-                trans = flexitable(value, key)
-                if isinstance(trans, str):
-                    yield f"{wrap(key, 'b')}: {trans}"
-                elif not trans:
-                    yield str(trans)
-                else:
-                    yield f"{wrap(key, 'b')}:"
-                    yield trans
+            overlap = set(map(type, data[0].values())) & {int, float, str}
 
-            # large_table = list_table(title=header)
-            large_table = list_table()
-            for large, items in it.groupby(
-                data, lambda i: len(str(i.values())) > MAX_DICT_SIZE
-            ):
-                if large:
-                    for item in items:
-                        values = it.starmap(
-                            getval,
-                            sorted(
-                                [(v or "", k) for k, v in item.items() if k in keys],
-                                key=lambda x, *_: str(type(x)),
-                                reverse=True,
-                            ),
-                        )
-                        tree = new_tree(it.chain.from_iterable(values), "")
-                        large_table.add_row(border_panel(tree))
-                else:
-                    sub_table = list_table(show_header=True)
-                    for key in keys:
-                        sub_table.add_column(
-                            key, header_style=predictably_random_color(key)
-                        )
-                    for item in items:
-                        sub_table.add_dict_item(item, transform=flexitable)
-                    for col in sub_table.columns:
-                        col.header = DISPLAY_HEADER.get(str(col.header), col.header)
-                    large_table.add_row(sub_table)
+            if len(overlap) == 2 and any(MATCH_COUNT_HEADER.search(k) for k in keys):
+                value = counts_table(data)
+            elif "sql" in keys:
+                from .sql import sql_table
 
-                value = large_table
+                value = sql_table(data)
+            else:
+
+                def getval(value: Any, key: str) -> Iterable[RenderableType]:
+                    trans = flexitable(value, key)
+                    if isinstance(trans, str):
+                        yield f"{wrap(key, 'b')}: {trans}"
+                    elif not trans:
+                        yield str(trans)
+                    else:
+                        yield f"{wrap(key, 'b')}:"
+                        yield trans
+
+                # large_table = list_table(title=header)
+                large_table = list_table()
+                for large, items in it.groupby(
+                    data, lambda i: len(str(i.values())) > MAX_DICT_SIZE
+                ):
+                    if large:
+                        for item in items:
+                            values = it.starmap(
+                                getval,
+                                sorted(
+                                    [
+                                        (v or "", k)
+                                        for k, v in item.items()
+                                        if k in keys
+                                    ],
+                                    key=lambda x, *_: str(type(x)),
+                                    reverse=True,
+                                ),
+                            )
+                            tree = new_tree(it.chain.from_iterable(values), "")
+                            large_table.add_row(border_panel(tree))
+                    else:
+                        sub_table = list_table(show_header=True)
+                        for key in keys:
+                            sub_table.add_column(
+                                key, header_style=predictably_random_color(key)
+                            )
+                        for item in items:
+                            sub_table.add_dict_item(item, transform=flexitable)
+                        for col in sub_table.columns:
+                            col.header = DISPLAY_HEADER.get(str(col.header), col.header)
+                        large_table.add_row(sub_table)
+
+                    value = large_table
 
     undebug(type(value), data)
     return value

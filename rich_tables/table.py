@@ -35,7 +35,7 @@ JSONDict = Dict[str, Any]
 
 
 console = make_console()
-install(console=console)
+install(console=console, show_locals=True)
 print = console.print
 
 
