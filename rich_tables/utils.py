@@ -267,7 +267,7 @@ def progress_bar(size: float, width: float, end: Optional[float] = None) -> Bar:
     # def desaturate( q q
 
     color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
-    print(f"{end=} {size=} {width=}")
+    # print(f"{end=} {size=} {width=}")
     return Bar(
         size=size, begin=0, width=int(width), end=end, color=color, bgcolor=bgcolor
     )
