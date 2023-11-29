@@ -1,6 +1,7 @@
 import itertools as it
 import logging
 import os
+import re
 from datetime import datetime
 from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
@@ -20,6 +21,7 @@ from .fields import DISPLAY_HEADER, FIELDS_MAP, MATCH_COUNT_HEADER, counts_table
 from .utils import (
     NewTable,
     border_panel,
+    format_string,
     format_with_color,
     make_console,
     new_table,
@@ -110,8 +112,7 @@ def flexitable(data: Any, header: str) -> RenderableType:
 @flexitable.register
 def _str(data: str) -> RenderableType:
     debug(_str, data)
-    if "[/]" not in data:
-        data = data.replace("[", "⟦").replace("]", "⟧")
+    data = format_string(data)
 
     value = " | ".join(map(format_with_color, data.split(" | ")))
     undebug(type(value), data)
@@ -121,9 +122,8 @@ def _str(data: str) -> RenderableType:
 @flexitable.register
 def _str_header(data: str, header: str) -> RenderableType:
     debug(_str_header, data)
-    if "[/]" not in data:
-        data = data.replace("[", "⟦").replace("]", "⟧")
 
+    data = format_string(data)
     value = FIELDS_MAP[header](data)
     undebug(type(value), data)
     return value

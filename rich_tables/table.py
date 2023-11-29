@@ -5,7 +5,6 @@ from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import singledispatch
-from traceback import format_exc, format_tb
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple, Union
 
 from multimethod import DispatchError

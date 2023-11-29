@@ -24,6 +24,7 @@ from rich.tree import Tree
 
 JSONDict = Dict[str, Any]
 SPLIT_PAT = re.compile(r"[;,] ?")
+PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
 
 
 BOLD_GREEN = "b green"
@@ -176,12 +177,25 @@ def list_table(items: Iterable[Any], **kwargs: Any) -> NewTable:
 @lru_cache(None)
 def predictably_random_color(string: str) -> str:
     random.seed(string)
-    rand = partial(random.randint, 60, 200)
+    rand = partial(random.randint, 30, 225)
     return "#{:02X}{:02X}{:02X}".format(rand(), rand(), rand())
 
 
 def format_with_color(name: str) -> str:
     return wrap(name, f"b {predictably_random_color(name)}")
+
+
+def fmt_pred_color(m: re.Match) -> str:
+    return f"{predictably_random_color(m.group(2))}]{m.group(2)}"
+
+
+def format_string(text: str) -> str:
+    if "pred color]" in text:
+        return PRED_COLOR_PAT.sub(fmt_pred_color, text)
+    if "[/]" not in text:
+        return text.replace("[", "⟦").replace("]", "⟧")
+
+    return text
 
 
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:

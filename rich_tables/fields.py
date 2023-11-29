@@ -25,6 +25,7 @@ from .utils import (
     get_country,
     md_panel,
     new_table,
+    predictably_random_color,
     progress_bar,
     simple_panel,
     syntax,
@@ -258,7 +259,7 @@ fields_by_func = {
         "text",
     ),
     colored_split: (
-        "error",
+        # "error",
         "genre",
         "kind",
         "operation",
