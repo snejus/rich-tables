@@ -71,8 +71,6 @@ def parse_sql_query(sql: str, span: float) -> dict:
 #     return FIELDS_MAP["sql"](data)
 
 
-# def sql_table(data: List[JSONDict]) -> NewTable:
-#     return list_table((get_val(item["sql"], "sql") for idx, item in enumerate(data)))
 # parsed_data = [
 #     parse_sql_query(item["sql"], item["exclusive_time"]) for item in data
 # ]

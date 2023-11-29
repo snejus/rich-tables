@@ -3,7 +3,8 @@ import re
 from collections import defaultdict
 from datetime import datetime
 from functools import singledispatch
-from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Type, Union
+from itertools import islice
+from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Union
 
 from rich.console import RenderableType
 from rich.syntax import Syntax
@@ -15,6 +16,7 @@ from .utils import (
     BOLD_GREEN,
     BOLD_RED,
     JSONDict,
+    NewTable,
     border_panel,
     colored_split,
     colored_with_bg,
@@ -23,9 +25,9 @@ from .utils import (
     fmt_time,
     format_with_color,
     get_country,
+    list_table,
     md_panel,
     new_table,
-    predictably_random_color,
     progress_bar,
     simple_panel,
     syntax,
@@ -330,3 +332,7 @@ def _(obj: dict, field: str) -> Any:
 @get_val.register
 def _(obj: object, field: str) -> Any:
     return _get_val(getattr(obj, field, None), field)
+
+
+def sql_table(data: List[JSONDict]) -> NewTable:
+    return list_table((get_val(item["sql"], "sql") for idx, item in enumerate(data)))
