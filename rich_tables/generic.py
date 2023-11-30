@@ -1,10 +1,9 @@
 import itertools as it
 import logging
 import os
-from collections.abc import Callable
 from datetime import datetime
 from functools import partial, wraps
-from typing import Any, Dict, Iterable, List, TypeVar, Union
+from typing import Any, Callable, Dict, Iterable, List, TypeVar, Union
 
 from multimethod import multidispatch
 from rich import box

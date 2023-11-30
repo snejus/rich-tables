@@ -179,6 +179,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     log=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     unified_diff=lambda x: syntax(x, "diff"),
     diffHunk=lambda x: syntax(x, "diff"),
+    snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     # diff=lambda x: Text.from_markup(x) if "[/]" in x else md_panel(x),
     query=lambda x: Text(x, style="bold"),
     joins=lambda x: "\n".join(map(fmt_joins, x.split(", "))),
