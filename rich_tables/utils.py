@@ -192,8 +192,8 @@ def fmt_pred_color(m: re.Match) -> str:
 def format_string(text: str) -> str:
     if "pred color]" in text:
         return PRED_COLOR_PAT.sub(fmt_pred_color, text)
-    # if "[/]" not in text:
-    #     return text.replace("[", "⟦").replace("]", "⟧")
+    if "[/]" not in text:
+        return text.replace("[", r"\[")
 
     return text
 
@@ -333,6 +333,11 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 
 @multimethod
 def diff(before: Any, after: Any) -> Any:
+    return make_difftext(str(before), str(after))
+
+
+@diff.register
+def _(before: None, after: None) -> str:
     return make_difftext(str(before), str(after))
 
 
