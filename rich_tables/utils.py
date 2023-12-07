@@ -176,8 +176,8 @@ def list_table(items: Iterable[Any], **kwargs: Any) -> NewTable:
 
 @lru_cache(None)
 def predictably_random_color(string: str) -> str:
-    random.seed(string)
-    rand = partial(random.randint, 30, 225)
+    random.seed(string.strip())
+    rand = partial(random.randint, 50, 205)
     return "#{:02X}{:02X}{:02X}".format(rand(), rand(), rand())
 
 

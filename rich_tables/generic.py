@@ -1,5 +1,6 @@
 import itertools as it
 import logging
+import operator as o
 import os
 from datetime import datetime
 from functools import partial, wraps
@@ -12,7 +13,9 @@ from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
 from rich.markdown import Markdown
 from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
+from rich.tree import Tree
 from typing_extensions import ParamSpec
 
 from .fields import DISPLAY_HEADER, FIELDS_MAP, MATCH_COUNT_HEADER, counts_table
@@ -158,15 +161,18 @@ def _json_dict(data: JSONDict) -> RenderableType:
             continue
 
         value = flexitable(content, key)
-        # reveal_type(content)
-        if isinstance(value, ConsoleRenderable) and not isinstance(value, Markdown):
-            cols.append(border_panel(value, title=flexitable(key)))
+        if isinstance(value, (NewTable, Text)):
+            cols.append(border_panel(value, title=key))
+        elif isinstance(value, ConsoleRenderable) and not isinstance(value, Markdown):
+            cols.append(value)
         else:
             table.add_row(key, value)
 
-    cols.insert(0, table)
-    # if header:
-    #     return Columns(cols)
+    if table.rows:
+        cols.insert(0, table)
+
+    if len(cols) == 1:
+        return cols[0]
 
     table = new_table(padding=(0, 0))
     row: List[RenderableType]
@@ -222,17 +228,26 @@ def _dict_list(data: List[JSONDict]) -> RenderableType:
     if len(overlap) == 2 and any(MATCH_COUNT_HEADER.search(k) for k in keys):
         return counts_table(data)
 
-    def getval(value: Any, key: str) -> Iterable[RenderableType]:
-        trans = flexitable(value, key)
-        if isinstance(trans, str):
-            yield f"{wrap(key, 'b')}: {trans}"
-        elif not trans:
-            yield str(trans)
-        else:
-            yield f"{wrap(key, 'b')}:"
-            yield trans
+    def getval(value: Any, key: str) -> RenderableType:
+        transformed_value = flexitable(value, key)
+        header = wrap(key, 'b')
+        if (
+            isinstance(transformed_value, NewTable)
+            and len(transformed_value.rows) == 1
+            and len(transformed_value.columns) == 1
+        ):
+            transformed_value = transformed_value.columns[0]._cells[0]
 
-    # large_table = list_table(title=header)
+        if isinstance(transformed_value, str):
+            return f"{header}: {transformed_value}"
+
+        if isinstance(transformed_value, Panel):
+            transformed_value.title = header
+        elif isinstance(transformed_value, Tree):
+            transformed_value.label = header
+
+        return transformed_value
+
     large_table = list_table()
     for large, items in it.groupby(
         data, lambda i: len(str(i.values())) > MAX_DICT_SIZE
@@ -247,8 +262,8 @@ def _dict_list(data: List[JSONDict]) -> RenderableType:
                         reverse=True,
                     ),
                 )
-                tree = new_tree(it.chain.from_iterable(values), "")
-                large_table.add_row(border_panel(tree))
+                tree = new_tree(values, "")
+                large_table.add_row(tree)
         else:
             sub_table = list_table(show_header=True)
             for key in keys:

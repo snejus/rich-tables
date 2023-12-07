@@ -11,7 +11,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 from typing_extensions import TypedDict
 
-from .fields import FIELDS_MAP, get_val
+from .fields import FIELDS_MAP, _get_val, get_val
 from .utils import (
     JSONDict,
     border_panel,
@@ -140,7 +140,7 @@ class Reaction:
     content: str
 
     def __str__(self) -> str:
-        return f":{self.content.lower()}: {self.user}"
+        return f":{self.content.lower()}: {_get_val(self.user, 'author')}"
 
 
 class PanelMixin:

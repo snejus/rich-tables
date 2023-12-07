@@ -147,9 +147,9 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     ),
     ingr=lambda x: simple_panel(colored_split(x)),
     content=lambda x: md_panel(x) if isinstance(x, str) else x,
-    comments=lambda x: md_panel(
-        x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
-    ),
+    # comments=lambda x: md_panel(
+    #     x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
+    # ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
     primary=lambda x: colored_split(x) if isinstance(x, str) else str(x),
     duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
@@ -176,10 +176,14 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     # sql=sql_table,
     file=lambda x: "/".join(map(format_with_color, x.split("/"))),
     field=lambda x: ".".join(map(format_with_color, x.split("."))),
-    log=border_panel,
+    log=lambda x: border_panel(
+        x, border_style="b i", padding=(0, 2, 0, 2), style="on #232323"
+    ),
     unified_diff=lambda x: syntax(x, "diff"),
     diffHunk=lambda x: syntax(x, "diff"),
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
+    # traceback=lambda x: border_panel(x),
+    traceback=lambda x: border_panel(syntax(x, "python")),
     # diff=lambda x: Text.from_markup(x) if "[/]" in x else md_panel(x),
     query=lambda x: Text(x, style="bold"),
     joins=lambda x: "\n".join(map(fmt_joins, x.split(", "))),
