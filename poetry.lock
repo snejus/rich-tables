@@ -728,7 +728,7 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 name = "rgbxy"
 version = "0.5"
 description = "RGB conversion tool written in Python for Philips Hue."
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "rgbxy-0.5.tar.gz", hash = "sha256:78a099f5f8d30c82e95f1941850bc49e42649d6beac8f96e3a301e97437d6d30"},
@@ -784,7 +784,7 @@ files = [
 name = "sqlparse"
 version = "0.4.4"
 description = "A non-validating SQL parser."
-optional = true
+optional = false
 python-versions = ">=3.5"
 files = [
     {file = "sqlparse-0.4.4-py3-none-any.whl", hash = "sha256:5430a4fe2ac7d0f93e66f1efc6e1338a41884b7ddf2a350cedd20ccc4d9d28f3"},
@@ -1033,9 +1033,8 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 
 [extras]
 hue = ["rgbxy"]
-sql = ["sqlparse"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7,<4"
-content-hash = "408694c59379ff4135106369d53c0787601ca3fe1518fc88312903d4bcc8f39b"
+content-hash = "eb254d178e1d873aa218f274c608172d7c8206202a789927992432c8a4261820"
