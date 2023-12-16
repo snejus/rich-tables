@@ -36,7 +36,7 @@ from .utils import (
     wrap,
 )
 
-MATCH_COUNT_HEADER = re.compile(r"duration|_(sum|count)$")
+MATCH_COUNT_HEADER = re.compile(r"duration|(_sum|_?count)$")
 
 
 def counts_table(data: List[JSONDict]) -> Table:
@@ -58,7 +58,7 @@ def counts_table(data: List[JSONDict]) -> Table:
     # ensure subcount and count headers are at the end
     if subcount_header:
         count_header = f"{subcount_header}/{count_header}"
-    ordered_headers.append(count_header)
+        ordered_headers.append(count_header)
 
     table = new_table(*ordered_headers, "")
     for item, count in zip(data, all_counts):
