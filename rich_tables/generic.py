@@ -1,6 +1,5 @@
 import itertools as it
 import logging
-import operator as o
 import os
 from datetime import datetime
 from functools import partial, wraps
@@ -13,10 +12,8 @@ from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
 from rich.markdown import Markdown
 from rich.panel import Panel
-from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
-from typing_extensions import ParamSpec
 
 from .fields import DISPLAY_HEADER, FIELDS_MAP, MATCH_COUNT_HEADER, counts_table
 from .utils import (
@@ -35,7 +32,6 @@ from .utils import (
 # snoop.install(color=True)
 
 JSONDict = Dict[str, Any]
-P = ParamSpec("P")
 T = TypeVar("T")
 console = make_console()
 
@@ -67,7 +63,7 @@ if not log.handlers:
         log.setLevel("DEBUG")
 
 
-def _debug(_func: Callable[[P.args], T]) -> None:
+def _debug(_func: Callable[..., T]) -> None:
     if log.isEnabledFor(10):
         global indent
         types = f"\033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m"
@@ -76,7 +72,7 @@ def _debug(_func: Callable[[P.args], T]) -> None:
         indent += "│ "
 
 
-def _undebug(_type: type, *args: P.args) -> None:
+def _undebug(_type: type, *args: Any) -> None:
     global indent
     indent = indent[:-2]
     if log.isEnabledFor(10):
@@ -106,15 +102,15 @@ def prepare_dict(item: JSONDict) -> JSONDict:
     return item
 
 
-def debug(func: Callable[P, T]) -> Callable[P, T]:
+def debug(func: Callable[..., T]) -> Callable[..., T]:
     @wraps(func)
-    def wrapper(*args: P.args) -> T:
+    def wrapper(*args: Any) -> T:
         _debug(func)
         result = func(*args)
         _undebug(type(result), *args)
         return result
 
-    return wrapper  # type: ignore[return-value]
+    return wrapper
 
 
 @multidispatch
