@@ -29,6 +29,7 @@ PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
 
 BOLD_GREEN = "b green"
 BOLD_RED = "b red"
+SECONDS_PER_DAY = 86400
 
 
 def wrap(text: str, tag: str) -> str:
@@ -308,7 +309,7 @@ def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
-def time2human(timestamp: Union[int, str, float], acc: int = 1) -> str:
+def diff_dt(timestamp: Union[int, str, float], acc: int = 1) -> str:
     try:
         datetime = timestamp2datetime(timestamp)
     except ValueError:
@@ -317,7 +318,19 @@ def time2human(timestamp: Union[int, str, float], acc: int = 1) -> str:
     diff = datetime.timestamp() - time.time()
     fmted = " ".join(islice(fmt_time(int(diff)), acc))
 
-    strtime = datetime.strftime("%F" if abs(diff) > 86000 else "%T")
+    return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN)
+
+
+def diff_dt(timestamp: Union[int, str, float], acc: int = 1) -> str:
+    try:
+        datetime = timestamp2datetime(timestamp)
+    except ValueError:
+        return str(timestamp)
+
+    diff = datetime.timestamp() - time.time()
+    fmted = " ".join(islice(fmt_time(int(diff)), acc))
+
+    strtime = datetime.strftime("%F" if abs(diff) > SECONDS_PER_DAY else "%T")
 
     return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN) + " " + strtime
 

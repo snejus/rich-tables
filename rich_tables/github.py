@@ -17,12 +17,12 @@ from .utils import (
     border_panel,
     colored_with_bg,
     format_with_color,
+    diff_dt,
     list_table,
     md_panel,
     new_table,
     predictably_random_color,
     simple_panel,
-    time2human,
     wrap,
 )
 
@@ -76,8 +76,8 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
     "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
     "dates": lambda x: new_table(
         rows=[
-            [wrap(r" ⬤ ", "b green"), time2human(x[0])],
-            [wrap(r" ◯ ", "b yellow"), time2human(x[1])],
+            [wrap(r" ⬤ ", "b green"), diff_dt(x[0])],
+            [wrap(r" ◯ ", "b yellow"), diff_dt(x[1])],
         ]
     ),
     "path": lambda x: wrap(x, "b"),

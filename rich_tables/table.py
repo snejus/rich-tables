@@ -1,5 +1,6 @@
 import itertools as it
 import json
+import operator as o
 import sys
 from collections import OrderedDict
 from contextlib import suppress
@@ -14,6 +15,8 @@ from rich.console import ConsoleRenderable
 from rich.panel import Panel
 from rich.table import Table
 from rich.traceback import install
+from toolz import concat, curry, pluck
+from typing_extensions import TypedDict
 
 from .fields import FIELDS_MAP, get_val
 from .generic import flexitable
@@ -21,14 +24,16 @@ from .github import pulls_table
 from .music import albums_table
 from .utils import (
     border_panel,
+    diff_dt,
     format_with_color,
     make_console,
     new_table,
     new_tree,
     predictably_random_color,
-    time2human,
     wrap,
 )
+
+contains = curry(o.contains)
 
 JSONDict = Dict[str, Any]
 
@@ -168,25 +173,28 @@ def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
         yield border_panel(table, title=year_and_month)
 
 
-def tasktime(datestr: str) -> str:
-    return time2human(datetime.strptime(datestr, "%Y%m%dT%H%M%SZ").timestamp())
+class TaskGroup(TypedDict):
+    items: List[JSONDict]
 
 
-def tasks_table(tasks: Dict[str, List[JSONDict]]) -> Iterator[Panel]:
-    if not tasks:
+def tasks_table(task_groups: List[TaskGroup]) -> Iterator[Panel]:
+    if not task_groups:
         return
+
     fields_map: JSONDict = {
         "id": str,
         "urgency": lambda x: str(round(x, 1)),
         "description": lambda x: x,
-        "due": tasktime,
-        "end": tasktime,
-        "sched": tasktime,
+        "due": diff_dt,
+        "end": diff_dt,
+        "sched": diff_dt,
         "tags": lambda x: " ".join(map(format_with_color, x or [])),
         "project": format_with_color,
-        "modified": tasktime,
+        "modified": diff_dt,
+        "created": diff_dt,
+        "entry": diff_dt,
         "annotations": lambda ann: "\n".join(
-            wrap(tasktime(a["entry"]), "b") + ": " + wrap(a["description"], "i")
+            wrap(diff_dt(a["entry"]), "b") + ": " + wrap(a["description"], "i")
             for a in ann
         ),
     }
@@ -199,12 +207,12 @@ def tasks_table(tasks: Dict[str, List[JSONDict]]) -> Iterator[Panel]:
         "recurring": "i magenta",
     }
     uuid_to_desc = {}
-    all_tasks = list(it.chain.from_iterable(tasks.values()))
-    for task in (r for r in all_tasks if r.get("recur") and r["status"] != "recurring"):
+    tasks = list(concat(pluck("items", task_groups)))
+    for task in (r for r in tasks if r.get("recur") and r["status"] != "recurring"):
         task["status"] = "recurring"
         task["description"] += f" ({task})"
 
-    for task in all_tasks:
+    for task in tasks:
         task["sched"] = task.get("scheduled")
         if task.get("start"):
             task["status"] = "started"
@@ -215,12 +223,14 @@ def tasks_table(tasks: Dict[str, List[JSONDict]]) -> Iterator[Panel]:
 
         uuid_to_desc[task["uuid"]] = desc
 
-    headers = ["urgency", "id", *(fields_map.keys() - {"id", "urgency"})]
-    headers = [h for h in headers if any(t.get(h) for t in all_tasks)]
+    existing = tasks[0].keys()
+    allowed = existing & fields_map.keys()
+    possible = dict.fromkeys(["id", "urgency", "created", "modified", *existing]).keys()
+    headers: List[str] = list(filter(contains(allowed), possible))
 
-    for group_name, task_list in tasks.items():
-        table = new_table(padding=(0, 1, 0, 1))
-        for task in task_list:
+    for task_group in task_groups:
+        table = new_table(*headers, padding=(0, 1, 0, 1))
+        for task in task_group["items"]:
             task_tree = new_tree(title=uuid_to_desc[task["uuid"]], guide_style="white")
 
             ann = task.pop("annotations", None)
@@ -235,14 +245,11 @@ def tasks_table(tasks: Dict[str, List[JSONDict]]) -> Iterator[Panel]:
             task["description"] = task_tree
             table.add_row(*(get_val(task, h) for h in headers))
 
+        group_type = next(iter(task_group.keys() - {"items"}))
         yield border_panel(
             table,
-            title=group_name,
-            style=(
-                "b green"
-                if group_name == "started"
-                else predictably_random_color(str(group_name))
-            ),
+            title=get_val(task_group, group_type),
+            style=predictably_random_color(str(task_group.get(group_type) or "")),
         )
 
 

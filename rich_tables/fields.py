@@ -25,13 +25,13 @@ from .utils import (
     fmt_time,
     format_with_color,
     get_country,
+    diff_dt,
     list_table,
     md_panel,
     new_table,
     progress_bar,
     simple_panel,
     syntax,
-    time2human,
     timestamp2timestr,
     wrap,
 )
@@ -102,13 +102,13 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if isinstance(x, list)
         else colored_split(x)
     ),
-    avg_last_played=lambda x: time2human(x, acc=2),
+    avg_last_played=lambda x: diff_dt(x, acc=2),
     since=lambda x: (
         x
         if isinstance(x, str)
         else datetime.fromtimestamp(float(x)).strftime("%F %H:%M")
     ),
-    dt=lambda x: time2human(x, 5),
+    dt=lambda x: diff_dt(x, acc=5),
     createdAt=lambda x: x.replace("T", " ").replace("Z", ""),
     updatedAt=lambda x: x.replace("T", " ").replace("Z", ""),
     wait_per_play=lambda x: wrap(
@@ -237,7 +237,7 @@ fields_by_func = {
         "type_name",
         "user",
     ),
-    time2human: (
+    diff_dt: (
         "added",
         "committedDate",
         # "created",
