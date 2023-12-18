@@ -18,12 +18,11 @@ from .utils import (
     JSONDict,
     NewTable,
     border_panel,
-    colored_split,
-    colored_with_bg,
     diff,
     duration2human,
     fmt_time,
     format_with_color,
+    format_with_color_on_black,
     get_country,
     human_dt,
     list_table,
@@ -96,11 +95,11 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
             .split("; "),
         )
     ),
-    author=colored_with_bg,
+    author=format_with_color_on_black,
     labels=lambda x: (
-        wrap("    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x), "b i")
+        wrap("    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x), "b")
         if isinstance(x, list)
-        else colored_split(x)
+        else format_with_color(x.upper())
     ),
     avg_last_played=lambda x: human_dt(x, acc=2),
     since=lambda x: (
@@ -130,7 +129,6 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if isinstance(x, int)
         else x
     ),
-    group_source=lambda x: ", ".join(map(format_with_color, x)),
     length=timestamp2timestr,
     tracktotal=lambda x: (
         (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
@@ -140,14 +138,13 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     country=get_country,
     helicopta=lambda x: ":fire: " if x and int(x) else "",
     hidden=lambda x: ":shit: " if x and int(x) else "",
-    keywords=lambda x: colored_with_bg(x),
-    ingr=lambda x: simple_panel(colored_split(x)),
+    keywords=format_with_color_on_black,
+    ingr=lambda x: simple_panel(format_with_color(x)),
     content=lambda x: md_panel(x) if isinstance(x, str) else x,
     # comments=lambda x: md_panel(
     #     x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
     # ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
-    primary=lambda x: colored_split(x) if isinstance(x, str) else str(x),
     duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
     total_duration=lambda x: duration2human(x),
     plays=lambda x: wrap(x, BOLD_GREEN),
@@ -184,11 +181,10 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     query=lambda x: Text(x, style="bold"),
     joins=lambda x: "\n".join(map(fmt_joins, x.split(", "))),
     order_by=lambda x: " ".join(map(fmt_ordering, re.split(r",\s+", x))),
-    default_start_time=format_with_color,
-    default_end_time=format_with_color,
 )
 fields_by_func = {
     format_with_color: (
+        "__typename",
         "album",
         "albumtype",
         "area",
@@ -200,6 +196,8 @@ fields_by_func = {
         "Category",
         "code",
         "data_source",
+        "default_start_time",
+        "default_end_time",
         "Description",
         "endpoint",
         "entity",
@@ -210,12 +208,18 @@ fields_by_func = {
         "event",
         "from",
         "full_name",
+        "genre",
+        "group_source",
+        "Interests",
         "issuetype",
         "key",
+        "kind",
         "label",
         "mastering",
         "media",
         "module",
+        "operation",
+        "primary",
         "priority",
         "project",
         "short_name",
@@ -229,7 +233,7 @@ fields_by_func = {
         "symbol",
         "table",
         "to",
-        "__typename",
+        "tables",
         "type_name",
         "user",
     ),
@@ -260,16 +264,6 @@ fields_by_func = {
         "interview",
         "notes",
         "text",
-    ),
-    colored_split: (
-        # "error",
-        "genre",
-        "kind",
-        "operation",
-        "tables",
-        "Interests",
-        # "practice_ids"
-        # "post_addresses",
     ),
 }
 for func, fields in fields_by_func.items():

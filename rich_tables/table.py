@@ -1,6 +1,5 @@
 import itertools as it
 import json
-import operator as o
 import sys
 from collections import OrderedDict
 from contextlib import suppress
@@ -8,7 +7,7 @@ from datetime import datetime, timedelta
 from functools import singledispatch
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple, Union
 
-from funcy import cat, curry, omit, pluck, rcurry, select
+from funcy import curry, join, keep, omit, rcurry, zipdict
 from multimethod import DispatchError
 from rich.bar import Bar
 from rich.columns import Columns
@@ -33,10 +32,13 @@ from .utils import (
     wrap,
 )
 
-contains = curry(o.contains)
+JSONDict = Dict[str, Any]
 skip_keys = rcurry(omit)
 
-JSONDict = Dict[str, Any]
+
+@curry
+def keep_keys(keys: Iterable[str], item: JSONDict) -> JSONDict:
+    return zipdict(keys, map(item.get, keys))
 
 
 console = make_console()
@@ -174,15 +176,19 @@ def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
         yield border_panel(table, title=year_and_month)
 
 
-class TaskGroup(TypedDict):
-    items: List[JSONDict]
-
-
-def tasks_table(task_groups: List[TaskGroup]) -> Iterator[Panel]:
-    if not task_groups:
+def tasks_table(tasks_by_group: Dict[str, JSONDict]) -> Iterator[Panel]:
+    if not tasks_by_group:
         return
 
-    skip_headers = skip_keys({"priority", "recur", "uuid", "reviewed"})
+    SKIP_HEADERS = {
+        "priority",
+        "recur",
+        "uuid",
+        "reviewed",
+        "modified",
+        "annotations",
+        "depends",
+    }
     fields_map: JSONDict = {
         "id": str,
         "uuid": str,
@@ -195,23 +201,29 @@ def tasks_table(task_groups: List[TaskGroup]) -> Iterator[Panel]:
         "project": format_with_color,
         "modified": human_dt,
         "created": human_dt,
-        "entry": human_dt,
+        "start": human_dt,
         "priority": lambda x: wrap(f"({wrap('!', 'red', )})", "b") + " "
         if x == "H"
         else "",
-        # "annotations": lambda ann: "\n".join(
-        #     wrap(human_dt(a["entry"]), "b") + ": " + wrap(a["description"], "i")
-        #     for a in ann
-        # ),
+        "annotations": lambda ann: new_tree(
+            (
+                wrap(human_dt(a["created"]), "b") + ": " + wrap(a["description"], "i")
+                for a in ann
+            ),
+            "Annotations",
+        )
+        if ann
+        else None,
     }
     FIELDS_MAP.update(fields_map)
 
-    tasks = list(cat(pluck("items", task_groups)))
+    tasks = join(tasks_by_group.values())
+    first_task = tasks[0]
 
-    all_headers = tasks[0].keys()
-    ordered_keys = dict.fromkeys(
-        ["id", "urgency", "created", "modified", *all_headers]
-    ).keys()
+    all_headers = first_task.keys()
+    initial_headers = ["id", "urgency", "created", "modified"]
+    ordered_keys = dict.fromkeys([*initial_headers, *all_headers]).keys()
+    keep_headers = keep_keys(ordered_keys - SKIP_HEADERS)
 
     status_map = {
         "completed": "b s black on green",
@@ -223,43 +235,36 @@ def tasks_table(task_groups: List[TaskGroup]) -> Iterator[Panel]:
 
     desc_by_uuid = {}
     for task in tasks:
+        desc = task["description"]
         if task.get("recur") and task["status"] != "recurring":
             task["status"] = "recurring"
-            task["description"] += f" ({task})"
+            desc += f" ({task})"
         elif task.get("start"):
             task["status"] = "started"
 
-        desc = get_val(task, 'priority') + wrap(
-            task["description"], status_map[task["status"]]
-        )
+        desc = get_val(task, 'priority') + wrap(desc, status_map[task["status"]])
+        desc = new_tree(title=desc, guide_style="white")
+        task["description"] = desc
         desc_by_uuid[task["uuid"]] = desc
 
-    # take_headers = take_keys(headers)
-    for task_group in task_groups:
-        tasks = task_group["items"]
+    for group, tasks in tasks_by_group.items():
         for task in tasks:
-            task_tree = new_tree(
-                title=desc_by_uuid[task.pop("uuid")], guide_style="white"
-            )
-
-            ann = task.pop("annotations", None)
-            if ann:
-                task_tree.add(FIELDS_MAP["annotations"](ann))
+            annotations = get_val(task, "annotations")
+            if annotations:
+                task["description"].add(annotations)
 
             dep_uuids = task.get("depends") or []
-            for dep_line in (
-                " ".join((wrap(u, "b"), desc_by_uuid[u]))
-                for u in set(dep_uuids) & desc_by_uuid.keys()
-            ):
-                task_tree.add(dep_line, guide_style="red")
-            task["description"] = task_tree
-            # table.add_row(*(get_val(task, h) for h in headers))
+            deps = list(filter(None, map(desc_by_uuid.get, dep_uuids)))
+            if deps:
+                task["description"].add(
+                    new_tree(deps, guide_style="b red", hide_root=True)
+                )
 
-        group_type = next(iter(task_group.keys() - {"items"}))
+        print(keep_headers(tasks[0]))
         yield border_panel(
-            flexitable(list(map(skip_headers, tasks))),
-            title=get_val(task_group, group_type),
-            style=predictably_random_color(str(task_group.get(group_type) or "")),
+            flexitable(list(map(keep_headers, tasks))),
+            title=wrap(group, "b"),
+            style=predictably_random_color(group),
         )
 
 

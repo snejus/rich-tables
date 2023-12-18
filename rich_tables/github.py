@@ -15,8 +15,8 @@ from .fields import FIELDS_MAP, _get_val, get_val
 from .utils import (
     JSONDict,
     border_panel,
-    colored_with_bg,
     format_with_color,
+    format_with_color_on_black,
     human_dt,
     list_table,
     md_panel,
@@ -85,7 +85,7 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
     "files": lambda files: diff_panel(
         "files", [[*fmt_add_del(f), get_val(f, "path")] for f in files]
     ),
-    "reviewRequests": lambda x: "  ".join(map(colored_with_bg, x)),
+    "reviewRequests": format_with_color_on_black,
     "participants": lambda x: "\n".join(
         map(format_with_color, map("{:^20}".format, x))
     ),

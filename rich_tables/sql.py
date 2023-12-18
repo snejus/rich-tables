@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 import sqlparse
 
-from .utils import colored_with_bg, format_with_color
+from .utils import format_with_color, format_with_color_on_black
 
 QUERY_PARTS = [
     re.compile(
@@ -32,7 +32,7 @@ def fmt_ordering(column: str) -> str:
             else ""
         )
         + format_with_color(r[1])
-        + (f".{colored_with_bg(r[2])}" if r[2] else ""),
+        + (f".{format_with_color_on_black(r[2])}" if r[2] else ""),
         column,
     )
 

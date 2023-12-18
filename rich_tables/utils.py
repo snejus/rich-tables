@@ -58,7 +58,7 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "".join(set(punctuation) - {"_", ":"}),
+    junk: str = "".join(set(punctuation) - {"_", "-", ":"}),
 ) -> str:
     before = re.sub(r"\\?\[", r"\\[", before)
     after = re.sub(r"\\?\[", r"\\[", after)
@@ -187,11 +187,28 @@ def predictably_random_color(string: str) -> str:
 
 
 @lru_cache(None)
+def _format_with_color(string: str, on: Optional[str] = None) -> str:
+    color = f"b {predictably_random_color(string)}"
+    if on:
+        color += f" on {on}"
+    return wrap(string, color)
+
+
 def format_with_color(items: Union[str, Iterable[str]]) -> str:
     if isinstance(items, str):
         items = sorted(SPLIT_PAT.split(items))
 
-    return " ".join(wrap(item, f"b {predictably_random_color(item)}") for item in items)
+    return " ".join(map(_format_with_color, items))
+
+
+def format_with_color_on_black(items: Union[str, Iterable[str]]) -> str:
+    if isinstance(items, str):
+        items = sorted(SPLIT_PAT.split(items))
+
+    sep = wrap("a", "#000000 on #000000")
+    return " ".join(
+        sep + _format_with_color(item, on="#000000") + sep for item in items
+    )
 
 
 def fmt_pred_color(m: re.Match) -> str:
@@ -246,7 +263,7 @@ def new_tree(
 ) -> Tree:
     color = predictably_random_color(title or str(values))
     default: JSONDict = {"guide_style": color, "highlight": True}
-    tree = Tree(wrap(title, "b"), **{**default, **kwargs})
+    tree = Tree(title, **{**default, **kwargs})
 
     for val in values:
         tree.add(val)
@@ -255,24 +272,6 @@ def new_tree(
 
 def get_country(code: str) -> str:
     return format_with_color(code)
-
-
-def colored_with_bg(items: Union[str, Iterable[str]]) -> str:
-    if isinstance(items, str):
-        items = sorted(SPLIT_PAT.split(items))
-
-    sep = wrap("a", "#000000 on #000000")
-    return " ".join(
-        sep + wrap(item, f"bold {predictably_random_color(item)} on #000000") + sep
-        for item in items
-    )
-
-
-def colored_split(items: Union[str, Iterable[str]]) -> str:
-    if isinstance(items, str):
-        items = sorted(SPLIT_PAT.split(items))
-
-    return " ".join(map(format_with_color, items))
 
 
 def progress_bar(size: float, width: float, end: Optional[float] = None) -> Bar:
