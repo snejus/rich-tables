@@ -25,7 +25,7 @@ from .utils import (
     fmt_time,
     format_with_color,
     get_country,
-    diff_dt,
+    human_dt,
     list_table,
     md_panel,
     new_table,
@@ -102,13 +102,13 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if isinstance(x, list)
         else colored_split(x)
     ),
-    avg_last_played=lambda x: diff_dt(x, acc=2),
+    avg_last_played=lambda x: human_dt(x, acc=2),
     since=lambda x: (
         x
         if isinstance(x, str)
         else datetime.fromtimestamp(float(x)).strftime("%F %H:%M")
     ),
-    dt=lambda x: diff_dt(x, acc=5),
+    dt=lambda x: human_dt(x, acc=5),
     createdAt=lambda x: x.replace("T", " ").replace("Z", ""),
     updatedAt=lambda x: x.replace("T", " ").replace("Z", ""),
     wait_per_play=lambda x: wrap(
@@ -140,11 +140,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     country=get_country,
     helicopta=lambda x: ":fire: " if x and int(x) else "",
     hidden=lambda x: ":shit: " if x and int(x) else "",
-    keywords=lambda x: (
-        " ".join(map(colored_with_bg, colored_split(x).split("  ")))
-        if isinstance(x, str)
-        else x
-    ),
+    keywords=lambda x: colored_with_bg(x),
     ingr=lambda x: simple_panel(colored_split(x)),
     content=lambda x: md_panel(x) if isinstance(x, str) else x,
     # comments=lambda x: md_panel(
@@ -237,7 +233,7 @@ fields_by_func = {
         "type_name",
         "user",
     ),
-    diff_dt: (
+    human_dt: (
         "added",
         "committedDate",
         # "created",
@@ -271,7 +267,6 @@ fields_by_func = {
         "kind",
         "operation",
         "tables",
-        "tags",
         "Interests",
         # "practice_ids"
         # "post_addresses",

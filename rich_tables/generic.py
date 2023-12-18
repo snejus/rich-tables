@@ -15,6 +15,7 @@ from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
 
+from . import fields
 from .fields import DISPLAY_HEADER, FIELDS_MAP, MATCH_COUNT_HEADER, counts_table
 from .utils import (
     NewTable,
@@ -124,14 +125,13 @@ def flexitable(data: Any) -> RenderableType:
 def _header(data: Any, header: str) -> RenderableType:
     if not data:
         return ""
-    value = flexitable(data)
-    return FIELDS_MAP[header](value) if header in FIELDS_MAP else value
+    return fields.FIELDS_MAP[header](data) if header in fields.FIELDS_MAP else flexitable(data)
 
 
 @flexitable.register
 @debug
 def _tuple_header(data: tuple, header: str) -> RenderableType:  # type: ignore[type-arg]
-    return FIELDS_MAP[header](data) if header in FIELDS_MAP else str(data)
+    return fields.FIELDS_MAP[header](data) if header in fields.FIELDS_MAP else str(data)
 
 
 @flexitable.register

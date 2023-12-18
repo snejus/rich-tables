@@ -175,15 +175,23 @@ def list_table(items: Iterable[Any], **kwargs: Any) -> NewTable:
     return new_table(rows=[[i] for i in items], **kwargs)
 
 
+def _randint() -> int:
+    return random.randint(50, 205)
+
+
 @lru_cache(None)
 def predictably_random_color(string: str) -> str:
     random.seed(string.strip())
-    rand = partial(random.randint, 50, 205)
-    return "#{:02X}{:02X}{:02X}".format(rand(), rand(), rand())
+
+    return f"#{_randint():02X}{_randint():02X}{_randint():02X}"
 
 
-def format_with_color(name: str) -> str:
-    return wrap(name, f"b {predictably_random_color(name)}")
+@lru_cache(None)
+def format_with_color(items: Union[str, Iterable[str]]) -> str:
+    if isinstance(items, str):
+        items = sorted(SPLIT_PAT.split(items))
+
+    return " ".join(wrap(item, f"b {predictably_random_color(item)}") for item in items)
 
 
 def fmt_pred_color(m: re.Match) -> str:
@@ -249,19 +257,22 @@ def get_country(code: str) -> str:
     return format_with_color(code)
 
 
-def colored_with_bg(string: str) -> str:
+def colored_with_bg(items: Union[str, Iterable[str]]) -> str:
+    if isinstance(items, str):
+        items = sorted(SPLIT_PAT.split(items))
+
     sep = wrap("a", "#000000 on #000000")
-    return (
-        sep + wrap(string, f"bold {predictably_random_color(string)} on #000000") + sep
+    return " ".join(
+        sep + wrap(item, f"bold {predictably_random_color(item)} on #000000") + sep
+        for item in items
     )
 
 
-def _colored_split(strings: List[str]) -> str:
-    return " ".join(map(format_with_color, strings))
+def colored_split(items: Union[str, Iterable[str]]) -> str:
+    if isinstance(items, str):
+        items = sorted(SPLIT_PAT.split(items))
 
-
-def colored_split(string: str) -> str:
-    return _colored_split(sorted(SPLIT_PAT.split(string)))
+    return " ".join(map(format_with_color, items))
 
 
 def progress_bar(size: float, width: float, end: Optional[float] = None) -> Bar:
@@ -274,14 +285,11 @@ def progress_bar(size: float, width: float, end: Optional[float] = None) -> Bar:
     ratio = end / size
 
     random.seed(str(width))
-    rand = partial(random.randint, 55, 200)
 
     def norm() -> int:
-        return round(rand() * ratio)
+        return round(_randint() * ratio)
 
-    # def desaturate( q q
-
-    color = "#{:0>2X}{:0>2X}{:0>2X}".format(norm(), norm(), norm())
+    color = f"#{norm():0>2X}{norm():0>2X}{norm():0>2X}"
     # print(f"{end=} {size=} {width=}")
     return Bar(
         size=size, begin=0, width=int(width), end=end, color=color, bgcolor=bgcolor
@@ -309,7 +317,7 @@ def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
-def diff_dt(timestamp: Union[int, str, float], acc: int = 1) -> str:
+def human_dt(timestamp: Union[int, str, float], acc: int = 1) -> str:
     try:
         datetime = timestamp2datetime(timestamp)
     except ValueError:
@@ -321,7 +329,7 @@ def diff_dt(timestamp: Union[int, str, float], acc: int = 1) -> str:
     return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN)
 
 
-def diff_dt(timestamp: Union[int, str, float], acc: int = 1) -> str:
+def diff_dt(timestamp: Union[int, str, float], acc: int = 2) -> str:
     try:
         datetime = timestamp2datetime(timestamp)
     except ValueError:
