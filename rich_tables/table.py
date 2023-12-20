@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from functools import singledispatch
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple, Union
 
-from funcy import curry, join, keep, omit, rcurry, zipdict
+from funcy import curry, join
 from multimethod import DispatchError
 from rich.bar import Bar
 from rich.columns import Columns
@@ -15,7 +15,6 @@ from rich.console import ConsoleRenderable
 from rich.panel import Panel
 from rich.table import Table
 from rich.traceback import install
-from typing_extensions import TypedDict
 
 from .fields import FIELDS_MAP, get_val
 from .generic import flexitable
@@ -33,12 +32,11 @@ from .utils import (
 )
 
 JSONDict = Dict[str, Any]
-skip_keys = rcurry(omit)
 
 
 @curry
 def keep_keys(keys: Iterable[str], item: JSONDict) -> JSONDict:
-    return zipdict(keys, map(item.get, keys))
+    return dict(zip(keys, map(item.get, keys)))
 
 
 console = make_console()
@@ -222,8 +220,9 @@ def tasks_table(tasks_by_group: Dict[str, JSONDict]) -> Iterator[Panel]:
 
     all_headers = first_task.keys()
     initial_headers = ["id", "urgency", "created", "modified"]
-    ordered_keys = dict.fromkeys([*initial_headers, *all_headers]).keys()
-    keep_headers = keep_keys(ordered_keys - SKIP_HEADERS)
+    ordered_keys = dict.fromkeys([*initial_headers, *sorted(all_headers)]).keys()
+    valid_keys = [k for k in ordered_keys if k not in SKIP_HEADERS]
+    keep_headers = keep_keys(valid_keys)
 
     status_map = {
         "completed": "b s black on green",
@@ -260,7 +259,6 @@ def tasks_table(tasks_by_group: Dict[str, JSONDict]) -> Iterator[Panel]:
                     new_tree(deps, guide_style="b red", hide_root=True)
                 )
 
-        print(keep_headers(tasks[0]))
         yield border_panel(
             flexitable(list(map(keep_headers, tasks))),
             title=wrap(group, "b"),
@@ -276,11 +274,11 @@ def load_data() -> Any:
     except json.JSONDecodeError:
         msg = "Broken JSON"
     except AssertionError:
-        exit(0)
+        sys.exit(0)
     else:
         return data
     console.log(wrap(msg, "b red"), log_locals=True)
-    exit(1)
+    sys.exit(1)
 
 
 @singledispatch
