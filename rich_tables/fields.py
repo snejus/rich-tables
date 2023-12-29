@@ -241,6 +241,7 @@ fields_by_func = {
         "added",
         "committedDate",
         # "created",
+        "date",
         "due",
         # "end",
         "entry",
