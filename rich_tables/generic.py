@@ -125,7 +125,11 @@ def flexitable(data: Any) -> RenderableType:
 def _header(data: Any, header: str) -> RenderableType:
     if not data:
         return ""
-    return fields.FIELDS_MAP[header](data) if header in fields.FIELDS_MAP else flexitable(data)
+    return (
+        fields.FIELDS_MAP[header](data)
+        if header in fields.FIELDS_MAP
+        else flexitable(data)
+    )
 
 
 @flexitable.register
@@ -195,7 +199,7 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 @flexitable.register
 @debug
 def _str_list(data: List[str]) -> RenderableType:
-    return ", ".join(map(format_with_color, data))
+    return ", ".join(map(format_with_color, map(str, data)))
 
 
 @flexitable.register
