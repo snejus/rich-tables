@@ -169,14 +169,14 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     # sql=sql_table,
     file=lambda x: "/".join(map(format_with_color, x.split("/"))),
     field=lambda x: ".".join(map(format_with_color, x.split("."))),
-    log=lambda x: border_panel(
-        x, border_style="b i", padding=(0, 2, 0, 2), style="on #232323"
-    ),
+    # log=lambda x: border_panel(
+    #     x, border_style="b i", padding=(0, 2, 0, 2), style="on #232323"
+    # ),
     unified_diff=lambda x: syntax(x, "diff"),
     diffHunk=lambda x: syntax(x, "diff"),
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     # traceback=lambda x: border_panel(x),
-    traceback=lambda x: border_panel(syntax(x, "python")),
+    # traceback=lambda x: border_panel(syntax(x, "python")),
     # diff=lambda x: Text.from_markup(x) if "[/]" in x else md_panel(x),
     query=lambda x: Text(x, style="bold"),
     joins=lambda x: "\n".join(map(fmt_joins, x.split(", "))),
