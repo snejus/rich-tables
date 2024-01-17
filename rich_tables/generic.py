@@ -123,8 +123,9 @@ def flexitable(data: Any) -> RenderableType:
 @flexitable.register
 @debug
 def _header(data: Any, header: str) -> RenderableType:
-    if not data:
+    if data == "":
         return ""
+
     return (
         fields.FIELDS_MAP[header](data)
         if header in fields.FIELDS_MAP

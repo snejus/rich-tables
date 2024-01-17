@@ -195,10 +195,11 @@ def _format_with_color(string: str, on: Optional[str] = None) -> str:
 
 
 def format_with_color(items: Union[str, Iterable[str]]) -> str:
-    if isinstance(items, str):
-        items = sorted(SPLIT_PAT.split(items))
+    if isinstance(items, Iterable):
+        return " ".join(map(_format_with_color, items))
 
-    return " ".join(map(_format_with_color, items))
+    return sorted(SPLIT_PAT.split(items))
+
 
 
 def format_with_color_on_black(items: Union[str, Iterable[str]]) -> str:
