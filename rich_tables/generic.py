@@ -16,7 +16,7 @@ from rich.text import Text
 from rich.tree import Tree
 
 from . import fields
-from .fields import DISPLAY_HEADER, FIELDS_MAP, MATCH_COUNT_HEADER, counts_table
+from .fields import DISPLAY_HEADER, MATCH_COUNT_HEADER, _get_val, counts_table, get_val
 from .utils import (
     NewTable,
     border_panel,
@@ -126,11 +126,7 @@ def _header(data: Any, header: str) -> RenderableType:
     if data == "":
         return ""
 
-    return (
-        fields.FIELDS_MAP[header](data)
-        if header in fields.FIELDS_MAP
-        else flexitable(data)
-    )
+    return _get_val(data, header) if header in fields.FIELDS_MAP else flexitable(data)
 
 
 @flexitable.register

@@ -311,7 +311,11 @@ DISPLAY_HEADER: Dict[str, str] = {
 
 
 def _get_val(value: Any, field: str) -> Any:
-    return FIELDS_MAP[field](value) if value is not None else ""
+    # return FIELDS_MAP[field](value) if value is not None else ""
+    if value is None:
+        value = "None"
+
+    return FIELDS_MAP[field](value)
 
 
 @singledispatch
