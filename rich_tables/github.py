@@ -70,7 +70,7 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
         "SUCCESS": ":green_square:",
         "FAILURE": ":red_square:",
         "PENDING": ":yellow_square:",
-        None: "",
+        "None": "",
     }[x],
     "state": lambda x: wrap(fmt_state(x), "b"),
     "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
