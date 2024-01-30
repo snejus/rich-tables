@@ -107,9 +107,12 @@ def album_title(album: JSONDict) -> Table:
     artist = album.get("albumartist") or album.get("artist")
     genre = album.get("genre") or ""
     released = album.get("released", "")
-    return new_table(
-        rows=[[format_title(f"{name} by {artist}"), format_title(released), genre]]
+    title = (
+        f"{name} by {artist}"
+        if album["albumtypes"] != "single"
+        else f"singles by {artist}"
     )
+    return new_table(rows=[[format_title(title), format_title(released), genre]])
 
 
 def album_info(tracks: List[JSONDict]) -> JSONDict:
