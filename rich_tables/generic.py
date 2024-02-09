@@ -16,7 +16,7 @@ from rich.text import Text
 from rich.tree import Tree
 
 from . import fields
-from .fields import DISPLAY_HEADER, MATCH_COUNT_HEADER, _get_val, counts_table, get_val
+from .fields import DISPLAY_HEADER, MATCH_COUNT_HEADER, _get_val, counts_table
 from .utils import (
     NewTable,
     border_panel,
@@ -29,8 +29,6 @@ from .utils import (
     simple_panel,
     wrap,
 )
-
-# snoop.install(color=True)
 
 JSONDict = Dict[str, Any]
 T = TypeVar("T")
@@ -227,7 +225,7 @@ def _dict_list(data: List[JSONDict]) -> RenderableType:
 
     def getval(value: Any, key: str) -> RenderableType:
         transformed_value = flexitable(value, key)
-        header = wrap(key, 'b')
+        header = wrap(key, "b")
         if (
             isinstance(transformed_value, NewTable)
             and len(transformed_value.rows) == 1
