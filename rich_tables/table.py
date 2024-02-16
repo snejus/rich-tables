@@ -241,7 +241,7 @@ def tasks_table(tasks_by_group: Dict[str, JSONDict]) -> Iterator[Panel]:
         elif task.get("start"):
             task["status"] = "started"
 
-        desc = get_val(task, 'priority') + wrap(desc, status_map[task["status"]])
+        desc = get_val(task, "priority") + wrap(desc, status_map[task["status"]])
         desc = new_tree(title=desc, guide_style="white")
         task["description"] = desc
         desc_by_uuid[task["uuid"]] = desc
