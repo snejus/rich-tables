@@ -10,6 +10,7 @@
         "reviewed": "20211101T184517Z",
         "status": "pending",
         "uuid": "f7299f8a-dfa6-42d1-ab59-8ed92485fed1",
+        "annotations": [],
         "tags": ["fix", "new", "python"],
         "urgency": 4
       }
@@ -23,6 +24,7 @@
         "reviewed": "20211101T190112Z",
         "status": "pending",
         "uuid": "a5eab49f-04de-43b8-8098-4bb5d3f60fa1",
+        "annotations": [],
         "tags": ["fix"],
         "urgency": 3.8
       }
@@ -35,6 +37,7 @@
         "modified": "20211211T183808Z",
         "status": "pending",
         "uuid": "2a7ee836-4b81-4934-a7a3-0f175335771a",
+        "annotations": [],
         "urgency": 2.88493
       }
     ],
@@ -47,6 +50,7 @@
         "reviewed": "20211101T194040Z",
         "status": "pending",
         "uuid": "bb032f36-dd41-480f-8026-52dd9bfcb0d7",
+        "annotations": [],
         "tags": ["fix"],
         "urgency": 3.8
       },
@@ -58,6 +62,7 @@
         "reviewed": "20211101T185144Z",
         "status": "pending",
         "uuid": "f2a4b722-5ab7-4cab-9bdc-23e7c4d4c88f",
+        "annotations": [],
         "tags": ["fix"],
         "urgency": 3.8
       }
@@ -71,6 +76,7 @@
         "priority": "H",
         "status": "pending",
         "uuid": "0b12ff9c-da93-424b-bb7f-812b2331a19d",
+        "annotations": [],
         "depends": ["412b4d21-5914-4a02-9a4f-a7c8e0fd1c92"],
         "urgency": 3.96438
       },
@@ -82,6 +88,7 @@
         "reviewed": "20211101T193511Z",
         "status": "pending",
         "uuid": "7c0e7b45-7ad9-4ee2-8dcc-7b60fe9a4aae",
+        "annotations": [],
         "urgency": 3
       }
     ],
@@ -109,6 +116,7 @@
         "modified": "20220901T192230Z",
         "status": "pending",
         "uuid": "daf98fe9-7250-46a8-b28d-ba334e6c5aca",
+        "annotations": [],
         "tags": ["track_alt"],
         "urgency": 2.23836
       },
@@ -119,6 +127,7 @@
         "modified": "20220607T015809Z",
         "status": "pending",
         "uuid": "3a2416c7-f3bd-4b22-904d-277dab0e302a",
+        "annotations": [],
         "tags": ["artist", "cleanup"],
         "urgency": 2.80959
       },
@@ -129,6 +138,7 @@
         "modified": "20220521T094815Z",
         "status": "pending",
         "uuid": "7c8d61f2-0661-425a-9107-6040a51a7927",
+        "annotations": [],
         "tags": ["artist", "title"],
         "urgency": 2.90274
       },
@@ -139,6 +149,7 @@
         "modified": "20220418T202212Z",
         "status": "pending",
         "uuid": "4b4986e9-ef8e-4948-b277-f60f589ef531",
+        "annotations": [],
         "tags": ["artist", "cleanup", "title"],
         "urgency": 3.18356
       },
@@ -149,6 +160,7 @@
         "modified": "20220418T195159Z",
         "status": "pending",
         "uuid": "2a38cfb9-8887-4f5b-849b-9b58fd8f966f",
+        "annotations": [],
         "tags": ["artist", "cleanup", "title"],
         "urgency": 3.18356
       }
@@ -177,6 +189,7 @@
         "modified": "20221009T145626Z",
         "status": "pending",
         "uuid": "4186c054-4fbf-4438-b0e9-57e0d7cb2131",
+        "annotations": [],
         "tags": ["albumartist", "artist", "clean"],
         "urgency": 2.23014
       },
@@ -187,6 +200,7 @@
         "modified": "20220820T095603Z",
         "status": "pending",
         "uuid": "d4f48222-217c-4b1e-a869-268d73b1c3e4",
+        "annotations": [],
         "tags": ["album", "cleanup"],
         "urgency": 2.40411
       },
@@ -197,6 +211,7 @@
         "modified": "20220418T183125Z",
         "status": "pending",
         "uuid": "b83c8b27-a5df-4d64-9b15-3415ea15d0e5",
+        "annotations": [],
         "tags": ["mastering"],
         "urgency": 2.98356
       },
@@ -207,6 +222,7 @@
         "modified": "20220418T182806Z",
         "status": "pending",
         "uuid": "07964b0e-863f-437e-b5de-ca40c8a691ae",
+        "annotations": [],
         "tags": ["mastering"],
         "urgency": 2.98356
       },
@@ -217,6 +233,7 @@
         "modified": "20220418T181502Z",
         "status": "pending",
         "uuid": "e7ebe413-4f76-4dcf-971e-01366f9d477f",
+        "annotations": [],
         "tags": ["mastering"],
         "urgency": 2.98356
       },
@@ -227,6 +244,7 @@
         "modified": "20211211T175845Z",
         "status": "pending",
         "uuid": "63a69114-bed4-42c9-be25-c1eceb80cfb7",
+        "annotations": [],
         "tags": ["album", "comments", "dup"],
         "urgency": 3.88493
       }
