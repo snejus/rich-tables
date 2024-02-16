@@ -22,7 +22,7 @@ classifiers = [
 python = ">=3.7,<4"
 
 rich = ">=12.3.0"
-multimethod = "*"
+multimethod = { version = "*", python = ">=3.9" }
 
 rgbxy = ">=0.5"
 sqlparse = ">=0.4.4"

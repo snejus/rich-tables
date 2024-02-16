@@ -121,7 +121,7 @@ def flexitable(data: Any) -> RenderableType:
 @flexitable.register
 @debug
 def _header(data: Any, header: str) -> RenderableType:
-    if data == "":
+    if data == "" or data == []:
         return ""
 
     return _get_val(data, header) if header in fields.FIELDS_MAP else flexitable(data)
@@ -272,18 +272,18 @@ def _dict_list(data: List[JSONDict]) -> RenderableType:
     return large_table
 
 
-@flexitable.register
-@debug
-def _any_list(data: List[Any]) -> RenderableType:
-    if len(data) == 1:
-        return flexitable(data[0])
+# @flexitable.register
+# @debug
+# def _any_list(data: List[Any]) -> RenderableType:
+#     if len(data) == 1:
+#         return flexitable(data[0])
 
-    table = list_table(show_header=False)
-    for item in filter(None, data):
-        content = flexitable(item)
-        if isinstance(content, Iterable) and not isinstance(content, str):
-            table.add_row(*content)
-        else:
-            table.add_row(content)
+#     table = list_table(show_header=False)
+#     for item in filter(None, data):
+#         content = flexitable(item)
+#         if isinstance(content, Iterable) and not isinstance(content, str):
+#             table.add_row(*content)
+#         else:
+#             table.add_row(content)
 
-    return simple_panel(table)
+#     return simple_panel(table)

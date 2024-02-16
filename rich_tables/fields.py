@@ -129,7 +129,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if isinstance(x, int)
         else x
     ),
-    length=timestamp2timestr,
+    # length=timestamp2timestr,
     tracktotal=lambda x: (
         (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
         if isinstance(x, Iterable) and not isinstance(x, str)
