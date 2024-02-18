@@ -83,18 +83,18 @@ def counts_table(data: List[JSONDict]) -> Table:
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
     diff=lambda x: Text.from_markup(json.dumps(diff(*x), indent=2).replace('"', "")),
-    albumtypes=lambda x: "; ".join(
-        map(
-            format_with_color,
-            {
-                "album; compilation": "comp",
-                "dj-mix; broadcast": "dj-mix",
-                "broadcast; dj-mix": "dj-mix",
-            }
-            .get(x, x)
-            .split("; "),
-        )
-    ),
+    # albumtypes=lambda x: "; ".join(
+    #     map(
+    #         format_with_color,
+    #         {
+    #             "album; compilation": "comp",
+    #             "dj-mix; broadcast": "dj-mix",
+    #             "broadcast; dj-mix": "dj-mix",
+    #         }
+    #         .get(x, x)
+    #         .split("; "),
+    #     )
+    # ),
     author=format_with_color_on_black,
     labels=lambda x: (
         wrap("    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x), "b")
@@ -129,7 +129,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if isinstance(x, int)
         else x
     ),
-    # length=timestamp2timestr,
+    length=timestamp2timestr,
     tracktotal=lambda x: (
         (wrap("{}", "b cyan") + "/" + wrap("{}", "b cyan")).format(*x)
         if isinstance(x, Iterable) and not isinstance(x, str)
@@ -195,7 +195,7 @@ fields_by_func = {
         "category",
         "Category",
         "code",
-        "data_source",
+        # "data_source",
         "default_start_time",
         "default_end_time",
         "Description",

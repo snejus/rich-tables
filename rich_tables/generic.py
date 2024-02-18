@@ -194,7 +194,7 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 @flexitable.register
 @debug
 def _str_list(data: List[str]) -> RenderableType:
-    return ", ".join(map(format_with_color, map(str, data)))
+    return format_with_color(data)
 
 
 @flexitable.register
