@@ -91,7 +91,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
                 "dj-mix; broadcast": "dj-mix",
                 "broadcast; dj-mix": "dj-mix",
             }
-            .get(x, x)
+            .get("; ".join(x), "; ".join(x))
             .split("; "),
         )
     ),
