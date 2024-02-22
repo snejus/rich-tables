@@ -83,16 +83,15 @@ def counts_table(data: List[JSONDict]) -> Table:
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
     diff=lambda x: Text.from_markup(json.dumps(diff(*x), indent=2).replace('"', "")),
-    albumtypes=lambda x: "; ".join(
+    albumtypes=lambda x: " ".join(
         map(
             format_with_color,
-            {
-                "album; compilation": "comp",
-                "dj-mix; broadcast": "dj-mix",
-                "broadcast; dj-mix": "dj-mix",
-            }
-            .get("; ".join(x), "; ".join(x))
-            .split("; "),
+            (
+                "; ".join(x)
+                .replace("album; compilation", "comp")
+                .replace("dj-mix; broadcast", "dj-mix")
+                .replace("broadcast; dj-mix", "dj-mix")
+            ).split("; "),
         )
     ),
     author=format_with_color_on_black,
