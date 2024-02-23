@@ -314,6 +314,9 @@ def _get_val(value: Any, field: str) -> Any:
     if value is None:
         value = "None"
 
+    if field not in FIELDS_MAP and field.endswith("_group") and isinstance(value, list):
+        return format_with_color(value)
+
     return FIELDS_MAP[field](value)
 
 
