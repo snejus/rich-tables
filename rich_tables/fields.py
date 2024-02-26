@@ -87,8 +87,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         map(
             format_with_color,
             (
-                "; ".join(x)
-                .replace("album; compilation", "comp")
+                ("; ".join(x) if isinstance(x, list) else x)
+                .replace("compilation", "comp")
                 .replace("dj-mix; broadcast", "dj-mix")
                 .replace("broadcast; dj-mix", "dj-mix")
             ).split("; "),
