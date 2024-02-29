@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install poetry
+        run: pip install poetry
+
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
         with:
@@ -19,9 +22,7 @@ jobs:
           cache: poetry
 
       - name: Install dependencies
-        run: |
-          pip install poetry
-          poetry install --all-extras
+        run: poetry install --all-extras
 
       - name: Pytest
         run: poetry run pytest -vv
