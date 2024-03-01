@@ -267,6 +267,9 @@ def tasks_table(tasks_by_group: Dict[str, JSONDict]) -> Iterator[Panel]:
 
 
 def load_data() -> Any:
+    if sys.stdin.isatty():
+        return
+
     text = sys.stdin.read().replace(r"\x00", "")
     try:
         data = json.loads(text or "{}", object_hook=OrderedDict)
