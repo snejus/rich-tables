@@ -46,7 +46,7 @@ def parse_sql_query(sql: str, span: float) -> dict:
     kwargs = {"strip_comments": True}
     # kwargs["reindent" if REINDENT else "reindent_aligned"] = True
     kwargs["reindent_aligned"] = False
-    kwargs["reindent"] = False
+    kwargs["reindent"] = True
     sql = sqlparse.format(sql, **kwargs)
     query = defaultdict(str, span=round(span, 2), sql=sql)
     query = {
