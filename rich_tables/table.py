@@ -332,13 +332,13 @@ def main() -> None:
         if "-j" in args:
             console.print_json(data=data)
         else:
-            try:
-                for ret in draw_data(data):
-                    console.print(ret)
-            except DispatchError as e:
-                if e.__cause__:
-                    raise e.__cause__ from None
-                raise e
+            # try:
+            for ret in draw_data(data):
+                console.print(ret)
+            # except DispatchError as e:
+            #     if e.__cause__:
+            #         raise e.__cause__ from None
+            #     raise e
 
         if "-s" in set(args):
             console.save_html("saved.html")
