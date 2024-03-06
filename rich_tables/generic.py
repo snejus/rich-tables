@@ -76,7 +76,7 @@ def _undebug(_type: type, *args: Any) -> None:
     if log.isEnabledFor(10):
         data, *header = [str(arg).split(r"\n")[0] for arg in args]
         if header:
-            print(indent + f"Header: \033[1m{header}\033[0m")
+            print(indent + f"Header: \033[1m{header[0] if header else ''}\033[0m")
         elif data:
             print(indent + f"Data: \033[1m{data}\033[0m")
 

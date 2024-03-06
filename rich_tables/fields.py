@@ -139,7 +139,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     hidden=lambda x: ":shit: " if x and int(x) else "",
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
-    content=lambda x: md_panel(x) if isinstance(x, str) else x,
+    # content=lambda x: md_panel(x) if isinstance(x, str) else x,
     # comments=lambda x: md_panel(
     #     x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
     # ),
@@ -186,12 +186,14 @@ fields_by_func = {
         "__typename",
         "album",
         "albumtype",
+        "app",
         "area",
         "assignee",
         "brand",
         "calendar",
         "catalognum",
         "category",
+        "categories",
         "Category",
         "code",
         # "data_source",

@@ -272,7 +272,7 @@ def load_data() -> Any:
 
     text = sys.stdin.read().replace(r"\x00", "")
     try:
-        data = json.loads(text or "{}", object_hook=OrderedDict)
+        data = json.loads(text or "{}")
         assert data
     except json.JSONDecodeError:
         msg = "Broken JSON"
