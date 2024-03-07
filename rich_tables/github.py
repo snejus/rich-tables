@@ -4,7 +4,6 @@ from itertools import chain, groupby
 from typing import Any, Callable, Iterable, List, Mapping, Union
 
 from rich import box
-from rich.columns import Columns
 from rich.console import ConsoleRenderable, RenderableType
 from rich.panel import Panel
 from rich.syntax import Syntax
@@ -12,12 +11,13 @@ from rich.table import Table
 from typing_extensions import TypedDict
 
 from .fields import FIELDS_MAP, _get_val, get_val
+from .generic import flexitable
 from .utils import (
     JSONDict,
     border_panel,
+    diff_dt,
     format_with_color,
     format_with_color_on_black,
-    human_dt,
     list_table,
     md_panel,
     new_table,
@@ -76,8 +76,8 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
     "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
     "dates": lambda x: new_table(
         rows=[
-            [wrap(r" ⬤ ", "b green"), human_dt(x[0])],
-            [wrap(r" ◯ ", "b yellow"), human_dt(x[1])],
+            [wrap(r" ⬤ ", "b green"), diff_dt(x[0])],
+            [wrap(r" ◯ ", "b yellow"), diff_dt(x[1])],
         ]
     ),
     "path": lambda x: wrap(x, "b"),
@@ -327,6 +327,10 @@ class PullRequest:
     updatedAt: str
     url: str
 
+    @property
+    def dates(self) -> tuple[str, str]:
+        return self.createdAt, self.updatedAt
+
 
 @dataclass
 class PullRequestTable(PullRequest):
@@ -386,21 +390,10 @@ class PullRequestTable(PullRequest):
     @property
     def info(self) -> Panel:
         fields = "author", "dates", "participants", "reviewRequests"
+        pairs = [(f, getattr(self, f)) for f in fields]
+        field_rows = [[flexitable({f: v})] for f, v in pairs if v]
         return border_panel(
-            new_table(
-                rows=[
-                    [
-                        Columns(
-                            map(self.make_info_subpanel, fields),
-                            align="center",
-                            expand=True,
-                            equal=True,
-                        )
-                    ],
-                    [md_panel(self.body)],
-                    [self.files_commits],
-                ]
-            ),
+            new_table(rows=[*field_rows, [md_panel(self.body)], [self.files_commits]]),
             title=f"{self.name} @ {self.repo}",
             box=box.DOUBLE_EDGE,
             border_style=state_color(self.pr_state),

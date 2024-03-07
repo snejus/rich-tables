@@ -107,8 +107,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         else datetime.fromtimestamp(float(x)).strftime("%F %H:%M")
     ),
     dt=lambda x: human_dt(x, acc=5),
-    createdAt=lambda x: x.replace("T", " ").replace("Z", ""),
-    updatedAt=lambda x: x.replace("T", " ").replace("Z", ""),
+    # createdAt=lambda x: x.replace("T", " ").replace("Z", ""),
+    # updatedAt=lambda x: x.replace("T", " ").replace("Z", ""),
     wait_per_play=lambda x: wrap(
         " ".join(islice(fmt_time(int(float(x))), 1)), BOLD_GREEN
     ),
