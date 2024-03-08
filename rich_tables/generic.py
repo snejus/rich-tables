@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime
 from functools import partial, wraps
-from typing import Any, Callable, Dict, List, TypeVar, Union
+from typing import Any, Callable, Dict, List, Tuple, TypeVar, Union
 
 from multimethod import multidispatch
 from rich import box
@@ -61,10 +61,16 @@ if not log.handlers:
         log.setLevel("DEBUG")
 
 
-def _debug(_func: Callable[..., T]) -> None:
+def _debug(_func: Callable[..., T], *args) -> None:
     if log.isEnabledFor(10):
         global indent
         types = f"\033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m"
+
+        data, *header = [str(arg).split(r"\n")[0] for arg in args]
+        if header:
+            print(indent + f"Header: \033[1m{header[0] if header else ''}\033[0m")
+        elif data:
+            print(indent + f"Data: \033[1m{data}\033[0m")
         print(indent + f"Function \033[1;31m{_func.__name__}\033[0m, types: {types}")
 
         indent += "│ "
@@ -74,11 +80,11 @@ def _undebug(_type: type, *args: Any) -> None:
     global indent
     indent = indent[:-2]
     if log.isEnabledFor(10):
-        data, *header = [str(arg).split(r"\n")[0] for arg in args]
-        if header:
-            print(indent + f"Header: \033[1m{header[0] if header else ''}\033[0m")
-        elif data:
-            print(indent + f"Data: \033[1m{data}\033[0m")
+        # data, *header = [str(arg).split(r"\n")[0] for arg in args]
+        # if header:
+        #     print(indent + f"Header: \033[1m{header[0] if header else ''}\033[0m")
+        # elif data:
+        #     print(indent + f"Data: \033[1m{data}\033[0m")
 
         print(indent + "└─ " + f"Returning {_type}")
 
@@ -103,7 +109,7 @@ def prepare_dict(item: JSONDict) -> JSONDict:
 def debug(func: Callable[..., T]) -> Callable[..., T]:
     @wraps(func)
     def wrapper(*args: Any) -> T:
-        _debug(func)
+        _debug(func, *args)
         result = func(*args)
         _undebug(type(result), *args)
         return result
@@ -192,19 +198,25 @@ list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style=
 
 @flexitable.register
 @debug
-def _str_list(data: List[str]) -> RenderableType:
+def _list(data: List) -> RenderableType:
+    return flexitable(tuple(data))
+
+
+@flexitable.register
+@debug
+def _str_list(data: Tuple[str, ...]) -> RenderableType:
     return format_with_color(data)
 
 
 @flexitable.register
 @debug
-def _int_list(data: List[int]) -> Panel:
+def _int_list(data: Tuple[int, ...]) -> Panel:
     return border_panel(Columns(str(x) for x in data))
 
 
 @flexitable.register
 @debug
-def _dict_list(data: List[JSONDict]) -> RenderableType:
+def _dict_list(data: Tuple[JSONDict, ...]) -> RenderableType:
     if len(data) == 1 and len(data[0]) > 10:
         return flexitable(data[0])
 

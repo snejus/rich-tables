@@ -383,13 +383,13 @@ files = [
 
 [[package]]
 name = "multimethod"
-version = "1.10"
+version = "1.11.2"
 description = "Multiple argument dispatching."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "multimethod-1.10-py3-none-any.whl", hash = "sha256:afd84da9c3d0445c84f827e4d63ad42d17c6d29b122427c6dee9032ac2d2a0d4"},
-    {file = "multimethod-1.10.tar.gz", hash = "sha256:daa45af3fe257f73abb69673fd54ddeaf31df0eb7363ad6e1251b7c9b192d8c5"},
+    {file = "multimethod-1.11.2-py3-none-any.whl", hash = "sha256:cb338f09395c0ee87d36c7691cdd794d13d8864358082cf1205f812edd5ce05a"},
+    {file = "multimethod-1.11.2.tar.gz", hash = "sha256:7f2a4863967142e6db68632fef9cd79053c09670ba0c5f113301e245140bba5c"},
 ]
 
 [[package]]
@@ -702,7 +702,6 @@ files = [
 [package.dependencies]
 markdown-it-py = ">=2.2.0"
 pygments = ">=2.13.0,<3.0.0"
-typing-extensions = {version = ">=4.0.0,<5.0", markers = "python_version < \"3.9\""}
 
 [package.extras]
 jupyter = ["ipywidgets (>=7.5.1,<9)"]
@@ -825,5 +824,5 @@ hue = ["rgbxy"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.8,<4"
-content-hash = "366f2526e99c7bc4443e6fc406818fffca06db46750653e9b54a000c1669291a"
+python-versions = ">=3.9,<4"
+content-hash = "26594f8cc1dc73082aea2bf77d21f512a19cd2c3c8014e9449be8acd11543ee3"
