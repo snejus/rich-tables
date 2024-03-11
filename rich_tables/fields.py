@@ -140,9 +140,9 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
     # content=lambda x: md_panel(x) if isinstance(x, str) else x,
-    # comments=lambda x: md_panel(
-    #     x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
-    # ),
+    comments=lambda x: md_panel(
+        x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
+    ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
     duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
     total_duration=lambda x: duration2human(x),

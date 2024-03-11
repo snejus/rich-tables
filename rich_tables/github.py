@@ -358,11 +358,11 @@ class PullRequestTable(PullRequest):
                 comments=comments_by_review_id.get(r["id"], []),
             )
             for r in reviews
-            if (
-                r["id"] in threads_by_review_id
-                or r["state"] != "COMMENTED"
-                or r["body"]
-            )
+            # if (
+            #     # r["id"] in threads_by_review_id
+            #     r["state"] != "COMMENTED"
+            #     or r["body"]
+            # )
         ]
         return cls(**kwargs)
 
