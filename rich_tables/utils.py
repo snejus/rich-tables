@@ -247,7 +247,7 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
-    return simple_panel(
+    return border_panel(
         Markdown(
             content,
             inline_code_theme="nord-darker",
