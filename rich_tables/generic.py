@@ -204,7 +204,7 @@ def _list(data: List) -> RenderableType:
 
 @flexitable.register
 @debug
-def _str_list(data: Tuple[str, ...]) -> RenderableType:
+def _str_list(data: Tuple[Any, ...]) -> RenderableType:
     return format_with_color(data)
 
 
