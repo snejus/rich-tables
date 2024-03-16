@@ -21,6 +21,7 @@ from .utils import (
     diff,
     duration2human,
     fmt_time,
+    format_string,
     format_with_color,
     format_with_color_on_black,
     get_country,
@@ -134,6 +135,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if isinstance(x, Iterable) and not isinstance(x, str)
         else str(x)
     ),
+    category=lambda x: "/".join(map(format_with_color, x.split("/"))),
     country=get_country,
     helicopta=lambda x: ":fire: " if x and int(x) else "",
     hidden=lambda x: ":shit: " if x and int(x) else "",
@@ -145,7 +147,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
     duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
-    total_duration=lambda x: duration2human(x),
+    # total_duration=duration2human,
     plays=lambda x: wrap(x, BOLD_GREEN),
     skips=lambda x: wrap(x, BOLD_RED),
     # body=lambda x: x + "\n",
@@ -192,7 +194,7 @@ fields_by_func = {
         "brand",
         "calendar",
         "catalognum",
-        "category",
+        # "category",
         "categories",
         "Category",
         "code",
@@ -316,6 +318,9 @@ def _get_val(value: Any, field: str) -> Any:
     # return FIELDS_MAP[field](value) if value is not None else ""
     if value is None:
         value = "None"
+
+    if isinstance(value, str):
+        value = format_string(value)
 
     if field not in FIELDS_MAP and field.endswith("_group") and isinstance(value, list):
         return format_with_color(value)
