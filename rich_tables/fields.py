@@ -31,6 +31,7 @@ from .utils import (
     new_table,
     progress_bar,
     simple_panel,
+    split_with_color,
     syntax,
     timestamp2timestr,
     wrap,
@@ -211,7 +212,6 @@ fields_by_func = {
         "event",
         "from",
         "full_name",
-        "genre",
         "group_source",
         "Interests",
         "issuetype",
@@ -240,6 +240,7 @@ fields_by_func = {
         "type_name",
         "user",
     ),
+    split_with_color: ("genre", "genres"),
     human_dt: (
         "added",
         "committedDate",

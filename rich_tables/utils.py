@@ -194,9 +194,13 @@ def _format_with_color(string: str, on: Optional[str] = None) -> str:
     return wrap(string, color)
 
 
+def split_with_color(text: str) -> str:
+    return " ".join(_format_with_color(str(x)) for x in sorted(SPLIT_PAT.split(text)))
+
+
 def format_with_color(items: Union[str, Iterable[str]]) -> str:
     if isinstance(items, str):
-        items = sorted(SPLIT_PAT.split(items))
+        items = [items]
 
     return " ".join((_format_with_color(str(x)) for x in items))
 
