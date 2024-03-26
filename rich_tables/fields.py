@@ -59,7 +59,7 @@ def counts_table(data: List[JSONDict]) -> Table:
     # ensure subcount and count headers are at the end
     if subcount_header:
         count_header = f"{subcount_header}/{count_header}"
-    ordered_headers.append(count_header)
+    # ordered_headers.append(count_header)
 
     table = new_table(*ordered_headers, "")
     for item, count in zip(data, all_counts):
@@ -74,6 +74,7 @@ def counts_table(data: List[JSONDict]) -> Table:
         item[count_header] = count_val
         table.add_row(
             *(get_val(item, h) for h in ordered_headers),
+            count_val,
             progress_bar(end=subcount, width=max_value, size=count),
         )
     if count_header in {"duration", "total_duration"}:
