@@ -59,7 +59,7 @@ def lights_table(lights: List[JSONDict]) -> Table:
         elif xy:
             color = conv.xy_to_hex(*xy)
             light["xy"] = wrap("   a", f"#{color} on #{color}")
-        table.add_row(*map(str, (light.get(x, "") for x in headers)), style=style)
+        table.add_row(*(get_val(light, h) for h in headers), style=style)
     yield table
 
 
@@ -130,26 +130,22 @@ def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
             title = status_map[event["status"]] + wrap(
                 event["summary"] or "busy", f"b {color}"
             )
-            new_events.append(
-                {
-                    **event,
-                    "color": color,
-                    "name": (
-                        border_panel(get_val(event, "desc"), title=title)
-                        if event["desc"]
-                        else title
-                    ),
-                    "start": start,
-                    "start_day": start.strftime("%d %a"),
-                    "start_time": wrap(start.strftime("%H:%M"), "white"),
-                    "end_time": wrap(end.strftime("%H:%M"), "white"),
-                    "desc": (
-                        border_panel(get_val(event, "desc")) if event["desc"] else ""
-                    ),
-                    "bar": Bar(86400, *get_start_end(start, end), color=color),
-                    "summary": event["summary"] or "",
-                }
-            )
+            new_events.append({
+                **event,
+                "color": color,
+                "name": (
+                    border_panel(get_val(event, "desc"), title=title)
+                    if event["desc"]
+                    else title
+                ),
+                "start": start,
+                "start_day": start.strftime("%d %a"),
+                "start_time": wrap(start.strftime("%H:%M"), "white"),
+                "end_time": wrap(end.strftime("%H:%M"), "white"),
+                "desc": (border_panel(get_val(event, "desc")) if event["desc"] else ""),
+                "bar": Bar(86400, *get_start_end(start, end), color=color),
+                "summary": event["summary"] or "",
+            })
 
     keys = "name", "start_time", "end_time", "bar"
     month_events: Iterable[JSONDict]
@@ -200,7 +196,7 @@ def tasks_table(tasks_by_group: Dict[str, JSONDict]) -> Iterator[Panel]:
         "modified": human_dt,
         "created": human_dt,
         "start": human_dt,
-        "priority": lambda x: wrap(f"({wrap('!', 'red', )})", "b") + " "
+        "priority": lambda x: wrap(f"({wrap('!', 'red')})", "b") + " "
         if x == "H"
         else "",
         "annotations": lambda ann: new_tree(

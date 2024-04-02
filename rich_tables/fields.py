@@ -222,6 +222,7 @@ fields_by_func = {
         "mastering",
         "media",
         "module",
+        "name",
         "operation",
         "primary",
         "priority",
