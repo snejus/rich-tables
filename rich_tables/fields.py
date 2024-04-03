@@ -222,7 +222,6 @@ fields_by_func = {
         "mastering",
         "media",
         "module",
-        "name",
         "operation",
         "primary",
         "priority",
@@ -242,7 +241,7 @@ fields_by_func = {
         "type_name",
         "user",
     ),
-    split_with_color: ("genre", "genres"),
+    split_with_color: ("genre", "genres", "name"),
     human_dt: (
         "added",
         "committedDate",
