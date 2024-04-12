@@ -19,7 +19,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4"
+python = ">=3.8,<4"
 
 rich = ">=12.3.0"
 multimethod = "*"
