@@ -24,10 +24,11 @@ python = ">=3.8,<4"
 rich = ">=12.3.0"
 multimethod = "*"
 
+funcy = ">=2.0"
+platformdirs = ">=4.2.0"
 rgbxy = ">=0.5"
 sqlparse = ">=0.4.4"
 typing-extensions = ">=4.7.1"
-funcy = "^2.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = ">=4.0.1"

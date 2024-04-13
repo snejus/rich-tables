@@ -3,13 +3,14 @@ import re
 import time
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
-from functools import lru_cache, partial
+from functools import lru_cache
 from itertools import islice, starmap, zip_longest
 from math import copysign
 from os import environ, path
 from string import punctuation
 from typing import Any, Callable, Dict, Iterable, List, Optional, SupportsFloat, Union
 
+import platformdirs
 from multimethod import multimethod
 from rich import box
 from rich.align import Align
@@ -94,9 +95,7 @@ def fmt_time(seconds: int) -> Iterable[str]:
 
 
 def get_theme() -> Optional[Theme]:
-    _path = path.join(
-        environ.get("XDG_CONFIG_HOME") or path.expanduser("~/.config"),
-        "rich",
+    _path = platformdirs.user_config_path("rich/config.ini")
         "config.ini",
     )
     if path.exists(_path):

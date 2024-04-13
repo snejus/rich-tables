@@ -826,4 +826,4 @@ hue = ["rgbxy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4"
-content-hash = "366f2526e99c7bc4443e6fc406818fffca06db46750653e9b54a000c1669291a"
+content-hash = "b99c1aa3a3519d75bd85d88ef94d00b9edc55faa2869e4fcf1b218ffabcfe880"
