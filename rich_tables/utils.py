@@ -95,11 +95,9 @@ def fmt_time(seconds: int) -> Iterable[str]:
 
 
 def get_theme() -> Optional[Theme]:
-    _path = platformdirs.user_config_path("rich/config.ini")
-        "config.ini",
-    )
-    if path.exists(_path):
-        return Theme.read(_path)
+    config_path = platformdirs.user_config_path("rich") / "config.ini"
+    if config_path.exists():
+        return Theme.read(config_path)
     return None
 
 
