@@ -29,6 +29,7 @@ from .utils import (
     new_tree,
     predictably_random_color,
     wrap,
+    md_panel
 )
 
 JSONDict = Dict[str, Any]
@@ -320,6 +321,8 @@ def main() -> None:
             arguments = list(map(json.loads, arguments))
 
         print(FIELDS_MAP["diff"](arguments), highlight=False)
+    elif args and args[0] == "md":
+        console.print(md_panel(sys.stdin.read().replace(r"\x00", "")))
     else:
         if "-s" in set(args):
             console.record = True
