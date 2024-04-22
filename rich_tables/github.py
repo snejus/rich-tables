@@ -1,4 +1,7 @@
 """Functionality to display data from GitHub API."""
+
+from __future__ import annotations
+
 from dataclasses import dataclass
 from itertools import chain, groupby
 from typing import Any, Callable, Iterable, List, Mapping, Union
@@ -422,7 +425,7 @@ class PullRequestTable(PullRequest):
 
 
 def pulls_table(
-    data: List[Mapping[str, Any]]
+    data: List[Mapping[str, Any]],
 ) -> Iterable[Union[str, ConsoleRenderable]]:
     FIELDS_MAP.update(PR_FIELDS_MAP)
 

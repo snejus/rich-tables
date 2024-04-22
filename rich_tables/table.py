@@ -1,14 +1,12 @@
 import itertools as it
 import json
 import sys
-from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import singledispatch
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple, Union
 
 from funcy import curry, join
-from multimethod import DispatchError
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.console import ConsoleRenderable
@@ -267,9 +265,8 @@ def load_data() -> Any:
     if sys.stdin.isatty():
         return
 
-    text = sys.stdin.read().replace(r"\x00", "")
     try:
-        data = json.loads(text or "{}")
+        data = json.load(sys.stdin)
         assert data
     except json.JSONDecodeError:
         msg = "Broken JSON"
