@@ -45,10 +45,10 @@ def counts_table(data: List[JSONDict]) -> Table:
     subcount_header = None
     ordered_headers = []
     for key in data[0]:
-        if MATCH_COUNT_HEADER.search(key):
-            count_header = key
-        elif key.endswith("_subcount"):
+        if key.endswith("_subcount"):
             subcount_header = key
+        elif MATCH_COUNT_HEADER.search(key):
+            count_header = key
         else:
             ordered_headers.append(key)
 
@@ -56,12 +56,12 @@ def counts_table(data: List[JSONDict]) -> Table:
     num_type = int if len({c % 1 for c in all_counts}) == 1 else float
     max_value = max(all_counts)
 
-    # ensure subcount and count headers are at the end
     if subcount_header:
-        count_header = f"{subcount_header}/{count_header}"
-    # ordered_headers.append(count_header)
+        count_header = f"{subcount_header}/{count_header}".replace(
+            "_count", ""
+        ).replace("_subcount", "")
 
-    table = new_table(*ordered_headers, "")
+    table = new_table(*ordered_headers, count_header, "")
     for item, count in zip(data, all_counts):
         subcount = None
         if subcount_header:
@@ -71,7 +71,7 @@ def counts_table(data: List[JSONDict]) -> Table:
             count_val = duration2human(count)
         else:
             count_val = str(num_type(count))
-        item[count_header] = count_val
+
         table.add_row(
             *(get_val(item, h) for h in ordered_headers),
             count_val,
@@ -289,8 +289,8 @@ else:
                 indent_columns=False,
                 strip_whitespace=True,
                 strip_comments=True,
-                # reindent=True,
-                reindent_aligned=True,
+                reindent=True,
+                reindent_aligned=False,
             ),
             "sql",
             theme="gruvbox-dark",
