@@ -200,7 +200,7 @@ fields_by_func = {
         "categories",
         "Category",
         "code",
-        # "data_source",
+        "data_source",
         "default_start_time",
         "default_end_time",
         "Description",
@@ -323,6 +323,9 @@ def _get_val(value: Any, field: str) -> Any:
 
     if isinstance(value, str):
         value = format_string(value)
+
+    if isinstance(value, (int, float)):
+        value = str(value)
 
     if field not in FIELDS_MAP and field.endswith("_group") and isinstance(value, list):
         return format_with_color(value)
