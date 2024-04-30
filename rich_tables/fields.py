@@ -286,7 +286,7 @@ else:
         Syntax(
             sqlparse.format(
                 x.replace('"', ""),
-                indent_columns=False,
+                indent_columns=True,
                 strip_whitespace=True,
                 strip_comments=True,
                 reindent=True,
@@ -295,7 +295,7 @@ else:
             "sql",
             theme="gruvbox-dark",
             background_color="black",
-            word_wrap=False,
+            word_wrap=True,
         )
     )
 
