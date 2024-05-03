@@ -285,7 +285,7 @@ else:
     FIELDS_MAP["sql"] = lambda x: border_panel(
         Syntax(
             sqlparse.format(
-                x.replace('"', ""),
+                x,
                 indent_columns=True,
                 strip_whitespace=True,
                 strip_comments=True,
