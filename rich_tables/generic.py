@@ -217,6 +217,7 @@ def _int_list(data: Tuple[int, ...]) -> Panel:
 @flexitable.register
 @debug
 def _dict_list(data: Tuple[JSONDict, ...]) -> RenderableType:
+    print(len(data))
     if len(data) == 1 and len(data[0]) > 10:
         return flexitable(data[0])
 

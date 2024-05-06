@@ -40,7 +40,7 @@ from .utils import (
 MATCH_COUNT_HEADER = re.compile(r"duration|(_sum|_?count)$")
 
 
-def counts_table(data: List[JSONDict]) -> Table:
+def counts_table(data: Iterable[JSONDict]) -> Table:
     count_header = ""
     subcount_header = None
     ordered_headers = []
