@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime
 from functools import partial, wraps
-from typing import Any, Callable, Dict, List, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, Iterable, List, Tuple, TypeVar, Union
 
 from multimethod import multidispatch
 from rich import box
@@ -35,7 +35,7 @@ console = make_console()
 
 indent = ""
 
-MAX_DICT_SIZE = 500
+MAX_DICT_SIZE = 400
 
 
 def time_fmt(current: datetime) -> Text:
@@ -126,10 +126,17 @@ def flexitable(data: Any) -> RenderableType:
 @flexitable.register
 @debug
 def _header(data: Any, header: str) -> RenderableType:
-    if data == "" or data == []:
+    if data in ("", []):
         return ""
 
-    return _get_val(data, header) if header in fields.FIELDS_MAP else flexitable(data)
+    if header not in fields.FIELDS_MAP:
+        return flexitable(data)
+
+    out = _get_val(data, header)
+    if not isinstance(out, str) and type(out) == type(data):
+        return flexitable(out)
+
+    return out
 
 
 @flexitable.register
@@ -204,20 +211,19 @@ def _list(data: List) -> RenderableType:
 
 @flexitable.register
 @debug
-def _str_list(data: Tuple[Any, ...]) -> RenderableType:
+def _str_list(data: Iterable[Any]) -> RenderableType:
     return format_with_color(data)
 
 
 @flexitable.register
 @debug
-def _int_list(data: Tuple[int, ...]) -> Panel:
+def _int_list(data: Iterable[int]) -> Panel:
     return border_panel(Columns(str(x) for x in data))
 
 
 @flexitable.register
 @debug
-def _dict_list(data: Tuple[JSONDict, ...]) -> RenderableType:
-    print(len(data))
+def _dict_list(data: Iterable[JSONDict]) -> RenderableType:
     if len(data) == 1 and len(data[0]) > 10:
         return flexitable(data[0])
 
@@ -232,7 +238,7 @@ def _dict_list(data: Tuple[JSONDict, ...]) -> RenderableType:
 
     overlap = set(map(type, data[0].values())) & {int, float, str}
 
-    if len(overlap) == 2 and any(MATCH_COUNT_HEADER.search(k) for k in keys):
+    if len(overlap) >= 2 and any(MATCH_COUNT_HEADER.search(k) for k in keys):
         return counts_table(data)
 
     def getval(value: Any, key: str) -> RenderableType:

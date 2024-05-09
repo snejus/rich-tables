@@ -198,6 +198,8 @@ def split_with_color(text: str) -> str:
 def format_with_color(items: Union[str, Iterable[str]]) -> str:
     if isinstance(items, str):
         items = [items]
+    elif items and not isinstance(items[0], str):
+        return items
 
     return " ".join((_format_with_color(str(x)) for x in items))
 
@@ -275,7 +277,9 @@ def get_country(code: str) -> str:
     return format_with_color(code)
 
 
-def progress_bar(size: float, width: float, end: Optional[float] = None) -> Bar:
+def progress_bar(
+    size: float, width: float, end: Optional[float] = None, inverse: bool = False
+) -> Bar:
     if end is None:
         end = size
         size = width
@@ -283,6 +287,8 @@ def progress_bar(size: float, width: float, end: Optional[float] = None) -> Bar:
     else:
         bgcolor = "white"
     ratio = end / size
+    if inverse:
+        ratio = 1 - ratio
 
     random.seed(str(width))
 
@@ -290,7 +296,7 @@ def progress_bar(size: float, width: float, end: Optional[float] = None) -> Bar:
         return round(_randint() * ratio)
 
     color = f"#{norm():0>2X}{norm():0>2X}{norm():0>2X}"
-    # print(f"{end=} {size=} {width=}")
+    # print(f"{end=} {size=} {width=} {ratio=}")
     return Bar(
         size=size, begin=0, width=int(width), end=end, color=color, bgcolor=bgcolor
     )

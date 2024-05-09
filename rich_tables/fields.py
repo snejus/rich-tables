@@ -61,21 +61,27 @@ def counts_table(data: Iterable[JSONDict]) -> Table:
             "_count", ""
         ).replace("_subcount", "")
 
-    table = new_table(*ordered_headers, count_header, "")
+    table = new_table(*ordered_headers, count_header, count_header, expand=True)
     for item, count in zip(data, all_counts):
         subcount = None
+        inverse = False
+        count_val = str(count)
         if subcount_header:
             subcount = float(item[subcount_header])
             count_val = f"{num_type(subcount)}/{num_type(count)}"
         elif "duration" in count_header:
-            count_val = duration2human(count)
+            inverse = True
+            if num_type is int:
+                count_val = duration2human(count)
         else:
             count_val = str(num_type(count))
 
         table.add_row(
             *(get_val(item, h) for h in ordered_headers),
             count_val,
-            progress_bar(end=subcount, width=max_value, size=count),
+            progress_bar(
+                end=subcount, width=max_value * 15, size=count * 15, inverse=inverse
+            ),
         )
     if count_header in {"duration", "total_duration"}:
         table.caption = "Total " + duration2human(float(sum(all_counts)))
