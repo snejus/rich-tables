@@ -13,6 +13,8 @@ from rich.table import Table
 
 from .fields import DISPLAY_HEADER, FIELDS_MAP
 from .utils import border_panel, new_table, predictably_random_color, simple_panel, wrap
+import snoop
+snoop.install(color=True)
 
 JSONDict = Dict[str, Any]
 
@@ -138,6 +140,7 @@ def album_info_table(album: JSONDict) -> Table:
     return table
 
 
+@snoop
 def album_panel(tracks: List[JSONDict]) -> Panel:
     album = album_info(tracks)
 

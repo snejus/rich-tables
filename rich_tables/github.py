@@ -4,13 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import chain, groupby
-from typing import Any, Callable, Iterable, List, Mapping, Union
+from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Mapping, Union
 
 from rich import box
-from rich.console import ConsoleRenderable, RenderableType
-from rich.panel import Panel
 from rich.syntax import Syntax
-from rich.table import Table
 from typing_extensions import TypedDict
 
 from .fields import FIELDS_MAP, _get_val, get_val
@@ -28,6 +25,11 @@ from .utils import (
     simple_panel,
     wrap,
 )
+
+if TYPE_CHECKING:
+    from rich.console import ConsoleRenderable, RenderableType
+    from rich.panel import Panel
+    from rich.table import Table
 
 
 def fmt_add_del(file: JSONDict) -> List[str]:
@@ -206,7 +208,9 @@ class ReviewComment(IssueComment):
         return md_panel(
             self.body.replace("suggestion", "python"),
             title=self.title,
-            subtitle="\n".join(map(str, self.reactions)) + "\n",
+            subtitle=" ".join(map(str, self.reactions)).replace(
+                ":laugh:", ":laughing:"
+            ),
             **kwargs,
         )
 
@@ -220,7 +224,7 @@ class ReviewThread(PanelMixin):
     comments: List[ReviewComment]
 
     @classmethod
-    def make(cls, comments: List[JSONDict], **kwargs: Any) -> "ReviewThread":
+    def make(cls, comments: List[JSONDict], **kwargs: Any) -> ReviewThread:
         kwargs["comments"] = [ReviewComment.make(**c) for c in comments]
         return cls(**kwargs)
 
@@ -341,11 +345,11 @@ class PullRequestTable(PullRequest):
     comments: List[IssueComment]
 
     @classmethod
-    def make(cls, reviews: List[JSONDict], **kwargs: Any) -> "PullRequestTable":
+    def make(cls, reviews: List[JSONDict], **kwargs: Any) -> PullRequestTable:
         kwargs["commits"] = Commits([Commit(**c) for c in kwargs["commits"]])
         kwargs["comments"] = [IssueComment(**c) for c in kwargs["comments"]]
         threads = [ReviewThread.make(**rt) for rt in kwargs["reviewThreads"]]
-        review_comments = list(chain.from_iterable((t.comments for t in threads)))
+        review_comments = list(chain.from_iterable(t.comments for t in threads))
         review_comments.sort(key=lambda c: c.review_id)
         comments_by_review_id = {
             r: list(c) for r, c in groupby(review_comments, lambda c: c.review_id)
@@ -401,8 +405,7 @@ class PullRequestTable(PullRequest):
             box=box.DOUBLE_EDGE,
             border_style=state_color(self.pr_state),
             subtitle=(
-                f"[b]{fmt_state(self.reviewDecision)}[white] // "
-                + f"{fmt_state(self.state)}[/]"
+                f"[b]{fmt_state(self.reviewDecision)}[white] // {fmt_state(self.state)}[/]"
             ),
             align="center",
             title_align="center",
