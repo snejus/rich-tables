@@ -6,9 +6,18 @@ from difflib import SequenceMatcher
 from functools import lru_cache
 from itertools import islice, starmap, zip_longest
 from math import copysign
-from os import environ, path
 from string import punctuation
-from typing import Any, Callable, Dict, Iterable, List, Optional, SupportsFloat, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    SupportsFloat,
+    Union,
+)
 
 import platformdirs
 from multimethod import multimethod
@@ -195,10 +204,10 @@ def split_with_color(text: str) -> str:
     return " ".join(_format_with_color(str(x)) for x in sorted(SPLIT_PAT.split(text)))
 
 
-def format_with_color(items: Union[str, Iterable[str]]) -> str:
+def format_with_color(items: Any) -> Any:
     if isinstance(items, str):
         items = [items]
-    elif items and not isinstance(items[0], str):
+    elif items and (not isinstance(items, Sequence) or not isinstance(items[0], str)):
         return items
 
     return " ".join((_format_with_color(str(x)) for x in items))
