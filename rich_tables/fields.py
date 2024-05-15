@@ -48,7 +48,10 @@ def counts_table(data: Iterable[JSONDict]) -> Table:
         if key.endswith("_subcount"):
             subcount_header = key
         elif MATCH_COUNT_HEADER.search(key):
-            count_header = key
+            if count_header:
+                ordered_headers.append(key)
+            else:
+                count_header = key
         else:
             ordered_headers.append(key)
 

@@ -295,7 +295,7 @@ def progress_bar(
         bgcolor = "black"
     else:
         bgcolor = "white"
-    ratio = end / size
+    ratio = end / size if size else 1
     if inverse:
         ratio = 1 - ratio
 
@@ -377,14 +377,14 @@ def _(before: None, after: None) -> str:
     return make_difftext(str(before), str(after))
 
 
-@diff.register
-def _(before: Any, after: None) -> str:
-    return wrap(before, BOLD_RED)
+# @diff.register
+# def _(before: Any, after: None) -> str:
+#     return wrap("''" if before == "" else before, BOLD_RED)
 
 
-@diff.register
-def _(before: None, after: Any) -> str:
-    return wrap(after, BOLD_GREEN)
+# @diff.register
+# def _(before: None, after: Any) -> str:
+#     return wrap("''" if after == "" else after, BOLD_GREEN)
 
 
 @diff.register
