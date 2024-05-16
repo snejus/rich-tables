@@ -23,11 +23,11 @@ from .utils import (
     format_with_color,
     human_dt,
     make_console,
+    md_panel,
     new_table,
     new_tree,
     predictably_random_color,
     wrap,
-    md_panel
 )
 
 JSONDict = Dict[str, Any]

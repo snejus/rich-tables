@@ -94,7 +94,7 @@ def counts_table(data: Iterable[JSONDict]) -> Table:
 
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
-    diff=lambda x: Text.from_markup(json.dumps(diff(*x), indent=2).replace('"', "")),
+    diff=lambda x: json.dumps(diff(*x), indent=2),
     albumtypes=lambda x: " ".join(
         map(
             format_with_color,
@@ -330,8 +330,8 @@ def _get_val(value: Any, field: str) -> Any:
     if value is None:
         value = "None"
 
-    if isinstance(value, str):
-        value = format_string(value)
+    # if isinstance(value, str):
+    #     value = ng(value)
 
     if isinstance(value, (int, float)):
         value = str(value)

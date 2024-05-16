@@ -154,7 +154,7 @@ def _renderable(data: Union[ConsoleRenderable, NewTable]) -> RenderableType:
 @flexitable.register
 @debug
 def _str(data: str) -> RenderableType:
-    return format_string(data)
+    return data
 
 
 @flexitable.register
