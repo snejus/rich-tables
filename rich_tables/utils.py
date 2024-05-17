@@ -1,14 +1,11 @@
-import builtins
 import random
 import re
-import sys
 import time
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from functools import lru_cache
 from itertools import islice, starmap, zip_longest
 from math import copysign
-from pprint import pprint
 from string import punctuation
 from typing import (
     Any,
@@ -32,7 +29,6 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
-from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
 
@@ -49,24 +45,20 @@ CONSECUTIVE_SPACE = re.compile("(^ +| +$)")
 
 @lru_cache
 def format_string(text: str) -> str:
-    builtins.print(text, file=sys.stderr)
     if "pred color]" in text:
         return PRED_COLOR_PAT.sub(fmt_pred_color, text)
     if "[" in text and r"\[" not in text and "[/]" not in text:
-        builtins.print(text, file=sys.stderr)
-        return re.sub(r"\\*\[", r"\[", re.sub(r"\\*\]", r"\]", text))
+        return text.replace("[", r"\[")
 
     return text
 
 
 def wrap(text: str, tag: str) -> str:
-    return f"[{tag}]{format_string(text)}[/]"
+    return f"[{tag}]{format_string(str(text))}[/]"
 
 
 def format_space(string: str) -> str:
-    return CONSECUTIVE_SPACE.sub(lambda m: wrap("u", m.group(1)), string).replace(
-        "\n", "\n⏐"
-    )
+    return CONSECUTIVE_SPACE.sub(lambda m: wrap(m.group(1), "u"), string)
 
 
 def format_new(string: str) -> str:
@@ -80,9 +72,9 @@ def format_old(string: str) -> str:
 def fmtdiff(change: str, before: str, after: str) -> str:
     if change == "insert":
         return format_new(after)
-    elif change == "delete":
+    if change == "delete":
         return format_old(before)
-    elif change == "replace":
+    if change == "replace":
         return format_old(before) + format_new(after)
 
     return wrap(before, "dim")
@@ -390,7 +382,6 @@ def diff(before: str, after: str) -> Any:
 @diff.register
 @lru_cache
 def _(before: Any, after: Any) -> Any:
-    print(type(before), type(after))
     return diff(str(before), str(after))
 
 
@@ -420,7 +411,6 @@ def _(before: list, after: list) -> Any:
 def _(before: dict, after: dict) -> Any:
     data = {}
     keys = sorted(before.keys() | after.keys())
-    print(keys)
     for key in keys:
         if key not in before:
             data[wrap(key, BOLD_GREEN)] = wrap(after[key], BOLD_GREEN)
@@ -428,12 +418,5 @@ def _(before: dict, after: dict) -> Any:
             data[wrap(key, BOLD_RED)] = wrap(before[key], BOLD_RED)
         else:
             data[key] = diff(before.get(key), after.get(key))
-
-    # print(str(data).replace(r"\[", r"["), highlight=False)
-    # print(Text.from_markup(str(data).replace(r"]", r"\\]")))
-    # builtins.print(str(data))
-    print(str(data), highlight=False)
-    # for value in data.values():
-    #     print(value)
 
     return data

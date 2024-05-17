@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 from functools import singledispatch
 from itertools import islice
+from pprint import pformat
 from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Union
 
 from rich.console import RenderableType
@@ -94,7 +95,9 @@ def counts_table(data: Iterable[JSONDict]) -> Table:
 
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
-    diff=lambda x: json.dumps(diff(*x), indent=2),
+    diff=lambda x: Text.from_markup(
+        pformat(diff(*x), indent=2, width=300).replace("'", "").replace("\\\\", "\\")
+    ),
     albumtypes=lambda x: " ".join(
         map(
             format_with_color,
@@ -330,8 +333,8 @@ def _get_val(value: Any, field: str) -> Any:
     if value is None:
         value = "None"
 
-    # if isinstance(value, str):
-    #     value = ng(value)
+    if isinstance(value, str):
+        value = format_string(value)
 
     if isinstance(value, (int, float)):
         value = str(value)

@@ -126,7 +126,7 @@ def flexitable(data: Any) -> RenderableType:
 @flexitable.register
 @debug
 def _header(data: Any, header: str) -> RenderableType:
-    if data in ("", []):
+    if data in ("", [], {}):
         return ""
 
     if header not in fields.FIELDS_MAP:
