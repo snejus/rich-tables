@@ -99,6 +99,10 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/simple_json.svg)
 
+### Sql
+
+![image](svgs/sql.svg)
+
 ### Tasks
 
 ![image](svgs/tasks.svg)

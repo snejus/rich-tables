@@ -298,15 +298,15 @@ else:
         Syntax(
             sqlparse.format(
                 x,
-                indent_columns=True,
+                indent_columns=False,
                 strip_whitespace=True,
                 strip_comments=True,
                 reindent=True,
                 reindent_aligned=False,
             ),
             "sql",
-            theme="gruvbox-dark",
-            background_color="black",
+            theme="material",
+            background_color="#000000",
             word_wrap=True,
         )
     )

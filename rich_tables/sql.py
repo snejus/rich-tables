@@ -60,26 +60,8 @@ def parse_sql_query(sql: str, span: float) -> dict:
     for pat in QUERY_PARTS:
         m = pat.search(sql)
         if m:
-            query.update(
-                {k: v.strip() for k, v in m.groupdict().items() if not query[k]}
-            )
+            query.update({
+                k: v.strip() for k, v in m.groupdict().items() if not query[k]
+            })
 
     return query
-
-
-# def report_sql_query(data: JSONDict) -> None:
-#     return FIELDS_MAP["sql"](data)
-
-
-# parsed_data = [
-#     parse_sql_query(item["sql"], item["exclusive_time"]) for item in data
-# ]
-# summary_table = utils.new_table("id", *parsed_data[0].keys())
-# for idx, item in enumerate(parsed_data):
-#     item = {"id": str(idx), **{k: utils._get_val(v, k) for k, v in item.items()}}
-#     summary_table.add_dict_item(item)
-
-# item["sql"] = report_sql_query(item["sql"])
-# for col in new_table.get_columns():
-#     pass
-# return utils.simple_panel(utils.new_table(rows=[[sql_table], [summary_table]]))

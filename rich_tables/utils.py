@@ -375,12 +375,12 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 
 
 @multimethod
+@lru_cache
 def diff(before: str, after: str) -> Any:
     return make_difftext(before, after)
 
 
 @diff.register
-@lru_cache
 def _(before: Any, after: Any) -> Any:
     return diff(str(before), str(after))
 
