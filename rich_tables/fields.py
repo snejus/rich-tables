@@ -7,6 +7,7 @@ from itertools import islice
 from pprint import pformat
 from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Union
 
+import snoop
 from rich.console import RenderableType
 from rich.syntax import Syntax
 from rich.table import Table
@@ -38,9 +39,12 @@ from .utils import (
     wrap,
 )
 
+snoop.install(color=True)
+
 MATCH_COUNT_HEADER = re.compile(r"duration|(_sum|_?count)$")
 
 
+# @snoop
 def counts_table(data: Iterable[JSONDict]) -> Table:
     count_header = ""
     subcount_header = None
@@ -83,9 +87,7 @@ def counts_table(data: Iterable[JSONDict]) -> Table:
         table.add_row(
             *(get_val(item, h) for h in ordered_headers),
             count_val,
-            progress_bar(
-                end=subcount, width=max_value * 15, size=count * 15, inverse=inverse
-            ),
+            progress_bar(end=subcount, width=max_value, size=count, inverse=inverse),
         )
     if count_header in {"duration", "total_duration"}:
         table.caption = "Total " + duration2human(float(sum(all_counts)))
