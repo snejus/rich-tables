@@ -301,7 +301,7 @@ def progress_bar(
         size = width
         bgcolor = "black"
     else:
-        bgcolor = "white"
+        bgcolor = "#252c3a"
     ratio = end / size if size else 1
     if inverse:
         ratio = 1 - ratio
