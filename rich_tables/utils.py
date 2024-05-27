@@ -53,6 +53,7 @@ def format_string(text: str) -> str:
     return text
 
 
+@lru_cache
 def wrap(text: str, tag: str) -> str:
     return f"[{tag}]{format_string(str(text))}[/]"
 
@@ -83,8 +84,9 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "".join(set(punctuation) - {"_", "-", ":"}),
+    junk: str = "".join((set(punctuation) - {"_", "-", ":"}) | {"-"}),
 ) -> str:
+    print(junk)
     matcher = SequenceMatcher(
         lambda x: x not in junk, autojunk=False, a=before, b=after
     )
