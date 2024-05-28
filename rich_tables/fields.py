@@ -41,7 +41,7 @@ from .utils import (
 
 snoop.install(color=True)
 
-MATCH_COUNT_HEADER = re.compile(r"duration|(_sum|_?count)$")
+MATCH_COUNT_HEADER = re.compile(r"duration|(_sum$|_?count$)")
 
 
 # @snoop
