@@ -28,8 +28,7 @@ jobs:
         run: poetry run pytest -vv
 
       - name: Upload coverage data to coveralls.io
-        run: |
-          poetry run coveralls --service=github
+        run: poetry run coveralls --service=github
 
       - name: Lint flake8
         run: poetry run flake8 . --output-file flake.log --exit-zero
@@ -44,11 +43,14 @@ jobs:
         run: echo PROJECT_VERSION="$(git describe --tags | sed 's/-[^-]*$//')" >> $GITHUB_ENV
 
       - name: SonarCloud Scan
+        if: matrix.python == '3.8'
         uses: SonarSource/sonarcloud-github-action@master
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
+            -Dsonar.branch.name=${{ github.ref_name }}
             -Dsonar.organization=snejus
             -Dsonar.projectKey=snejus_rich-tables
             -Dsonar.projectVersion=${{ env.PROJECT_VERSION }}
@@ -61,5 +63,5 @@ jobs:
             -Dsonar.python.version=${{ matrix.python }}
             -Dsonar.python.xunit.reportPath=.reports/test-report.xml
             -Dsonar.sources=rich_tables
-            -Dsonar.tests=rich_tables
+            -Dsonar.tests=tests
             -Dsonar.test.inclusions=tests/*
