@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 import re
 import time
@@ -43,7 +45,7 @@ SECONDS_PER_DAY = 86400
 CONSECUTIVE_SPACE = re.compile("(^ +| +$)")
 
 
-@lru_cache
+# @lru_cache
 def format_string(text: str) -> str:
     if "pred color]" in text:
         return PRED_COLOR_PAT.sub(fmt_pred_color, text)
@@ -53,7 +55,6 @@ def format_string(text: str) -> str:
     return text
 
 
-@lru_cache
 def wrap(text: str, tag: str) -> str:
     return f"[{tag}]{format_string(str(text))}[/]"
 
@@ -86,7 +87,6 @@ def make_difftext(
     after: str,
     junk: str = "".join((set(punctuation) - {"_", "-", ":"}) | {"-"}),
 ) -> str:
-    print(junk)
     matcher = SequenceMatcher(
         lambda x: x not in junk, autojunk=False, a=before, b=after
     )
@@ -203,14 +203,14 @@ def _randint() -> int:
     return random.randint(50, 205)
 
 
-@lru_cache(None)
+# @lru_cache(None)
 def predictably_random_color(string: str) -> str:
     random.seed(string.strip())
 
     return f"#{_randint():02X}{_randint():02X}{_randint():02X}"
 
 
-@lru_cache(None)
+# @lru_cache(None)
 def _format_with_color(string: str, on: Optional[str] = None) -> str:
     color = f"b {predictably_random_color(string)}"
     if on:
@@ -377,14 +377,16 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 
 
 @multimethod
-@lru_cache
+# @lru_cache
 def diff(before: str, after: str) -> Any:
     return make_difftext(before, after)
 
 
 @diff.register
 def _(before: Any, after: Any) -> Any:
-    return diff(str(before), str(after))
+    return diff(
+        str("" if before is None else before), str("" if after is None else after)
+    )
 
 
 # @diff.register
@@ -405,8 +407,24 @@ def _(before: Any, after: Any) -> Any:
 
 
 @diff.register
-def _(before: list, after: list) -> Any:
+def _(before: List[Any], after: List[Any]) -> Any:
     return list(starmap(diff, zip_longest(before, after)))
+
+
+@diff.register
+def _(before: List[str], after: List[str]) -> Any:
+    before_set, after_set = set(before), set(after)
+    common = before_set & after_set
+    common_list = list(common)
+    return [
+        *list(starmap(diff, zip(common_list, common_list))),
+        *list(
+            starmap(
+                diff,
+                zip_longest(list(before_set - common), list(after_set - common)),
+            )
+        ),
+    ]
 
 
 @diff.register
