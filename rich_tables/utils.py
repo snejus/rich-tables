@@ -42,7 +42,7 @@ PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
 BOLD_GREEN = "b green"
 BOLD_RED = "b red"
 SECONDS_PER_DAY = 86400
-CONSECUTIVE_SPACE = re.compile("((^ +)|( +$))")
+CONSECUTIVE_SPACE = re.compile("((^ +?)|( +?$))")
 
 
 # @lru_cache
