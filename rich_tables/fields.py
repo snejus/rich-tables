@@ -1,4 +1,3 @@
-import json
 import re
 from collections import defaultdict
 from datetime import datetime
@@ -13,7 +12,6 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 
-from .sql import fmt_joins, fmt_ordering
 from .utils import (
     BOLD_GREEN,
     BOLD_RED,
@@ -183,7 +181,6 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     context=lambda x: syntax(x, "python"),
     python=lambda x: syntax(x, "python"),
     CreatedBy=lambda x: syntax(x.replace(";", "\n"), "sh"),
-    # sql=sql_table,
     file=lambda x: "/".join(map(format_with_color, x.split("/"))),
     field=lambda x: ".".join(map(format_with_color, x.split("."))),
     # log=lambda x: border_panel(
@@ -192,12 +189,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     unified_diff=lambda x: syntax(x, "diff"),
     diffHunk=lambda x: syntax(x, "diff"),
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
-    # traceback=lambda x: border_panel(x),
-    # traceback=lambda x: border_panel(syntax(x, "python")),
     # diff=lambda x: Text.from_markup(x) if "[/]" in x else md_panel(x),
     query=lambda x: Text(x, style="bold"),
-    joins=lambda x: "\n".join(map(fmt_joins, x.split(", "))),
-    order_by=lambda x: " ".join(map(fmt_ordering, re.split(r",\s+", x))),
 )
 fields_by_func = {
     format_with_color: (
