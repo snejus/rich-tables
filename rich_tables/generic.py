@@ -22,6 +22,7 @@ from .utils import (
     border_panel,
     format_string,
     format_with_color,
+    list_table,
     make_console,
     new_table,
     new_tree,
@@ -164,11 +165,11 @@ def _json_dict(data: JSONDict) -> RenderableType:
     table = mapping_view_table()
     cols: List[RenderableType] = []
     for key, content in data.items():
-        if content is None or isinstance(content, list) and not content:
+        if content is None or (isinstance(content, list) and not content):
             continue
 
         value = flexitable(content, key)
-        if isinstance(value, (NewTable, Text)):
+        if isinstance(value, (NewTable, Text, dict)):
             cols.append(border_panel(value, title=key))
         elif isinstance(value, ConsoleRenderable) and not isinstance(value, Markdown):
             cols.append(value)
@@ -181,9 +182,8 @@ def _json_dict(data: JSONDict) -> RenderableType:
     if len(cols) == 1:
         return cols[0]
 
-    table = new_table(padding=(0, 0))
-    row: List[RenderableType]
-    row, width = [], 0
+    row: List[RenderableType] = []
+    width = 0
     rows: List[RenderableType] = []
     for rend in cols:
         this_width = console.measure(rend).maximum
@@ -195,12 +195,13 @@ def _json_dict(data: JSONDict) -> RenderableType:
             width += this_width
 
     rows.append(Columns(row, equal=True, padding=(0, 0)))
-    table.add_rows([[r] for r in rows])
 
-    return table
+    return list_table(rows, padding=(0, 0))
 
 
-list_table = partial(new_table, expand=False, box=box.SIMPLE_HEAD, border_style="cyan")
+simple_head_table = partial(
+    new_table, expand=False, box=box.SIMPLE_HEAD, border_style="cyan"
+)
 
 
 @flexitable.register
@@ -230,7 +231,7 @@ def _dict_list(data: Iterable[JSONDict]) -> RenderableType:
     data = [prepare_dict(item) for item in data if item]
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     if not all_keys:
-        return list_table([])
+        return simple_head_table([])
 
     keys = {
         k: None for k in all_keys if any(((d.get(k) is not None) for d in data))
@@ -261,7 +262,7 @@ def _dict_list(data: Iterable[JSONDict]) -> RenderableType:
 
         return transformed_value
 
-    large_table = list_table()
+    large_table = simple_head_table()
     for large, items in it.groupby(
         data, lambda i: len(str(i.values())) > MAX_DICT_SIZE
     ):
@@ -278,7 +279,7 @@ def _dict_list(data: Iterable[JSONDict]) -> RenderableType:
                 tree = new_tree(values, "")
                 large_table.add_row(tree)
         else:
-            sub_table = list_table(show_header=True)
+            sub_table = simple_head_table(show_header=True)
             for key in keys:
                 sub_table.add_column(key, header_style=predictably_random_color(key))
             for item in items:
@@ -296,7 +297,7 @@ def _dict_list(data: Iterable[JSONDict]) -> RenderableType:
 #     if len(data) == 1:
 #         return flexitable(data[0])
 
-#     table = list_table(show_header=False)
+#     table = simple_head_table(show_header=False)
 #     for item in filter(None, data):
 #         content = flexitable(item)
 #         if isinstance(content, Iterable) and not isinstance(content, str):

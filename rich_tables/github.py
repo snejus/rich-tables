@@ -32,11 +32,21 @@ if TYPE_CHECKING:
     from rich.table import Table
 
 
-def fmt_add_del(file: JSONDict) -> List[str]:
-    added, deleted = file["additions"], file["deletions"]
+def b_green(text: str) -> str:
+    """Make the text bold green."""
+    return wrap(text, "b green")
+
+
+def b_red(text: str) -> str:
+    """Make the text bold red."""
+    return wrap(text, "b red")
+
+
+def fmt_add_del(added: int, deleted: int) -> List[str]:
+    """Format added and deleted diff counts."""
     additions = f"+{added}" if added else ""
     deletions = f"-{deleted}" if deleted else ""
-    return [wrap(additions.rjust(5), "b green"), wrap(deletions.rjust(3), "b red")]
+    return [b_green(additions.rjust(5)), b_red(deletions.rjust(3))]
 
 
 def state_color(state: str) -> str:
@@ -81,14 +91,18 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
     "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
     "dates": lambda x: new_table(
         rows=[
-            [wrap(r" ⬤ ", "b green"), diff_dt(x[0])],
+            [b_green(r" ⬤ "), diff_dt(x[0])],
             [wrap(r" ◯ ", "b yellow"), diff_dt(x[1])],
         ]
     ),
     "path": lambda x: wrap(x, "b"),
     "message": lambda x: wrap(x, "i"),
     "files": lambda files: diff_panel(
-        "files", [[*fmt_add_del(f), get_val(f, "path")] for f in files]
+        "files",
+        [
+            [*fmt_add_del(f["additions"], f["deletions"]), get_val(f, "path")]
+            for f in files
+        ],
     ),
     "reviewRequests": format_with_color_on_black,
     "participants": lambda x: "\n".join(
@@ -116,9 +130,7 @@ class Commit:
 
     @property
     def diff(self) -> List[str]:
-        additions = f"+{self.additions}" if self.additions else ""
-        deletions = f"-{self.deletions}" if self.deletions else ""
-        return [wrap(additions.rjust(5), "b green"), wrap(deletions.rjust(3), "b red")]
+        return fmt_add_del(self.additions, self.deletions)
 
     @property
     def parts(self) -> List[str]:
@@ -190,7 +202,7 @@ class ReviewComment(IssueComment):
     pullRequestReview: str
 
     @classmethod
-    def make(cls, reactions: List[JSONDict], **kwargs: Any) -> "ReviewComment":
+    def make(cls, reactions: List[JSONDict], **kwargs: Any) -> ReviewComment:
         kwargs["reactions"] = [Reaction(**c) for c in reactions]
         return cls(**kwargs)
 
@@ -250,13 +262,11 @@ class ReviewThread(PanelMixin):
 
     @property
     def title(self) -> str:
-        return " ".join(
-            [
-                wrap(self.path, "b magenta"),
-                self.formatted_state,
-                fmt_state("OUTDATED") if self.isOutdated else "",
-            ]
-        )
+        return " ".join([
+            wrap(self.path, "b magenta"),
+            self.formatted_state,
+            fmt_state("OUTDATED") if self.isOutdated else "",
+        ])
 
     @property
     def panel(self) -> Panel:
@@ -296,11 +306,11 @@ class Review(PanelMixin, Content):
 
     @property
     def status(self) -> str:
-        resolved_count = sum((t.isResolved for t in self.threads))
+        resolved_count = sum(t.isResolved for t in self.threads)
         total_count = len(self.threads)
         return (
-            wrap(" ⬤ " * resolved_count, "b green")
-            + wrap(" ◯ " * (total_count - resolved_count), "b red")
+            b_green(" ⬤ " * resolved_count)
+            + b_red(" ◯ " * (total_count - resolved_count))
             + " resolved"
             if total_count
             else ""
@@ -366,8 +376,7 @@ class PullRequestTable(PullRequest):
             )
             for r in reviews
             if (
-                r["id"] in threads_by_review_id
-                and r["state"] != "COMMENTED"
+                (r["id"] in threads_by_review_id and r["state"] != "COMMENTED")
                 or r["body"]
             )
         ]

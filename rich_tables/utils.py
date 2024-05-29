@@ -42,7 +42,7 @@ PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
 BOLD_GREEN = "b green"
 BOLD_RED = "b red"
 SECONDS_PER_DAY = 86400
-CONSECUTIVE_SPACE = re.compile("((^ +?)|( +?$))")
+CONSECUTIVE_SPACE = re.compile("^ +| +$")
 
 
 # @lru_cache
@@ -60,7 +60,7 @@ def wrap(text: str, tag: str) -> str:
 
 
 def format_space(string: str) -> str:
-    return CONSECUTIVE_SPACE.sub(lambda m: wrap(m.group(1), "u"), string)
+    return CONSECUTIVE_SPACE.sub(r"[u]\g<0>[/]", string)
 
 
 def format_new(string: str) -> str:
@@ -222,7 +222,7 @@ def split_with_color(text: str) -> str:
     return " ".join(_format_with_color(str(x)) for x in sorted(SPLIT_PAT.split(text)))
 
 
-def format_with_color(items: Any) -> Any:
+def format_with_color(items: Any) -> str:
     if isinstance(items, str):
         items = [items]
     elif items and (not isinstance(items, Sequence) or not isinstance(items[0], str)):
