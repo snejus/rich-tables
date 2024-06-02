@@ -8,7 +8,7 @@ from difflib import SequenceMatcher
 from functools import lru_cache
 from itertools import islice, starmap, zip_longest
 from math import copysign
-from string import punctuation
+from string import punctuation, ascii_uppercase
 from typing import (
     Any,
     Callable,
@@ -85,7 +85,7 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "".join((set(punctuation) - {"_", "-", ":"}) | {"-"}),
+    junk: str = "".join((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase)),
 ) -> str:
     matcher = SequenceMatcher(
         lambda x: x not in junk, autojunk=False, a=before, b=after
