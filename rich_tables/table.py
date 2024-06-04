@@ -40,6 +40,7 @@ def keep_keys(keys: Iterable[str], item: JSONDict) -> JSONDict:
 
 console = make_console()
 install(console=console, show_locals=True)
+print(console.width)
 print = console.print
 
 

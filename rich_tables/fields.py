@@ -248,7 +248,7 @@ fields_by_func = {
         "type_name",
         "user",
     ),
-    split_with_color: ("genre", "genres", "name"),
+    split_with_color: ("genre", "genres"),
     human_dt: (
         "added",
         "committedDate",
