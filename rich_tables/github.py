@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from itertools import chain, groupby
+from itertools import chain
 from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Mapping, Union
 
 from rich import box
@@ -18,6 +18,7 @@ from .utils import (
     diff_dt,
     format_with_color,
     format_with_color_on_black,
+    group_by,
     list_table,
     md_panel,
     new_table,
@@ -361,13 +362,9 @@ class PullRequestTable(PullRequest):
         threads = [ReviewThread.make(**rt) for rt in kwargs["reviewThreads"]]
         review_comments = list(chain.from_iterable(t.comments for t in threads))
         review_comments.sort(key=lambda c: c.review_id)
-        comments_by_review_id = {
-            r: list(c) for r, c in groupby(review_comments, lambda c: c.review_id)
-        }
+        comments_by_review_id = dict(group_by(review_comments, lambda c: c.review_id))
         threads.sort(key=lambda t: t.review_id)
-        threads_by_review_id = {
-            r: list(trs) for r, trs in groupby(threads, lambda t: t.review_id)
-        }
+        threads_by_review_id = dict(group_by(threads, lambda t: t.review_id))
         kwargs["reviews"] = [
             Review(
                 **r,

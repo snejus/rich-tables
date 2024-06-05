@@ -5,8 +5,7 @@ import re
 import time
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
-from functools import lru_cache
-from itertools import islice, starmap, zip_longest
+from itertools import groupby, islice, starmap, zip_longest
 from math import copysign
 from string import punctuation, ascii_uppercase
 from typing import (
@@ -16,8 +15,11 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Protocol,
     Sequence,
     SupportsFloat,
+    Tuple,
+    TypeVar,
     Union,
 )
 
@@ -43,6 +45,22 @@ BOLD_GREEN = "b green"
 BOLD_RED = "b red"
 SECONDS_PER_DAY = 86400
 CONSECUTIVE_SPACE = re.compile("(?:^ +)|(?: +$)")
+
+
+_T_contra = TypeVar("_T_contra", contravariant=True)
+
+
+class SupportsDunderLT(Protocol[_T_contra]):
+    def __lt__(self, __other: _T_contra) -> bool:
+        pass
+
+
+T = TypeVar("T")
+K = TypeVar("K", bound=SupportsDunderLT[Any])
+
+
+def group_by(iterable: Iterable[T], key: Callable[[T], K]) -> List[Tuple[K, List[T]]]:
+    return [(k, list(g)) for k, g in groupby(sorted(iterable, key=key), key)]
 
 
 # @lru_cache

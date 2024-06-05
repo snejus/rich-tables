@@ -1,4 +1,3 @@
-import itertools as it
 import json
 import sys
 from contextlib import suppress
@@ -21,6 +20,7 @@ from .music import albums_table
 from .utils import (
     border_panel,
     format_with_color,
+    group_by,
     human_dt,
     make_console,
     md_panel,
@@ -149,13 +149,12 @@ def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
 
     keys = "name", "start_time", "end_time", "bar"
     month_events: Iterable[JSONDict]
-    for year_and_month, month_events in it.groupby(
+    for year_and_month, month_events in group_by(
         new_events, lambda x: x["start"].strftime("%Y %B")
     ):
         table = new_table(*keys, highlight=False, padding=0, show_header=False)
-        for day, day_events in it.groupby(
-            sorted(month_events, key=lambda x: x.get("start_day") or ""),
-            lambda x: x.get("start_day") or "",
+        for day, day_events in group_by(
+            month_events, lambda x: x.get("start_day") or ""
         ):
             table.add_row(wrap(day, "b i"))
             for event in day_events:

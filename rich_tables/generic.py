@@ -22,6 +22,7 @@ from .utils import (
     border_panel,
     format_string,
     format_with_color,
+    group_by,
     list_table,
     make_console,
     new_table,
@@ -263,9 +264,7 @@ def _dict_list(data: Iterable[JSONDict]) -> RenderableType:
         return transformed_value
 
     large_table = simple_head_table()
-    for large, items in it.groupby(
-        data, lambda i: len(str(i.values())) > MAX_DICT_SIZE
-    ):
+    for large, items in group_by(data, lambda i: len(str(i.values())) > MAX_DICT_SIZE):
         if large:
             for item in items:
                 values = it.starmap(

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools as it
 import operator as op
 from collections import defaultdict
 from functools import lru_cache, partial
@@ -14,6 +13,7 @@ from .fields import DISPLAY_HEADER, FIELDS_MAP
 from .utils import (
     NewTable,
     border_panel,
+    group_by,
     new_table,
     predictably_random_color,
     simple_panel,
@@ -190,5 +190,5 @@ def albums_table(all_tracks: List[JSONDict]) -> Iterable[ConsoleRenderable]:
             track["album"] = "singles"
             track["albumartist"] = track["label"]
 
-    for album_name, tracks in it.groupby(sorted(all_tracks, key=get_album), get_album):
+    for _, tracks in group_by(all_tracks, get_album):
         yield album_panel(list(tracks))
