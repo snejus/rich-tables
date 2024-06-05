@@ -1,16 +1,15 @@
+from __future__ import annotations
+
 import json
 import sys
 from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import singledispatch
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple, Union, TYPE_CHECKING
 
 from funcy import curry, join
 from rich.bar import Bar
 from rich.columns import Columns
-from rich.console import ConsoleRenderable
-from rich.panel import Panel
-from rich.table import Table
 from rich.traceback import install
 
 from .fields import FIELDS_MAP, get_val
@@ -29,6 +28,11 @@ from .utils import (
     predictably_random_color,
     wrap,
 )
+
+if TYPE_CHECKING:
+    from rich.console import ConsoleRenderable
+    from rich.table import Table
+    from rich.panel import Panel
 
 JSONDict = Dict[str, Any]
 

@@ -1,15 +1,15 @@
+from __future__ import annotations
+
 import re
 from collections import defaultdict
 from datetime import datetime
 from functools import singledispatch
 from itertools import islice
 from pprint import pformat
-from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Union
+from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Union, TYPE_CHECKING
 
 import snoop
-from rich.console import RenderableType
 from rich.syntax import Syntax
-from rich.table import Table
 from rich.text import Text
 
 from .utils import (
@@ -36,6 +36,10 @@ from .utils import (
     timestamp2timestr,
     wrap,
 )
+
+if TYPE_CHECKING:
+    from rich.console import RenderableType
+    from rich.table import Table
 
 snoop.install(color=True)
 
