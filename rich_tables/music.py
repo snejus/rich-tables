@@ -1,18 +1,28 @@
+from __future__ import annotations
+
 import itertools as it
 import operator as op
-import re
 from collections import defaultdict
 from functools import lru_cache, partial
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Tuple
 
 from rich import box
 from rich.align import Align
 from rich.console import ConsoleRenderable, Group
-from rich.panel import Panel
-from rich.table import Table
 
 from .fields import DISPLAY_HEADER, FIELDS_MAP
-from .utils import border_panel, new_table, predictably_random_color, simple_panel, wrap
+from .utils import (
+    NewTable,
+    border_panel,
+    new_table,
+    predictably_random_color,
+    simple_panel,
+    wrap,
+)
+
+if TYPE_CHECKING:
+    from rich.panel import Panel
+    from rich.table import Table
 
 JSONDict = Dict[str, Any]
 
@@ -59,14 +69,10 @@ def get_vals(
     return [[get_val(tuple(t.items()), f) for f in fields] for t in tracks]
 
 
-def tracks_table(tracks, fields, color, sort):
-    # type: (List[JSONDict], Iterable[str], str, bool) -> Table
+def tracks_table(tracks: List[JSONDict], fields: List[str], color: str) -> NewTable:
     return new_table(
         *map(get_header, fields),
-        rows=get_vals(
-            fields,
-            sorted(tracks, key=op.methodcaller("get", "track", "")) if sort else tracks,
-        ),
+        rows=get_vals(fields, tracks),
         border_style=color,
         padding=(0, 0, 0, 1),
     )
@@ -145,18 +151,19 @@ def album_panel(tracks: List[JSONDict]) -> Panel:
     track_fields = [
         t
         for t in TRACK_FIELDS
-        if len(tracks) > 1 or len(set(map(lambda x: x.get("artist"), tracks))) == 1
+        if len(tracks) > 1 or len({t.get("artist") for t in tracks}) == 1
     ]
-    tracklist = tracks_table(tracks, track_fields, album["album_color"], sort=True)
+    tracks = sorted(tracks, key=op.itemgetter("track", "artist", "title"))
+    tracklist = tracks_table(tracks, track_fields, album["album_color"])
 
-    _, track = max(map(op.itemgetter("last_played", "track"), tracks))
-    if int(re.sub(r"\D", "", str(track).replace("A", "1"))) > 0:
-        row_no = tracklist.columns[0]._cells.index(str(track))
-        tracklist.rows[row_no].style = "b white on #000000"
-        tracklist.add_row(
-            *[album.get(k) or "" for k in ["tracktotal", *track_fields[1:]]],
-            style="d white on grey11",
-        )
+    last_track_index = tracks.index(
+        next(iter(sorted(tracks, key=op.itemgetter("last_played"), reverse=True)))
+    )
+    tracklist.rows[last_track_index].style = "b white on #000000"
+    tracklist.add_row(
+        *[album.get(k) or "" for k in ["tracktotal", *track_fields[1:]]],
+        style="d white on grey11",
+    )
 
     comments = album.get("comments")
     return border_panel(

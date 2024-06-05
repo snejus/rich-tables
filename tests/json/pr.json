@@ -12,6 +12,7 @@
       "additions": 35,
       "deletions": 22,
       "reviewDecision": "APPROVED",
+      "headRefName": "branch-name",
       "repository": "beets",
       "participants": ["snejus", "sampsyo", "wisp3rwind"],
       "labels": [],
