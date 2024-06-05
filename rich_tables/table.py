@@ -39,9 +39,7 @@ def keep_keys(keys: Iterable[str], item: JSONDict) -> JSONDict:
 
 
 console = make_console()
-install(console=console, show_locals=True)
-print(console.width)
-print = console.print
+install(console=console, show_locals=True, width=console.width)
 
 
 def lights_table(lights: List[JSONDict]) -> Table:
@@ -263,7 +261,7 @@ def tasks_table(tasks_by_group: Dict[str, JSONDict]) -> Iterator[Panel]:
 
 def load_data() -> Any:
     if sys.stdin.isatty():
-        return
+        return None
 
     try:
         data = json.load(sys.stdin)
@@ -317,7 +315,7 @@ def main() -> None:
         with suppress(json.JSONDecodeError):
             arguments = list(map(json.loads, arguments))
 
-        print(FIELDS_MAP["diff"](arguments), highlight=False)
+        console.print(FIELDS_MAP["diff"](arguments), highlight=False)
     elif args and args[0] == "md":
         console.print(md_panel(sys.stdin.read().replace(r"\x00", "")))
     else:

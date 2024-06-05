@@ -7,13 +7,14 @@ from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from itertools import groupby, islice, starmap, zip_longest
 from math import copysign
-from string import punctuation, ascii_uppercase
+from string import ascii_uppercase, punctuation
 from typing import (
     Any,
     Callable,
     Dict,
     Iterable,
     List,
+    Match,
     Optional,
     Protocol,
     Sequence,
@@ -110,7 +111,7 @@ def make_difftext(
     )
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
-        diff = diff + (fmtdiff(code, before[a1:a2], after[b1:b2]) or "")
+        diff += fmtdiff(code, before[a1:a2], after[b1:b2]) or ""
     return diff
 
 
@@ -124,7 +125,7 @@ def duration2human(duration: SupportsFloat) -> str:
 def fmt_time(seconds: int) -> Iterable[str]:
     abs_seconds = abs(seconds)
     return (
-        "{:>3}{}".format(int(copysign(num, seconds)), unit)
+        f"{int(copysign(num, seconds)):>3}{unit}"
         for num, unit in (
             (abs_seconds // 86400, "d"),
             (abs_seconds // 3600, "h"),
@@ -138,7 +139,7 @@ def fmt_time(seconds: int) -> Iterable[str]:
 def get_theme() -> Optional[Theme]:
     config_path = platformdirs.user_config_path("rich") / "config.ini"
     if config_path.exists():
-        return Theme.read(config_path)
+        return Theme.read(str(config_path))
     return None
 
 
@@ -246,7 +247,7 @@ def format_with_color(items: Any) -> str:
     elif items and (not isinstance(items, Sequence) or not isinstance(items[0], str)):
         return items
 
-    return " ".join((_format_with_color(str(x)) for x in items))
+    return " ".join(_format_with_color(str(x)) for x in items)
 
 
 def format_with_color_on_black(items: Union[str, Iterable[str]]) -> str:
@@ -259,7 +260,7 @@ def format_with_color_on_black(items: Union[str, Iterable[str]]) -> str:
     )
 
 
-def fmt_pred_color(m: re.Match) -> str:
+def fmt_pred_color(m: Match[str]) -> str:
     return f"{predictably_random_color(m.group(2))}]{m.group(2)}"
 
 

@@ -128,7 +128,7 @@ def album_info(tracks: List[JSONDict]) -> JSONDict:
     album = defaultdict(str, zip(fields, op.itemgetter(*fields)(first)))
     album.update(**album_stats(tracks))
     add_colors(album)
-    for field, val in filter(op.truth, sorted(album.items())):
+    for field, _ in filter(op.truth, sorted(album.items())):
         album[field] = get_val(tuple(album.items()), field)
     album["album_title"] = album_title(album)
     return album
@@ -139,7 +139,7 @@ def album_info_table(album: JSONDict) -> Table:
         return keyval[1] and keyval[0] not in ALBUM_IGNORE
 
     items = filter(should_display, sorted(album.items()))
-    table = new_table(rows=map(lambda x: (get_header(x[0]), x[1]), items))
+    table = new_table(rows=((get_header(x[0]), x[1]) for x in items))
     table.columns[0].style = "b " + album["album_color"]
     return table
 

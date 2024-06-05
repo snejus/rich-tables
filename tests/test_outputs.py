@@ -8,6 +8,7 @@ from freezegun import freeze_time
 
 from rich_tables import table
 from rich_tables.utils import make_console
+import locale
 
 JSON_DIR = Path("tests/json")
 SVG_DIR = Path("svgs")
@@ -29,7 +30,7 @@ def _populate_readme() -> Iterator[None]:
         for f in TEST_FILES
     )
 
-    with Path("README.md").open("r+") as f:
+    with Path("README.md").open("r+", encoding=locale.getpreferredencoding(False)) as f:
         readme = f.read()
         f.seek(0)
         readme = re.sub(r"(?<=## Examples\n\n).*", svgs, readme, flags=re.S)

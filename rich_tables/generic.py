@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime
 from functools import partial, wraps
-from typing import Any, Callable, Dict, Iterable, List, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, Iterable, List, TypeVar, Union
 
 from multimethod import multidispatch
 from rich import box
@@ -20,7 +20,6 @@ from .fields import DISPLAY_HEADER, MATCH_COUNT_HEADER, _get_val, counts_table
 from .utils import (
     NewTable,
     border_panel,
-    format_string,
     format_with_color,
     group_by,
     list_table,
@@ -68,7 +67,7 @@ def _debug(_func: Callable[..., T], *args) -> None:
         global indent
         types = f"\033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m"
 
-        data, *header = [str(arg).split(r"\n")[0] for arg in args]
+        data, *header = (str(arg).split(r"\n")[0] for arg in args)
         if header:
             print(indent + f"Header: \033[1m{header[0] if header else ''}\033[0m")
         elif data:
@@ -94,7 +93,7 @@ def _undebug(_type: type, *args: Any) -> None:
 def mapping_view_table() -> NewTable:
     """A table with two columns
     * First for bold field names
-    * Second one for values
+    * Second one for values.
     """
     table = new_table(border_style="cyan", style="cyan", box=box.MINIMAL, expand=False)
     table.add_column(justify="right", style="bold misty_rose1")
@@ -235,7 +234,7 @@ def _dict_list(data: Iterable[JSONDict]) -> RenderableType:
         return simple_head_table([])
 
     keys = {
-        k: None for k in all_keys if any(((d.get(k) is not None) for d in data))
+        k: None for k in all_keys if any((d.get(k) is not None) for d in data)
     }.keys()
 
     overlap = set(map(type, data[0].values())) & {int, float, str}
