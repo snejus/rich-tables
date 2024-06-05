@@ -161,6 +161,14 @@ class Reaction:
         return f":{self.content.lower()}: {_get_val(self.user, 'author')}"
 
 
+@dataclass
+class CreatedMixin:
+    @property
+    def created(self) -> str:
+        return self.createdAt
+
+
+@dataclass
 class PanelMixin:
     def get_title(self, fields: List[str]) -> str:
         return " ".join(get_val(self, f) for f in fields)
@@ -175,14 +183,19 @@ class PanelMixin:
 
 
 @dataclass
-class Content:
+class CreatedPanelMixin(CreatedMixin, PanelMixin):
+    pass
+
+
+@dataclass
+class Content(CreatedPanelMixin):
     createdAt: str
     author: str
     body: str
 
 
 @dataclass
-class IssueComment(PanelMixin, Content):
+class IssueComment(Content):
     reactions: List[Reaction]
 
     @property
@@ -217,19 +230,19 @@ class ReviewComment(IssueComment):
     def review_id(self) -> str:
         return self.pullRequestReview
 
-    def get_panel(self, **kwargs: Any) -> Panel:
+    @property
+    def panel(self) -> Panel:
         return md_panel(
             self.body.replace("suggestion", "python"),
             title=self.title,
             subtitle=" ".join(map(str, self.reactions)).replace(
                 ":laugh:", ":laughing:"
             ),
-            **kwargs,
         )
 
 
 @dataclass
-class ReviewThread(PanelMixin):
+class ReviewThread(CreatedPanelMixin):
     path: str
     isResolved: bool
     isOutdated: bool
@@ -246,8 +259,8 @@ class ReviewThread(PanelMixin):
         return self.comments[0].review_id
 
     @property
-    def createdAt(self) -> str:
-        return self.comments[0].createdAt
+    def created(self) -> str:
+        return self.comments[0].created
 
     @property
     def formatted_state(self) -> str:
@@ -272,9 +285,7 @@ class ReviewThread(PanelMixin):
     @property
     def panel(self) -> Panel:
         comments = self.comments
-        comments_col = list_table(
-            (c.get_panel() for c in comments), padding=(1, 0, 0, 0)
-        )
+        comments_col = list_table((c.panel for c in comments), padding=(1, 0, 0, 0))
         return border_panel(
             new_table(
                 rows=[[self.comments[0].diff, simple_panel(comments_col)]],
@@ -287,7 +298,7 @@ class ReviewThread(PanelMixin):
 
 
 @dataclass
-class Review(PanelMixin, Content):
+class Review(Content):
     id: str
     state: str
     threads: List[ReviewThread]
@@ -325,14 +336,14 @@ class Review(PanelMixin, Content):
 @dataclass
 class PullRequest:
     id: str
-    additions: int
+    createdAt: str
     author: str
     body: str
-    comments: List[IssueComment]
+    additions: int
     commits: Commits
-    createdAt: str
     deletions: int
     files: List[File]
+    headRefName: str
     labels: List[str]
     participants: List[str]
     repository: str
@@ -340,6 +351,7 @@ class PullRequest:
     reviewRequests: List[str]
     reviewThreads: List[ReviewThread]
     reviews: List[Review]
+    comments: List[IssueComment]
     state: str
     title: str
     updatedAt: str
@@ -352,9 +364,6 @@ class PullRequest:
 
 @dataclass
 class PullRequestTable(PullRequest):
-    reviews: List[Review]
-    comments: List[IssueComment]
-
     @classmethod
     def make(cls, reviews: List[JSONDict], **kwargs: Any) -> PullRequestTable:
         kwargs["commits"] = Commits([Commit(**c) for c in kwargs["commits"]])
@@ -402,7 +411,7 @@ class PullRequestTable(PullRequest):
 
     @property
     def info(self) -> Panel:
-        fields = "author", "dates", "participants", "reviewRequests"
+        fields = "author", "dates", "headRefName", "participants", "reviewRequests"
         pairs = [(f, getattr(self, f)) for f in fields]
         field_rows = [[flexitable({f: v})] for f, v in pairs if v]
         return border_panel(
@@ -411,7 +420,14 @@ class PullRequestTable(PullRequest):
             box=box.DOUBLE_EDGE,
             border_style=state_color(self.pr_state),
             subtitle=(
-                f"[b]{fmt_state(self.reviewDecision)}[white] // {fmt_state(self.state)}[/]"
+                wrap(
+                    " ".join([
+                        fmt_state(self.reviewDecision),
+                        wrap("//", "white"),
+                        fmt_state(self.state),
+                    ]),
+                    "b",
+                )
             ),
             align="center",
             title_align="center",
@@ -423,12 +439,12 @@ class PullRequestTable(PullRequest):
         return new_table(rows=[[get_val(self, "files"), self.commits.panel]])
 
     @property
-    def contents(self) -> List[PanelMixin]:
+    def timestamped_contents(self) -> List[CreatedPanelMixin]:
         return [*self.reviews, *self.comments]
 
     @property
     def panels(self) -> Iterable[Panel]:
-        comments = sorted(self.contents, key=lambda c: c.createdAt)
+        comments = sorted(self.timestamped_contents, key=lambda c: c.created)
         for comment in comments:
             yield comment.panel
 
