@@ -64,7 +64,6 @@ def group_by(iterable: Iterable[T], key: Callable[[T], K]) -> List[Tuple[K, List
     return [(k, list(g)) for k, g in groupby(sorted(iterable, key=key), key)]
 
 
-# @lru_cache
 def format_string(text: str) -> str:
     if "pred color]" in text:
         return PRED_COLOR_PAT.sub(fmt_pred_color, text)
@@ -190,7 +189,6 @@ class NewTable(Table):
 
 
 def new_table(*headers: str, **kwargs: Any) -> NewTable:
-    # print(f"creating new table, headers: {headers}")
     default = {
         "show_edge": False,
         "show_header": False,
@@ -222,14 +220,12 @@ def _randint() -> int:
     return random.randint(50, 205)
 
 
-# @lru_cache(None)
 def predictably_random_color(string: str) -> str:
     random.seed(string.strip())
 
     return f"#{_randint():02X}{_randint():02X}{_randint():02X}"
 
 
-# @lru_cache(None)
 def _format_with_color(string: str, on: Optional[str] = None) -> str:
     color = f"b {predictably_random_color(string)}"
     if on:
@@ -265,7 +261,6 @@ def fmt_pred_color(m: Match[str]) -> str:
 
 
 def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    # print(f"creating new panel with title {kwargs.get('title')}")
     default: JSONDict = {
         "title_align": "left",
         "subtitle_align": "right",
@@ -333,7 +328,6 @@ def progress_bar(
         return round(_randint() * ratio)
 
     color = f"#{norm():0>2X}{norm():0>2X}{norm():0>2X}"
-    # print(f"{end=} {size=} {width=} {ratio=}")
     return Bar(
         size=size, begin=0, width=int(width), end=end, color=color, bgcolor=bgcolor
     )
@@ -396,7 +390,6 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 
 
 @multimethod
-# @lru_cache
 def diff(before: str, after: str) -> Any:
     return make_difftext(before, after)
 
@@ -406,23 +399,6 @@ def _(before: Any, after: Any) -> Any:
     return diff(
         str("" if before is None else before), str("" if after is None else after)
     )
-
-
-# @diff.register
-# def _(before: None, after: None) -> str:
-#     return make_difftext(
-#         '""' if before == "" else str(before), '""' if after == "" else str(after)
-#     )
-
-
-# @diff.register
-# def _(before: Any, after: None) -> str:
-#     return wrap("''" if before == "" else before, BOLD_RED)
-
-
-# @diff.register
-# def _(before: None, after: Any) -> str:
-#     return wrap("''" if after == "" else after, BOLD_GREEN)
 
 
 @diff.register

@@ -161,8 +161,6 @@ def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
                     table.add_dict_item(event, style=event["color"] + " on grey7")
                 else:
                     table.add_dict_item(event)
-                    # if event["desc"]:
-                    #     table.add_row("", "", "", event["desc"])
             table.add_row("")
         yield border_panel(table, title=year_and_month)
 
@@ -326,13 +324,8 @@ def main() -> None:
         if "-j" in args:
             console.print_json(data=data)
         else:
-            # try:
             for ret in draw_data(data):
                 console.print(ret)
-            # except DispatchError as e:
-            #     if e.__cause__:
-            #         raise e.__cause__ from None
-            #     raise e
 
         if "-s" in set(args):
             console.save_html("saved.html")

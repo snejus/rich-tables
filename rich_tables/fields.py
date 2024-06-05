@@ -42,7 +42,6 @@ snoop.install(color=True)
 MATCH_COUNT_HEADER = re.compile(r"duration|(_sum$|_?count$)")
 
 
-# @snoop
 def counts_table(data: Iterable[JSONDict]) -> Table:
     count_header = ""
     subcount_header = None
@@ -122,8 +121,6 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         else datetime.fromtimestamp(float(x)).strftime("%F %H:%M")
     ),
     dt=lambda x: human_dt(x, acc=5),
-    # createdAt=lambda x: x.replace("T", " ").replace("Z", ""),
-    # updatedAt=lambda x: x.replace("T", " ").replace("Z", ""),
     wait_per_play=lambda x: wrap(
         " ".join(islice(fmt_time(int(float(x))), 1)), BOLD_GREEN
     ),
@@ -155,17 +152,13 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     hidden=lambda x: ":shit: " if x and int(x) else "",
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
-    # content=lambda x: md_panel(x) if isinstance(x, str) else x,
     comments=lambda x: md_panel(
         x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
     ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
     duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
-    # total_duration=duration2human,
     plays=lambda x: wrap(x, BOLD_GREEN),
     skips=lambda x: wrap(x, BOLD_RED),
-    # body=lambda x: x + "\n",
-    # message=Text,
     new=lambda x: (
         wrap(":heavy_check_mark: ", BOLD_GREEN)
         if x
@@ -183,13 +176,9 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     CreatedBy=lambda x: syntax(x.replace(";", "\n"), "sh"),
     file=lambda x: "/".join(map(format_with_color, x.split("/"))),
     field=lambda x: ".".join(map(format_with_color, x.split("."))),
-    # log=lambda x: border_panel(
-    #     x, border_style="b i", padding=(0, 2, 0, 2), style="on #232323"
-    # ),
     unified_diff=lambda x: syntax(x, "diff"),
     diffHunk=lambda x: syntax(x, "diff"),
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
-    # diff=lambda x: Text.from_markup(x) if "[/]" in x else md_panel(x),
     query=lambda x: Text(x, style="bold"),
 )
 fields_by_func = {
@@ -203,7 +192,6 @@ fields_by_func = {
         "brand",
         "calendar",
         "catalognum",
-        # "category",
         "categories",
         "Category",
         "code",
@@ -252,25 +240,18 @@ fields_by_func = {
     human_dt: (
         "added",
         "committedDate",
-        # "created",
-        # "date",
         "due",
-        # "end",
         "entry",
         "first_active",
         "last_active",
         "last_played",
-        # "modified",
         "mtime",
-        # "start",
         "updated",
-        # "count"
     ),
     md_panel: (
         "answer",
         "benefits",
         "bodyHTML",
-        # "comment",
         "creditText",
         "description",
         "desc",
@@ -324,7 +305,6 @@ DISPLAY_HEADER: Dict[str, str] = {
 
 
 def _get_val(value: Any, field: str) -> Any:
-    # return FIELDS_MAP[field](value) if value is not None else ""
     if value is None:
         value = "None"
 
