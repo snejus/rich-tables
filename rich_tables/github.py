@@ -4,7 +4,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Mapping, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Mapping,
+    Protocol,
+    Union,
+)
 
 from rich import box
 from rich.syntax import Syntax
@@ -161,11 +170,10 @@ class Reaction:
         return f":{self.content.lower()}: {_get_val(self.user, 'author')}"
 
 
-@dataclass
-class CreatedMixin:
+class CreatedMixin(Protocol):
     @property
     def created(self) -> str:
-        return self.createdAt
+        raise NotImplementedError
 
 
 @dataclass
@@ -192,6 +200,10 @@ class Content(CreatedPanelMixin):
     createdAt: str
     author: str
     body: str
+
+    @property
+    def created(self) -> str:
+        return self.createdAt
 
 
 @dataclass
@@ -377,14 +389,11 @@ class PullRequestTable(PullRequest):
         kwargs["reviews"] = [
             Review(
                 **r,
-                threads=threads_by_review_id.get(r["id"], []),
-                comments=comments_by_review_id.get(r["id"], []),
+                threads=threads_by_review_id.pop(r["id"], []),
+                comments=comments_by_review_id.pop(r["id"], []),
             )
             for r in reviews
-            if (
-                (r["id"] in threads_by_review_id and r["state"] != "COMMENTED")
-                or r["body"]
-            )
+            if (r["id"] in threads_by_review_id or r["body"])
         ]
         return cls(**kwargs)
 
