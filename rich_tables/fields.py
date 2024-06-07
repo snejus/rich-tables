@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import random
 import re
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime
 from functools import singledispatch
 from itertools import islice
 from pprint import pformat
-from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Iterable, MutableMapping
 
-import snoop
+from rich.bar import Bar
 from rich.syntax import Syntax
 from rich.text import Text
 
@@ -16,7 +18,7 @@ from .utils import (
     BOLD_GREEN,
     BOLD_RED,
     JSONDict,
-    NewTable,
+    _randint,
     border_panel,
     diff,
     duration2human,
@@ -26,7 +28,6 @@ from .utils import (
     format_with_color_on_black,
     get_country,
     human_dt,
-    list_table,
     md_panel,
     new_table,
     progress_bar,
@@ -41,12 +42,40 @@ if TYPE_CHECKING:
     from rich.console import RenderableType
     from rich.table import Table
 
-snoop.install(color=True)
 
 MATCH_COUNT_HEADER = re.compile(r"duration|(_sum$|_?count$)")
 
 
-def counts_table(data: Iterable[JSONDict]) -> Table:
+# def progress_bar(
+#     size: float, width: float, end: float | None = None, inverse: bool = False
+# ) -> Bar:
+#     if end is None:
+#         end = size
+#         size = width
+#         bgcolor = "black"
+#     else:
+#         bgcolor = "#252c3a"
+#     ratio = end / size if size else 1
+#     if inverse:
+#         ratio = 1 - ratio
+
+#     random.seed(str(width))
+
+#     def norm() -> int:
+#         return round(_randint() * ratio)
+
+#     color = f"#{norm():0>2X}{norm():0>2X}{norm():0>2X}"
+#     return Bar(
+#         size=size, begin=0, width=int(width), end=end, color=color, bgcolor=bgcolor
+#     )
+
+
+# @dataclass
+# class CountsTable:
+#     pass
+
+
+def counts_table(data: list[JSONDict]) -> Table:
     count_header = ""
     subcount_header = None
     ordered_headers = []
@@ -185,7 +214,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
 )
-fields_by_func = {
+fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     format_with_color: (
         "__typename",
         "album",
@@ -292,7 +321,7 @@ else:
     )
 
 
-DISPLAY_HEADER: Dict[str, str] = {
+DISPLAY_HEADER: dict[str, str] = {
     "track": "#",
     "bpm": "🚀",
     "last_played": ":timer_clock: ",
@@ -325,7 +354,7 @@ def _get_val(value: Any, field: str) -> Any:
 
 
 @singledispatch
-def get_val(obj: Union[JSONDict, object], field: str) -> Any:
+def get_val(obj: JSONDict | object, field: str) -> Any:
     """Definition of a generic get_val function."""
 
 
@@ -337,7 +366,3 @@ def _(obj: dict, field: str) -> Any:
 @get_val.register
 def _(obj: object, field: str) -> Any:
     return _get_val(getattr(obj, field, None), field)
-
-
-def sql_table(data: List[JSONDict]) -> NewTable:
-    return list_table((get_val(item["sql"], "sql") for idx, item in enumerate(data)))
