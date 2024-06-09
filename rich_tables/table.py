@@ -5,7 +5,17 @@ import sys
 from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import singledispatch
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple, Union, TYPE_CHECKING
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Tuple,
+    Union,
+)
 
 from funcy import curry, join
 from rich.bar import Bar
@@ -18,6 +28,7 @@ from .github import pulls_table
 from .music import albums_table
 from .utils import (
     border_panel,
+    format_string,
     format_with_color,
     group_by,
     human_dt,
@@ -31,8 +42,8 @@ from .utils import (
 
 if TYPE_CHECKING:
     from rich.console import ConsoleRenderable
-    from rich.table import Table
     from rich.panel import Panel
+    from rich.table import Table
 
 JSONDict = Dict[str, Any]
 
@@ -265,11 +276,14 @@ def load_data() -> Any:
     if sys.stdin.isatty():
         return None
 
+    text = sys.stdin.read()
     try:
-        data = json.load(sys.stdin)
+        data = json.loads(text)
         assert data
     except json.JSONDecodeError:
-        msg = "Broken JSON"
+        console.print(format_string(text))
+        sys.exit(0)
+        # msg = "Broken JSON"
     except AssertionError:
         sys.exit(0)
     else:
