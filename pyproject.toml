@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rich-tables"
-version = "0.4.0a1"
+version = "0.4.0"
 description = "Ready-made rich tables for various purposes"
 authors = ["Šarūnas Nejus <snejus@pm.me>"]
 readme = "README.md"
@@ -10,12 +10,12 @@ repository = "https://github.com/snejus/rich-tables"
 
 keywords = ["json", "pretty", "rich", "console", "terminal"]
 classifiers = [
-  "Development Status :: 1 - Planning",
-  "Environment :: Console",
-  "Intended Audience :: End Users/Desktop",
-  "Intended Audience :: System Administrators",
-  "Operating System :: OS Independent",
-  "Topic :: Utilities",
+    "Development Status :: 1 - Planning",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Topic :: Utilities",
 ]
 
 [tool.poetry.dependencies]
