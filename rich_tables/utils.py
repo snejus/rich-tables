@@ -40,6 +40,7 @@ from rich.tree import Tree
 JSONDict = Dict[str, Any]
 SPLIT_PAT = re.compile(r"[;,] ?")
 PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
+HTML_PARAGRAPH = re.compile(r"</?p>")
 
 
 BOLD_GREEN = "b green"
@@ -237,22 +238,20 @@ def split_with_color(text: str) -> str:
     return " ".join(_format_with_color(str(x)) for x in sorted(SPLIT_PAT.split(text)))
 
 
-def format_with_color(items: Any) -> str:
+def format_with_color(items: str | Sequence[str]) -> str:
     if isinstance(items, str):
         items = [items]
-    elif items and (not isinstance(items, Sequence) or not isinstance(items[0], str)):
-        return items
 
     return " ".join(_format_with_color(str(x)) for x in items)
 
 
 def format_with_color_on_black(items: Union[str, Iterable[str]]) -> str:
-    if isinstance(items, str):
-        items = sorted(SPLIT_PAT.split(items))
+    if not (isinstance(items, Iterable) and not isinstance(items, str)):
+        items = sorted(SPLIT_PAT.split(str(items)))
 
     sep = wrap("a", "#000000 on #000000")
     return " ".join(
-        sep + _format_with_color(item, on="#000000") + sep for item in items
+        sep + _format_with_color(str(item), on="#000000") + sep for item in items
     )
 
 
@@ -284,7 +283,7 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 def md_panel(content: str, **kwargs: Any) -> Panel:
     return border_panel(
         Markdown(
-            content,
+            HTML_PARAGRAPH.sub("", content),
             inline_code_theme="nord-darker",
             code_theme="nord-darker",
             justify=kwargs.pop("justify", "left"),

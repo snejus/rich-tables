@@ -164,8 +164,13 @@ def _json_dict(data: JSONDict) -> RenderableType:
             continue
 
         value = flexitable(content, key)
-        if isinstance(value, (NewTable, Text, dict)):
+        # print(f"{key=}, {value=}")
+        if isinstance(value, (NewTable, Text, dict, Columns)):
             cols.append(border_panel(value, title=key))
+        elif isinstance(value, ConsoleRenderable) and hasattr(value, "title"):
+            print("hello")
+            value.title = key
+            cols.append(value)
         elif isinstance(value, ConsoleRenderable) and not isinstance(value, Markdown):
             cols.append(value)
         else:
@@ -213,8 +218,8 @@ def _str_list(data: Iterable[Any]) -> RenderableType:
 
 @flexitable.register
 @debug
-def _int_list(data: Iterable[int]) -> Panel:
-    return border_panel(Columns(str(x) for x in data))
+def _int_list(data: Iterable[int]) -> Columns:
+    return Columns(str(x) for x in data)
 
 
 @flexitable.register
