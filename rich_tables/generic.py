@@ -168,7 +168,6 @@ def _json_dict(data: JSONDict) -> RenderableType:
         if isinstance(value, (NewTable, Text, dict, Columns)):
             cols.append(border_panel(value, title=key))
         elif isinstance(value, ConsoleRenderable) and hasattr(value, "title"):
-            print("hello")
             value.title = key
             cols.append(value)
         elif isinstance(value, ConsoleRenderable) and not isinstance(value, Markdown):
