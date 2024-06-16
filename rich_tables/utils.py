@@ -25,6 +25,7 @@ from typing import (
 )
 
 import platformdirs
+import sqlparse
 from multimethod import multimethod
 from rich import box
 from rich.align import Align
@@ -386,6 +387,23 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
         "word_wrap": True,
     }
     return Syntax(*args, **{**default, **kwargs})
+
+
+def sql_syntax(sql_string: str) -> Syntax:
+    return Syntax(
+        sqlparse.format(
+            sql_string,
+            indent_columns=True,
+            strip_whitespace=True,
+            strip_comments=True,
+            reindent=True,
+            reindent_aligned=False,
+        ),
+        "sql",
+        theme="gruvbox-dark",
+        background_color="black",
+        word_wrap=True,
+    )
 
 
 @multimethod

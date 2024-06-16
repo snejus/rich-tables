@@ -11,7 +11,6 @@ from pprint import pformat
 from typing import TYPE_CHECKING, Any, Callable, Iterable, MutableMapping
 
 from rich.bar import Bar
-from rich.syntax import Syntax
 from rich.text import Text
 
 from .utils import (
@@ -33,6 +32,7 @@ from .utils import (
     progress_bar,
     simple_panel,
     split_with_color,
+    sql_syntax,
     syntax,
     timestamp2timestr,
     wrap,
@@ -213,6 +213,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     diffHunk=lambda x: syntax(x, "diff"),
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
+    sql=lambda x: border_panel(sql_syntax(x)),
 )
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     format_with_color: (
@@ -297,29 +298,6 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
 for func, fields in fields_by_func.items():
     for field in fields:
         FIELDS_MAP[field] = func
-
-try:
-    import sqlparse
-except ModuleNotFoundError:
-    pass
-else:
-    FIELDS_MAP["sql"] = lambda x: border_panel(
-        Syntax(
-            sqlparse.format(
-                x,
-                indent_columns=False,
-                strip_whitespace=True,
-                strip_comments=True,
-                reindent=True,
-                reindent_aligned=False,
-            ),
-            "sql",
-            theme="material",
-            background_color="#000000",
-            word_wrap=True,
-        )
-    )
-
 
 DISPLAY_HEADER: dict[str, str] = {
     "track": "#",
