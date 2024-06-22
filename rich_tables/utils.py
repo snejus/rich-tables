@@ -69,7 +69,7 @@ def group_by(iterable: Iterable[T], key: Callable[[T], K]) -> List[Tuple[K, List
 def format_string(text: str) -> str:
     if "pred color]" in text:
         return PRED_COLOR_PAT.sub(fmt_pred_color, text)
-    if "[" in text and r"\[" not in text and "[/]" not in text:
+    if "[" in text and r"\[" not in text and "[/" not in text:
         return text.replace("[", r"\[")
 
     return text
