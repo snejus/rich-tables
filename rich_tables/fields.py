@@ -317,7 +317,7 @@ DISPLAY_HEADER: dict[str, str] = {
 
 def _get_val(value: Any, field: str) -> Any:
     if value is None:
-        value = "None"
+        return "None"
 
     if isinstance(value, str):
         value = format_string(value)

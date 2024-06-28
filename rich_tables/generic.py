@@ -38,7 +38,7 @@ console = make_console()
 
 indent = ""
 
-MAX_DICT_SIZE = 400
+MAX_DICT_SIZE = 500
 
 
 def time_fmt(current: datetime) -> Text:
