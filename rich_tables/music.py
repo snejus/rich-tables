@@ -126,6 +126,8 @@ def album_info(tracks: List[JSONDict]) -> JSONDict:
     fields = sorted([f for f in tracks[0] if f not in TRACK_FIELDS])
 
     album = defaultdict(str, zip(fields, op.itemgetter(*fields)(first)))
+    if not album["album"]:
+        album.update(album="Singles", albumartist=first["artist"])
     album.update(**album_stats(tracks))
     add_colors(album)
     for field, _ in filter(op.truth, sorted(album.items())):
