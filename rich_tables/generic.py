@@ -125,7 +125,7 @@ def _header(data: Any, header: str) -> RenderableType:
     if data in ("", [], {}):
         return ""
 
-    if header not in fields.FIELDS_MAP:
+    if header not in fields.FIELDS_MAP or isinstance(data, (dict, list)):
         return flexitable(data)
 
     out = _get_val(data, header)
