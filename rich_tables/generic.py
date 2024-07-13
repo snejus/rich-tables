@@ -38,7 +38,7 @@ console = make_console()
 
 indent = ""
 
-MAX_DICT_SIZE = 500
+MAX_DICT_LENGTH = int(os.getenv("TABLE_MAX_DICT_LENGTH") or 500)
 
 
 def time_fmt(current: datetime) -> Text:
@@ -262,7 +262,9 @@ def _dict_list(data: Iterable[JSONDict]) -> RenderableType:
         return transformed_value
 
     large_table = simple_head_table()
-    for large, items in group_by(data, lambda i: len(str(i.values())) > MAX_DICT_SIZE):
+    for large, items in group_by(
+        data, lambda i: len(str(i.values())) > MAX_DICT_LENGTH
+    ):
         if large:
             for item in items:
                 values = it.starmap(
