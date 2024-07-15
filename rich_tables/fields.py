@@ -275,6 +275,8 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "added",
         "committedDate",
         "due",
+        "start",
+        "end",
         "entry",
         "first_active",
         "last_active",
