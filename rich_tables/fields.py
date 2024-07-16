@@ -1,23 +1,19 @@
 from __future__ import annotations
 
-import random
 import re
 from collections import defaultdict
-from dataclasses import dataclass
 from datetime import datetime
 from functools import singledispatch
 from itertools import islice
 from pprint import pformat
 from typing import TYPE_CHECKING, Any, Callable, Iterable, MutableMapping
 
-from rich.bar import Bar
 from rich.text import Text
 
 from .utils import (
     BOLD_GREEN,
     BOLD_RED,
     JSONDict,
-    _randint,
     border_panel,
     diff,
     duration2human,
