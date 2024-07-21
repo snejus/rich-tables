@@ -182,10 +182,6 @@ class PanelMixin:
         return " ".join(get_val(self, f) for f in fields)
 
     @property
-    def title(self) -> str:
-        return self.get_title(["author", "createdAt"])
-
-    @property
     def panel(self) -> Panel:
         raise NotImplementedError
 
@@ -202,35 +198,51 @@ class Content(CreatedPanelMixin):
     body: str
 
     @property
+    def created_at(self) -> str:
+        return f"""[white]{self.createdAt.replace("T", " ").replace("Z", "")}[/]"""
+
+    @property
     def created(self) -> str:
-        return self.createdAt
+        return self.created_at
 
 
 @dataclass
-class IssueComment(Content):
+class Comment(Content):
     reactions: List[Reaction]
 
+    @classmethod
+    def make(cls, reactions: List[JSONDict], **kwargs: Any) -> Comment:
+        kwargs["reactions"] = [Reaction(**c) for c in reactions]
+        return cls(**kwargs)
+
+    @property
+    def title(self) -> str:
+        return self.get_title(["author", "created_at"])
+
+    @property
+    def subtitle(self) -> str:
+        return " ".join(map(str, self.reactions)).replace(":laugh:", ":laughing:")
+
+
+@dataclass
+class IssueComment(Comment):
     @property
     def panel(self) -> Panel:
         return border_panel(
             list_table([md_panel(self.body)]),
             border_style="b yellow",
             title=self.title,
+            subtitle=self.subtitle,
             box=box.ROUNDED,
         )
 
 
 @dataclass
-class ReviewComment(IssueComment):
+class ReviewComment(Comment):
     outdated: bool
     path: str
     diffHunk: str
     pullRequestReview: str
-
-    @classmethod
-    def make(cls, reactions: List[JSONDict], **kwargs: Any) -> ReviewComment:
-        kwargs["reactions"] = [Reaction(**c) for c in reactions]
-        return cls(**kwargs)
 
     @property
     def diff(self) -> Syntax:
@@ -247,9 +259,7 @@ class ReviewComment(IssueComment):
         return md_panel(
             self.body.replace("suggestion", "python"),
             title=self.title,
-            subtitle=" ".join(map(str, self.reactions)).replace(
-                ":laugh:", ":laughing:"
-            ),
+            subtitle=self.subtitle,
         )
 
 
@@ -272,7 +282,7 @@ class ReviewThread(CreatedPanelMixin):
 
     @property
     def created(self) -> str:
-        return self.comments[0].created
+        return self.comments[0].created_at
 
     @property
     def formatted_state(self) -> str:
@@ -319,9 +329,13 @@ class Review(Content):
     @property
     def panel(self) -> Panel:
         self.threads.sort(key=lambda t: t.isResolved)
+        rows = []
+        if self.body:
+            rows.append(md_panel(self.body))
+        rows.extend(t.panel for t in self.threads)
 
         return border_panel(
-            list_table([md_panel(self.body), *(t.panel for t in self.threads)]),
+            list_table(rows),
             subtitle=self.state,
             border_style=state_color(self.state),
             title=self.title,
@@ -342,7 +356,7 @@ class Review(Content):
 
     @property
     def title(self) -> str:
-        return self.get_title(["state", "author", "createdAt", "status"])
+        return self.get_title(["state", "author", "created_at", "status"])
 
 
 @dataclass
@@ -379,7 +393,7 @@ class PullRequestTable(PullRequest):
     @classmethod
     def make(cls, reviews: List[JSONDict], **kwargs: Any) -> PullRequestTable:
         kwargs["commits"] = Commits([Commit(**c) for c in kwargs["commits"]])
-        kwargs["comments"] = [IssueComment(**c) for c in kwargs["comments"]]
+        kwargs["comments"] = [IssueComment.make(**c) for c in kwargs["comments"]]
         threads = [ReviewThread.make(**rt) for rt in kwargs["reviewThreads"]]
         review_comments = list(chain.from_iterable(t.comments for t in threads))
         review_comments.sort(key=lambda c: c.review_id)
