@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from contextlib import suppress
@@ -297,6 +298,13 @@ def draw_data(data: Union[JSONDict, List[JSONDict]]) -> Any:
     return None
 
 
+def get_args() -> JSONDict:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument("args", nargs="*", default=[])
+    return vars(parser.parse_args())
+
+
 @draw_data.register(dict)
 def _draw_data_dict(data: JSONDict) -> Iterator[ConsoleRenderable]:
     if "values" in data and "title" in data:
@@ -308,8 +316,9 @@ def _draw_data_dict(data: JSONDict) -> Iterator[ConsoleRenderable]:
             "Album": albums_table,
             "Tasks": tasks_table,
         }
-        if title in calls:
-            yield from calls[title](values, **data)
+        table_func = calls.get(title)
+        if table_func:
+            yield from table_func(values, **data, **get_args())
         else:
             yield flexitable(values)
     else:

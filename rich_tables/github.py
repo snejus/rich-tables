@@ -221,7 +221,7 @@ class Comment(Content):
 
     @property
     def subtitle(self) -> str:
-        return " ".join(map(str, self.reactions)).replace(":laugh:", ":laughing:")
+        return " ".join(map(str, self.reactions)).replace(":laugh:", ":laughing:").replace(":hooray:", ":party_popper:")
 
 
 @dataclass
@@ -263,13 +263,27 @@ class ReviewComment(Comment):
         )
 
 
+class ResolvedMixin:
+    @property
+    def resolved(self) -> bool:
+        raise NotImplementedError
+
+    @property
+    def border_color(self) -> str:
+        return "green" if self.resolved else "yellow"
+
+
 @dataclass
-class ReviewThread(CreatedPanelMixin):
+class ReviewThread(CreatedPanelMixin, ResolvedMixin):
     path: str
     isResolved: bool
     isOutdated: bool
     resolvedBy: str
     comments: List[ReviewComment]
+
+    @property
+    def resolved(self) -> bool:
+        return self.isResolved
 
     @classmethod
     def make(cls, comments: List[JSONDict], **kwargs: Any) -> ReviewThread:
@@ -314,30 +328,38 @@ class ReviewThread(CreatedPanelMixin):
                 highlight=False,
             ),
             highlight=False,
-            border_style="green" if self.isResolved else "yellow",
+            border_style=self.border_color,
             title=self.title,
         )
 
 
 @dataclass
-class Review(Content):
+class Review(Content, ResolvedMixin):
     id: str
     state: str
     threads: List[ReviewThread]
     comments: List[ReviewComment]
 
+    verbose: bool
+
+    @property
+    def resolved(self) -> bool:
+        return all(t.resolved for t in self.threads)
+
     @property
     def panel(self) -> Panel:
-        self.threads.sort(key=lambda t: t.isResolved)
         rows = []
         if self.body:
             rows.append(md_panel(self.body))
-        rows.extend(t.panel for t in self.threads)
+
+        if not self.resolved or self.verbose:
+            self.threads.sort(key=lambda t: t.isResolved)
+            rows.extend(t.panel for t in self.threads)
 
         return border_panel(
             list_table(rows),
             subtitle=self.state,
-            border_style=state_color(self.state),
+            border_style=self.border_color,
             title=self.title,
             box=box.HEAVY,
         )
@@ -346,12 +368,14 @@ class Review(Content):
     def status(self) -> str:
         resolved_count = sum(t.isResolved for t in self.threads)
         total_count = len(self.threads)
-        return (
-            b_green(" ⬤ " * resolved_count)
-            + b_red(" ◯ " * (total_count - resolved_count))
-            + " resolved"
-            if total_count
-            else ""
+        if not total_count:
+            return ""
+
+        if total_count == resolved_count:
+            return wrap("RESOLVED", state_color("RESOLVED"))
+
+        return b_green(" ⬤ " * resolved_count) + b_red(
+            " ◯ " * (total_count - resolved_count)
         )
 
     @property
@@ -383,6 +407,8 @@ class PullRequest:
     updatedAt: str
     url: str
 
+    verbose: bool
+
     @property
     def dates(self) -> tuple[str, str]:
         return self.createdAt, self.updatedAt
@@ -405,6 +431,7 @@ class PullRequestTable(PullRequest):
                 **r,
                 threads=threads_by_review_id.pop(r["id"], []),
                 comments=comments_by_review_id.pop(r["id"], []),
+                verbose=kwargs["verbose"],
             )
             for r in reviews
             if (r["id"] in threads_by_review_id or r["body"])
@@ -467,17 +494,16 @@ class PullRequestTable(PullRequest):
 
     @property
     def panels(self) -> Iterable[Panel]:
-        comments = sorted(self.timestamped_contents, key=lambda c: c.created)
-        for comment in comments:
-            yield comment.panel
+        for content in sorted(self.timestamped_contents, key=lambda c: c.created):
+            yield content.panel
 
 
 def pulls_table(
-    data: List[Mapping[str, Any]],
+    data: List[Mapping[str, Any]], **kwargs
 ) -> Iterable[Union[str, ConsoleRenderable]]:
     FIELDS_MAP.update(PR_FIELDS_MAP)
 
     pr = data[0]
-    pr_table = PullRequestTable.make(**pr)
+    pr_table = PullRequestTable.make(**pr, verbose=kwargs["verbose"])
     yield pr_table.info
     yield from pr_table.panels
