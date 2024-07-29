@@ -124,7 +124,13 @@ def counts_table(data: list[JSONDict]) -> Table:
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
     diff=lambda x: Text.from_markup(
-        pformat(diff(*x), indent=2, width=300).replace("'", "").replace("\\\\", "\\")
+        diff(*x)
+        if isinstance(x[0], str)
+        else (
+            pformat(diff(*x), indent=2, width=300)
+            .replace("'", "")
+            .replace("\\\\", "\\")
+        )
     ),
     albumtypes=lambda x: " ".join(
         map(

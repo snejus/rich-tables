@@ -7,7 +7,13 @@ from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from itertools import groupby, islice, starmap, zip_longest
 from math import copysign
-from string import ascii_uppercase, punctuation
+from string import (
+    ascii_letters,
+    ascii_lowercase,
+    ascii_uppercase,
+    punctuation,
+    whitespace,
+)
 from typing import (
     Any,
     Callable,
@@ -105,11 +111,12 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "".join((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase)),
+    junk: str = "".join(
+        sorted((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase))
+    ),
 ) -> str:
-    matcher = SequenceMatcher(
-        lambda x: x not in junk, autojunk=False, a=before, b=after
-    )
+    print(junk)
+    matcher = SequenceMatcher(lambda x: x in junk, autojunk=False, a=before, b=after)
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff += fmtdiff(code, before[a1:a2], after[b1:b2]) or ""

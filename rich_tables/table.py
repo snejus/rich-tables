@@ -58,7 +58,7 @@ console = make_console()
 install(console=console, show_locals=True, width=console.width)
 
 
-def lights_table(lights: List[JSONDict]) -> Table:
+def lights_table(lights: List[JSONDict], **__) -> Table:
     from rgbxy import Converter
 
     headers = lights[0].keys()
@@ -77,7 +77,7 @@ def lights_table(lights: List[JSONDict]) -> Table:
     yield table
 
 
-def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
+def calendar_table(events: List[JSONDict], **__) -> Iterable[ConsoleRenderable]:
     def get_start_end(start: datetime, end: datetime) -> Tuple[int, int]:
         if start.hour == end.hour == 0:
             return 0, 86400
@@ -181,7 +181,7 @@ def calendar_table(events: List[JSONDict]) -> Iterable[ConsoleRenderable]:
         yield border_panel(table, title=year_and_month)
 
 
-def tasks_table(tasks_by_group: Dict[str, JSONDict]) -> Iterator[Panel]:
+def tasks_table(tasks_by_group: Dict[str, JSONDict], **__) -> Iterator[Panel]:
     if not tasks_by_group:
         return
 
