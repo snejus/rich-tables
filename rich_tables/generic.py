@@ -238,7 +238,7 @@ def _dict_list(data: Iterable[JSONDict]) -> RenderableType:
 
     overlap = set(map(type, data[0].values())) & {int, float, str}
 
-    if len(overlap) >= 2 and any(MATCH_COUNT_HEADER.search(k) for k in keys):
+    if overlap and any(MATCH_COUNT_HEADER.search(k) for k in keys):
         return counts_table(data)
 
     def getval(value: Any, key: str) -> RenderableType:
