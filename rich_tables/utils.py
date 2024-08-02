@@ -115,8 +115,9 @@ def make_difftext(
         sorted((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase))
     ),
 ) -> str:
-    print(junk)
-    matcher = SequenceMatcher(lambda x: x in junk, autojunk=False, a=before, b=after)
+    matcher = SequenceMatcher(
+        lambda x: x not in junk, autojunk=False, a=before, b=after
+    )
     diff = ""
     for code, a1, a2, b1, b2 in matcher.get_opcodes():
         diff += fmtdiff(code, before[a1:a2], after[b1:b2]) or ""
