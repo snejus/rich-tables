@@ -66,14 +66,16 @@ if not log.handlers:
 def _debug(_func: Callable[..., T], *args) -> None:
     if log.isEnabledFor(10):
         global indent
-        types = f"\033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m"
-
         data, *header = (str(arg).split(r"\n")[0] for arg in args)
-        if header:
-            print(indent + f"Header: \033[1m{header[0] if header else ''}\033[0m")
-        elif data:
-            print(indent + f"Data: \033[1m{data}\033[0m")
-        print(indent + f"Function \033[1;31m{_func.__name__}\033[0m, types: {types}")
+        print(
+            indent
+            + " ".join([
+                f"Function \033[1;31m{_func.__name__}\033[0m",
+                f"Types: \033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m",
+                f"Header: \033[1;35m{header[0]}\033[0m " if header else "",
+                f"Data: \033[1m{data}\033[0m" if data else "",
+            ])
+        )
 
         indent += "│ "
 
@@ -115,7 +117,7 @@ def debug(func: Callable[..., T]) -> Callable[..., T]:
 
 @multidispatch
 @debug
-def flexitable(data: Any) -> RenderableType:
+def flexitable(data) -> RenderableType:
     return str(data)
 
 
@@ -155,7 +157,7 @@ def _str(data: str) -> RenderableType:
 
 @flexitable.register
 @debug
-def _json_dict(data: JSONDict) -> RenderableType:
+def _json_dict(data: dict) -> RenderableType:
     data = prepare_dict(data)
     table = mapping_view_table()
     cols: List[RenderableType] = []
@@ -223,7 +225,7 @@ def _int_list(data: Iterable[int]) -> Columns:
 
 @flexitable.register
 @debug
-def _dict_list(data: Iterable[JSONDict]) -> RenderableType:
+def _dict_list(data: Iterable[dict]) -> RenderableType:
     if len(data) == 1 and len(data[0]) > 10:
         return flexitable(data[0])
 
