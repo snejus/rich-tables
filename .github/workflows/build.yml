@@ -11,6 +11,9 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Need to read all commits in order to git describe project's version
+          fetch-depth: 0
 
       - name: Install poetry
         run: pip install poetry
