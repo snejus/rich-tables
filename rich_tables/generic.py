@@ -69,12 +69,14 @@ def _debug(_func: Callable[..., T], *args) -> None:
         data, *header = (str(arg).split(r"\n")[0] for arg in args)
         print(
             indent
-            + " ".join([
-                f"Function \033[1;31m{_func.__name__}\033[0m",
-                f"Types: \033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m",
-                f"Header: \033[1;35m{header[0]}\033[0m " if header else "",
-                f"Data: \033[1m{data}\033[0m" if data else "",
-            ])
+            + " ".join(
+                [
+                    f"Function \033[1;31m{_func.__name__}\033[0m",
+                    f"Types: \033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m",
+                    f"Header: \033[1;35m{header[0]}\033[0m " if header else "",
+                    f"Data: \033[1m{data}\033[0m" if data else "",
+                ]
+            )
         )
 
         indent += "│ "
