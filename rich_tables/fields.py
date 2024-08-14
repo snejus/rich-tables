@@ -191,7 +191,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
     ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
-    duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
+    duration=lambda x: duration2human(x) if isinstance(x, int | float) else x,
     plays=lambda x: wrap(x, BOLD_GREEN),
     skips=lambda x: wrap(x, BOLD_RED),
     new=lambda x: (
@@ -206,6 +206,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if name == "is blocked by"
         else name
     ),
+    code=lambda x: syntax(x, "python"),
     context=lambda x: syntax(x, "python"),
     python=lambda x: syntax(x, "python"),
     CreatedBy=lambda x: syntax(x.replace(";", "\n"), "sh"),
@@ -230,7 +231,6 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "catalognum",
         "categories",
         "Category",
-        "code",
         "data_source",
         "default_start_time",
         "default_end_time",
@@ -269,6 +269,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "table",
         "to",
         "tables",
+        "test",
         "type_name",
         "user",
     ),
