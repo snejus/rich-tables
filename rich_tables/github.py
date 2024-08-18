@@ -51,6 +51,7 @@ def b_red(text: str) -> str:
     """Make the text bold red."""
     return wrap(text, "b red")
 
+fm
 
 def fmt_add_del(added: int, deleted: int) -> List[str]:
     """Format added and deleted diff counts."""
@@ -221,7 +222,11 @@ class Comment(Content):
 
     @property
     def subtitle(self) -> str:
-        return " ".join(map(str, self.reactions)).replace(":laugh:", ":laughing:").replace(":hooray:", ":party_popper:")
+        return (
+            " ".join(map(str, self.reactions))
+            .replace(":laugh:", ":laughing:")
+            .replace(":hooray:", ":party_popper:")
+        )
 
 
 @dataclass

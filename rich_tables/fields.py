@@ -191,7 +191,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
     ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
-    duration=lambda x: duration2human(x) if isinstance(x, int | float) else x,
+    duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
     plays=lambda x: wrap(x, BOLD_GREEN),
     skips=lambda x: wrap(x, BOLD_RED),
     new=lambda x: (
