@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass
 from itertools import chain
 from typing import (
@@ -51,7 +52,6 @@ def b_red(text: str) -> str:
     """Make the text bold red."""
     return wrap(text, "b red")
 
-fm
 
 def fmt_add_del(added: int, deleted: int) -> List[str]:
     """Format added and deleted diff counts."""
@@ -60,8 +60,9 @@ def fmt_add_del(added: int, deleted: int) -> List[str]:
     return [b_green(additions.rjust(5)), b_red(deletions.rjust(3))]
 
 
-def state_color(state: str) -> str:
-    return {
+COLOR_BY_STATE = defaultdict(
+    lambda: "default",
+    {
         "True": "green",
         True: "green",
         "APPROVED": "green",
@@ -76,11 +77,12 @@ def state_color(state: str) -> str:
         "REVIEW_REQUIRED": "red",
         "DISMISSED": "gray42",
         "False": "red",
-    }.get(state, "default")
+    },
+)
 
 
 def fmt_state(state: str) -> str:
-    return wrap(state, f"b {state_color(state)}")
+    return wrap(state, f"b {COLOR_BY_STATE[state]}")
 
 
 def diff_panel(title: str, rows: List[List[str]]) -> Panel:
@@ -377,7 +379,7 @@ class Review(Content, ResolvedMixin):
             return ""
 
         if total_count == resolved_count:
-            return wrap("RESOLVED", state_color("RESOLVED"))
+            return wrap("RESOLVED", COLOR_BY_STATE["RESOLVED"])
 
         return b_green(" ⬤ " * resolved_count) + b_red(
             " ◯ " * (total_count - resolved_count)
@@ -473,7 +475,7 @@ class PullRequestTable(PullRequest):
             new_table(rows=[*field_rows, [md_panel(self.body)], [self.files_commits]]),
             title=f"{self.name} @ {self.repo}",
             box=box.DOUBLE_EDGE,
-            border_style=state_color(self.pr_state),
+            border_style=COLOR_BY_STATE[self.pr_state],
             subtitle=(
                 wrap(
                     " ".join([
