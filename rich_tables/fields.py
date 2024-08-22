@@ -127,7 +127,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         diff(*x)
         if isinstance(x[0], str)
         else (
-            pformat(diff(*x), indent=2, width=300, sort_dicts=False)
+            pformat(diff(*x), indent=2, width=3000, sort_dicts=False)
             .replace("'", "")
             .replace("\\\\", "\\")
         )
