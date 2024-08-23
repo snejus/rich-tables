@@ -185,7 +185,7 @@ def tasks_table(tasks_by_group: Dict[str, JSONDict], **__) -> Iterator[Panel]:
     if not tasks_by_group:
         return
 
-    SKIP_HEADERS = {
+    skip_headers = {
         "priority",
         "recur",
         "uuid",
@@ -207,9 +207,7 @@ def tasks_table(tasks_by_group: Dict[str, JSONDict], **__) -> Iterator[Panel]:
         "modified": human_dt,
         "created": human_dt,
         "start": human_dt,
-        "priority": lambda x: wrap(f"({wrap('!', 'red')})", "b") + " "
-        if x == "H"
-        else "",
+        "priority": lambda x: "[b]([red]![/])[/]" if x == "H" else "",
         "annotations": lambda ann: new_tree(
             (
                 wrap(human_dt(a["created"]), "b") + ": " + wrap(a["description"], "i")
@@ -228,10 +226,10 @@ def tasks_table(tasks_by_group: Dict[str, JSONDict], **__) -> Iterator[Panel]:
     all_headers = first_task.keys()
     initial_headers = ["id", "urgency", "created", "modified"]
     ordered_keys = dict.fromkeys([*initial_headers, *sorted(all_headers)]).keys()
-    valid_keys = [k for k in ordered_keys if k not in SKIP_HEADERS]
+    valid_keys = [k for k in ordered_keys if k not in skip_headers]
     keep_headers = keep_keys(valid_keys)
 
-    status_map = {
+    status_map: Dict[str, str] = {
         "completed": "b s black on green",
         "deleted": "s red",
         "pending": "white",
@@ -239,29 +237,27 @@ def tasks_table(tasks_by_group: Dict[str, JSONDict], **__) -> Iterator[Panel]:
         "recurring": "i magenta",
     }
 
-    desc_by_uuid = {}
     for task in tasks:
         desc = task["description"]
-        if task.get("recur") and task["status"] != "recurring":
-            task["status"] = "recurring"
-            desc += f" ({task})"
-        elif task.get("start"):
+        if task.get("start"):
             task["status"] = "started"
 
-        desc = get_val(task, "priority") + wrap(desc, status_map[task["status"]])
+        desc = wrap(desc, status_map[task["status"]])
+        if "priority" in task:
+            desc = f"{get_val(task, 'priority')} {desc}"
+
         desc = new_tree(title=desc, guide_style="white")
         task["description"] = desc
-        desc_by_uuid[task["uuid"]] = desc
+
+    desc_by_uuid = {task["uuid"]: task["description"] for task in tasks}
 
     for group, tasks in tasks_by_group.items():
         for task in tasks:
-            annotations = get_val(task, "annotations")
-            if annotations:
+            if annotations := get_val(task, "annotations"):
                 task["description"].add(annotations)
 
             dep_uuids = task.get("depends") or []
-            deps = list(filter(None, map(desc_by_uuid.get, dep_uuids)))
-            if deps:
+            if deps:= [d for uuid in dep_uuids if (d := desc_by_uuid.get(uuid))]:
                 task["description"].add(
                     new_tree(deps, guide_style="b red", hide_root=True)
                 )
