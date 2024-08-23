@@ -1,1 +1,44 @@
-{"before": {"description":"Process JSON diffs recursively","entry":"20230916T183549Z","modified":"20230916T210407Z","project":"rich-tables","start":"20230916T210407Z","status":"pending","uuid":"83071b90-7c90-4925-9aac-765abb5e0993","annotations":[{"entry":"20230916T210407Z","description":"Started"}]}, "after": {"description":"Process JSON diffs recursively","entry":"20230916T183549Z","modified":"20230916T210407Z","project":"rich-tables","status":"pending","uuid":"83071b90-7c90-4925-9aac-765abb5e0993","annotations":[{"entry":"20230916T210407Z","description":"Started"},{"entry":"20230916T210607Z","description":"Stopped"}]}}
+{
+  "before": {
+    "album": null,
+    "albumtype": "single",
+    "albumtypes": "single",
+    "artist": "Matriark",
+    "catalognum": "mt004",
+    "comments": "mt004\n\nmastering by alexander salomonsen\n\n\nI'm very happy to announce Andrea's debut track. <3",
+    "composer": "",
+    "composer_sort": null,
+    "country": "SE",
+    "data_source": "bandcamp",
+    "day": 9,
+    "label": "Megatech Industries",
+    "length": 421,
+    "media": "Vinyl",
+    "month": 11,
+    "release_track_id": null,
+    "style": null,
+    "title": "Arangel",
+    "year": 2020
+  },
+  "after": {
+    "album": "",
+    "albumtype": "single",
+    "albumtypes": "single; album",
+    "arranger": null,
+    "artist": "Matriark",
+    "catalognum": "mt004",
+    "comments": "mt004\n\nmastering by alexander salomonsen\n\n\nI'm very very happy to announce Andrea's debut track. <3",
+    "composer": null,
+    "country": "SE",
+    "data_source": "bandcamp",
+    "day": 9,
+    "label": "Megatech Industries",
+    "length": 451,
+    "media": "Digital Media",
+    "month": 11,
+    "release_track_id": null,
+    "style": null,
+    "title": "Arangel",
+    "year": 2020
+  }
+}

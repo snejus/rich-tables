@@ -5,7 +5,6 @@ from collections import defaultdict
 from datetime import datetime
 from functools import singledispatch
 from itertools import islice
-from pprint import pformat
 from typing import TYPE_CHECKING, Any, Callable, Iterable, MutableMapping
 
 from rich.text import Text
@@ -15,7 +14,7 @@ from .utils import (
     BOLD_RED,
     JSONDict,
     border_panel,
-    diff,
+    pretty_diff,
     duration2human,
     fmt_time,
     format_string,
@@ -123,15 +122,7 @@ def counts_table(data: list[JSONDict]) -> Table:
 
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
-    diff=lambda x: Text.from_markup(
-        diff(*x)
-        if isinstance(x[0], str)
-        else (
-            pformat(diff(*x), indent=2, width=3000, sort_dicts=False)
-            .replace("'", "")
-            .replace("\\\\", "\\")
-        )
-    ),
+    diff=lambda x: pretty_diff(*x),
     albumtypes=lambda x: " ".join(
         map(
             format_with_color,

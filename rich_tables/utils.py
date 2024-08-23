@@ -6,6 +6,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from itertools import groupby, islice, starmap, zip_longest
+from pprint import pformat
 from math import copysign
 from string import (
     ascii_letters,
@@ -34,6 +35,7 @@ import platformdirs
 import sqlparse
 from multimethod import multimethod
 from rich import box
+from rich.text import Text
 from rich.align import Align
 from rich.bar import Bar
 from rich.console import Console, RenderableType
@@ -414,6 +416,10 @@ def sql_syntax(sql_string: str) -> Syntax:
     )
 
 
+def diff_serialize(value: Any) -> str:
+    return {None: "null", "": '""'}.get(value, str(value))
+
+
 @multimethod
 def diff(before: str, after: str) -> Any:
     return make_difftext(before, after)
@@ -421,9 +427,7 @@ def diff(before: str, after: str) -> Any:
 
 @diff.register
 def _(before: Any, after: Any) -> Any:
-    return diff(
-        str("" if before is None else before), str("" if after is None else after)
-    )
+    return diff(diff_serialize(before), diff_serialize(after))
 
 
 @diff.register
@@ -453,10 +457,22 @@ def _(before: dict, after: dict) -> Any:
     keys = sorted(before.keys() | after.keys())
     for key in keys:
         if key not in before:
-            data[wrap(key, BOLD_GREEN)] = wrap(after[key], BOLD_GREEN)
+            data[wrap(key, BOLD_GREEN)] = wrap(diff_serialize(after[key]), BOLD_GREEN)
         elif key not in after:
-            data[wrap(key, BOLD_RED)] = wrap(before[key], BOLD_RED)
+            data[wrap(key, BOLD_RED)] = wrap(diff_serialize(before[key]), BOLD_RED)
         else:
-            data[key] = diff(before.get(key), after.get(key))
+            data[key] = diff(before[key], after[key])
 
     return data
+
+
+def pretty_diff(before: Any, after: Any) -> Text:
+    result = diff(before, after)
+    if not isinstance(result, str):
+        result = (
+            pformat(result, indent=2, width=300, sort_dicts=False)
+            .replace("'", "")
+            .replace("\\\\", "\\")
+        )
+
+    return Text.from_markup(result)
