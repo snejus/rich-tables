@@ -14,7 +14,6 @@ from .utils import (
     BOLD_RED,
     JSONDict,
     border_panel,
-    pretty_diff,
     duration2human,
     fmt_time,
     format_string,
@@ -24,6 +23,7 @@ from .utils import (
     human_dt,
     md_panel,
     new_table,
+    pretty_diff,
     progress_bar,
     simple_panel,
     split_with_color,
@@ -39,35 +39,6 @@ if TYPE_CHECKING:
 
 
 MATCH_COUNT_HEADER = re.compile(r"duration|(_sum$|_?count$)")
-
-
-# def progress_bar(
-#     size: float, width: float, end: float | None = None, inverse: bool = False
-# ) -> Bar:
-#     if end is None:
-#         end = size
-#         size = width
-#         bgcolor = "black"
-#     else:
-#         bgcolor = "#252c3a"
-#     ratio = end / size if size else 1
-#     if inverse:
-#         ratio = 1 - ratio
-
-#     random.seed(str(width))
-
-#     def norm() -> int:
-#         return round(_randint() * ratio)
-
-#     color = f"#{norm():0>2X}{norm():0>2X}{norm():0>2X}"
-#     return Bar(
-#         size=size, begin=0, width=int(width), end=end, color=color, bgcolor=bgcolor
-#     )
-
-
-# @dataclass
-# class CountsTable:
-#     pass
 
 
 def counts_table(data: list[JSONDict]) -> Table:

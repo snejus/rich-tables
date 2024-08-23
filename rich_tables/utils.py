@@ -6,15 +6,9 @@ import time
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from itertools import groupby, islice, starmap, zip_longest
-from pprint import pformat
 from math import copysign
-from string import (
-    ascii_letters,
-    ascii_lowercase,
-    ascii_uppercase,
-    punctuation,
-    whitespace,
-)
+from pprint import pformat
+from string import ascii_uppercase, punctuation
 from typing import (
     Any,
     Callable,
@@ -35,7 +29,6 @@ import platformdirs
 import sqlparse
 from multimethod import multimethod
 from rich import box
-from rich.text import Text
 from rich.align import Align
 from rich.bar import Bar
 from rich.console import Console, RenderableType
@@ -43,6 +36,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
+from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
 

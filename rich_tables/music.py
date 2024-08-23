@@ -3,7 +3,7 @@ from __future__ import annotations
 import operator as op
 from collections import defaultdict
 from functools import lru_cache, partial
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Tuple, TypeVar
 
 from rich import box
 from rich.align import Align
@@ -78,18 +78,21 @@ def tracks_table(tracks: List[JSONDict], fields: List[str], color: str) -> NewTa
     )
 
 
+T = TypeVar("T")
+
+
 def album_stats(tracks: List[JSONDict]) -> JSONDict:
-    def agg(field: str, default: int = 0) -> Iterable[int]:
+    def agg(field: str, default: T) -> Iterable[T]:
         return ((x.get(field) or default) for x in tracks)
 
     stats: JSONDict = dict(
-        bpm=round(sum(agg("bpm")) / len(tracks)),
-        rating=round(sum(agg("rating")) / len(tracks), 2),
-        plays=sum(agg("plays")),
-        skips=sum(agg("skips")),
-        mtime=max(agg("mtime")),
-        last_played=max(agg("last_played")),
-        tracktotal=(str(len(tracks)), str(tracks[0].get("tracktotal")) or str(0)),
+        bpm=round(sum(agg("bpm", 0)) / len(tracks)),
+        rating=round(sum(agg("rating", 0)) / len(tracks), 2),
+        plays=sum(agg("plays", 0)),
+        skips=sum(agg("skips", 0)),
+        mtime=max(agg("mtime", 0)),
+        last_played=max(agg("last_played", 0)),
+        tracktotal=(str(len(tracks)), str(tracks[0].get("tracktotal")) or "0"),
         comments="\n---\n---\n".join(set(agg("comments", ""))),
     )
     return stats
