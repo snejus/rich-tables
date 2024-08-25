@@ -18,11 +18,12 @@ from typing import (
     Union,
 )
 
-from funcy import curry, join
 from rich.bar import Bar
 from rich.columns import Columns
 from rich.traceback import install
+from typing_extensions import TypedDict
 
+from . import task
 from .fields import FIELDS_MAP, get_val
 from .generic import flexitable
 from .github import pulls_table
@@ -30,28 +31,19 @@ from .music import albums_table
 from .utils import (
     border_panel,
     format_string,
-    format_with_color,
     group_by,
-    human_dt,
     make_console,
     md_panel,
     new_table,
-    new_tree,
     predictably_random_color,
     wrap,
 )
 
 if TYPE_CHECKING:
-    from rich.console import ConsoleRenderable
-    from rich.panel import Panel
+    from rich.console import RenderableType
     from rich.table import Table
 
 JSONDict = Dict[str, Any]
-
-
-@curry
-def keep_keys(keys: Iterable[str], item: JSONDict) -> JSONDict:
-    return dict(zip(keys, map(item.get, keys)))
 
 
 console = make_console()
@@ -77,7 +69,7 @@ def lights_table(lights: List[JSONDict], **__) -> Table:
     yield table
 
 
-def calendar_table(events: List[JSONDict], **__) -> Iterable[ConsoleRenderable]:
+def calendar_table(events: List[JSONDict], **__) -> Iterable[RenderableType]:
     def get_start_end(start: datetime, end: datetime) -> Tuple[int, int]:
         if start.hour == end.hour == 0:
             return 0, 86400
@@ -181,112 +173,22 @@ def calendar_table(events: List[JSONDict], **__) -> Iterable[ConsoleRenderable]:
         yield border_panel(table, title=year_and_month)
 
 
-def tasks_table(tasks_by_group: Dict[str, JSONDict], **__) -> Iterator[Panel]:
-    if not tasks_by_group:
-        return
-
-    skip_headers = {
-        "priority",
-        "recur",
-        "uuid",
-        "reviewed",
-        "modified",
-        "annotations",
-        "depends",
-    }
-    fields_map: JSONDict = {
-        "id": str,
-        "uuid": str,
-        "urgency": lambda x: str(round(float(x), 1)),
-        "description": lambda x: x,
-        "due": human_dt,
-        "end": human_dt,
-        "sched": human_dt,
-        "tags": format_with_color,
-        "project": format_with_color,
-        "modified": human_dt,
-        "created": human_dt,
-        "start": human_dt,
-        "priority": lambda x: "[b]([red]![/])[/]" if x == "H" else "",
-        "annotations": lambda ann: new_tree(
-            (
-                wrap(human_dt(a["created"]), "b") + ": " + wrap(a["description"], "i")
-                for a in ann
-            ),
-            "Annotations",
-        )
-        if ann
-        else None,
-    }
-    FIELDS_MAP.update(fields_map)
-
-    tasks = join(tasks_by_group.values())
-    first_task = tasks[0]
-
-    all_headers = first_task.keys()
-    initial_headers = ["id", "urgency", "created", "modified"]
-    ordered_keys = dict.fromkeys([*initial_headers, *sorted(all_headers)]).keys()
-    valid_keys = [k for k in ordered_keys if k not in skip_headers]
-    keep_headers = keep_keys(valid_keys)
-
-    status_map: Dict[str, str] = {
-        "completed": "b s black on green",
-        "deleted": "s red",
-        "pending": "white",
-        "started": "b green",
-        "recurring": "i magenta",
-    }
-
-    for task in tasks:
-        desc = task["description"]
-        if task.get("start"):
-            task["status"] = "started"
-
-        desc = wrap(desc, status_map[task["status"]])
-        if "priority" in task:
-            desc = f"{get_val(task, 'priority')} {desc}"
-
-        desc = new_tree(title=desc, guide_style="white")
-        task["description"] = desc
-
-    desc_by_uuid = {task["uuid"]: task["description"] for task in tasks}
-
-    for group, tasks in tasks_by_group.items():
-        for task in tasks:
-            if annotations := get_val(task, "annotations"):
-                task["description"].add(annotations)
-
-            dep_uuids = task.get("depends") or []
-            if deps:= [d for uuid in dep_uuids if (d := desc_by_uuid.get(uuid))]:
-                task["description"].add(
-                    new_tree(deps, guide_style="b red", hide_root=True)
-                )
-
-        yield border_panel(
-            flexitable(list(map(keep_headers, tasks))),
-            title=wrap(group, "b"),
-            style=predictably_random_color(group),
-        )
-
-
-def load_data() -> Any:
+def load_data() -> JSONDict | None:
+    """Load JSON data from the stdin."""
     if sys.stdin.isatty():
         return None
 
     text = sys.stdin.read()
     try:
-        data = json.loads(text)
+        data: JSONDict = json.loads(text)
         assert data
     except json.JSONDecodeError:
         console.print(format_string(text))
         sys.exit(0)
-        # msg = "Broken JSON"
     except AssertionError:
         sys.exit(0)
     else:
         return data
-    console.log(wrap(msg, "b red"), log_locals=True)
-    sys.exit(1)
 
 
 @singledispatch
@@ -301,28 +203,31 @@ def get_args() -> JSONDict:
     return vars(parser.parse_args())
 
 
+class NamedData(TypedDict):
+    title: str
+    values: List[JSONDict]
+
+
+TABLE_BY_NAME: Dict[str, Callable[..., Any]] = {
+    "Pull Requests": pulls_table,
+    "Hue lights": lights_table,
+    "Calendar": calendar_table,
+    "Album": albums_table,
+    "Tasks": task.get_table,
+}
+
+
 @draw_data.register(dict)
-def _draw_data_dict(data: JSONDict) -> Iterator[ConsoleRenderable]:
-    if "values" in data and "title" in data:
-        values, title = data.pop("values", None), data.pop("title", None)
-        calls: Dict[str, Callable[List[JSONDict], Iterator[ConsoleRenderable]]] = {
-            "Pull Requests": pulls_table,
-            "Hue lights": lights_table,
-            "Calendar": calendar_table,
-            "Album": albums_table,
-            "Tasks": tasks_table,
-        }
-        table_func = calls.get(title)
-        if table_func:
-            yield from table_func(values, **data, **get_args())
-        else:
-            yield flexitable(values)
+def _draw_data_dict(data: JSONDict | NamedData) -> Iterator[RenderableType]:
+    if (title := data.get("title")) and (values := data.get("values")):
+        table = TABLE_BY_NAME.get(title, flexitable)
+        yield from table(values, **get_args())
     else:
         yield flexitable(data)
 
 
 @draw_data.register(list)
-def _draw_data_list(data: List[JSONDict]) -> Iterator[ConsoleRenderable]:
+def _draw_data_list(data: List[JSONDict]) -> Iterator[RenderableType]:
     yield flexitable(data)
 
 
