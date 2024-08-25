@@ -3,20 +3,11 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from contextlib import suppress
+import tempfile
 from datetime import datetime, timedelta
 from functools import singledispatch
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Tuple,
-    Union,
-)
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Iterator, List, Tuple
 
 from rich.bar import Bar
 from rich.columns import Columns
@@ -24,18 +15,17 @@ from rich.traceback import install
 from typing_extensions import TypedDict
 
 from . import task
-from .fields import FIELDS_MAP, get_val
+from .fields import get_val
 from .generic import flexitable
 from .github import pulls_table
 from .music import albums_table
 from .utils import (
     border_panel,
-    format_string,
     group_by,
     make_console,
-    md_panel,
     new_table,
     predictably_random_color,
+    pretty_diff,
     wrap,
 )
 
@@ -50,7 +40,7 @@ console = make_console()
 install(console=console, show_locals=True, width=console.width)
 
 
-def lights_table(lights: List[JSONDict], **__) -> Table:
+def lights_table(lights: List[JSONDict], **__) -> Iterator[Table]:
     from rgbxy import Converter
 
     headers = lights[0].keys()
@@ -173,39 +163,54 @@ def calendar_table(events: List[JSONDict], **__) -> Iterable[RenderableType]:
         yield border_panel(table, title=year_and_month)
 
 
-def load_data() -> JSONDict | None:
-    """Load JSON data from the stdin."""
-    if sys.stdin.isatty():
-        return None
+def load_data(filepath: str) -> list[JSONDict] | JSONDict | str:
+    """Load data from the given file.
 
-    text = sys.stdin.read()
-    try:
-        data: JSONDict = json.loads(text)
-        assert data
-    except json.JSONDecodeError:
-        console.print(format_string(text))
-        sys.exit(0)
-    except AssertionError:
-        sys.exit(0)
+    Try to load the data as JSON, otherwise return the text as is.
+    """
+    if filepath == "/dev/stdin":
+        text = sys.stdin.read()
     else:
-        return data
+        path = Path(filepath)
+        text = path.read_text() if path.exists() and path.is_file() else filepath
+
+    try:
+        json_data: JSONDict | list[JSONDict] = json.loads(text)
+    except json.JSONDecodeError:
+        return text
+    else:
+        return json_data
 
 
-@singledispatch
-def draw_data(data: Union[JSONDict, List[JSONDict]]) -> Any:
-    return None
-
-
-def get_args() -> JSONDict:
-    parser = argparse.ArgumentParser()
+def get_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="""Pretty-print JSON data.
+By default, read JSON data from stdin and prettify it.
+Otherwise, use command 'diff' to compare two JSON objects or blocks of text.""",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     parser.add_argument("-v", "--verbose", action="store_true")
-    parser.add_argument("args", nargs="*", default=[])
-    return vars(parser.parse_args())
+    parser.add_argument("-j", "--json", action="store_true", help="output as JSON")
+    parser.add_argument(
+        "-s", "--save", action="store_true", help="save the output as HTML"
+    )
+
+    subparsers = parser.add_subparsers(
+        dest="command", title="Subcommands", required=False
+    )
+    diff_parser = subparsers.add_parser("diff", help="show diff between two objects")
+    diff_parser.add_argument(
+        "before", type=load_data, help="JSON object or text before, can be a filename"
+    )
+    diff_parser.add_argument(
+        "after", type=load_data, help="JSON object or text after, can be a filename"
+    )
+    return parser.parse_args()
 
 
 class NamedData(TypedDict):
     title: str
-    values: List[JSONDict]
+    values: list[JSONDict]
 
 
 TABLE_BY_NAME: Dict[str, Callable[..., Any]] = {
@@ -217,46 +222,43 @@ TABLE_BY_NAME: Dict[str, Callable[..., Any]] = {
 }
 
 
+@singledispatch
+def draw_data(data: Any, **kwargs) -> Iterator[RenderableType]:
+    """Render the provided data."""
+    yield data
+
+
 @draw_data.register(dict)
-def _draw_data_dict(data: JSONDict | NamedData) -> Iterator[RenderableType]:
+def _draw_data_dict(data: JSONDict | NamedData, **kwargs) -> Iterator[RenderableType]:
     if (title := data.get("title")) and (values := data.get("values")):
         table = TABLE_BY_NAME.get(title, flexitable)
-        yield from table(values, **get_args())
+        yield from table(values, **kwargs)
     else:
         yield flexitable(data)
 
 
 @draw_data.register(list)
-def _draw_data_list(data: List[JSONDict]) -> Iterator[RenderableType]:
+def _draw_data_list(data: list[JSONDict], **kwargs) -> Iterator[RenderableType]:
     yield flexitable(data)
 
 
 def main() -> None:
-    args = []
-    if len(sys.argv) > 1:
-        args.extend(sys.argv[1:])
-
-    if args and args[0] == "diff":
-        arguments = args[1:]
-        with suppress(json.JSONDecodeError):
-            arguments = list(map(json.loads, arguments))
-
-        console.print(FIELDS_MAP["diff"](arguments), highlight=False)
-    elif args and args[0] == "md":
-        console.print(md_panel(sys.stdin.read().replace(r"\x00", "")))
+    args = get_args()
+    if args.command == "diff":
+        console.print(pretty_diff(args.before, args.after))
     else:
-        if "-s" in set(args):
-            console.record = True
-
-        data = load_data()
-        if "-j" in args:
+        data = load_data("/dev/stdin")
+        if args.json:
             console.print_json(data=data)
         else:
-            for ret in draw_data(data):
-                console.print(ret)
+            console.record = True
+            for renderable in filter(None, draw_data(data, verbose=args.verbose)):
+                console.print(renderable)
 
-        if "-s" in set(args):
-            console.save_html("saved.html")
+    if args.save:
+        filename = tempfile.NamedTemporaryFile(suffix=".html", delete=False).name
+        console.save_html(filename)
+        print(f"Saved output as {filename}", file=sys.stderr)
 
 
 if __name__ == "__main__":
