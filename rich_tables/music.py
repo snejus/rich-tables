@@ -151,6 +151,7 @@ def album_info_table(album: JSONDict) -> Table:
 
 def album_panel(tracks: List[JSONDict]) -> Panel:
     album = album_info(tracks)
+    url = album.pop("url")
 
     # ignore the artist field if there is only one found
     track_fields = [
@@ -183,6 +184,7 @@ def album_panel(tracks: List[JSONDict]) -> Panel:
         ),
         box=box.DOUBLE_EDGE,
         style=album["albumartist_color"],
+        subtitle=f"[b white]{url}",
     )
 
 
