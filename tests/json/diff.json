@@ -2,7 +2,7 @@
   "before": {
     "album": null,
     "albumtype": "single",
-    "albumtypes": "single",
+    "albumtypes": ["single", "album"],
     "artist": "Matriark",
     "catalognum": "mt004",
     "comments": "mt004\n\nmastering by alexander salomonsen\n\n\nI'm very happy to announce Andrea's debut track. <3",
@@ -23,7 +23,7 @@
   "after": {
     "album": "",
     "albumtype": "single",
-    "albumtypes": "single; album",
+    "albumtypes": "album",
     "arranger": null,
     "artist": "Matriark",
     "catalognum": "mt004",

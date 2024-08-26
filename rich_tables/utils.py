@@ -411,7 +411,11 @@ def sql_syntax(sql_string: str) -> Syntax:
 
 
 def diff_serialize(value: Any) -> str:
-    return {None: "null", "": '""'}.get(value, str(value))
+    if value is None:
+        return "null"
+    if value == "":
+        return '""'
+    return str(value)
 
 
 @multimethod
