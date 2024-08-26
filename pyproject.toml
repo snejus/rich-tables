@@ -10,23 +10,22 @@ repository = "https://github.com/snejus/rich-tables"
 
 keywords = ["json", "pretty", "rich", "console", "terminal"]
 classifiers = [
-    "Development Status :: 1 - Planning",
-    "Environment :: Console",
-    "Intended Audience :: End Users/Desktop",
-    "Intended Audience :: System Administrators",
-    "Operating System :: OS Independent",
-    "Topic :: Utilities",
+  "Development Status :: 1 - Planning",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "Intended Audience :: System Administrators",
+  "Operating System :: OS Independent",
+  "Topic :: Utilities",
 ]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4"
 
-rich = ">=12.3.0"
-multimethod = "*"
-
 funcy = ">=2.0"
-platformdirs = ">=4.2.0"
+multimethod = "*"
 rgbxy = ">=0.5"
+platformdirs = ">=4.2.0"
+rich = ">=12.3.0"
 sqlparse = ">=0.4.4"
 typing-extensions = ">=4.7.1"
 
@@ -44,7 +43,7 @@ freezegun = ">=1.2.1"
 types-six = ">=1.16.2"
 types-freezegun = ">=1.1.9"
 coveralls = ">=3.3.1"
-snoop = "^0.4.3"
+snoop = ">=0.4.3"
 
 [tool.poetry.extras]
 hue = ["rgbxy"]
