@@ -151,7 +151,7 @@ def album_info_table(album: JSONDict) -> Table:
 
 def album_panel(tracks: List[JSONDict]) -> Panel:
     album = album_info(tracks)
-    url = album.pop("url")
+    url = album.pop("url", "")
 
     # ignore the artist field if there is only one found
     track_fields = [
