@@ -5,7 +5,7 @@ import logging
 import os
 from datetime import datetime
 from functools import partial, wraps
-from typing import Any, Callable, Dict, Iterable, List, TypeVar, Union
+from typing import Any, Callable, Dict, List, Sequence, TypeVar, Union
 
 from multimethod import multidispatch
 from rich import box
@@ -39,6 +39,7 @@ console = make_console()
 indent = ""
 
 MAX_DICT_LENGTH = int(os.getenv("TABLE_MAX_DICT_LENGTH") or 500)
+MAX_DICT_KEYS = int(os.getenv("TABLE_MAX_DICT_KEYS") or 10)
 
 
 def time_fmt(current: datetime) -> Text:
@@ -69,14 +70,12 @@ def _debug(_func: Callable[..., T], *args) -> None:
         data, *header = (str(arg).split(r"\n")[0] for arg in args)
         print(
             indent
-            + " ".join(
-                [
-                    f"Function \033[1;31m{_func.__name__}\033[0m",
-                    f"Types: \033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m",
-                    f"Header: \033[1;35m{header[0]}\033[0m " if header else "",
-                    f"Data: \033[1m{data}\033[0m" if data else "",
-                ]
-            )
+            + " ".join([
+                f"Function \033[1;31m{_func.__name__}\033[0m",
+                f"Types: \033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m",
+                f"Header: \033[1;35m{header[0]}\033[0m " if header else "",
+                f"Data: \033[1m{data}\033[0m" if data else "",
+            ])
         )
 
         indent += "│ "
@@ -90,7 +89,8 @@ def _undebug(_type: type, *args: Any) -> None:
 
 
 def mapping_view_table() -> NewTable:
-    """A table with two columns
+    """Return a table with two columns.
+
     * First for bold field names
     * Second one for values.
     """
@@ -133,7 +133,7 @@ def _header(data: Any, header: str) -> RenderableType:
         return flexitable(data)
 
     out = _get_val(data, header)
-    if not isinstance(out, str) and type(out) == type(data):
+    if not isinstance(out, str) and isinstance(out, type(data)):
         return flexitable(out)
 
     return out
@@ -159,7 +159,7 @@ def _str(data: str) -> RenderableType:
 
 @flexitable.register
 @debug
-def _json_dict(data: dict) -> RenderableType:
+def _json_dict(data: JSONDict) -> RenderableType:
     data = prepare_dict(data)
     table = mapping_view_table()
     cols: List[RenderableType] = []
@@ -168,7 +168,6 @@ def _json_dict(data: dict) -> RenderableType:
             continue
 
         value = flexitable(content, key)
-        # print(f"{key=}, {value=}")
         if isinstance(value, (NewTable, Text, dict, Columns)):
             cols.append(border_panel(value, title=key))
         elif isinstance(value, ConsoleRenderable) and hasattr(value, "title"):
@@ -209,26 +208,26 @@ simple_head_table = partial(
 
 @flexitable.register
 @debug
-def _list(data: List) -> RenderableType:
+def _list(data: list) -> RenderableType:
     return flexitable(tuple(data))
 
 
 @flexitable.register
 @debug
-def _str_list(data: Iterable[Any]) -> RenderableType:
+def _str_list(data: Sequence[str]) -> RenderableType:
     return format_with_color(data)
 
 
 @flexitable.register
 @debug
-def _int_list(data: Iterable[int]) -> Columns:
+def _int_list(data: Sequence[int]) -> Columns:
     return Columns(str(x) for x in data)
 
 
 @flexitable.register
 @debug
-def _dict_list(data: Iterable[dict]) -> RenderableType:
-    if len(data) == 1 and len(data[0]) > 10:
+def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
+    if len(data) == 1 and len(data[0]) > MAX_DICT_KEYS:
         return flexitable(data[0])
 
     data = [prepare_dict(item) for item in data if item]

@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 
 
 MATCH_COUNT_HEADER = re.compile(r"duration|(_sum$|_?count$)")
+MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 230))
 
 
 def counts_table(data: list[JSONDict]) -> Table:
@@ -122,18 +123,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         " ".join(islice(fmt_time(int(float(x))), 1)), BOLD_GREEN
     ),
     bpm=lambda x: (
-        wrap(
-            str(x),
-            (
-                BOLD_GREEN
-                if x < 135
-                else BOLD_RED
-                if x > 230
-                else "red"
-                if x > 165
-                else "yellow"
-            ),
-        )
+        wrap(str(x), next(c for c, m in MAX_BPM_COLOR if x < m))
         if isinstance(x, int)
         else x
     ),
@@ -283,7 +273,7 @@ DISPLAY_HEADER: dict[str, str] = {
 }
 
 
-def _get_val(value: Any, field: str) -> Any:
+def _get_val(value: Any, field: str) -> RenderableType:
     if value is None:
         return "None"
 
