@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 
 MATCH_COUNT_HEADER = re.compile(r"duration|(_sum$|_?count$)")
-MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 230))
+MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
 
 
 def counts_table(data: list[JSONDict]) -> Table:
