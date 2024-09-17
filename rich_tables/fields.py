@@ -266,7 +266,7 @@ DISPLAY_HEADER: dict[str, str] = {
     "helicopta": ":helicopter: ",
     "hidden": ":no_entry: ",
     "track_alt": ":cd: ",
-    # "catalognum": ":pen: ",
+    "catalognum": ":pen: ",
     "plays": wrap(":play_button: ", BOLD_GREEN),
     "skips": wrap(":stop_button: ", BOLD_RED),
     "albumtypes": "types",
