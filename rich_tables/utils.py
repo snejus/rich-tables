@@ -114,10 +114,10 @@ def make_difftext(
     matcher = SequenceMatcher(
         lambda x: x not in junk, autojunk=False, a=before, b=after
     )
-    diff = ""
-    for code, a1, a2, b1, b2 in matcher.get_opcodes():
-        diff += fmtdiff(code, before[a1:a2], after[b1:b2]) or ""
-    return diff
+    return "".join(
+        fmtdiff(code, before[a1:a2], after[b1:b2]) or ""
+        for code, a1, a2, b1, b2 in matcher.get_opcodes()
+    )
 
 
 def duration2human(duration: SupportsFloat) -> str:
@@ -143,9 +143,7 @@ def fmt_time(seconds: int) -> Iterable[str]:
 
 def get_theme() -> Optional[Theme]:
     config_path = platformdirs.user_config_path("rich") / "config.ini"
-    if config_path.exists():
-        return Theme.read(str(config_path))
-    return None
+    return Theme.read(str(config_path)) if config_path.exists() else None
 
 
 def make_console(**kwargs: Any) -> Console:
@@ -251,7 +249,7 @@ def format_with_color(items: str | Sequence[str]) -> str:
 
 
 def format_with_color_on_black(items: Union[str, Iterable[str]]) -> str:
-    if not (isinstance(items, Iterable) and not isinstance(items, str)):
+    if not isinstance(items, Iterable) or isinstance(items, str):
         items = sorted(SPLIT_PAT.split(str(items)))
 
     sep = wrap("a", "#000000 on #000000")
@@ -298,8 +296,10 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
 
 
 def new_tree(
-    values: Iterable[RenderableType] = [], title: str = "", **kwargs: Any
+    values: Iterable[RenderableType] = None, title: str = "", **kwargs: Any
 ) -> Tree:
+    if values is None:
+        values = []
     color = predictably_random_color(title or str(values))
     default: JSONDict = {"guide_style": color, "highlight": True}
     tree = Tree(title, **{**default, **kwargs})
@@ -381,7 +381,7 @@ def diff_dt(timestamp: Union[int, str, float], acc: int = 2) -> str:
 
     strtime = datetime.strftime("%F" if abs(diff) > SECONDS_PER_DAY else "%T")
 
-    return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN) + " " + strtime
+    return f"{wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN)} {strtime}"
 
 
 def syntax(*args: Any, **kwargs: Any) -> Syntax:
@@ -390,7 +390,7 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
         "background_color": "black",
         "word_wrap": True,
     }
-    return Syntax(*args, **{**default, **kwargs})
+    return Syntax(*args, **default | kwargs)
 
 
 def sql_syntax(sql_string: str) -> Syntax:
@@ -413,9 +413,7 @@ def sql_syntax(sql_string: str) -> Syntax:
 def diff_serialize(value: Any) -> str:
     if value is None:
         return "null"
-    if value == "":
-        return '""'
-    return str(value)
+    return '""' if value == "" else str(value)
 
 
 @multimethod

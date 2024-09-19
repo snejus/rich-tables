@@ -374,16 +374,15 @@ class Review(Content, ResolvedMixin):
     @property
     def status(self) -> str:
         resolved_count = sum(t.isResolved for t in self.threads)
-        total_count = len(self.threads)
-        if not total_count:
+        if total_count := len(self.threads):
+            return (
+                wrap("RESOLVED", COLOR_BY_STATE["RESOLVED"])
+                if total_count == resolved_count
+                else b_green(" ⬤ " * resolved_count)
+                + b_red(" ◯ " * (total_count - resolved_count))
+            )
+        else:
             return ""
-
-        if total_count == resolved_count:
-            return wrap("RESOLVED", COLOR_BY_STATE["RESOLVED"])
-
-        return b_green(" ⬤ " * resolved_count) + b_red(
-            " ◯ " * (total_count - resolved_count)
-        )
 
     @property
     def title(self) -> str:

@@ -57,7 +57,7 @@ def load_data(filepath: str) -> list[JSONDict] | JSONDict | str:
         text = sys.stdin.read()
     else:
         path = Path(filepath)
-        text = path.read_text() if path.exists() and path.is_file() else filepath
+        text = path.read_text() if path.is_file() else filepath
 
     try:
         json_data: JSONDict | list[JSONDict] = json.loads(text)

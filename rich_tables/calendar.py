@@ -181,7 +181,7 @@ def get_months(events: list[Event]) -> Iterable[RenderableType]:
                 values = get_values(period)
                 if "Week " in period.summary:
                     table.add_row("")
-                    table.add_row(*values, style=period.color + " on grey7")
+                    table.add_row(*values, style=f"{period.color} on grey7")
                 else:
                     table.add_row(*values)
             table.add_row("")

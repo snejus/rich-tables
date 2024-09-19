@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import datetime
 from functools import singledispatch
 from itertools import islice
+from numbers import Number
 from typing import TYPE_CHECKING, Any, Callable, Iterable, MutableMapping
 
 from rich.text import Text
@@ -87,7 +88,7 @@ def counts_table(data: list[JSONDict]) -> Table:
             progress_bar(end=subcount, width=max_value, size=count, inverse=inverse),
         )
     if count_header in {"duration", "total_duration"}:
-        table.caption = "Total " + duration2human(float(sum(all_counts)))
+        table.caption = f"Total {duration2human(float(sum(all_counts)))}"
         table.caption_justify = "left"
     return table
 
@@ -135,8 +136,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     ),
     category=lambda x: "/".join(map(format_with_color, x.split("/"))),
     country=get_country,
-    helicopta=lambda x: ":fire: " if x and int(x) else "",
-    hidden=lambda x: ":shit: " if x and int(x) else "",
+    helicopta=lambda x: (":fire: " if int(x) else "") if str(x).isdigit() else x,
+    hidden=lambda x: (":shit: " if int(x) else "") if str(x).isdigit() else x,
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
     comments=lambda x: md_panel(
