@@ -58,7 +58,7 @@ def counts_table(data: list[JSONDict]) -> Table:
         else:
             ordered_headers.append(key)
 
-    all_counts = [float(i[count_header]) for i in data]
+    all_counts = [float(i.get(count_header, 0)) for i in data]
     num_type = int if len({c % 1 for c in all_counts}) == 1 else float
     max_value = max(all_counts)
 
