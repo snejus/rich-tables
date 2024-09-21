@@ -438,12 +438,12 @@ def _(before: List[str], after: List[str]) -> Any:
     common_list = list(common)
     return [
         *list(starmap(diff, zip(common_list, common_list))),
-        *list(
-            starmap(
-                diff,
-                zip_longest(list(before_set - common), list(after_set - common)),
+        *[
+            diff(before or "", after or "")
+            for before, after in zip_longest(
+                list(before_set - common), list(after_set - common)
             )
-        ),
+        ],
     ]
 
 
