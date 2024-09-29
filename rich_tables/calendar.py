@@ -13,7 +13,7 @@ from typing_extensions import Literal, NotRequired, TypedDict
 from .fields import get_val
 from .utils import (
     border_panel,
-    group_by,
+    sortgroup_by,
     new_table,
     wrap,
 )
@@ -171,11 +171,11 @@ def get_months(events: list[Event]) -> Iterable[RenderableType]:
 
     headers = "name", "start_time", "end_time", "bar"
     get_values = attrgetter(*headers)
-    for year_and_month, month_periods in group_by(
+    for year_and_month, month_periods in sortgroup_by(
         all_periods, lambda x: x.start_year_month
     ):
         table = new_table(*headers, highlight=False, padding=0, show_header=False)
-        for day, day_periods in group_by(month_periods, lambda x: x.start_day):
+        for day, day_periods in sortgroup_by(month_periods, lambda x: x.start_day):
             table.add_row(wrap(day, "b i"))
             for period in day_periods:
                 values = get_values(period)

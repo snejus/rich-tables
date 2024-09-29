@@ -64,7 +64,7 @@ T = TypeVar("T")
 K = TypeVar("K", bound=SupportsDunderLT[Any])
 
 
-def group_by(iterable: Iterable[T], key: Callable[[T], K]) -> List[Tuple[K, List[T]]]:
+def sortgroup_by(iterable: Iterable[T], key: Callable[[T], K]) -> List[Tuple[K, List[T]]]:
     return [(k, list(g)) for k, g in groupby(sorted(iterable, key=key), key)]
 
 
@@ -284,6 +284,12 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
+    if "title" not in kwargs and (
+        m := re.match(r"\[title\](.+?)\[/title\]\s+", content)
+    ):
+        kwargs["title"] = m[1]
+        content = content.replace(m[0], "")
+
     return border_panel(
         Markdown(
             HTML_PARAGRAPH.sub("", content),

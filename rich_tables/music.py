@@ -13,7 +13,7 @@ from .fields import DISPLAY_HEADER, FIELDS_MAP
 from .utils import (
     NewTable,
     border_panel,
-    group_by,
+    sortgroup_by,
     new_table,
     predictably_random_color,
     simple_panel,
@@ -197,5 +197,5 @@ def albums_table(all_tracks: List[JSONDict], **__) -> Iterable[ConsoleRenderable
             track["album"] = "singles"
             track["albumartist"] = track["label"]
 
-    for _, tracks in group_by(all_tracks, get_album):
+    for _, tracks in sortgroup_by(all_tracks, get_album):
         yield album_panel(list(tracks))

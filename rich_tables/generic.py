@@ -5,6 +5,7 @@ import logging
 import os
 from datetime import datetime
 from functools import partial, wraps
+from itertools import groupby
 from typing import Any, Callable, Dict, List, Sequence, TypeVar, Union
 
 from multimethod import multidispatch
@@ -23,7 +24,6 @@ from .utils import (
     NewTable,
     border_panel,
     format_with_color,
-    group_by,
     list_table,
     make_console,
     new_table,
@@ -227,6 +227,10 @@ def _int_list(data: Sequence[int]) -> Columns:
 @flexitable.register
 @debug
 def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
+    data = list(filter(None, data))
+    if not data:
+        return None
+
     if len(data) == 1 and len(data[0]) > MAX_DICT_KEYS:
         return flexitable(data[0])
 
@@ -258,16 +262,16 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
             return f"{header}: {transformed_value}"
 
         if isinstance(transformed_value, Panel):
-            transformed_value.title = header
+            transformed_value = new_tree([transformed_value], header)
         elif isinstance(transformed_value, Tree):
             transformed_value.label = header
 
         return transformed_value
 
     large_table = simple_head_table()
-    for large, items in group_by(
-        data, lambda i: len(str(i.values())) > MAX_DICT_LENGTH
-    ):
+    for large, items in groupby(data, lambda i: len(str(i.values())) > MAX_DICT_LENGTH):
+        items = list(items)
+        print(f"{large=}, {len(items)=}")
         if large:
             for item in items:
                 values = it.starmap(
