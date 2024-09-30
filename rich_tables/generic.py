@@ -271,7 +271,6 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
     large_table = simple_head_table()
     for large, items in groupby(data, lambda i: len(str(i.values())) > MAX_DICT_LENGTH):
         items = list(items)
-        print(f"{large=}, {len(items)=}")
         if large:
             for item in items:
                 values = it.starmap(

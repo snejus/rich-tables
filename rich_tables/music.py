@@ -28,6 +28,7 @@ JSONDict = Dict[str, Any]
 
 TRACK_FIELDS = [
     "track",
+    "track_alt",
     "length",
     "artist",
     "title",
@@ -37,6 +38,7 @@ TRACK_FIELDS = [
     "skips",
     "helicopta",
     "hidden",
+    "lyrics"
 ]
 ALBUM_IGNORE = set(TRACK_FIELDS) | {
     "album_color",
