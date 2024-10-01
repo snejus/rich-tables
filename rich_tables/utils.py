@@ -64,7 +64,9 @@ T = TypeVar("T")
 K = TypeVar("K", bound=SupportsDunderLT[Any])
 
 
-def sortgroup_by(iterable: Iterable[T], key: Callable[[T], K]) -> List[Tuple[K, List[T]]]:
+def sortgroup_by(
+    iterable: Iterable[T], key: Callable[[T], K]
+) -> List[Tuple[K, List[T]]]:
     return [(k, list(g)) for k, g in groupby(sorted(iterable, key=key), key)]
 
 
@@ -262,25 +264,23 @@ def fmt_pred_color(m: Match[str]) -> str:
     return f"{predictably_random_color(m.group(2))}]{m.group(2)}"
 
 
-def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    default: JSONDict = {
-        "title_align": "left",
-        "subtitle_align": "right",
-        "box": box.SIMPLE,
-        "expand": False,
-        "border_style": "red",
-    }
+def simple_panel(content: RenderableType, **kwargs) -> Panel:
+    kwargs.setdefault("title_align", "left")
+    kwargs.setdefault("subtitle_align", "right")
+    kwargs.setdefault("box", box.SIMPLE)
+    kwargs.setdefault("expand", False)
+    kwargs.setdefault("border_style", "red")
     if "title" in kwargs:
         kwargs["title"] = wrap(kwargs["title"], "b")
     if kwargs.pop("align", "") == "center":
         content = Align.center(content, vertical="middle")
-    return Panel(content, **{**default, **kwargs})
+    return Panel(content, **kwargs)
 
 
-def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    return simple_panel(
-        content, **{"box": box.ROUNDED, "border_style": "dim", **kwargs}
-    )
+def border_panel(content: RenderableType, **kwargs) -> Panel:
+    kwargs.setdefault("box", box.ROUNDED)
+    kwargs.setdefault("border_style", "dim")
+    return simple_panel(content, **kwargs)
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
