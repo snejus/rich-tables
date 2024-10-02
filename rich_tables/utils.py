@@ -396,7 +396,7 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
         "background_color": "black",
         "word_wrap": True,
     }
-    return Syntax(*args, **default | kwargs)
+    return Syntax(*args, **{**default, **kwargs})
 
 
 def sql_syntax(sql_string: str) -> Syntax:
