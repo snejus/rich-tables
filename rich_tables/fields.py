@@ -43,6 +43,56 @@ MATCH_COUNT_HEADER = re.compile(r"duration|(_sum$|_?count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
 
 
+def add_count_bars(data: list[JSONDict]) -> list[JSONDict]:
+    count_header = ""
+    subcount_header = None
+    ordered_headers = []
+    for key in data[0]:
+        if key.endswith("_subcount"):
+            subcount_header = key
+        elif MATCH_COUNT_HEADER.search(key):
+            if count_header:
+                ordered_headers.append(key)
+            else:
+                count_header = key
+        else:
+            ordered_headers.append(key)
+
+    all_counts = [float(i.get(count_header, 0)) for i in data]
+    num_type = int if len({c % 1 for c in all_counts}) == 1 else float
+    max_value = max(all_counts)
+
+    if subcount_header:
+        count_header = f"{subcount_header}/{count_header}".replace(
+            "_count", ""
+        ).replace("_subcount", "")
+
+    keys = ordered_headers
+    new_data = []
+    for item, count in zip(data, all_counts):
+        subcount = None
+        inverse = False
+        count_val = str(count)
+        if subcount_header:
+            subcount = float(item[subcount_header])
+            count_val = f"{num_type(subcount)}/{num_type(count)}"
+        elif "duration" in count_header:
+            inverse = True
+            if num_type is int:
+                count_val = duration2human(count)
+        else:
+            count_val = str(num_type(count))
+
+        new_item = {k: item[k] for k in keys}
+        new_item[count_header] = count_val
+        new_item[f"{count_header}_bar"] = progress_bar(
+            end=subcount, width=max_value, size=count, inverse=inverse
+        )
+        new_data.append(new_item)
+
+    return new_data
+
+
 def counts_table(data: list[JSONDict]) -> Table:
     count_header = ""
     subcount_header = None

@@ -8,18 +8,27 @@ from functools import partial, wraps
 from itertools import groupby
 from typing import Any, Callable, Dict, List, Sequence, TypeVar, Union
 
+import snoop
 from multimethod import multidispatch
 from rich import box
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
+
+snoop.install(color=True)
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
 
 from . import fields
-from .fields import DISPLAY_HEADER, MATCH_COUNT_HEADER, _get_val, counts_table
+from .fields import (
+    DISPLAY_HEADER,
+    MATCH_COUNT_HEADER,
+    _get_val,
+    add_count_bars,
+    counts_table,
+)
 from .utils import (
     NewTable,
     border_panel,
@@ -226,6 +235,7 @@ def _int_list(data: Sequence[int]) -> Columns:
 
 @flexitable.register
 @debug
+# @snoop
 def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
     data = list(filter(None, data))
     if not data:
@@ -246,7 +256,8 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
     overlap = set(map(type, data[0].values())) & {int, float, str}
 
     if overlap and any(MATCH_COUNT_HEADER.search(k) for k in keys):
-        return counts_table(data)
+        data = add_count_bars(data)
+        keys = data[0].keys()
 
     def getval(value: Any, key: str) -> RenderableType:
         transformed_value = flexitable(value, key)
