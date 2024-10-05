@@ -13,6 +13,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Hashable,
     Iterable,
     List,
     Match,
@@ -416,9 +417,34 @@ def sql_syntax(sql_string: str) -> Syntax:
     )
 
 
+class hashable_list(list):
+    def __hash__(self) -> int:
+        return hash(tuple(self))
+
+
+class hashable_dict(dict):
+    def __hash__(self) -> int:
+        return hash(tuple(self.items()))
+
+
+@multimethod
+def to_hashable(value: Any) -> Any:
+    return value
+
+
+@to_hashable.register
+def _(value: List[Any]) -> List[Any]:
+    return hashable_list(map(to_hashable, value))
+
+
+@to_hashable.register
+def _(value: Dict[str, Any]) -> Dict[str, Any]:
+    return hashable_dict({k: to_hashable(v) for k, v in value.items()})
+
+
 def diff_serialize(value: Any) -> str:
     if value is None:
-        return "null"
+        return ""
     return '""' if value == "" else str(value)
 
 
@@ -439,18 +465,19 @@ def _(before: List[Any], after: List[Any]) -> Any:
 
 @diff.register
 def _(before: List[str], after: List[str]) -> Any:
-    before_set, after_set = set(before), set(after)
-    common = before_set & after_set
-    common_list = list(common)
-    return [
-        *list(starmap(diff, zip(common_list, common_list))),
-        *[
-            diff(before or "", after or "")
-            for before, after in zip_longest(
-                list(before_set - common), list(after_set - common)
-            )
-        ],
-    ]
+    return [diff(b or "", a or "") for b, a in zip_longest(before, after)]
+    # before_set, after_set = set(before), set(after)
+    # common = before_set & after_set
+    # common_list = list(common)
+    # return [
+    #     *list(starmap(diff, zip(common_list, common_list))),
+    #     *[
+    #         diff(before or "", after or "")
+    #         for before, after in zip_longest(
+    #             list(before_set - common), list(after_set - common)
+    #         )
+    #     ],
+    # ]
 
 
 @diff.register
@@ -469,11 +496,12 @@ def _(before: dict, after: dict) -> Any:
 
 
 def pretty_diff(before: Any, after: Any) -> Text:
-    result = diff(before, after)
+    result = diff(to_hashable(before), to_hashable(after))
     if not isinstance(result, str):
         result = (
             pformat(result, indent=2, width=300, sort_dicts=False)
             .replace("'", "")
+            .replace('"', "")
             .replace("\\\\", "\\")
         )
 
