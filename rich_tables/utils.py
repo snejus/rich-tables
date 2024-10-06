@@ -8,7 +8,7 @@ from difflib import SequenceMatcher
 from itertools import groupby, islice, starmap, zip_longest
 from math import copysign
 from pprint import pformat
-from string import ascii_uppercase, punctuation
+from string import ascii_uppercase, punctuation, whitespace
 from typing import (
     Any,
     Callable,

@@ -83,7 +83,7 @@ def add_count_bars(data: list[JSONDict]) -> list[JSONDict]:
         else:
             count_val = str(num_type(count))
 
-        new_item = {k: item[k] for k in keys}
+        new_item = {k: item.get(k) for k in keys}
         new_item[count_header] = count_val
         new_item[f"{count_header}_bar"] = progress_bar(
             end=subcount, width=max_value, size=count, inverse=inverse
