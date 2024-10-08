@@ -135,7 +135,7 @@ def main() -> None:
         data = load_data("/dev/stdin")
         if args.json:
             console.print_json(data=data)
-        else:
+        elif data:
             console.record = True
             for renderable in filter(None, draw_data(data, verbose=args.verbose)):
                 console.print(renderable)
