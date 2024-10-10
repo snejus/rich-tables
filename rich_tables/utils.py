@@ -8,12 +8,11 @@ from difflib import SequenceMatcher
 from itertools import groupby, islice, starmap, zip_longest
 from math import copysign
 from pprint import pformat
-from string import ascii_uppercase, punctuation, whitespace
+from string import ascii_uppercase, punctuation
 from typing import (
     Any,
     Callable,
     Dict,
-    Hashable,
     Iterable,
     List,
     Match,
@@ -89,10 +88,16 @@ def format_space(string: str) -> str:
 
 
 def format_new(string: str) -> str:
+    if string == "\n":
+        string = "␊\n"
+
     return wrap(format_space(string), BOLD_GREEN)
 
 
 def format_old(string: str) -> str:
+    if string == "\n":
+        string = "␊"
+
     return wrap(wrap(string, BOLD_RED), "s")
 
 
