@@ -4,7 +4,7 @@ import itertools as it
 import logging
 import os
 from datetime import datetime
-from functools import partial, wraps
+from functools import lru_cache, partial, wraps
 from itertools import groupby
 from typing import Any, Callable, Dict, List, Sequence, TypeVar, Union
 
@@ -138,7 +138,10 @@ def _header(data: Any, header: str) -> RenderableType:
     if data in ("", [], {}):
         return ""
 
-    if header not in fields.FIELDS_MAP or isinstance(data, (dict, list)):
+    if header.endswith(".py"):
+        return _get_val(data, header)
+
+    if header not in fields.FIELDS_MAP or isinstance(data, list):
         return flexitable(data)
 
     out = _get_val(data, header)
@@ -235,7 +238,6 @@ def _int_list(data: Sequence[int]) -> Columns:
 
 @flexitable.register
 @debug
-# @snoop
 def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
     data = list(filter(None, data))
     if not data:
@@ -272,7 +274,7 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
         if isinstance(transformed_value, str):
             return f"{header}: {transformed_value}"
 
-        if isinstance(transformed_value, Panel):
+        if isinstance(transformed_value, (Panel, NewTable)):
             transformed_value = new_tree([transformed_value], header)
         elif isinstance(transformed_value, Tree):
             transformed_value.label = header

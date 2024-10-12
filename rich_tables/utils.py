@@ -2,21 +2,25 @@ from __future__ import annotations
 
 import random
 import re
+import sys
 import time
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
+from functools import lru_cache
 from itertools import groupby, islice, starmap, zip_longest
 from math import copysign
 from pprint import pformat
-from string import ascii_uppercase, punctuation
+from string import ascii_uppercase, printable, punctuation
 from typing import (
     Any,
     Callable,
     Dict,
+    Generic,
     Iterable,
     List,
     Match,
     Optional,
+    Pattern,
     Protocol,
     Sequence,
     SupportsFloat,
@@ -41,15 +45,41 @@ from rich.theme import Theme
 from rich.tree import Tree
 
 JSONDict = Dict[str, Any]
-SPLIT_PAT = re.compile(r"[;,] ?")
-PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
-HTML_PARAGRAPH = re.compile(r"</?p>")
+T = TypeVar("T")
+
+
+class cached_classproperty(Generic[T]):
+    def __init__(self, getter: Callable[..., T]) -> None:
+        self.getter = getter
+        self.cache: dict[type[object], T] = {}
+
+    def __get__(self, instance: object, owner: type[object]) -> T:
+        if owner not in self.cache:
+            self.cache[owner] = self.getter(owner)
+
+        return self.cache[owner]
+
+
+def cached_patternprop(
+    pattern: str, flags: int = 0
+) -> cached_classproperty[Pattern[str]]:
+    """Pattern is compiled and cached the first time it is accessed."""
+    return cached_classproperty(
+        lambda _: print(f"Compiling {pattern}", file=sys.stderr)
+        or re.compile(pattern, flags)
+    )
+
+
+class Pat:
+    SPLIT_PAT = re.compile(r"[;,] ?")
+    PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
+    HTML_PARAGRAPH = re.compile(r"</?p>")
+    CONSECUTIVE_SPACE = re.compile("(?:^ +)|(?: +$)")
 
 
 BOLD_GREEN = "b green"
 BOLD_RED = "b red"
 SECONDS_PER_DAY = 86400
-CONSECUTIVE_SPACE = re.compile("(?:^ +)|(?: +$)")
 
 
 _T_contra = TypeVar("_T_contra", contravariant=True)
@@ -60,7 +90,6 @@ class SupportsDunderLT(Protocol[_T_contra]):
         pass
 
 
-T = TypeVar("T")
 K = TypeVar("K", bound=SupportsDunderLT[Any])
 
 
@@ -72,7 +101,7 @@ def sortgroup_by(
 
 def format_string(text: str) -> str:
     if "pred color]" in text:
-        return PRED_COLOR_PAT.sub(fmt_pred_color, text)
+        return Pat.PRED_COLOR_PAT.sub(fmt_pred_color, text)
     if "[" in text and r"\[" not in text and "[/" not in text:
         return text.replace("[", r"\[")
 
@@ -84,7 +113,7 @@ def wrap(text: str, tag: str) -> str:
 
 
 def format_space(string: str) -> str:
-    return CONSECUTIVE_SPACE.sub(r"[u]\g<0>[/]", string)
+    return Pat.CONSECUTIVE_SPACE.sub(r"[u]\g<0>[/]", string)
 
 
 def format_new(string: str) -> str:
@@ -165,7 +194,6 @@ def make_console(**kwargs: Any) -> Console:
 
 
 console = make_console()
-print = console.print
 
 
 class NewTable(Table):
@@ -200,25 +228,24 @@ class NewTable(Table):
         self.add_row(*vals, **kwargs)
 
 
-def new_table(*headers: str, **kwargs: Any) -> NewTable:
-    default = {
-        "show_edge": False,
-        "show_header": False,
-        "pad_edge": False,
-        "highlight": True,
-        "row_styles": ["white"],
-        "expand": False,
-        "title_justify": "left",
-        "style": "black",
-        "border_style": "black",
-        "box": box.ROUNDED,
-    }
+def new_table(*headers: str, **kwargs) -> NewTable:
+    kwargs.setdefault("show_edge", False)
+    kwargs.setdefault("show_header", False)
+    kwargs.setdefault("pad_edge", False)
+    kwargs.setdefault("highlight", True)
+    kwargs.setdefault("row_styles", ["white"])
+    kwargs.setdefault("expand", False)
+    kwargs.setdefault("title_justify", "left")
+    kwargs.setdefault("style", "black")
+    kwargs.setdefault("border_style", "black")
+    kwargs.setdefault("box", box.ROUNDED)
+
     if headers:
-        default.update(
+        kwargs.update(
             header_style="bold misty_rose1", box=box.SIMPLE_HEAVY, show_header=True
         )
     rows = kwargs.pop("rows", [])
-    table = NewTable(*headers, **{**default, **kwargs})
+    table = NewTable(*headers, **kwargs)
     if rows:
         table.add_rows(rows)
     return table
@@ -232,6 +259,7 @@ def _randint() -> int:
     return random.randint(50, 205)
 
 
+@lru_cache
 def predictably_random_color(string: str) -> str:
     random.seed(string.strip())
 
@@ -246,7 +274,9 @@ def _format_with_color(string: str, on: Optional[str] = None) -> str:
 
 
 def split_with_color(text: str) -> str:
-    return " ".join(_format_with_color(str(x)) for x in sorted(SPLIT_PAT.split(text)))
+    return " ".join(
+        _format_with_color(str(x)) for x in sorted(Pat.SPLIT_PAT.split(text))
+    )
 
 
 def format_with_color(items: str | Sequence[str]) -> str:
@@ -258,7 +288,7 @@ def format_with_color(items: str | Sequence[str]) -> str:
 
 def format_with_color_on_black(items: Union[str, Iterable[str]]) -> str:
     if not isinstance(items, Iterable) or isinstance(items, str):
-        items = sorted(SPLIT_PAT.split(str(items)))
+        items = sorted(Pat.SPLIT_PAT.split(str(items)))
 
     sep = wrap("a", "#000000 on #000000")
     return " ".join(
@@ -298,7 +328,7 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
 
     return border_panel(
         Markdown(
-            HTML_PARAGRAPH.sub("", content),
+            Pat.HTML_PARAGRAPH.sub("", content),
             inline_code_theme="nord-darker",
             code_theme="nord-darker",
             justify=kwargs.pop("justify", "left"),
@@ -308,13 +338,13 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
 
 
 def new_tree(
-    values: Iterable[RenderableType] = None, title: str = "", **kwargs: Any
+    values: Iterable[RenderableType] | None = None, title: str = "", **kwargs
 ) -> Tree:
     if values is None:
         values = []
-    color = predictably_random_color(title or str(values))
-    default: JSONDict = {"guide_style": color, "highlight": True}
-    tree = Tree(title, **{**default, **kwargs})
+    kwargs.setdefault("guide_style", predictably_random_color(title or str(values)))
+    kwargs.setdefault("highlight", True)
+    tree = Tree(title, **kwargs)
 
     for val in values:
         tree.add(val)
@@ -397,12 +427,10 @@ def diff_dt(timestamp: Union[int, str, float], acc: int = 2) -> str:
 
 
 def syntax(*args: Any, **kwargs: Any) -> Syntax:
-    default = {
-        "theme": "paraiso-dark",
-        "background_color": "black",
-        "word_wrap": True,
-    }
-    return Syntax(*args, **{**default, **kwargs})
+    kwargs.setdefault("theme", "paraiso-dark")
+    kwargs.setdefault("background_color", "black")
+    kwargs.setdefault("word_wrap", True)
+    return Syntax(*args, **kwargs)
 
 
 def sql_syntax(sql_string: str) -> Syntax:
@@ -455,7 +483,7 @@ def diff_serialize(value: Any) -> str:
 
 @multimethod
 def diff(before: str, after: str) -> Any:
-    return make_difftext(before, after)
+    return make_difftext(before, after, printable)
 
 
 @diff.register

@@ -332,6 +332,9 @@ def _get_val(value: Any, field: str) -> RenderableType:
     if value is None:
         return "None"
 
+    if field.endswith(".py"):
+        return border_panel(syntax(value, "python"), title=field)
+
     if isinstance(value, str):
         value = format_string(value)
 
