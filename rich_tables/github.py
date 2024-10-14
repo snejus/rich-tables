@@ -287,6 +287,7 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
     isOutdated: bool
     resolvedBy: str
     comments: List[ReviewComment]
+    verbose: bool
 
     @property
     def resolved(self) -> bool:
@@ -328,12 +329,16 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
     @property
     def panel(self) -> Panel:
         comments = self.comments
-        comments_col = list_table((c.panel for c in comments), padding=(1, 0, 0, 0))
-        return border_panel(
-            new_table(
+        if self.verbose or not self.resolved:
+            comments_col = list_table((c.panel for c in comments), padding=(1, 0, 0, 0))
+            content = new_table(
                 rows=[[self.comments[0].diff, simple_panel(comments_col)]],
                 highlight=False,
-            ),
+            )
+        else:
+            content = ""
+        return border_panel(
+            content,
             highlight=False,
             border_style=self.border_color,
             title=self.title,
@@ -360,7 +365,7 @@ class Review(Content, ResolvedMixin):
             rows.append(md_panel(self.body))
 
         if not self.resolved or self.verbose:
-            self.threads.sort(key=lambda t: t.isResolved)
+            self.threads.sort(key=lambda t: t.resolved)
             rows.extend(t.panel for t in self.threads)
 
         return border_panel(
@@ -407,7 +412,7 @@ class PullRequest:
     reviewRequests: List[str]
     reviewThreads: List[ReviewThread]
     reviews: List[Review]
-    comments: List[IssueComment]
+    comments: List[Comment]
     state: str
     title: str
     updatedAt: str
@@ -424,27 +429,32 @@ class PullRequest:
 class PullRequestTable(PullRequest):
     @classmethod
     def make(cls, reviews: List[JSONDict], **kwargs: Any) -> PullRequestTable:
-        kwargs["commits"] = Commits([Commit(**c) for c in kwargs["commits"]])
-        kwargs["comments"] = [IssueComment.make(**c) for c in kwargs["comments"]]
-        threads = [ReviewThread.make(**rt) for rt in kwargs["reviewThreads"]]
-        review_comments = list(chain.from_iterable(t.comments for t in threads))
-        review_comments.sort(key=lambda c: c.review_id)
-        comments_by_review_id = dict(
-            sortgroup_by(review_comments, lambda c: c.review_id)
-        )
-        threads.sort(key=lambda t: t.review_id)
-        threads_by_review_id = dict(sortgroup_by(threads, lambda t: t.review_id))
-        kwargs["reviews"] = [
-            Review(
-                **r,
-                threads=threads_by_review_id.pop(r["id"], []),
-                comments=comments_by_review_id.pop(r["id"], []),
-                verbose=kwargs["verbose"],
-            )
-            for r in reviews
-            if (r["id"] in threads_by_review_id or r["body"])
+        verbose = kwargs["verbose"]
+        threads = [
+            ReviewThread.make(**rt, verbose=verbose) for rt in kwargs["reviewThreads"]
         ]
-        return cls(**kwargs)
+        comments_by_review_id = dict(
+            sortgroup_by(
+                (c for t in threads for c in t.comments),
+                lambda c: c.review_id,
+            )
+        )
+        threads_by_review_id = dict(sortgroup_by(threads, lambda t: t.review_id))
+        return cls(
+            commits=Commits([Commit(**c) for c in kwargs.pop("commits", [])]),
+            comments=[IssueComment.make(**c) for c in kwargs.pop("comments", [])],
+            reviews=[
+                Review(
+                    **r,
+                    threads=threads_by_review_id.pop(r["id"], []),
+                    comments=comments_by_review_id.pop(r["id"], []),
+                    verbose=verbose,
+                )
+                for r in reviews
+                if (r["id"] in threads_by_review_id or r["body"])
+            ],
+            **kwargs,
+        )
 
     def make_info_subpanel(self, attr: str) -> Panel:
         return simple_panel(
@@ -513,5 +523,8 @@ def pulls_table(
 
     pr = data[0]
     pr_table = PullRequestTable.make(**pr, verbose=kwargs["verbose"])
+    print(f"{len(pr_table.comments)=}")
+    print(f"{len(pr_table.reviews)=}")
+    print(f"{len(pr_table.reviewThreads)=}")
     yield pr_table.info
     yield from pr_table.panels
