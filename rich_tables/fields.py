@@ -328,11 +328,11 @@ DISPLAY_HEADER: dict[str, str] = {
 }
 
 
-def _get_val(value: Any, field: str) -> RenderableType:
+def _get_val(value: Any, field: str) -> Any:
     if value is None:
         return "None"
 
-    if field.endswith(".py"):
+    if field.endswith(".py") and isinstance(value, str):
         return border_panel(syntax(value, "python"), title=field)
 
     if isinstance(value, str):
@@ -341,10 +341,13 @@ def _get_val(value: Any, field: str) -> RenderableType:
     if isinstance(value, (int, float)):
         value = str(value)
 
+    if field in FIELDS_MAP:
+        return FIELDS_MAP[field](value)
+
     if field not in FIELDS_MAP and field.endswith("_group") and isinstance(value, list):
         return format_with_color(value)
 
-    return FIELDS_MAP[field](value)
+    return value
 
 
 @singledispatch

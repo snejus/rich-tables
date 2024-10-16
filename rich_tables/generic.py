@@ -301,7 +301,7 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
             for key in keys:
                 sub_table.add_column(key, header_style=predictably_random_color(key))
             for item in items:
-                sub_table.add_dict_item(item, transform=flexitable)
+                sub_table.add_row(*[flexitable(item.get(k, ""), k) for k in keys])
             for col in sub_table.columns:
                 col.header = DISPLAY_HEADER.get(str(col.header), col.header)
             large_table.add_row(sub_table)

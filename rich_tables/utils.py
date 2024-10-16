@@ -217,15 +217,6 @@ class NewTable(Table):
         """Provide a mapping between columns names / ids and columns."""
         return [str(c.header) for c in self.columns]
 
-    def add_dict_item(
-        self,
-        item: JSONDict,
-        transform: Callable[[Any, str], Any] = lambda x, _: x,
-        **kwargs: Any,
-    ) -> None:
-        """Take the required columns / keys from the given dictionary item."""
-        vals = (transform(item.get(c, ""), c) for c in self.colnames)
-        self.add_row(*vals, **kwargs)
 
 
 def new_table(*headers: str, **kwargs) -> NewTable:

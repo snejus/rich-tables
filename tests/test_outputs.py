@@ -1,3 +1,4 @@
+import locale
 import re
 import sys
 from pathlib import Path
@@ -8,7 +9,6 @@ from freezegun import freeze_time
 
 from rich_tables import table
 from rich_tables.utils import make_console
-import locale
 
 JSON_DIR = Path("tests/json")
 SVG_DIR = Path("svgs")
@@ -41,6 +41,7 @@ def _populate_readme() -> Iterator[None]:
 @pytest.mark.parametrize("testcase", TEST_FILES, ids=str)
 def test_outputs(testcase: Path) -> None:
     sys.stdin = testcase.open()
+    sys.argv[1:] = []
 
     table.console = make_console(record=True, width=156)
     table.main()
