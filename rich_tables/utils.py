@@ -144,9 +144,10 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "".join(
-        sorted((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase))
-    ),
+    junk: str = "a"
+    # junk: str = "".join(
+    #     sorted((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase))
+    # ),
 ) -> str:
     matcher = SequenceMatcher(
         lambda x: x not in junk, autojunk=False, a=before, b=after
@@ -216,7 +217,6 @@ class NewTable(Table):
     def colnames(self) -> List[str]:
         """Provide a mapping between columns names / ids and columns."""
         return [str(c.header) for c in self.columns]
-
 
 
 def new_table(*headers: str, **kwargs) -> NewTable:
