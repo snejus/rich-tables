@@ -144,10 +144,9 @@ def fmtdiff(change: str, before: str, after: str) -> str:
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "a"
-    # junk: str = "".join(
-    #     sorted((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase))
-    # ),
+    junk: str = "".join(
+        sorted((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase))
+    ),
 ) -> str:
     matcher = SequenceMatcher(
         lambda x: x not in junk, autojunk=False, a=before, b=after
