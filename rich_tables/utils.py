@@ -36,6 +36,7 @@ from rich import box
 from rich.align import Align
 from rich.bar import Bar
 from rich.console import Console, RenderableType
+from rich.errors import MarkupError
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
@@ -183,8 +184,17 @@ def get_theme() -> Optional[Theme]:
     return Theme.read(str(config_path)) if config_path.exists() else None
 
 
+class OurConsole(Console):
+    def print(self, *args, **kwargs):
+        try:
+            super().print(*args, **kwargs)
+        except MarkupError:
+            kwargs["markup"] = False
+            super().print(*args, **kwargs)
+
+
 def make_console(**kwargs: Any) -> Console:
-    return Console(
+    return OurConsole(
         theme=get_theme(),
         force_terminal=True,
         force_interactive=False,

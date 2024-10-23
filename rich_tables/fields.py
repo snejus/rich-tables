@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from collections import defaultdict
 from datetime import datetime
@@ -332,7 +333,7 @@ def _get_val(value: Any, field: str) -> Any:
     if value is None:
         return "None"
 
-    if field.endswith(".py") and isinstance(value, str):
+    if field.endswith(".py"):
         return border_panel(syntax(value, "python"), title=field)
 
     if isinstance(value, str):

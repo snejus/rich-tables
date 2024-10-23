@@ -6,13 +6,13 @@ import os
 from datetime import datetime
 from functools import lru_cache, partial, wraps
 from itertools import groupby
-from typing import Any, Callable, Dict, List, Sequence, TypeVar, Union
+from typing import Any, Callable, Dict, Generator, List, Sequence, TypeVar, Union
 
 import snoop
 from multimethod import multidispatch
 from rich import box
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, RenderableType
+from rich.console import ConsoleRenderable, Group, RenderableType, group
 from rich.logging import RichHandler
 
 snoop.install(color=True)
@@ -138,7 +138,7 @@ def _header(data: Any, header: str) -> RenderableType:
     if data in ("", [], {}):
         return ""
 
-    if header.endswith(".py"):
+    if header.endswith(".py") and isinstance(data, str):
         return _get_val(data, header)
 
     if header not in fields.FIELDS_MAP or isinstance(data, list):
@@ -180,7 +180,9 @@ def _json_dict(data: JSONDict) -> RenderableType:
             continue
 
         value = flexitable(content, key)
-        if isinstance(value, (NewTable, Text, dict, Columns)):
+        if isinstance(value, Generator):
+            cols.append(border_panel(Group(*value), title=key))
+        elif isinstance(value, (NewTable, Text, dict, Columns)):
             cols.append(border_panel(value, title=key))
         elif isinstance(value, ConsoleRenderable) and hasattr(value, "title"):
             value.title = key
@@ -193,24 +195,26 @@ def _json_dict(data: JSONDict) -> RenderableType:
     if table.rows:
         cols.insert(0, table)
 
-    if len(cols) == 1:
-        return cols[0]
+    yield from cols
 
-    row: List[RenderableType] = []
-    width = 0
-    rows: List[RenderableType] = []
-    for rend in cols:
-        this_width = console.measure(rend).maximum
-        if width + this_width > console.width:
-            rows.append(Columns(row, equal=True, padding=(0, 0)))
-            row, width = [rend], this_width
-        else:
-            row.append(rend)
-            width += this_width
+    # return border_panel(Group(*cols))
+    # yield from cols
 
-    rows.append(Columns(row, equal=True, padding=(0, 0)))
+    # row: List[RenderableType] = []
+    # width = 0
+    # rows: List[RenderableType] = []
+    # for rend in cols:
+    #     this_width = console.measure(rend).maximum
+    #     if width + this_width > console.width:
+    #         rows.append(Columns(row, equal=True, padding=(0, 0)))
+    #         row, width = [rend], this_width
+    #     else:
+    #         row.append(rend)
+    #         width += this_width
 
-    return list_table(rows, padding=(0, 0))
+    # rows.append(Columns(row, equal=True, padding=(0, 0)))
+
+    # return list_table(rows, padding=(0, 0))
 
 
 simple_head_table = partial(
@@ -279,6 +283,9 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
         elif isinstance(transformed_value, Tree):
             transformed_value.label = header
 
+        elif isinstance(transformed_value, Generator):
+            return Group(*transformed_value, fit=False)
+
         return transformed_value
 
     large_table = simple_head_table()
@@ -301,7 +308,9 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
             for key in keys:
                 sub_table.add_column(key, header_style=predictably_random_color(key))
             for item in items:
-                sub_table.add_row(*[flexitable(item.get(k, ""), k) for k in keys])
+                sub_table.add_row(*[
+                    (Group(*res) if isinstance(res, Generator) else res) for k in keys if (res := flexitable(item.get(k, ""), k))
+                ])
             for col in sub_table.columns:
                 col.header = DISPLAY_HEADER.get(str(col.header), col.header)
             large_table.add_row(sub_table)

@@ -481,7 +481,7 @@ class PullRequestTable(PullRequest):
     def info(self) -> Panel:
         fields = "author", "dates", "headRefName", "participants", "reviewRequests"
         pairs = [(f, getattr(self, f)) for f in fields]
-        field_rows = [[flexitable({f: v})] for f, v in pairs if v]
+        field_rows = [flexitable({f: v}) for f, v in pairs if v]
         return border_panel(
             new_table(rows=[*field_rows, [md_panel(self.body)], [self.files_commits]]),
             title=f"{self.name} @ {self.repo}",

@@ -119,7 +119,7 @@ def _draw_data_dict(data: JSONDict | NamedData, **kwargs) -> Iterator[Renderable
         table = TABLE_BY_NAME.get(title, flexitable)
         yield from table(values, **kwargs)
     else:
-        yield flexitable(data)
+        yield from flexitable(data)
 
 
 @draw_data.register(list)
