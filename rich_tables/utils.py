@@ -10,7 +10,7 @@ from functools import lru_cache
 from itertools import groupby, islice, starmap, zip_longest
 from math import copysign
 from pprint import pformat
-from string import ascii_uppercase, printable, punctuation
+from string import ascii_uppercase, printable, punctuation, whitespace, ascii_lowercase
 from typing import (
     Any,
     Callable,
@@ -146,7 +146,11 @@ def make_difftext(
     before: str,
     after: str,
     junk: str = "".join(
-        sorted((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase))
+        sorted(
+            (set(punctuation) - {"_", "-", ":"})
+            | set(ascii_uppercase)
+            | {"\n"}
+        )
     ),
 ) -> str:
     matcher = SequenceMatcher(
@@ -483,7 +487,7 @@ def diff_serialize(value: Any) -> str:
 
 @multimethod
 def diff(before: str, after: str) -> Any:
-    return make_difftext(before, after, printable)
+    return make_difftext(before, after, set(printable) - set(ascii_uppercase) - set(ascii_lowercase) - {" "})
 
 
 @diff.register
