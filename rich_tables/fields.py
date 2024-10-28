@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import json
 import re
 from collections import defaultdict
 from datetime import datetime
 from functools import singledispatch
 from itertools import islice
-from numbers import Number
 from typing import TYPE_CHECKING, Any, Callable, Iterable, MutableMapping
 
 from rich.text import Text
@@ -345,7 +343,7 @@ def _get_val(value: Any, field: str) -> Any:
     if field in FIELDS_MAP:
         return FIELDS_MAP[field](value)
 
-    if field not in FIELDS_MAP and field.endswith("_group") and isinstance(value, list):
+    if field.endswith("_group") and isinstance(value, list):
         return format_with_color(value)
 
     return value

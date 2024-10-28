@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from itertools import chain
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -386,8 +385,7 @@ class Review(Content, ResolvedMixin):
                 else b_green(" ⬤ " * resolved_count)
                 + b_red(" ◯ " * (total_count - resolved_count))
             )
-        else:
-            return ""
+        return ""
 
     @property
     def title(self) -> str:

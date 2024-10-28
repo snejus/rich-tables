@@ -4,7 +4,7 @@ import itertools as it
 import logging
 import os
 from datetime import datetime
-from functools import lru_cache, partial, wraps
+from functools import partial, wraps
 from itertools import groupby
 from typing import Any, Callable, Dict, Generator, List, Sequence, TypeVar, Union
 
@@ -12,7 +12,7 @@ import snoop
 from multimethod import multidispatch
 from rich import box
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, Group, RenderableType, group
+from rich.console import ConsoleRenderable, Group, RenderableType
 from rich.logging import RichHandler
 
 snoop.install(color=True)
@@ -27,13 +27,11 @@ from .fields import (
     MATCH_COUNT_HEADER,
     _get_val,
     add_count_bars,
-    counts_table,
 )
 from .utils import (
     NewTable,
     border_panel,
     format_with_color,
-    list_table,
     make_console,
     new_table,
     new_tree,

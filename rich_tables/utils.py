@@ -10,7 +10,7 @@ from functools import lru_cache
 from itertools import groupby, islice, starmap, zip_longest
 from math import copysign
 from pprint import pformat
-from string import ascii_uppercase, printable, punctuation, whitespace, ascii_lowercase
+from string import ascii_lowercase, ascii_uppercase, printable, punctuation
 from typing import (
     Any,
     Callable,
@@ -109,7 +109,7 @@ def format_string(text: str) -> str:
     return text
 
 
-def wrap(text: str, tag: str) -> str:
+def wrap(text: Any, tag: str) -> str:
     return f"[{tag}]{format_string(str(text))}[/]"
 
 
@@ -146,11 +146,7 @@ def make_difftext(
     before: str,
     after: str,
     junk: str = "".join(
-        sorted(
-            (set(punctuation) - {"_", "-", ":"})
-            | set(ascii_uppercase)
-            | {"\n"}
-        )
+        sorted((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase) | {"\n"})
     ),
 ) -> str:
     matcher = SequenceMatcher(
@@ -310,8 +306,8 @@ def simple_panel(content: RenderableType, **kwargs) -> Panel:
     kwargs.setdefault("box", box.SIMPLE)
     kwargs.setdefault("expand", False)
     kwargs.setdefault("border_style", "red")
-    if "title" in kwargs:
-        kwargs["title"] = wrap(kwargs["title"], "b")
+    # if "title" in kwargs:
+    #     kwargs["title"] = wrap(kwargs["title"], "b")
     if kwargs.pop("align", "") == "center":
         content = Align.center(content, vertical="middle")
     return Panel(content, **kwargs)
@@ -487,7 +483,11 @@ def diff_serialize(value: Any) -> str:
 
 @multimethod
 def diff(before: str, after: str) -> Any:
-    return make_difftext(before, after, set(printable) - set(ascii_uppercase) - set(ascii_lowercase) - {" "})
+    return make_difftext(
+        before,
+        after,
+        set(printable) - set(ascii_uppercase) - set(ascii_lowercase) - {" "},
+    )
 
 
 @diff.register
