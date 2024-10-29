@@ -301,7 +301,7 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
                 sub_table.add_row(*[
                     (Group(*res) if isinstance(res, Generator) else res)
                     for k in keys
-                    if (res := flexitable(item.get(k, ""), k))
+                    if (res := flexitable(item.get(k, ""), k)) is not None
                 ])
             for col in sub_table.columns:
                 col.header = DISPLAY_HEADER.get(str(col.header), col.header)
