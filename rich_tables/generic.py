@@ -22,12 +22,7 @@ from rich.text import Text
 from rich.tree import Tree
 
 from . import fields
-from .fields import (
-    DISPLAY_HEADER,
-    MATCH_COUNT_HEADER,
-    _get_val,
-    add_count_bars,
-)
+from .fields import DISPLAY_HEADER, MATCH_COUNT_HEADER, _get_val, add_count_bars
 from .utils import (
     NewTable,
     border_panel,
@@ -245,9 +240,6 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
     if not data:
         return None
 
-    if len(data) == 1 and len(data[0]) > MAX_DICT_KEYS:
-        return flexitable(data[0])
-
     data = [prepare_dict(item) for item in data if item]
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     if not all_keys:
@@ -307,7 +299,9 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
                 sub_table.add_column(key, header_style=predictably_random_color(key))
             for item in items:
                 sub_table.add_row(*[
-                    (Group(*res) if isinstance(res, Generator) else res) for k in keys if (res := flexitable(item.get(k, ""), k))
+                    (Group(*res) if isinstance(res, Generator) else res)
+                    for k in keys
+                    if (res := flexitable(item.get(k, ""), k))
                 ])
             for col in sub_table.columns:
                 col.header = DISPLAY_HEADER.get(str(col.header), col.header)
