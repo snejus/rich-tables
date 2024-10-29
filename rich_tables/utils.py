@@ -486,7 +486,7 @@ def diff(before: str, after: str) -> Any:
     return make_difftext(
         before,
         after,
-        set(printable) - set(ascii_uppercase) - set(ascii_lowercase) - {" "},
+        set(printable)
     )
 
 
