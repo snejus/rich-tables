@@ -521,8 +521,5 @@ def pulls_table(
 
     pr = data[0]
     pr_table = PullRequestTable.make(**pr, verbose=kwargs["verbose"])
-    print(f"{len(pr_table.comments)=}")
-    print(f"{len(pr_table.reviews)=}")
-    print(f"{len(pr_table.reviewThreads)=}")
     yield pr_table.info
     yield from pr_table.panels

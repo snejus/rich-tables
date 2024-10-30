@@ -341,7 +341,10 @@ def _get_val(value: Any, field: str) -> Any:
         value = str(value)
 
     if field in FIELDS_MAP:
-        return FIELDS_MAP[field](value)
+        try:
+            return FIELDS_MAP[field](value)
+        except TypeError:
+            return value
 
     if field.endswith("_group") and isinstance(value, list):
         return format_with_color(value)
