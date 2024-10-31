@@ -8,14 +8,11 @@ from functools import partial, wraps
 from itertools import groupby
 from typing import Any, Callable, Dict, Generator, List, Sequence, TypeVar, Union
 
-import snoop
 from multimethod import multidispatch
 from rich import box
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group, RenderableType
 from rich.logging import RichHandler
-
-snoop.install(color=True)
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.text import Text
@@ -27,6 +24,7 @@ from .utils import (
     NewTable,
     border_panel,
     format_with_color,
+    list_table,
     make_console,
     new_table,
     new_tree,
@@ -159,7 +157,7 @@ def _renderable(data: Union[ConsoleRenderable, NewTable]) -> RenderableType:
 @flexitable.register
 @debug
 def _str(data: str) -> RenderableType:
-    return data
+    yield data
 
 
 @flexitable.register
@@ -239,6 +237,15 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
     data = list(filter(None, data))
     if not data:
         return None
+
+    if not all(isinstance(d, dict) for d in data):
+        return list_table(
+            [Group(*flexitable(d)) for d in data],
+            show_lines=True,
+            border_style="dim",
+            show_edge=True,
+            box=box.DOUBLE,
+        )
 
     data = [prepare_dict(item) for item in data if item]
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))

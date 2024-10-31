@@ -251,7 +251,7 @@ def new_table(*headers: str, **kwargs) -> NewTable:
     return table
 
 
-def list_table(items: Iterable[Any], **kwargs: Any) -> NewTable:
+def list_table(items: Iterable[RenderableType], **kwargs) -> NewTable:
     return new_table(rows=[[i] for i in items], **kwargs)
 
 
@@ -483,11 +483,7 @@ def diff_serialize(value: Any) -> str:
 
 @multimethod
 def diff(before: str, after: str) -> Any:
-    return make_difftext(
-        before,
-        after,
-        set(printable)
-    )
+    return make_difftext(before, after, set(printable))
 
 
 @diff.register
