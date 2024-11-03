@@ -157,7 +157,7 @@ def _renderable(data: Union[ConsoleRenderable, NewTable]) -> RenderableType:
 @flexitable.register
 @debug
 def _str(data: str) -> RenderableType:
-    yield data
+    return data
 
 
 @flexitable.register
@@ -275,6 +275,7 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
         if isinstance(transformed_value, str):
             return f"{header}: {transformed_value}"
 
+        print(f"{transformed_value=}, {type(transformed_value)=}")
         if isinstance(transformed_value, (Panel, NewTable)):
             transformed_value = new_tree([transformed_value], header)
         elif isinstance(transformed_value, Tree):
