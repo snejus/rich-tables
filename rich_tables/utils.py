@@ -184,7 +184,7 @@ def get_theme() -> Optional[Theme]:
     return Theme.read(str(config_path)) if config_path.exists() else None
 
 
-class OurConsole(Console):
+class SafeConsole(Console):
     def print(self, *args, **kwargs):
         try:
             super().print(*args, **kwargs)
@@ -193,14 +193,12 @@ class OurConsole(Console):
             super().print(*args, **kwargs)
 
 
-def make_console(**kwargs: Any) -> Console:
-    return OurConsole(
-        theme=get_theme(),
-        force_terminal=True,
-        force_interactive=False,
-        emoji=True,
-        **kwargs,
-    )
+def make_console(**kwargs) -> SafeConsole:
+    kwargs.setdefault("theme", get_theme())
+    kwargs.setdefault("force_terminal", True)
+    kwargs.setdefault("force_interactive", False)
+    kwargs.setdefault("emoji", True)
+    return Console(**kwargs)
 
 
 console = make_console()
