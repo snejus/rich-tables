@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from rich.console import RenderableType
     from rich.table import Table
 
+MAX_FILENAME_LEN = 255
 JSONDict = Dict[str, Any]
 
 
@@ -55,6 +56,8 @@ def load_data(filepath: str) -> list[JSONDict] | JSONDict | str:
     """
     if filepath == "/dev/stdin":
         text = sys.stdin.read()
+    elif len(filepath) > MAX_FILENAME_LEN or len(filepath.encode()) > MAX_FILENAME_LEN:
+        text = filepath
     else:
         path = Path(filepath)
         text = path.read_text() if path.is_file() else filepath
@@ -130,7 +133,7 @@ def _draw_data_list(data: list[JSONDict], **kwargs) -> Iterator[RenderableType]:
 def main() -> None:
     args = get_args()
     if args.command == "diff":
-        console.print(pretty_diff(args.before, args.after))
+        console.print(pretty_diff(args.before, args.after).markup, markup=False)
     else:
         data = load_data("/dev/stdin")
         if args.json:

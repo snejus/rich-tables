@@ -118,16 +118,20 @@ def format_space(string: str) -> str:
 
 
 def format_new(string: str) -> str:
-    if string == "\n":
-        string = "␊\n"
+    # if string == "\n":
+    #     string = "⮠ \n"
+    string = re.sub("^\n", lambda m: m[0].replace("\n", "⮠ \n"), string)
 
+    # return f"{{+{string}+}}"
     return wrap(format_space(string), BOLD_GREEN)
 
 
 def format_old(string: str) -> str:
-    if string == "\n":
-        string = "␊"
+    # if string == "\n":
+    #     string = "⮠ "
+    string = re.sub("\n+$", lambda m: m[0].replace("\n", "⮠ \n"), string)
 
+    # return f"{{-{string}-}}"
     return wrap(wrap(string, BOLD_RED), "s")
 
 
@@ -142,20 +146,66 @@ def fmtdiff(change: str, before: str, after: str) -> str:
     return wrap(before, "dim")
 
 
+def format_added_line(m: Match[str]) -> str:
+    text = m[1]
+    if txt := text.replace("[/]", ""):
+        text += f"\n[on green]{' ' * len(txt)}[/]"
+
+    return text
+
+
+def triplewise(iterable):
+    iterator = iter(iterable)
+    window = tuple(islice(iterator, 3))
+    if len(window) == 3:
+        yield window
+    for item in iterator:
+        window = window[1:] + (item,)
+        yield window
+
+
 def make_difftext(
     before: str,
     after: str,
-    junk: str = "".join(
-        sorted((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase) | {"\n"})
-    ),
+    junk: str = "".join(sorted((set(punctuation) - {"_", "-", ":"}) | {"\n"})),
 ) -> str:
-    matcher = SequenceMatcher(
-        lambda x: x not in junk, autojunk=False, a=before, b=after
+    # matcher = SequenceMatcher(lambda x: x == "\n", autojunk=False, a=before, b=after)
+    matcher = SequenceMatcher(None, autojunk=False, a=before, b=after)
+    ops = matcher.get_opcodes()
+    print(ops)
+    to_remove_ids = [
+        i
+        for i, (op, a, b, *_) in enumerate(ops)
+        if 0 < i < len(ops) - 1
+        and op == "equal"
+        and b - a < 3
+        # and before[a:b].replace("\n", "")
+        # and not before[:a].endswith("\n")
+    ]
+    for i in reversed(to_remove_ids):
+        a, b = ops[i - 1], ops[i + 1]
+        if "replace" in {a[0], b[0]}:
+            action = "replace"
+        else:
+            action = a[0]
+        print(
+            action,
+            a[0],
+            b[0],
+            before[ops[i][1] : ops[i][2]].encode(),
+            before[a[1] : b[2]].encode(),
+            after[a[3] : b[4]].encode(),
+        )
+        ops[i] = (action, a[1], b[2], a[3], b[4])
+        del ops[i + 1]
+        del ops[i - 1]
+    print(ops)
+
+    text = "".join(
+        fmtdiff(code, before[a1:a2], after[b1:b2]) or "" for code, a1, a2, b1, b2 in ops
     )
-    return "".join(
-        fmtdiff(code, before[a1:a2], after[b1:b2]) or ""
-        for code, a1, a2, b1, b2 in matcher.get_opcodes()
-    )
+    # text = re.sub(r"([^\n]+)\\n", format_added_line, text)
+    return text
 
 
 def duration2human(duration: SupportsFloat) -> str:
