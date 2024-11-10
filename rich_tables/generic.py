@@ -221,6 +221,12 @@ def _list(data: list) -> RenderableType:
 
 @flexitable.register
 @debug
+def _list_list(data: List[List[Any]]) -> RenderableType:
+    return list_table(flexitable(i) for i in data)
+
+
+@flexitable.register
+@debug
 def _str_list(data: Sequence[str]) -> RenderableType:
     return format_with_color(data)
 

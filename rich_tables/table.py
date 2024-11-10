@@ -133,7 +133,7 @@ def _draw_data_list(data: list[JSONDict], **kwargs) -> Iterator[RenderableType]:
 def main() -> None:
     args = get_args()
     if args.command == "diff":
-        console.print(pretty_diff(args.before, args.after).markup, markup=False)
+        console.print(pretty_diff(args.before, args.after), markup=False)
     else:
         data = load_data("/dev/stdin")
         if args.json:

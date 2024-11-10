@@ -9,7 +9,7 @@ from difflib import SequenceMatcher
 from functools import lru_cache
 from itertools import groupby, islice, starmap, zip_longest
 from math import copysign
-from pprint import pformat
+from pprint import pformat, pprint
 from string import ascii_lowercase, ascii_uppercase, printable, punctuation
 from typing import (
     Any,
@@ -118,21 +118,14 @@ def format_space(string: str) -> str:
 
 
 def format_new(string: str) -> str:
-    # if string == "\n":
-    #     string = "⮠ \n"
-    string = re.sub("^\n", lambda m: m[0].replace("\n", "⮠ \n"), string)
-
-    # return f"{{+{string}+}}"
+    string = re.sub("^\n+", lambda m: m[0].replace("\n", "⮠\n"), string)
     return wrap(format_space(string), BOLD_GREEN)
 
 
 def format_old(string: str) -> str:
-    # if string == "\n":
-    #     string = "⮠ "
-    string = re.sub("\n+$", lambda m: m[0].replace("\n", "⮠ \n"), string)
-
-    # return f"{{-{string}-}}"
-    return wrap(wrap(string, BOLD_RED), "s")
+    string = re.sub("^\n|\n$", lambda m: m[0].replace("\n", "⮠ "), string)
+    # string = re.sub("(?<!^)\n(?!$)", lambda m: m[0].replace("\n", ""), string)
+    return wrap(string, f"{BOLD_RED}")
 
 
 def fmtdiff(change: str, before: str, after: str) -> str:
@@ -141,7 +134,10 @@ def fmtdiff(change: str, before: str, after: str) -> str:
     if change == "delete":
         return format_old(before)
     if change == "replace":
-        return format_old(before) + format_new(after)
+        return "".join(
+            (format_old(a) + format_new(b)) if a != b else a
+            for a, b in zip(before.partition("\n"), after.rpartition("\n"))
+        )
 
     return wrap(before, "dim")
 
@@ -169,43 +165,29 @@ def make_difftext(
     after: str,
     junk: str = "".join(sorted((set(punctuation) - {"_", "-", ":"}) | {"\n"})),
 ) -> str:
-    # matcher = SequenceMatcher(lambda x: x == "\n", autojunk=False, a=before, b=after)
-    matcher = SequenceMatcher(None, autojunk=False, a=before, b=after)
+    matcher = SequenceMatcher(lambda x: x in " \n", autojunk=False, a=before, b=after)
     ops = matcher.get_opcodes()
-    print(ops)
     to_remove_ids = [
         i
-        for i, (op, a, b, *_) in enumerate(ops)
+        for i, (op, a, b, c, d) in enumerate(ops)
         if 0 < i < len(ops) - 1
         and op == "equal"
-        and b - a < 3
-        # and before[a:b].replace("\n", "")
-        # and not before[:a].endswith("\n")
+        and b - a < 5
+        and before[a:b].strip()
+        and after[c:d].strip()
     ]
     for i in reversed(to_remove_ids):
         a, b = ops[i - 1], ops[i + 1]
-        if "replace" in {a[0], b[0]}:
-            action = "replace"
-        else:
-            action = a[0]
-        print(
-            action,
-            a[0],
-            b[0],
-            before[ops[i][1] : ops[i][2]].encode(),
-            before[a[1] : b[2]].encode(),
-            after[a[3] : b[4]].encode(),
-        )
+        action = "replace"
+
         ops[i] = (action, a[1], b[2], a[3], b[4])
+
         del ops[i + 1]
         del ops[i - 1]
-    print(ops)
 
-    text = "".join(
+    return "".join(
         fmtdiff(code, before[a1:a2], after[b1:b2]) or "" for code, a1, a2, b1, b2 in ops
     )
-    # text = re.sub(r"([^\n]+)\\n", format_added_line, text)
-    return text
 
 
 def duration2human(duration: SupportsFloat) -> str:
@@ -235,6 +217,13 @@ def get_theme() -> Optional[Theme]:
 
 
 class SafeConsole(Console):
+    def render_str(self, text: str, **kwargs) -> Text:
+        try:
+            return super().render_str(text, **kwargs)
+        except MarkupError:
+            kwargs["markup"] = False
+            return super().render_str(text, **kwargs)
+
     def print(self, *args, **kwargs):
         try:
             super().print(*args, **kwargs)
@@ -248,7 +237,7 @@ def make_console(**kwargs) -> SafeConsole:
     kwargs.setdefault("force_terminal", True)
     kwargs.setdefault("force_interactive", False)
     kwargs.setdefault("emoji", True)
-    return Console(**kwargs)
+    return SafeConsole(**kwargs)
 
 
 console = make_console()
@@ -276,7 +265,9 @@ class NewTable(Table):
         return [str(c.header) for c in self.columns]
 
 
-def new_table(*headers: str, **kwargs) -> NewTable:
+def new_table(
+    *headers: str, rows: Iterable[Iterable[RenderableType]] | None = None, **kwargs
+) -> NewTable:
     kwargs.setdefault("show_edge", False)
     kwargs.setdefault("show_header", False)
     kwargs.setdefault("pad_edge", False)
@@ -289,10 +280,10 @@ def new_table(*headers: str, **kwargs) -> NewTable:
     kwargs.setdefault("box", box.ROUNDED)
 
     if headers:
-        kwargs.update(
-            header_style="bold misty_rose1", box=box.SIMPLE_HEAVY, show_header=True
-        )
-    rows = kwargs.pop("rows", [])
+        kwargs.setdefault("header_style", "bold misty_rose1")
+        kwargs.setdefault("show_header", True)
+        kwargs.setdefault("box", box.SIMPLE_HEAVY)
+
     table = NewTable(*headers, **kwargs)
     if rows:
         table.add_rows(rows)
