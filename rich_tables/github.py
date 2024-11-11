@@ -169,7 +169,7 @@ class Reaction:
     content: str
 
     def __str__(self) -> str:
-        return f':{self.content.lower()}: {get_val(self, "user")}'
+        return f":{self.content.lower()}: {get_val(self, 'user')}"
 
 
 class CreatedMixin(Protocol):
@@ -460,7 +460,7 @@ class PullRequestTable(PullRequest):
             title=wrap(attr, "b"),
             title_align="center",
             expand=True,
-            align="center",
+            vertical_align="middle",
         )
 
     @property
@@ -495,7 +495,7 @@ class PullRequestTable(PullRequest):
                     "b",
                 )
             ),
-            align="center",
+            vertical_align="middle",
             title_align="center",
             subtitle_align="center",
         )

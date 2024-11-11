@@ -33,9 +33,9 @@ import platformdirs
 import sqlparse
 from multimethod import multimethod
 from rich import box
-from rich.align import Align
+from rich.align import Align, VerticalAlignMethod
 from rich.bar import Bar
-from rich.console import Console, RenderableType
+from rich.console import Console, ConsoleRenderable, RenderableType, RichCast
 from rich.errors import MarkupError
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -244,20 +244,44 @@ console = make_console()
 
 
 class NewTable(Table):
-    def __init__(self, *args: str, **kwargs: Any) -> None:
-        ckwargs = {
-            "overflow": kwargs.pop("overflow", "fold"),
-            "justify": kwargs.pop("justify", "left"),
-            "vertical": kwargs.pop("vertical", "middle"),
-        }
+    def __init__(self, *args, **kwargs) -> None:
+        table_kwarg_names = set(Table.__init__.__code__.co_varnames)
+        column_kwarg_names = kwargs.keys() - table_kwarg_names
+        column_kwargs = {k: kwargs.pop(k) for k in column_kwarg_names}
+
         super().__init__(**kwargs)
         for arg in args:
-            self.add_column(arg, **ckwargs)
+            self.add_column(arg, **column_kwargs)
+
+    def add_column(self, *args, **kwargs) -> None:
+        kwargs.setdefault("overflow", "fold")
+        kwargs.setdefault("justify", "left")
+        kwargs.setdefault("vertical", "middle")
+        self.show_header = True
+        super().add_column(*args, **kwargs)
 
     def add_rows(self, rows: Iterable[Iterable[RenderableType]]) -> None:
         """Add multiple rows to the table."""
         for row in rows:
             self.add_row(*row)
+
+    def add_dict_row(
+        self, data: JSONDict, ignore_extra_fields: bool = False, **kwargs
+    ) -> None:
+        """Add a row to the table from a dictionary."""
+        if not ignore_extra_fields:
+            existing_cols = set(self.colnames)
+            for field in (f for f in data if f not in existing_cols):
+                self.add_column(field)
+
+        values = [data.get(c, "") for c in self.colnames]
+        self.add_row(
+            *(
+                (v if isinstance(v, (ConsoleRenderable, RichCast, str)) else str(v))
+                for v in values
+            ),
+            **kwargs,
+        )
 
     @property
     def colnames(self) -> List[str]:
@@ -268,8 +292,15 @@ class NewTable(Table):
 def new_table(
     *headers: str, rows: Iterable[Iterable[RenderableType]] | None = None, **kwargs
 ) -> NewTable:
+    if headers:
+        kwargs.setdefault("header_style", "bold misty_rose1")
+        kwargs.setdefault("show_header", True)
+        kwargs.setdefault("box", box.SIMPLE_HEAVY)
+    else:
+        kwargs.setdefault("show_header", False)
+        kwargs.setdefault("box", box.ROUNDED)
+
     kwargs.setdefault("show_edge", False)
-    kwargs.setdefault("show_header", False)
     kwargs.setdefault("pad_edge", False)
     kwargs.setdefault("highlight", True)
     kwargs.setdefault("row_styles", ["white"])
@@ -277,12 +308,6 @@ def new_table(
     kwargs.setdefault("title_justify", "left")
     kwargs.setdefault("style", "black")
     kwargs.setdefault("border_style", "black")
-    kwargs.setdefault("box", box.ROUNDED)
-
-    if headers:
-        kwargs.setdefault("header_style", "bold misty_rose1")
-        kwargs.setdefault("show_header", True)
-        kwargs.setdefault("box", box.SIMPLE_HEAVY)
 
     table = NewTable(*headers, **kwargs)
     if rows:
@@ -339,16 +364,19 @@ def fmt_pred_color(m: Match[str]) -> str:
     return f"{predictably_random_color(m.group(2))}]{m.group(2)}"
 
 
-def simple_panel(content: RenderableType, **kwargs) -> Panel:
+def simple_panel(
+    content: RenderableType, vertical_align: VerticalAlignMethod | None = None, **kwargs
+) -> Panel:
     kwargs.setdefault("title_align", "left")
     kwargs.setdefault("subtitle_align", "right")
     kwargs.setdefault("box", box.SIMPLE)
     kwargs.setdefault("expand", False)
     kwargs.setdefault("border_style", "red")
-    # if "title" in kwargs:
-    #     kwargs["title"] = wrap(kwargs["title"], "b")
-    if kwargs.pop("align", "") == "center":
-        content = Align.center(content, vertical="middle")
+    if "title" in kwargs:
+        kwargs["title"] = wrap(kwargs["title"], "b")
+
+    if vertical_align:
+        content = Align.center(content, vertical=vertical_align)
     return Panel(content, **kwargs)
 
 

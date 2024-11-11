@@ -13,10 +13,10 @@ from .fields import DISPLAY_HEADER, FIELDS_MAP
 from .utils import (
     NewTable,
     border_panel,
-    sortgroup_by,
     new_table,
     predictably_random_color,
     simple_panel,
+    sortgroup_by,
     wrap,
 )
 
@@ -38,7 +38,7 @@ TRACK_FIELDS = [
     "skips",
     "helicopta",
     "hidden",
-    "lyrics"
+    "lyrics",
 ]
 ALBUM_IGNORE = set(TRACK_FIELDS) | {
     "album_color",
@@ -178,7 +178,9 @@ def album_panel(tracks: List[JSONDict]) -> Panel:
         Group(
             album["album_title"],
             Align.center(
-                simple_panel(comments, style="grey54", expand=True, align="center")
+                simple_panel(
+                    comments, style="grey54", expand=True, vertical_align="middle"
+                )
             )
             if comments
             else "",
