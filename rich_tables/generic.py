@@ -97,6 +97,7 @@ def mapping_view_table() -> NewTable:
     table = new_table(border_style="cyan", style="cyan", box=box.MINIMAL, expand=False)
     table.add_column(justify="right", style="bold misty_rose1")
     table.add_column()
+    table.show_header = False
     return table
 
 
@@ -171,7 +172,9 @@ def _json_dict(data: JSONDict) -> RenderableType:
             continue
 
         value = flexitable(content, key)
-        if isinstance(value, Generator):
+        if len(str(content)) < MAX_DICT_LENGTH:
+            table.add_row(key, value)
+        elif isinstance(value, Generator):
             cols.append(border_panel(Group(*value), title=key))
         elif isinstance(value, (NewTable, Text, dict, Columns)):
             cols.append(border_panel(value, title=key))
@@ -281,7 +284,7 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
         if isinstance(transformed_value, str):
             return f"{header}: {transformed_value}"
 
-        print(f"{transformed_value=}, {type(transformed_value)=}")
+        # print(f"{transformed_value=}, {type(transformed_value)=}")
         if isinstance(transformed_value, (Panel, NewTable)):
             transformed_value = new_tree([transformed_value], header)
         elif isinstance(transformed_value, Tree):

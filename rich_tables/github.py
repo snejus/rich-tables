@@ -478,10 +478,12 @@ class PullRequestTable(PullRequest):
     @property
     def info(self) -> Panel:
         fields = "author", "dates", "headRefName", "participants", "reviewRequests"
-        pairs = [(f, getattr(self, f)) for f in fields]
-        field_rows = [flexitable({f: v}) for f, v in pairs if v]
+        pairs = {f: v for f in fields if (v := getattr(self, f))}
+        field_rows = flexitable(pairs)
         return border_panel(
-            new_table(rows=[*field_rows, [md_panel(self.body)], [self.files_commits]]),
+            new_table(
+                rows=[list(field_rows), [md_panel(self.body)], [self.files_commits]]
+            ),
             title=f"{self.name} @ {self.repo}",
             box=box.DOUBLE_EDGE,
             border_style=COLOR_BY_STATE[self.pr_state],

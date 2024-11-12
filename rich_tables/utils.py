@@ -247,18 +247,28 @@ class NewTable(Table):
     def __init__(self, *args, **kwargs) -> None:
         table_kwarg_names = set(Table.__init__.__code__.co_varnames)
         column_kwarg_names = kwargs.keys() - table_kwarg_names
-        column_kwargs = {k: kwargs.pop(k) for k in column_kwarg_names}
+        self.column_kwargs = {k: kwargs.pop(k) for k in column_kwarg_names}
 
-        super().__init__(**kwargs)
-        for arg in args:
-            self.add_column(arg, **column_kwargs)
+        super().__init__(*args, **kwargs)
 
     def add_column(self, *args, **kwargs) -> None:
-        kwargs.setdefault("overflow", "fold")
-        kwargs.setdefault("justify", "left")
-        kwargs.setdefault("vertical", "middle")
+        for k, v in self.column_kwargs.items():
+            kwargs.setdefault(k, v)
+
         self.show_header = True
         super().add_column(*args, **kwargs)
+
+    def add_row(self, *args: RenderableType | None, **kwargs) -> None:
+        rends = list(args)
+        if (overflow := self.column_kwargs.get("overflow")) and (
+            max_width := self.column_kwargs.get("max_width")
+        ):
+            rends = [(Text.from_markup(a) if isinstance(a, str) else a) for a in args]
+            for r in rends:
+                if isinstance(r, Text):
+                    r.truncate(max_width, overflow=overflow)
+
+        return super().add_row(*rends, **kwargs)
 
     def add_rows(self, rows: Iterable[Iterable[RenderableType]]) -> None:
         """Add multiple rows to the table."""
@@ -273,6 +283,7 @@ class NewTable(Table):
             existing_cols = set(self.colnames)
             for field in (f for f in data if f not in existing_cols):
                 self.add_column(field)
+                self.columns[-1]._cells = [""] * self.row_count
 
         values = [data.get(c, "") for c in self.colnames]
         self.add_row(
@@ -595,7 +606,7 @@ def _(before: dict, after: dict) -> Any:
     return data
 
 
-def pretty_diff(before: Any, after: Any) -> Text:
+def pretty_diff(before: Any, after: Any, **kwargs) -> Text:
     result = diff(to_hashable(before), to_hashable(after))
     if not isinstance(result, str):
         result = (
@@ -605,4 +616,4 @@ def pretty_diff(before: Any, after: Any) -> Text:
             .replace("\\\\", "\\")
         )
 
-    return Text.from_markup(result)
+    return Text.from_markup(result, **kwargs)
