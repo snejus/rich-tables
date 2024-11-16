@@ -172,10 +172,11 @@ def _json_dict(data: JSONDict) -> RenderableType:
             continue
 
         value = flexitable(content, key)
+        if isinstance(value, Generator):
+            value = border_panel(Group(*value), title=key)
+
         if len(str(content)) < MAX_DICT_LENGTH:
             table.add_row(key, value)
-        elif isinstance(value, Generator):
-            cols.append(border_panel(Group(*value), title=key))
         elif isinstance(value, (NewTable, Text, dict, Columns)):
             cols.append(border_panel(value, title=key))
         elif isinstance(value, ConsoleRenderable) and hasattr(value, "title"):

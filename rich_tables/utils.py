@@ -124,8 +124,7 @@ def format_new(string: str) -> str:
 
 def format_old(string: str) -> str:
     string = re.sub("^\n|\n$", lambda m: m[0].replace("\n", "⮠ "), string)
-    # string = re.sub("(?<!^)\n(?!$)", lambda m: m[0].replace("\n", ""), string)
-    return wrap(string, f"{BOLD_RED}")
+    return wrap(string, f"s b black on red")
 
 
 def fmtdiff(change: str, before: str, after: str) -> str:
