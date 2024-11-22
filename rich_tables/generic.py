@@ -175,17 +175,17 @@ def _json_dict(data: JSONDict) -> RenderableType:
         if isinstance(value, Generator):
             value = border_panel(Group(*value), title=key)
 
-        if len(str(content)) < MAX_DICT_LENGTH:
-            table.add_row(key, value)
-        elif isinstance(value, (NewTable, Text, dict, Columns)):
-            cols.append(border_panel(value, title=key))
-        elif isinstance(value, ConsoleRenderable) and hasattr(value, "title"):
-            value.title = key
-            cols.append(value)
-        elif isinstance(value, ConsoleRenderable) and not isinstance(value, Markdown):
-            cols.append(value)
-        else:
-            table.add_row(key, value)
+        # if len(str(content)) < MAX_DICT_LENGTH:
+        #     table.add_row(key, value)
+        if isinstance(value, (NewTable, Text, dict, Columns)):
+            value = border_panel(value, title=key)
+        # elif isinstance(value, ConsoleRenderable) and hasattr(value, "title"):
+        #     value.title = key
+        #     cols.append(value)
+        # elif isinstance(value, ConsoleRenderable) and not isinstance(value, Markdown):
+        #     cols.append(value)
+        # else:
+        table.add_row(key, value)
 
     if table.rows:
         cols.insert(0, table)
