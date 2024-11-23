@@ -559,8 +559,8 @@ def diff_serialize(value: Any) -> str:
 
 
 @multimethod
-def diff(before: str, after: str) -> Any:
-    return make_difftext(before, after, set(printable))
+def diff(before: str, after: str) -> str:
+    return make_difftext(before, after, printable)
 
 
 @diff.register
