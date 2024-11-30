@@ -9,8 +9,8 @@ from difflib import SequenceMatcher
 from functools import lru_cache
 from itertools import groupby, islice, starmap, zip_longest
 from math import copysign
-from pprint import pformat, pprint
-from string import ascii_lowercase, ascii_uppercase, printable, punctuation
+from pprint import pformat
+from string import printable, punctuation
 from typing import (
     Any,
     Callable,
@@ -575,19 +575,19 @@ def _(before: List[Any], after: List[Any]) -> Any:
 
 @diff.register
 def _(before: List[str], after: List[str]) -> Any:
-    return [diff(b or "", a or "") for b, a in zip_longest(before, after)]
-    # before_set, after_set = set(before), set(after)
-    # common = before_set & after_set
-    # common_list = list(common)
-    # return [
-    #     *list(starmap(diff, zip(common_list, common_list))),
-    #     *[
-    #         diff(before or "", after or "")
-    #         for before, after in zip_longest(
-    #             list(before_set - common), list(after_set - common)
-    #         )
-    #     ],
-    # ]
+    # return [diff(b or "", a or "") for b, a in zip_longest(before, after)]
+    before_set, after_set = dict.fromkeys(before), dict.fromkeys(after)
+    common = [k for k in before_set if k in after_set]
+    return [
+        *list(starmap(diff, zip(common, common))),
+        *[
+            diff(before or "", after or "")
+            for before, after in zip_longest(
+                [k for k in before_set if k not in common],
+                [k for k in after_set if k not in common],
+            )
+        ],
+    ]
 
 
 @diff.register
