@@ -279,7 +279,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     ),
     split_with_color: ("genre", "genres"),
     human_dt: (
-        "added",
+        # "added",
         "committedDate",
         "due",
         "start",
