@@ -4,7 +4,6 @@ from dataclasses import asdict, dataclass, field
 from functools import partial
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Iterator, List
 
-from funcy import join
 from typing_extensions import Literal, TypedDict
 
 from .fields import FIELDS_MAP, get_val
@@ -141,14 +140,14 @@ FIELDS_MAP.update(fields_map)
 
 def get_table(tasks_data_by_group: Dict[str, list[JSONDict]], **__) -> Iterator[Panel]:
     """Yield a table for each tasks group."""
-    headers = get_headers(next(iter(join(tasks_data_by_group.values()))))
+    headers = get_headers(next(t for g in tasks_data_by_group.values() for t in g))
     keep_headers = partial(keep_keys, headers)
 
     tasks_by_group = {
         g: [Task(**t) for t in tasks_data]
         for g, tasks_data in tasks_data_by_group.items()
     }
-    desc_by_uuid = {t.uuid: t.desc for t in join(tasks_by_group.values())}
+    desc_by_uuid = {t.uuid: t.desc for g in tasks_by_group.values() for t in g}
     for group, tasks in tasks_by_group.items():
         yield border_panel(
             flexitable([

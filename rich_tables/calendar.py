@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
 from typing import TYPE_CHECKING, Any, Dict, Iterable
+from zoneinfo import ZoneInfo
 
-from funcy import join
 from rich.bar import Bar
 from rich.columns import Columns
 from typing_extensions import Literal, NotRequired, TypedDict
@@ -167,7 +167,7 @@ def get_legend(events: list[Event]) -> RenderableType:
 
 
 def get_months(events: list[Event]) -> Iterable[RenderableType]:
-    all_periods = join(e.get_periods() for e in events)
+    all_periods = [p for e in events for p in e.get_periods()]
 
     headers = "name", "start_time", "end_time", "bar"
     get_values = attrgetter(*headers)
