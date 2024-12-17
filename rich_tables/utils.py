@@ -164,7 +164,7 @@ def make_difftext(
     after: str,
     junk: str = "".join(sorted((set(punctuation) - {"_", "-", ":"}) | {"\n"})),
 ) -> str:
-    matcher = SequenceMatcher(lambda x: x in " \n", autojunk=False, a=before, b=after)
+    matcher = SequenceMatcher(lambda x: x in "", autojunk=False, a=before, b=after)
     ops = matcher.get_opcodes()
     to_remove_ids = [
         i
