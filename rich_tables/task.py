@@ -135,11 +135,11 @@ fields_map: JSONDict = {
     if ann
     else None,
 }
-FIELDS_MAP.update(fields_map)
 
 
 def get_table(tasks_data_by_group: Dict[str, list[JSONDict]], **__) -> Iterator[Panel]:
     """Yield a table for each tasks group."""
+    FIELDS_MAP.update(fields_map)
     headers = get_headers(next(t for g in tasks_data_by_group.values() for t in g))
     keep_headers = partial(keep_keys, headers)
 
