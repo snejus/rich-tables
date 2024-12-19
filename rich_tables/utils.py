@@ -76,6 +76,7 @@ class Pat:
     PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
     HTML_PARAGRAPH = re.compile(r"</?p>")
     CONSECUTIVE_SPACE = re.compile("(?:^ +)|(?: +$)")
+    OPENING_BRACKET = re.compile(r"\[(?!http)")
 
 
 BOLD_GREEN = "b green"
@@ -104,7 +105,7 @@ def format_string(text: str) -> str:
     if "pred color]" in text:
         return Pat.PRED_COLOR_PAT.sub(fmt_pred_color, text)
     if "[" in text and r"\[" not in text and "[/" not in text:
-        return text.replace("[", r"\[")
+        return Pat.OPENING_BRACKET.sub(r"\[", text)
 
     return text
 
