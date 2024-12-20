@@ -393,6 +393,14 @@ class Review(Content, ResolvedMixin):
 
 
 @dataclass
+class Issue:
+    number: int
+    title: str
+    state: str
+    url: str
+
+
+@dataclass
 class PullRequest:
     id: str
     createdAt: str
@@ -415,6 +423,7 @@ class PullRequest:
     title: str
     updatedAt: str
     url: str
+    fixed_issues: List[Issue]
 
     verbose: bool
 
@@ -451,6 +460,7 @@ class PullRequestTable(PullRequest):
                 for r in reviews
                 if (r["id"] in threads_by_review_id or r["body"])
             ],
+            fixed_issues=[Issue(**i) for i in kwargs.pop("closingIssuesReferences")],
             **kwargs,
         )
 
