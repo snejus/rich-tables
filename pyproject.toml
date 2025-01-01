@@ -21,7 +21,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.8,<4"
 
-multimethod = "*"
+multimethod = "<2"
 rgbxy = ">=0.5"
 platformdirs = ">=4.2.0"
 rich = ">=12.3.0"
