@@ -447,7 +447,13 @@
           ]
         }
       ],
-      "id": "PR_kwDOAAygxs40fzZb"
+      "id": "PR_kwDOAAygxs40fzZb",
+      "closingIssuesReferences": [{
+        "number": 5133,
+        "state": "OPEN",
+        "title": "lyrics: config in tests not reset before each test",
+        "url": "https://github.com/beetbox/beets/issues/5133"
+      }]
     }
   ]
 }

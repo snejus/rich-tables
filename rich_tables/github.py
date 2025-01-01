@@ -17,7 +17,7 @@ from typing import (
 
 from rich import box
 from rich.syntax import Syntax
-from typing_extensions import TypedDict
+from typing_extensions import Literal, TypedDict
 
 from .fields import FIELDS_MAP, get_val
 from .generic import flexitable
@@ -396,8 +396,17 @@ class Review(Content, ResolvedMixin):
 class Issue:
     number: int
     title: str
-    state: str
+    state: Literal["OPEN", "CLOSED"]
     url: str
+
+    @property
+    def status(self) -> str:
+        return {"OPEN": "[b green][/]", "CLOSED": "[b magenta][/]"}[self.state]
+
+    @property
+    def fmt(self) -> str:
+        # return f"{self.status} {self.title} {self.url}"
+        return f"{self.title} {self.url}"
 
 
 @dataclass
@@ -423,7 +432,7 @@ class PullRequest:
     title: str
     updatedAt: str
     url: str
-    fixed_issues: List[Issue]
+    issues: List[Issue]
 
     verbose: bool
 
@@ -460,7 +469,7 @@ class PullRequestTable(PullRequest):
                 for r in reviews
                 if (r["id"] in threads_by_review_id or r["body"])
             ],
-            fixed_issues=[Issue(**i) for i in kwargs.pop("closingIssuesReferences")],
+            issues=[Issue(**i) for i in kwargs.pop("closingIssuesReferences")],
             **kwargs,
         )
 
@@ -486,8 +495,19 @@ class PullRequestTable(PullRequest):
         return "MERGED" if self.state == "MERGED" else self.reviewDecision
 
     @property
+    def fixed_issues(self) -> RenderableType:
+        return list_table([i.fmt for i in self.issues])
+
+    @property
     def info(self) -> Panel:
-        fields = "author", "dates", "headRefName", "participants", "reviewRequests"
+        fields = (
+            "author",
+            "dates",
+            "headRefName",
+            "participants",
+            "reviewRequests",
+            "fixed_issues",
+        )
         pairs = {f: v for f in fields if (v := getattr(self, f))}
         field_rows = flexitable(pairs)
         return border_panel(

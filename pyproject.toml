@@ -19,7 +19,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4"
+python = ">=3.9,<4"
 
 multimethod = "<2"
 rgbxy = ">=0.5"
@@ -27,6 +27,7 @@ platformdirs = ">=4.2.0"
 rich = ">=12.3.0"
 sqlparse = ">=0.4.4"
 typing-extensions = ">=4.7.1"
+humanize = "^4.11.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = ">=4.0.1"
