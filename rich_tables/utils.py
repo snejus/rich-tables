@@ -29,6 +29,7 @@ from typing import (
     Union,
 )
 
+import humanize
 import platformdirs
 import sqlparse
 from multimethod import multimethod
@@ -478,11 +479,12 @@ def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
-def human_dt(timestamp: Union[int, str, float], acc: int = 1) -> str:
+def human_dt(timestamp: Union[str, float], acc: int = 1) -> str:
     try:
         datetime = timestamp2datetime(timestamp)
     except ValueError:
         return str(timestamp)
+    return humanize.naturaltime(datetime)
 
     diff = datetime.timestamp() - time.time()
     fmted = " ".join(islice(fmt_time(int(diff)), acc))
