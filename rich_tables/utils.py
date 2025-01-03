@@ -479,17 +479,18 @@ def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
-def human_dt(timestamp: Union[str, float], acc: int = 1) -> str:
+def human_dt(timestamp: Union[str, float]) -> str:
     try:
         datetime = timestamp2datetime(timestamp)
     except ValueError:
         return str(timestamp)
-    return humanize.naturaltime(datetime)
 
-    diff = datetime.timestamp() - time.time()
-    fmted = " ".join(islice(fmt_time(int(diff)), acc))
+    num, text = humanize.naturaltime(datetime).split(maxsplit=1)
+    if num in {"a", "an"}:
+        num = "1"
+    color = predictably_random_color(f"{int(num) // 10} {text}")
 
-    return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN)
+    return f"[b {color}]{num} {text}[/]"
 
 
 def diff_dt(timestamp: Union[int, str, float], acc: int = 2) -> str:

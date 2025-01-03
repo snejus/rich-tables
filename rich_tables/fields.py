@@ -162,13 +162,11 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if isinstance(x, list)
         else format_with_color(x.upper())
     ),
-    avg_last_played=lambda x: human_dt(x, acc=2),
     since=lambda x: (
         x
         if isinstance(x, str)
         else datetime.fromtimestamp(float(x)).strftime("%F %H:%M")
     ),
-    # dt=lambda x: human_dt(x, acc=5),
     wait_per_play=lambda x: wrap(
         " ".join(islice(fmt_time(int(float(x))), 1)), BOLD_GREEN
     ),
@@ -214,7 +212,6 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     CreatedBy=lambda x: syntax(x.replace(";", "\n"), "sh"),
     file=lambda x: "/".join(map(format_with_color, x.split("/"))),
     field=lambda x: ".".join(map(format_with_color, x.split("."))),
-    added=lambda x: format_with_color(human_dt(x)),
     unified_diff=lambda x: syntax(x, "diff"),
     diffHunk=lambda x: syntax(x, "diff"),
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
@@ -281,14 +278,16 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     ),
     split_with_color: ("genre", "genres"),
     human_dt: (
-        # "added",
+        "added",
         "committedDate",
         "due",
+        "done_date",
         "start",
         "end",
         "entry",
         "first_active",
         "last_active",
+        "last_played",
         "mtime",
         "updated",
         "providerPublishTime",
