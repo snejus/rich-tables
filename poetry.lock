@@ -156,6 +156,17 @@ files = [
 tests = ["Django", "numpy (>=1.16.3)", "pandas (>=0.24.2)", "pytest"]
 
 [[package]]
+name = "coloraide"
+version = "4.1"
+description = "A color library for Python."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "coloraide-4.1-py3-none-any.whl", hash = "sha256:118bf24bc0f71b7cf0805c66f68e2c2b3994060db41ce91d2c0a44fffc3e123c"},
+    {file = "coloraide-4.1.tar.gz", hash = "sha256:8c57823227ba941f60a2d59b46cc023d6d3e4c6ae065117e40717391569e9f7d"},
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -938,4 +949,4 @@ hue = ["rgbxy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<4"
-content-hash = "ac502fad311ee6506117cf29091fc408fa3764e23ebb90cb87a6889a808edd52"
+content-hash = "1da4495410d5624af259ab766133f6f9eea99b712f637fb3c468ab266eb46bc3"

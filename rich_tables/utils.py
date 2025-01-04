@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import colorsys
 import random
 import re
 import sys
@@ -32,6 +33,7 @@ from typing import (
 import humanize
 import platformdirs
 import sqlparse
+from coloraide import Color
 from multimethod import multimethod
 from rich import box
 from rich.align import Align, VerticalAlignMethod
@@ -335,11 +337,28 @@ def _randint() -> int:
     return random.randint(50, 205)
 
 
-@lru_cache
-def predictably_random_color(string: str) -> str:
-    random.seed(string.strip())
+def adjust_color_intensity(
+    rgb_color: tuple[int, int, int], factor: float
+) -> tuple[int, ...]:
+    # Convert RGB to HSL
+    h, _l, s = colorsys.rgb_to_hls(*[c / 255.0 for c in rgb_color])
 
-    return f"#{_randint():02X}{_randint():02X}{_randint():02X}"
+    # Adjust the lightness (intensity) while keeping hue constant
+    new_l = max(0, min(1, 0.5 * factor))
+    print(new_l)
+
+    # Convert back to RGB
+    return tuple(int(c * 255) for c in colorsys.hls_to_rgb(h, new_l, s))
+
+
+@lru_cache
+def predictably_random_color(string: str, intensity: float | None = None) -> str:
+    random.seed(string.strip())
+    r, g, b = _randint(), _randint(), _randint()
+    if intensity is not None:
+        r, g, b = adjust_color_intensity((r, g, b), intensity)
+
+    return f"#{r:02X}{g:02X}{b:02X}"
 
 
 def _format_with_color(string: str, on: Optional[str] = None) -> str:
@@ -462,6 +481,7 @@ def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
     if isinstance(timestamp, str):
         timestamp = re.sub(r"[.]\d+", "", timestamp.strip("'"))
         formats = [
+            "%Y-%m-%d",
             "%Y-%m-%dT%H:%M:%SZ",
             "%Y%m%dT%H%M%SZ",
             "%Y-%m-%d %H:%M:%S",
@@ -479,18 +499,51 @@ def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
+COLORS_AND_PERIODS = [
+    (c.filter("contrast", 0.5), *p)
+    for c, p in zip(
+        Color("magenta").harmony("wheel", space="oklch", count=7),
+        [
+            (60, 1),  # seconds
+            (60, 60),  # minutes
+            (24, 60 * 60),  # hours
+            (31, 24 * 60 * 60),  # days
+            (12, 31 * 24 * 60 * 60),  # months
+            (365, 12 * 30 * 24 * 60 * 60),  # years
+        ],
+    )
+]
+
+
+def get_td_color(seconds: float) -> str:
+    for color, max_factor, seconds_in_unit in COLORS_AND_PERIODS:
+        if seconds < seconds_in_unit * max_factor:
+            unit_count = seconds // seconds_in_unit
+            center = max_factor / 2
+            diff = unit_count - center
+            factor = -(diff / center / 1.5)
+            factor = 1 + factor
+            return (
+                color.filter("brightness", factor)
+                .clip()
+                .convert("srgb")
+                .to_string(hex=True)
+            )
+
+    raise AssertionError("Shouldn't get here")
+
+
 def human_dt(timestamp: Union[str, float]) -> str:
     try:
-        datetime = timestamp2datetime(timestamp)
+        dt = timestamp2datetime(timestamp)
     except ValueError:
         return str(timestamp)
 
-    num, text = humanize.naturaltime(datetime).split(maxsplit=1)
-    if num in {"a", "an"}:
-        num = "1"
-    color = predictably_random_color(f"{int(num) // 10} {text}")
+    human_dt = humanize.naturaltime(dt)
 
-    return f"[b {color}]{num} {text}[/]"
+    color = get_td_color(abs((dt.now(tz=dt.tzinfo) - dt).total_seconds()))
+
+    return f"[b {color}]{human_dt}[/]"
 
 
 def diff_dt(timestamp: Union[int, str, float], acc: int = 2) -> str:

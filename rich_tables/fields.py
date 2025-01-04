@@ -291,6 +291,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "mtime",
         "updated",
         "providerPublishTime",
+        "release_date",
     ),
     md_panel: (
         "answer",

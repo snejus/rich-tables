@@ -13,7 +13,6 @@ from rich import box
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group, RenderableType
 from rich.logging import RichHandler
-from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
