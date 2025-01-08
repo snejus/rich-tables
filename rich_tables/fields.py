@@ -89,6 +89,12 @@ def add_count_bars(data: list[JSONDict]) -> list[JSONDict]:
         )
         new_data.append(new_item)
 
+    if count_header in {"duration", "total_duration"}:
+        new_data.append({
+            keys[0]: "TOTAL",
+            count_header: duration2human(float(sum(all_counts))),
+        })
+
     return new_data
 
 
@@ -158,9 +164,14 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     ),
     author=format_with_color_on_black,
     labels=lambda x: (
-        wrap("    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x), "b")
+        wrap(
+            "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x),
+            "b",
+        )
         if isinstance(x, list)
         else format_with_color(x.upper())
+        if isinstance(x, str)
+        else x
     ),
     since=lambda x: (
         x
