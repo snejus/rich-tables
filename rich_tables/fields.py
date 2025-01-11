@@ -162,7 +162,9 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
             ).split("; "),
         )
     ),
-    author=format_with_color_on_black,
+    author=lambda x: (
+        format_with_color_on_black(x) if isinstance(x, (str, list, tuple, set)) else x
+    ),
     labels=lambda x: (
         wrap(
             "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x),
