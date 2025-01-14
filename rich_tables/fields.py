@@ -288,6 +288,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "type",
         "type_name",
         "user",
+        "client", "env"
     ),
     split_with_color: ("genre", "genres"),
     human_dt: (
