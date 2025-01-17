@@ -30,7 +30,7 @@ TRACK_FIELDS = [
     "track",
     "track_alt",
     "length",
-    "artist",
+    # "artist",
     "artists",
     "title",
     "bpm",
