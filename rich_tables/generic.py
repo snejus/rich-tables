@@ -3,6 +3,7 @@ from __future__ import annotations
 import itertools as it
 import logging
 import os
+from contextlib import suppress
 from datetime import datetime
 from functools import partial, wraps
 from itertools import groupby
@@ -135,11 +136,12 @@ def _header(data: Any, header: str) -> RenderableType:
     if header not in fields.FIELDS_MAP or isinstance(data, list):
         return flexitable(data)
 
-    out = _get_val(data, header)
-    if not isinstance(out, str) and isinstance(out, type(data)):
-        return flexitable(out)
+    with suppress(Exception):
+        data = _get_val(data, header)
+    if not isinstance(data, str) and isinstance(data, type(data)):
+        return flexitable(data)
 
-    return out
+    return data
 
 
 @flexitable.register
