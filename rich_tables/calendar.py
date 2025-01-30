@@ -50,7 +50,7 @@ class Period:
             if kwargs["end"] < datetime.now(tz=kwargs["end"].tzinfo)
             else ""
         )
-        kwargs["desc"] = kwargs["desc"].strip()
+        kwargs["desc"] = (kwargs["desc"] or "").strip()
         return cls(**kwargs)
 
     @property
