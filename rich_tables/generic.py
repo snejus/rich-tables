@@ -218,10 +218,10 @@ simple_head_table = partial(
 )
 
 
-@flexitable.register
-@debug
-def _list(data: list) -> RenderableType:
-    return flexitable(tuple(data))
+# @flexitable.register
+# @debug
+# def _list(data: list) -> RenderableType:
+#     return flexitable(tuple(data))
 
 
 @flexitable.register
