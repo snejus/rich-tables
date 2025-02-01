@@ -127,7 +127,8 @@ def _draw_data_dict(data: JSONDict | NamedData, **kwargs) -> Iterator[Renderable
 
 @draw_data.register(list)
 def _draw_data_list(data: list[JSONDict], **kwargs) -> Iterator[RenderableType]:
-    yield flexitable(data)
+    if data:
+        yield flexitable(data)
 
 
 def main() -> None:
