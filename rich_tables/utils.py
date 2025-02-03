@@ -279,7 +279,11 @@ class NewTable(Table):
             self.add_row(*row)
 
     def add_dict_row(
-        self, data: JSONDict, ignore_extra_fields: bool = False, **kwargs
+        self,
+        data: JSONDict,
+        ignore_extra_fields: bool = False,
+        sort_columns: bool = False,
+        **kwargs,
     ) -> None:
         """Add a row to the table from a dictionary."""
         if not ignore_extra_fields:
@@ -287,6 +291,8 @@ class NewTable(Table):
             for field in (f for f in data if f not in existing_cols):
                 self.add_column(field)
                 self.columns[-1]._cells = [""] * self.row_count
+                if sort_columns:
+                    self.columns = sorted(self.columns, key=lambda c: c.header)
 
         values = [data.get(c, "") for c in self.colnames]
         self.add_row(

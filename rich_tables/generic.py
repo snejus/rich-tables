@@ -29,6 +29,7 @@ from .utils import (
     new_table,
     new_tree,
     predictably_random_color,
+    simple_panel,
     wrap,
 )
 
@@ -101,6 +102,24 @@ def mapping_view_table() -> NewTable:
     return table
 
 
+def two_axes_table(*args, **kwargs) -> NewTable:
+    table = new_table(
+        border_style="magenta",
+        header_style="b blue",
+        box=box.HORIZONTALS,
+        highlight=False,
+        padding=(0, 2),
+        show_lines=False,
+        pad_edge=True,
+        expand=False,
+        show_edge=False,
+        justify="center",
+        row_styles=["bold on black", "bold on #212834"],
+    )
+    table.add_column(header_style="on black", style="b #d3a270")
+    return table
+
+
 def prepare_dict(item: JSONDict) -> JSONDict:
     if "before" in item and "after" in item:
         item["diff"] = (item.pop("before"), item.pop("after"))
@@ -164,6 +183,16 @@ def _str(data: str) -> RenderableType:
 
 @flexitable.register
 @debug
+def _json_dict(data: dict[str, dict[str, int | float | str | None]]) -> RenderableType:
+    table = two_axes_table()
+    for y_val, x_mapping in data.items():
+        table.add_dict_row({"": y_val, **x_mapping}, sort_columns=True)
+
+    yield table
+
+
+@flexitable.register
+@debug
 def _json_dict(data: JSONDict) -> RenderableType:
     data = prepare_dict(data)
     table = mapping_view_table()
@@ -174,24 +203,28 @@ def _json_dict(data: JSONDict) -> RenderableType:
 
         value = flexitable(content, key)
         if isinstance(value, Generator):
-            value = border_panel(Group(*value), title=key)
+            value = simple_panel(
+                Group(*value), title_align="center", border_style="bold i magenta"
+            )
 
         # if len(str(content)) < MAX_DICT_LENGTH:
         #     table.add_row(key, value)
         if isinstance(value, (NewTable, Text, dict, Columns)):
-            value = border_panel(value, title=key)
+            value = simple_panel(value)
         # elif isinstance(value, ConsoleRenderable) and hasattr(value, "title"):
         #     value.title = key
         #     cols.append(value)
         # elif isinstance(value, ConsoleRenderable) and not isinstance(value, Markdown):
         #     cols.append(value)
         # else:
-        table.add_row(key, value)
+        if len(data) == 1:
+            value.title = key
+            value.padding = 1
+            yield value
+        else:
+            table.add_row(key, value)
 
-    if table.rows:
-        cols.insert(0, table)
-
-    yield from cols
+    yield table
 
     # return border_panel(Group(*cols))
     # yield from cols
