@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python: ["3.9", "3.10", "3.11", "3.12"]
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -46,7 +46,7 @@ jobs:
         run: echo PROJECT_VERSION="$(git describe --tags | sed 's/-[^-]*$//')" >> $GITHUB_ENV
 
       - name: SonarCloud Scan
-        if: matrix.python == '3.8'
+        if: matrix.python == '3.9'
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

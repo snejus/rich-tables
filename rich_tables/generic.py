@@ -29,7 +29,6 @@ from .utils import (
     new_table,
     new_tree,
     predictably_random_color,
-    simple_panel,
     wrap,
 )
 
@@ -71,12 +70,14 @@ def _debug(_func: Callable[..., T], *args) -> None:
         data, *header = (str(arg).split(r"\n")[0] for arg in args)
         print(
             indent
-            + " ".join([
-                f"Function \033[1;31m{_func.__name__}\033[0m",
-                f"Types: \033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m",
-                f"Header: \033[1;35m{header[0]}\033[0m " if header else "",
-                f"Data: \033[1m{data}\033[0m" if data else "",
-            ])
+            + " ".join(
+                [
+                    f"Function \033[1;31m{_func.__name__}\033[0m",
+                    f"Types: \033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m",
+                    f"Header: \033[1;35m{header[0]}\033[0m " if header else "",
+                    f"Data: \033[1m{data}\033[0m" if data else "",
+                ]
+            )
         )
 
         indent += "│ "
@@ -183,67 +184,23 @@ def _str(data: str) -> RenderableType:
 
 @flexitable.register
 @debug
-def _json_dict(data: dict[str, dict[str, int | float | str | None]]) -> RenderableType:
-    table = two_axes_table()
-    for y_val, x_mapping in data.items():
-        table.add_dict_row({"": y_val, **x_mapping}, sort_columns=True)
-
-    yield table
-
-
-@flexitable.register
-@debug
 def _json_dict(data: JSONDict) -> RenderableType:
     data = prepare_dict(data)
     table = mapping_view_table()
-    cols: List[RenderableType] = []
     for key, content in data.items():
         if content is None or (isinstance(content, list) and not content):
             continue
 
         value = flexitable(content, key)
         if isinstance(value, Generator):
-            value = simple_panel(
-                Group(*value), title_align="center", border_style="bold i magenta"
-            )
+            value = border_panel(Group(*value), title_align="center")
 
-        # if len(str(content)) < MAX_DICT_LENGTH:
-        #     table.add_row(key, value)
         if isinstance(value, (NewTable, Text, dict, Columns)):
-            value = simple_panel(value)
-        # elif isinstance(value, ConsoleRenderable) and hasattr(value, "title"):
-        #     value.title = key
-        #     cols.append(value)
-        # elif isinstance(value, ConsoleRenderable) and not isinstance(value, Markdown):
-        #     cols.append(value)
-        # else:
-        if len(data) == 1:
-            value.title = key
-            value.padding = 1
-            yield value
-        else:
-            table.add_row(key, value)
+            value = border_panel(value)
+
+        table.add_row(key, value)
 
     yield table
-
-    # return border_panel(Group(*cols))
-    # yield from cols
-
-    # row: List[RenderableType] = []
-    # width = 0
-    # rows: List[RenderableType] = []
-    # for rend in cols:
-    #     this_width = console.measure(rend).maximum
-    #     if width + this_width > console.width:
-    #         rows.append(Columns(row, equal=True, padding=(0, 0)))
-    #         row, width = [rend], this_width
-    #     else:
-    #         row.append(rend)
-    #         width += this_width
-
-    # rows.append(Columns(row, equal=True, padding=(0, 0)))
-
-    # return list_table(rows, padding=(0, 0))
 
 
 simple_head_table = partial(
@@ -350,11 +307,13 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
             for key in keys:
                 sub_table.add_column(key, header_style=predictably_random_color(key))
             for item in items:
-                sub_table.add_row(*[
-                    (Group(*res) if isinstance(res, Generator) else res)
-                    for k in keys
-                    if (res := flexitable(item.get(k, ""), k)) is not None
-                ])
+                sub_table.add_row(
+                    *[
+                        (Group(*res) if isinstance(res, Generator) else res)
+                        for k in keys
+                        if (res := flexitable(item.get(k, ""), k)) is not None
+                    ]
+                )
             for col in sub_table.columns:
                 col.header = DISPLAY_HEADER.get(str(col.header), col.header)
             large_table.add_row(sub_table)
