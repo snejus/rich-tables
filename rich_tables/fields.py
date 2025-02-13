@@ -317,6 +317,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "creditText",
         "description",
         "desc",
+        "doc",
         # "instructions",
         "content",
         "interview",
