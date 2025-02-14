@@ -523,7 +523,7 @@ COLORS_AND_PERIODS = [
 
 def get_td_color(seconds: float) -> str:
     for color, max_factor, seconds_in_unit in COLORS_AND_PERIODS:
-        if seconds < seconds_in_unit * max_factor:
+        if seconds <= seconds_in_unit * max_factor:
             unit_count = seconds // seconds_in_unit
             center = max_factor / 2
             diff = unit_count - center
@@ -561,7 +561,7 @@ def diff_dt(timestamp: Union[int, str, float], acc: int = 2) -> str:
     diff = datetime.timestamp() - time.time()
     fmted = " ".join(islice(fmt_time(int(diff)), acc))
 
-    strtime = datetime.strftime("%F" if abs(diff) > SECONDS_PER_DAY else "%T")
+    strtime = datetime.strftime("%F" if abs(diff) >= SECONDS_PER_DAY else "%T")
 
     return f"{wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN)} {strtime}"
 
