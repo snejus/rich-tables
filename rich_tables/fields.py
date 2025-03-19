@@ -90,10 +90,12 @@ def add_count_bars(data: list[JSONDict]) -> list[JSONDict]:
         new_data.append(new_item)
 
     if count_header in {"duration", "total_duration"}:
-        new_data.append({
-            keys[0]: "TOTAL",
-            count_header: duration2human(float(sum(all_counts))),
-        })
+        new_data.append(
+            {
+                keys[0]: "TOTAL",
+                count_header: duration2human(float(sum(all_counts))),
+            }
+        )
 
     return new_data
 
@@ -230,6 +232,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
     sql=lambda x: border_panel(sql_syntax(x.replace(r"\[", "["))),
+    slug=format_with_color_on_black,
 )
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     format_with_color: (
@@ -290,7 +293,8 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "type",
         "type_name",
         "user",
-        "client", "env"
+        "client",
+        "env",
     ),
     split_with_color: ("genre", "genres"),
     human_dt: (
