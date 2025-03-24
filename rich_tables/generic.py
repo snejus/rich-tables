@@ -97,7 +97,7 @@ def mapping_view_table() -> NewTable:
     * Second one for values.
     """
     table = new_table(border_style="cyan", style="cyan", box=box.MINIMAL, expand=False)
-    table.add_column(justify="right", style="bold misty_rose1")
+    table.add_column(style="bold misty_rose1")
     table.add_column()
     table.show_header = False
     return table

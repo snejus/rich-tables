@@ -30,10 +30,7 @@ from typing import (
     Union,
 )
 
-import humanize
 import platformdirs
-import sqlparse
-from coloraide import Color
 from multimethod import multimethod
 from rich import box
 from rich.align import Align, VerticalAlignMethod
@@ -432,7 +429,7 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
 
     return border_panel(
         Markdown(
-            Pat.HTML_PARAGRAPH.sub("", content),
+            print(pat := Pat.HTML_PARAGRAPH.sub("", content)) or pat,
             inline_code_theme="nord-darker",
             code_theme="nord-darker",
             justify=kwargs.pop("justify", "left"),
@@ -505,24 +502,28 @@ def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
-COLORS_AND_PERIODS = [
-    (c.filter("contrast", 0.5), *p)
-    for c, p in zip(
-        Color("magenta").harmony("wheel", space="oklch", count=7),
-        [
-            (60, 1),  # seconds
-            (60, 60),  # minutes
-            (24, 60 * 60),  # hours
-            (31, 24 * 60 * 60),  # days
-            (12, 31 * 24 * 60 * 60),  # months
-            (365, 12 * 30 * 24 * 60 * 60),  # years
-        ],
-    )
-]
+@lru_cache
+def get_colors_and_periods():
+    from coloraide import Color
+
+    return [
+        (c.filter("contrast", 0.5), *p)
+        for c, p in zip(
+            Color("magenta").harmony("wheel", space="oklch", count=7),
+            [
+                (60, 1),  # seconds
+                (60, 60),  # minutes
+                (24, 60 * 60),  # hours
+                (31, 24 * 60 * 60),  # days
+                (12, 31 * 24 * 60 * 60),  # months
+                (365, 12 * 30 * 24 * 60 * 60),  # years
+            ],
+        )
+    ]
 
 
 def get_td_color(seconds: float) -> str:
-    for color, max_factor, seconds_in_unit in COLORS_AND_PERIODS:
+    for color, max_factor, seconds_in_unit in get_colors_and_periods():
         if seconds <= seconds_in_unit * max_factor:
             unit_count = seconds // seconds_in_unit
             center = max_factor / 2
@@ -540,6 +541,8 @@ def get_td_color(seconds: float) -> str:
 
 
 def human_dt(timestamp: Union[str, float]) -> str:
+    import humanize
+
     try:
         dt = timestamp2datetime(timestamp)
     except ValueError:
@@ -574,6 +577,8 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 
 
 def sql_syntax(sql_string: str) -> Syntax:
+    import sqlparse
+
     return Syntax(
         sqlparse.format(
             sql_string,

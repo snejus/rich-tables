@@ -321,6 +321,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "bodyHTML",
         "creditText",
         "description",
+        "Description",
         "desc",
         "doc",
         # "instructions",
