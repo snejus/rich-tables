@@ -30,6 +30,7 @@ from typing import (
     Union,
 )
 
+import humanize
 import platformdirs
 from multimethod import multimethod
 from rich import box
@@ -522,6 +523,7 @@ def get_colors_and_periods():
     ]
 
 
+@lru_cache
 def get_td_color(seconds: float) -> str:
     for color, max_factor, seconds_in_unit in get_colors_and_periods():
         if seconds <= seconds_in_unit * max_factor:
@@ -541,8 +543,6 @@ def get_td_color(seconds: float) -> str:
 
 
 def human_dt(timestamp: Union[str, float]) -> str:
-    import humanize
-
     try:
         dt = timestamp2datetime(timestamp)
     except ValueError:
@@ -577,8 +577,6 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 
 
 def sql_syntax(sql_string: str) -> Syntax:
-    import sqlparse
-
     return Syntax(
         sqlparse.format(
             sql_string,
