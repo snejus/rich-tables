@@ -103,24 +103,6 @@ def mapping_view_table() -> NewTable:
     return table
 
 
-def two_axes_table(*args, **kwargs) -> NewTable:
-    table = new_table(
-        border_style="magenta",
-        header_style="b blue",
-        box=box.HORIZONTALS,
-        highlight=False,
-        padding=(0, 2),
-        show_lines=False,
-        pad_edge=True,
-        expand=False,
-        show_edge=False,
-        justify="center",
-        row_styles=["bold on black", "bold on #212834"],
-    )
-    table.add_column(header_style="on black", style="b #d3a270")
-    return table
-
-
 def prepare_dict(item: JSONDict) -> JSONDict:
     if "before" in item and "after" in item:
         item["diff"] = (item.pop("before"), item.pop("after"))
@@ -266,12 +248,6 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
     def getval(value: Any, key: str) -> RenderableType:
         transformed_value = flexitable(value, key)
         header = wrap(key, "b")
-        if (
-            isinstance(transformed_value, NewTable)
-            and len(transformed_value.rows) == 1
-            and len(transformed_value.columns) == 1
-        ):
-            transformed_value = transformed_value.columns[0]._cells[0]
 
         if isinstance(transformed_value, str):
             return f"{header}: {transformed_value}"
@@ -283,13 +259,12 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
             transformed_value.label = header
 
         elif isinstance(transformed_value, Generator):
-            return Group(*transformed_value, fit=False)
+            return new_tree([Group(*transformed_value, fit=False)], header)
 
         return transformed_value
 
     large_table = simple_head_table()
     for large, items in groupby(data, lambda i: len(str(i.values())) > MAX_DICT_LENGTH):
-        items = list(items)
         if large:
             for item in items:
                 values = it.starmap(

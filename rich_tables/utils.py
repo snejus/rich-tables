@@ -143,24 +143,6 @@ def fmtdiff(change: str, before: str, after: str) -> str:
     return wrap(before, "dim")
 
 
-def format_added_line(m: Match[str]) -> str:
-    text = m[1]
-    if txt := text.replace("[/]", ""):
-        text += f"\n[on green]{' ' * len(txt)}[/]"
-
-    return text
-
-
-def triplewise(iterable):
-    iterator = iter(iterable)
-    window = tuple(islice(iterator, 3))
-    if len(window) == 3:
-        yield window
-    for item in iterator:
-        window = window[1:] + (item,)
-        yield window
-
-
 def make_difftext(
     before: str,
     after: str,
