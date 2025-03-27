@@ -170,7 +170,9 @@ def album_panel(tracks: List[JSONDict]) -> Panel:
     tracklist = tracks_table(tracks, track_fields, album["album_color"])
 
     last_track_index = tracks.index(
-        next(iter(sorted(tracks, key=op.itemgetter("last_played"), reverse=True)))
+        next(
+            iter(sorted(tracks, key=lambda t: t.get("last_played") or 0, reverse=True))
+        )
     )
     tracklist.rows[last_track_index].style = "b white on #000000"
     tracklist.add_row(
