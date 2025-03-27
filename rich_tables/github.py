@@ -319,11 +319,13 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
 
     @property
     def title(self) -> str:
-        return " ".join([
-            wrap(self.path, "b magenta"),
-            self.formatted_state,
-            fmt_state("OUTDATED") if self.isOutdated else "",
-        ])
+        return " ".join(
+            [
+                wrap(self.path, "b magenta"),
+                self.formatted_state,
+                fmt_state("OUTDATED") if self.isOutdated else "",
+            ]
+        )
 
     @property
     def panel(self) -> Panel:
@@ -509,11 +511,13 @@ class PullRequestTable(PullRequest):
             border_style=COLOR_BY_STATE[self.pr_state],
             subtitle=(
                 wrap(
-                    " ".join([
-                        fmt_state(self.reviewDecision),
-                        wrap("//", "white"),
-                        fmt_state(self.state),
-                    ]),
+                    " ".join(
+                        [
+                            fmt_state(self.reviewDecision),
+                            wrap("//", "white"),
+                            fmt_state(self.state),
+                        ]
+                    ),
                     "b",
                 )
             ),
