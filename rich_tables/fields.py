@@ -22,7 +22,6 @@ from .utils import (
     get_country,
     human_dt,
     md_panel,
-    new_table,
     pretty_diff,
     progress_bar,
     simple_panel,
@@ -35,7 +34,6 @@ from .utils import (
 
 if TYPE_CHECKING:
     from rich.console import RenderableType
-    from rich.table import Table
 
 
 MATCH_COUNT_HEADER = re.compile(r"duration|(_sum$|_?count$)")
@@ -98,56 +96,6 @@ def add_count_bars(data: list[JSONDict]) -> list[JSONDict]:
         )
 
     return new_data
-
-
-def counts_table(data: list[JSONDict]) -> Table:
-    count_header = ""
-    subcount_header = None
-    ordered_headers = []
-    for key in data[0]:
-        if key.endswith("_subcount"):
-            subcount_header = key
-        elif MATCH_COUNT_HEADER.search(key):
-            if count_header:
-                ordered_headers.append(key)
-            else:
-                count_header = key
-        else:
-            ordered_headers.append(key)
-
-    all_counts = [float(i.get(count_header, 0)) for i in data]
-    num_type = int if len({c % 1 for c in all_counts}) == 1 else float
-    max_value = max(all_counts)
-
-    if subcount_header:
-        count_header = f"{subcount_header}/{count_header}".replace(
-            "_count", ""
-        ).replace("_subcount", "")
-
-    table = new_table(*ordered_headers, count_header, count_header, expand=True)
-    for item, count in zip(data, all_counts):
-        subcount = None
-        inverse = False
-        count_val = str(count)
-        if subcount_header:
-            subcount = float(item[subcount_header])
-            count_val = f"{num_type(subcount)}/{num_type(count)}"
-        elif "duration" in count_header:
-            inverse = True
-            if num_type is int:
-                count_val = duration2human(count)
-        else:
-            count_val = str(num_type(count))
-
-        table.add_row(
-            *(get_val(item, h) for h in ordered_headers),
-            count_val,
-            progress_bar(end=subcount, width=max_value, size=count, inverse=inverse),
-        )
-    if count_header in {"duration", "total_duration"}:
-        table.caption = f"Total {duration2human(float(sum(all_counts)))}"
-        table.caption_justify = "left"
-    return table
 
 
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
@@ -265,13 +213,11 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "group_source",
         "Interests",
         "issuetype",
-        # "key",
         "kind",
         "label",
         "mastering",
         "media",
         "module",
-        # "name",
         "operation",
         "primary",
         "priority",
@@ -324,7 +270,6 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "Description",
         "desc",
         "doc",
-        # "instructions",
         "content",
         "interview",
         "notes",
@@ -351,7 +296,7 @@ DISPLAY_HEADER: dict[str, str] = {
 }
 
 
-def _get_val(value: Any, field: str) -> Any:
+def _get_val(value: Any, field: str) -> RenderableType:
     if value is None:
         return "None"
 

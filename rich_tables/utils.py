@@ -3,7 +3,6 @@ from __future__ import annotations
 import colorsys
 import random
 import re
-import sys
 import time
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
@@ -16,12 +15,10 @@ from typing import (
     Any,
     Callable,
     Dict,
-    Generic,
     Iterable,
     List,
     Match,
     Optional,
-    Pattern,
     Protocol,
     Sequence,
     SupportsFloat,
@@ -48,28 +45,6 @@ from rich.tree import Tree
 
 JSONDict = Dict[str, Any]
 T = TypeVar("T")
-
-
-class cached_classproperty(Generic[T]):
-    def __init__(self, getter: Callable[..., T]) -> None:
-        self.getter = getter
-        self.cache: dict[type[object], T] = {}
-
-    def __get__(self, instance: object, owner: type[object]) -> T:
-        if owner not in self.cache:
-            self.cache[owner] = self.getter(owner)
-
-        return self.cache[owner]
-
-
-def cached_patternprop(
-    pattern: str, flags: int = 0
-) -> cached_classproperty[Pattern[str]]:
-    """Pattern is compiled and cached the first time it is accessed."""
-    return cached_classproperty(
-        lambda _: print(f"Compiling {pattern}", file=sys.stderr)
-        or re.compile(pattern, flags)
-    )
 
 
 class Pat:
@@ -622,7 +597,6 @@ def _(before: List[Any], after: List[Any]) -> Any:
 
 @diff.register
 def _(before: List[str], after: List[str]) -> Any:
-    # return [diff(b or "", a or "") for b, a in zip_longest(before, after)]
     before_set, after_set = dict.fromkeys(before), dict.fromkeys(after)
     common = [k for k in before_set if k in after_set]
     return [

@@ -39,7 +39,6 @@ console = make_console()
 indent = ""
 
 MAX_DICT_LENGTH = int(os.getenv("TABLE_MAX_DICT_LENGTH") or 500)
-MAX_DICT_KEYS = int(os.getenv("TABLE_MAX_DICT_KEYS") or 10)
 
 
 def time_fmt(current: datetime) -> Text:
@@ -190,18 +189,6 @@ simple_head_table = partial(
 )
 
 
-# @flexitable.register
-# @debug
-# def _list(data: list) -> RenderableType:
-#     return flexitable(tuple(data))
-
-
-@flexitable.register
-@debug
-def _list_list(data: List[List[Any]]) -> RenderableType:
-    return list_table(flexitable(i) for i in data)
-
-
 @flexitable.register
 @debug
 def _str_list(data: Sequence[str]) -> RenderableType:
@@ -252,7 +239,6 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
         if isinstance(transformed_value, str):
             return f"{header}: {transformed_value}"
 
-        # print(f"{transformed_value=}, {type(transformed_value)=}")
         if isinstance(transformed_value, (Panel, NewTable)):
             transformed_value = new_tree([transformed_value], header)
         elif isinstance(transformed_value, Tree):

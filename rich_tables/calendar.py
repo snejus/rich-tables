@@ -11,14 +11,13 @@ from rich.columns import Columns
 from typing_extensions import Literal, NotRequired, TypedDict
 
 from .fields import get_val
-from .utils import border_panel, new_table, simple_panel, sortgroup_by, wrap
+from .utils import border_panel, new_table, sortgroup_by, wrap
 
 if TYPE_CHECKING:
     from rich.console import RenderableType
 
 JSONDict = Dict[str, Any]
 
-PAST_COLOR = "strike"
 SYMBOL_BY_STATUS = {
     "needsAction": "[b grey3] ? [/]",
     "accepted": "[b green]   [/]",
@@ -167,9 +166,6 @@ def get_legend(events: list[Event]) -> RenderableType:
     )
 
 
-from pprint import pprint
-
-
 def get_months(events: list[Event]) -> Iterable[RenderableType]:
     all_periods = [p for e in events for p in e.get_periods()]
 
@@ -193,8 +189,6 @@ def get_months(events: list[Event]) -> Iterable[RenderableType]:
 
 
 def get_table(events_data: list[JSONDict], **__) -> Iterable[RenderableType]:
-    for e in events_data:
-        pprint(e)
     events = [Event.make(**e) for e in events_data]
     yield get_legend(events)
     yield from get_months(events)

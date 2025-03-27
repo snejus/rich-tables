@@ -405,7 +405,6 @@ class Issue:
 
     @property
     def fmt(self) -> str:
-        # return f"{self.status} {self.title} {self.url}"
         return f"{self.title} {self.url}"
 
 
@@ -471,15 +470,6 @@ class PullRequestTable(PullRequest):
             ],
             issues=[Issue(**i) for i in kwargs.pop("closingIssuesReferences")],
             **kwargs,
-        )
-
-    def make_info_subpanel(self, attr: str) -> Panel:
-        return simple_panel(
-            get_val(self, attr),
-            title=wrap(attr, "b"),
-            title_align="center",
-            expand=True,
-            vertical_align="middle",
         )
 
     @property
