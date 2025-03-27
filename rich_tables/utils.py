@@ -331,7 +331,6 @@ def adjust_color_intensity(
 
     # Adjust the lightness (intensity) while keeping hue constant
     new_l = max(0, min(1, 0.5 * factor))
-    print(new_l)
 
     # Convert back to RGB
     return tuple(int(c * 255) for c in colorsys.hls_to_rgb(h, new_l, s))
@@ -412,7 +411,7 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
 
     return border_panel(
         Markdown(
-            print(pat := Pat.HTML_PARAGRAPH.sub("", content)) or pat,
+            Pat.HTML_PARAGRAPH.sub("", content),
             inline_code_theme="nord-darker",
             code_theme="nord-darker",
             justify=kwargs.pop("justify", "left"),
