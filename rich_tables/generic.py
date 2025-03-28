@@ -122,7 +122,7 @@ def debug(func: Callable[..., T]) -> Callable[..., T]:
 
 @multidispatch
 @debug
-def flexitable(data) -> RenderableType:
+def flexitable(data: Any) -> RenderableType:
     return str(data)
 
 
@@ -207,7 +207,7 @@ def _int_list(data: Sequence[int]) -> Columns:
 def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
     data = list(filter(None, data))
     if not data:
-        return None
+        return
 
     if not all(isinstance(d, dict) for d in data):
         return list_table(
@@ -221,7 +221,7 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
     data = [prepare_dict(item) for item in data if item]
     all_keys = dict.fromkeys(it.chain.from_iterable(tuple(d.keys()) for d in data))
     if not all_keys:
-        return simple_head_table([])
+        return simple_head_table()
 
     keys = {
         k: None for k in all_keys if any((d.get(k) is not None) for d in data)

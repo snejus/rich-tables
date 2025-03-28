@@ -13,7 +13,7 @@ from math import copysign
 from pprint import pformat
 from re import Match
 from string import printable, punctuation
-from typing import Any, Callable, Protocol, SupportsFloat, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Protocol, SupportsFloat, TypeVar
 
 import humanize
 import platformdirs
@@ -30,6 +30,9 @@ from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
+
+if TYPE_CHECKING:
+    from coloraide import Color
 
 JSONDict = dict[str, Any]
 T = TypeVar("T")
@@ -448,7 +451,7 @@ def timestamp2timestr(timestamp: str | float | None) -> str:
 
 
 @lru_cache
-def get_colors_and_periods():
+def get_colors_and_periods() -> list[tuple[Color, int, int]]:
     from coloraide import Color
 
     return [
@@ -473,9 +476,7 @@ def get_td_color(seconds: float) -> str:
         if seconds <= seconds_in_unit * max_factor:
             unit_count = seconds // seconds_in_unit
             center = max_factor / 2
-            diff = unit_count - center
-            factor = -(diff / center / 1.5)
-            factor = 1 + factor
+            factor = -((unit_count - center) / center / 1.5) + 1
             return (
                 color.filter("brightness", factor)
                 .clip()
@@ -521,6 +522,8 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 
 
 def sql_syntax(sql_string: str) -> Syntax:
+    import sqlparse
+
     return Syntax(
         sqlparse.format(
             sql_string,
