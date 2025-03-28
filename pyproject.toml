@@ -41,7 +41,6 @@ pytest-cov = ">=3.0.0"
 pytest-sugar = "*"
 freezegun = ">=1.2.1"
 
-types-six = ">=1.16.2"
 types-freezegun = ">=1.1.9"
 coveralls = ">=3.3.1"
 snoop = ">=0.4.3"
