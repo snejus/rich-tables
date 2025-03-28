@@ -4,16 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Iterable,
-    List,
-    Mapping,
-    Protocol,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, Protocol
 
 from rich import box
 from rich.syntax import Syntax
@@ -37,6 +28,8 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
     from rich.console import ConsoleRenderable, RenderableType
     from rich.panel import Panel
     from rich.table import Table
@@ -52,7 +45,7 @@ def b_red(text: str) -> str:
     return wrap(text, "b red")
 
 
-def fmt_add_del(added: int, deleted: int) -> List[str]:
+def fmt_add_del(added: int, deleted: int) -> list[str]:
     """Format added and deleted diff counts."""
     additions = f"+{added}" if added else ""
     deletions = f"-{deleted}" if deleted else ""
@@ -84,7 +77,7 @@ def fmt_state(state: str) -> str:
     return wrap(state, f"b {COLOR_BY_STATE[state]}")
 
 
-def diff_panel(title: str, rows: List[List[str]]) -> Panel:
+def diff_panel(title: str, rows: list[list[str]]) -> Panel:
     return border_panel(
         new_table(rows=rows),
         title=title,
@@ -141,11 +134,11 @@ class Commit:
     statusCheckRollup: str
 
     @property
-    def diff(self) -> List[str]:
+    def diff(self) -> list[str]:
         return fmt_add_del(self.additions, self.deletions)
 
     @property
-    def parts(self) -> List[str]:
+    def parts(self) -> list[str]:
         return [
             *self.diff,
             get_val(self, "statusCheckRollup"),
@@ -156,7 +149,7 @@ class Commit:
 
 @dataclass
 class Commits:
-    commits: List[Commit]
+    commits: list[Commit]
 
     @property
     def panel(self) -> Panel:
@@ -180,7 +173,7 @@ class CreatedMixin(Protocol):
 
 @dataclass
 class PanelMixin:
-    def get_title(self, fields: List[str]) -> str:
+    def get_title(self, fields: list[str]) -> str:
         return " ".join(get_val(self, f) for f in fields)
 
     @property
@@ -210,10 +203,10 @@ class Content(CreatedPanelMixin):
 
 @dataclass
 class Comment(Content):
-    reactions: List[Reaction]
+    reactions: list[Reaction]
 
     @classmethod
-    def make(cls, reactions: List[JSONDict], **kwargs: Any) -> Comment:
+    def make(cls, reactions: list[JSONDict], **kwargs: Any) -> Comment:
         kwargs["reactions"] = [Reaction(**c) for c in reactions]
         return cls(**kwargs)
 
@@ -285,7 +278,7 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
     isResolved: bool
     isOutdated: bool
     resolvedBy: str
-    comments: List[ReviewComment]
+    comments: list[ReviewComment]
     verbose: bool
 
     @property
@@ -293,7 +286,7 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
         return self.isResolved
 
     @classmethod
-    def make(cls, comments: List[JSONDict], **kwargs: Any) -> ReviewThread:
+    def make(cls, comments: list[JSONDict], **kwargs: Any) -> ReviewThread:
         kwargs["comments"] = [ReviewComment.make(**c) for c in comments]
         return cls(**kwargs)
 
@@ -350,8 +343,8 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
 class Review(Content, ResolvedMixin):
     id: str
     state: str
-    threads: List[ReviewThread]
-    comments: List[ReviewComment]
+    threads: list[ReviewThread]
+    comments: list[ReviewComment]
 
     verbose: bool
 
@@ -419,21 +412,21 @@ class PullRequest:
     additions: int
     commits: Commits
     deletions: int
-    files: List[File]
+    files: list[File]
     headRefName: str
-    labels: List[str]
-    participants: List[str]
+    labels: list[str]
+    participants: list[str]
     repository: str
     reviewDecision: str
-    reviewRequests: List[str]
-    reviewThreads: List[ReviewThread]
-    reviews: List[Review]
-    comments: List[Comment]
+    reviewRequests: list[str]
+    reviewThreads: list[ReviewThread]
+    reviews: list[Review]
+    comments: list[Comment]
     state: str
     title: str
     updatedAt: str
     url: str
-    issues: List[Issue]
+    issues: list[Issue]
 
     verbose: bool
 
@@ -445,7 +438,7 @@ class PullRequest:
 @dataclass
 class PullRequestTable(PullRequest):
     @classmethod
-    def make(cls, reviews: List[JSONDict], **kwargs: Any) -> PullRequestTable:
+    def make(cls, reviews: list[JSONDict], **kwargs: Any) -> PullRequestTable:
         verbose = kwargs["verbose"]
         threads = [
             ReviewThread.make(**rt, verbose=verbose) for rt in kwargs["reviewThreads"]
@@ -531,7 +524,7 @@ class PullRequestTable(PullRequest):
         return new_table(rows=[[get_val(self, "files"), self.commits.panel]])
 
     @property
-    def timestamped_contents(self) -> List[CreatedPanelMixin]:
+    def timestamped_contents(self) -> list[CreatedPanelMixin]:
         return [*self.reviews, *self.comments]
 
     @property
@@ -541,8 +534,8 @@ class PullRequestTable(PullRequest):
 
 
 def pulls_table(
-    data: List[Mapping[str, Any]], **kwargs
-) -> Iterable[Union[str, ConsoleRenderable]]:
+    data: list[Mapping[str, Any]], **kwargs
+) -> Iterable[str | ConsoleRenderable]:
     FIELDS_MAP.update(PR_FIELDS_MAP)
 
     pr = data[0]

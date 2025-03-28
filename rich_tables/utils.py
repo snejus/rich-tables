@@ -4,28 +4,16 @@ import colorsys
 import random
 import re
 import time
+from collections.abc import Iterable, Sequence
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from functools import lru_cache
 from itertools import groupby, islice, starmap, zip_longest
 from math import copysign
 from pprint import pformat
+from re import Match
 from string import printable, punctuation
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Match,
-    Optional,
-    Protocol,
-    Sequence,
-    SupportsFloat,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, Protocol, SupportsFloat, TypeVar
 
 import humanize
 import platformdirs
@@ -43,7 +31,7 @@ from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
 
-JSONDict = Dict[str, Any]
+JSONDict = dict[str, Any]
 T = TypeVar("T")
 
 
@@ -73,7 +61,7 @@ K = TypeVar("K", bound=SupportsDunderLT[Any])
 
 def sortgroup_by(
     iterable: Iterable[T], key: Callable[[T], K]
-) -> List[Tuple[K, List[T]]]:
+) -> list[tuple[K, list[T]]]:
     return [(k, list(g)) for k, g in groupby(sorted(iterable, key=key), key)]
 
 
@@ -169,7 +157,7 @@ def fmt_time(seconds: int) -> Iterable[str]:
     )
 
 
-def get_theme() -> Optional[Theme]:
+def get_theme() -> Theme | None:
     config_path = platformdirs.user_config_path("rich") / "config.ini"
     return Theme.read(str(config_path)) if config_path.exists() else None
 
@@ -259,7 +247,7 @@ class NewTable(Table):
         )
 
     @property
-    def colnames(self) -> List[str]:
+    def colnames(self) -> list[str]:
         """Provide a mapping between columns names / ids and columns."""
         return [str(c.header) for c in self.columns]
 
@@ -321,7 +309,7 @@ def predictably_random_color(string: str, intensity: float | None = None) -> str
     return f"#{r:02X}{g:02X}{b:02X}"
 
 
-def _format_with_color(string: str, on: Optional[str] = None) -> str:
+def _format_with_color(string: str, on: str | None = None) -> str:
     color = f"b {predictably_random_color(string)}"
     if on:
         color += f" on {on}"
@@ -341,7 +329,7 @@ def format_with_color(items: str | Sequence[str]) -> str:
     return " ".join(_format_with_color(str(x)) for x in items)
 
 
-def format_with_color_on_black(items: Union[str, Iterable[str]]) -> str:
+def format_with_color_on_black(items: str | Iterable[str]) -> str:
     if not isinstance(items, Iterable) or isinstance(items, str):
         items = sorted(Pat.SPLIT_PAT.split(str(items)))
 
@@ -414,7 +402,7 @@ def get_country(code: str) -> str:
 
 
 def progress_bar(
-    size: float, width: float, end: Optional[float] = None, inverse: bool = False
+    size: float, width: float, end: float | None = None, inverse: bool = False
 ) -> Bar:
     if end is None:
         end = size
@@ -437,7 +425,7 @@ def progress_bar(
     )
 
 
-def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
+def timestamp2datetime(timestamp: str | float | None) -> datetime:
     if isinstance(timestamp, str):
         timestamp = re.sub(r"[.]\d+", "", timestamp.strip("'"))
         formats = [
@@ -455,7 +443,7 @@ def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
     return datetime.fromtimestamp(int(float(timestamp or 0)), tz=timezone.utc)
 
 
-def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
+def timestamp2timestr(timestamp: str | float | None) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
@@ -498,7 +486,7 @@ def get_td_color(seconds: float) -> str:
     raise AssertionError("Shouldn't get here")
 
 
-def human_dt(timestamp: Union[str, float]) -> str:
+def human_dt(timestamp: str | float) -> str:
     try:
         dt = timestamp2datetime(timestamp)
     except ValueError:
@@ -511,7 +499,7 @@ def human_dt(timestamp: Union[str, float]) -> str:
     return f"[b {color}]{human_dt}[/]"
 
 
-def diff_dt(timestamp: Union[int, str, float], acc: int = 2) -> str:
+def diff_dt(timestamp: str | float, acc: int = 2) -> str:
     try:
         datetime = timestamp2datetime(timestamp)
     except ValueError:
@@ -565,12 +553,12 @@ def to_hashable(value: Any) -> Any:
 
 
 @to_hashable.register
-def _(value: List[Any]) -> List[Any]:
+def _(value: list[Any]) -> list[Any]:
     return hashable_list(map(to_hashable, value))
 
 
 @to_hashable.register
-def _(value: Dict[str, Any]) -> Dict[str, Any]:
+def _(value: dict[str, Any]) -> dict[str, Any]:
     return hashable_dict({k: to_hashable(v) for k, v in value.items()})
 
 
@@ -591,12 +579,12 @@ def _(before: Any, after: Any) -> Any:
 
 
 @diff.register
-def _(before: List[Any], after: List[Any]) -> Any:
+def _(before: list[Any], after: list[Any]) -> Any:
     return list(starmap(diff, zip_longest(before, after)))
 
 
 @diff.register
-def _(before: List[str], after: List[str]) -> Any:
+def _(before: list[str], after: list[str]) -> Any:
     before_set, after_set = dict.fromkeys(before), dict.fromkeys(after)
     common = [k for k in before_set if k in after_set]
     return [

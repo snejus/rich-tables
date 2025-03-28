@@ -3,7 +3,7 @@ from __future__ import annotations
 import operator as op
 from collections import defaultdict
 from functools import lru_cache, partial
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Tuple, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from rich import box
 from rich.align import Align
@@ -21,10 +21,12 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from rich.panel import Panel
     from rich.table import Table
 
-JSONDict = Dict[str, Any]
+JSONDict = dict[str, Any]
 
 TRACK_FIELDS = [
     "track",
@@ -73,7 +75,7 @@ def get_vals(
     return [[get_val(tuple(t.items()), f) for f in fields] for t in tracks]
 
 
-def tracks_table(tracks: List[JSONDict], fields: List[str], color: str) -> NewTable:
+def tracks_table(tracks: list[JSONDict], fields: list[str], color: str) -> NewTable:
     return new_table(
         *map(get_header, fields),
         rows=get_vals(fields, tracks),
@@ -85,7 +87,7 @@ def tracks_table(tracks: List[JSONDict], fields: List[str], color: str) -> NewTa
 T = TypeVar("T")
 
 
-def album_stats(tracks: List[JSONDict]) -> JSONDict:
+def album_stats(tracks: list[JSONDict]) -> JSONDict:
     def agg(field: str, default: T) -> Iterable[T]:
         return ((x.get(field) or default) for x in tracks)
 
@@ -128,7 +130,7 @@ def album_title(album: JSONDict) -> Table:
     return new_table(rows=[[format_title(title), format_title(released), genre]])
 
 
-def album_info(tracks: List[JSONDict]) -> JSONDict:
+def album_info(tracks: list[JSONDict]) -> JSONDict:
     first = tracks[0]
     fields = sorted([f for f in tracks[0] if f not in TRACK_FIELDS])
 
@@ -144,7 +146,7 @@ def album_info(tracks: List[JSONDict]) -> JSONDict:
 
 
 def album_info_table(album: JSONDict) -> Table:
-    def should_display(keyval: Tuple[str, Any]) -> bool:
+    def should_display(keyval: tuple[str, Any]) -> bool:
         return keyval[1] and keyval[0] not in ALBUM_IGNORE
 
     items = filter(should_display, sorted(album.items()))
@@ -153,7 +155,7 @@ def album_info_table(album: JSONDict) -> Table:
     return table
 
 
-def album_panel(tracks: List[JSONDict]) -> Panel:
+def album_panel(tracks: list[JSONDict]) -> Panel:
     album = album_info(tracks)
     url = album.pop("url", "")
 
@@ -199,7 +201,7 @@ def album_panel(tracks: List[JSONDict]) -> Panel:
     )
 
 
-def albums_table(all_tracks: List[JSONDict], **__) -> Iterable[ConsoleRenderable]:
+def albums_table(all_tracks: list[JSONDict], **__) -> Iterable[ConsoleRenderable]:
     def get_album(track: JSONDict) -> str:
         return track.get("album") or ""
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any, Dict, Iterable
+from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
 from rich.bar import Bar
@@ -14,9 +14,10 @@ from .fields import get_val
 from .utils import border_panel, new_table, sortgroup_by, wrap
 
 if TYPE_CHECKING:
-    from rich.console import RenderableType
+    from collections.abc import Iterable
 
-JSONDict = Dict[str, Any]
+    from rich.console import RenderableType
+JSONDict = dict[str, Any]
 
 SYMBOL_BY_STATUS = {
     "needsAction": "[b grey3] ? [/]",

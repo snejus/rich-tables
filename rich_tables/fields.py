@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from collections.abc import Iterable, MutableMapping
 from datetime import datetime
 from functools import singledispatch
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Callable, Iterable, MutableMapping
+from typing import TYPE_CHECKING, Any, Callable
 
 from rich.text import Text
 

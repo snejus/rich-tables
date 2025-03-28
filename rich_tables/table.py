@@ -6,7 +6,7 @@ import sys
 import tempfile
 from functools import singledispatch
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List
+from typing import TYPE_CHECKING, Any, Callable
 
 from rich.traceback import install
 from typing_extensions import TypedDict
@@ -19,18 +19,20 @@ from .music import albums_table
 from .utils import make_console, new_table, pretty_diff, wrap
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from rich.console import RenderableType
     from rich.table import Table
 
 MAX_FILENAME_LEN = 255
-JSONDict = Dict[str, Any]
+JSONDict = dict[str, Any]
 
 
 console = make_console()
 install(console=console, show_locals=True, width=console.width)
 
 
-def lights_table(lights: List[JSONDict], **__) -> Iterator[Table]:
+def lights_table(lights: list[JSONDict], **__) -> Iterator[Table]:
     from rgbxy import Converter
 
     headers = lights[0].keys()
@@ -101,7 +103,7 @@ class NamedData(TypedDict):
     values: list[JSONDict]
 
 
-TABLE_BY_NAME: Dict[str, Callable[..., Any]] = {
+TABLE_BY_NAME: dict[str, Callable[..., Any]] = {
     "Pull Requests": pulls_table,
     "Hue lights": lights_table,
     "Calendar": calendar.get_table,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Iterator, List
+from typing import TYPE_CHECKING, Any, Callable
 
 from typing_extensions import Literal, TypedDict
 
@@ -18,6 +18,8 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+
     from rich.panel import Panel
     from rich.tree import Tree
 
@@ -41,7 +43,7 @@ COLOR_BY_STATUS = {
     "recurring": "i magenta",
 }
 
-JSONDict = Dict[str, Any]
+JSONDict = dict[str, Any]
 
 
 def keep_keys(keys: Iterable[str], item: JSONDict) -> JSONDict:
@@ -108,7 +110,7 @@ class Task:
         return data
 
 
-def get_headers(task_headers: Iterable[str]) -> List[str]:
+def get_headers(task_headers: Iterable[str]) -> list[str]:
     """Return the list of headers that will be used in the table."""
     ordered_keys = dict.fromkeys([*INITIAL_HEADERS, *sorted(task_headers)]).keys()
     return [*[k for k in ordered_keys if k not in SKIP_HEADERS], "tree"]
@@ -137,7 +139,7 @@ fields_map: JSONDict = {
 }
 
 
-def get_table(tasks_data_by_group: Dict[str, list[JSONDict]], **__) -> Iterator[Panel]:
+def get_table(tasks_data_by_group: dict[str, list[JSONDict]], **__) -> Iterator[Panel]:
     """Yield a table for each tasks group."""
     FIELDS_MAP.update(fields_map)
     headers = get_headers(next(t for g in tasks_data_by_group.values() for t in g))

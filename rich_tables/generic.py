@@ -3,11 +3,12 @@ from __future__ import annotations
 import itertools as it
 import logging
 import os
+from collections.abc import Generator, Sequence
 from contextlib import suppress
 from datetime import datetime
 from functools import partial, wraps
 from itertools import groupby
-from typing import Any, Callable, Dict, Generator, List, Sequence, TypeVar, Union
+from typing import Any, Callable, TypeVar
 
 from multimethod import multidispatch
 from rich import box
@@ -32,7 +33,7 @@ from .utils import (
     wrap,
 )
 
-JSONDict = Dict[str, Any]
+JSONDict = dict[str, Any]
 T = TypeVar("T")
 console = make_console()
 
@@ -153,7 +154,7 @@ def _tuple_header(data: tuple, header: str) -> RenderableType:  # type: ignore[t
 
 @flexitable.register
 @debug
-def _renderable(data: Union[ConsoleRenderable, NewTable]) -> RenderableType:
+def _renderable(data: ConsoleRenderable) -> RenderableType:
     return data
 
 
