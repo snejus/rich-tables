@@ -4,7 +4,6 @@ import itertools as it
 import logging
 import os
 from collections.abc import Generator, Sequence
-from contextlib import suppress
 from datetime import datetime
 from functools import partial, wraps
 from itertools import groupby
@@ -64,30 +63,44 @@ if not log.handlers:
         log.setLevel("DEBUG")
 
 
-def _debug(_func: Callable[..., T], *args) -> None:
-    if log.isEnabledFor(10):
-        global indent
-        data, *header = (str(arg).split(r"\n")[0] for arg in args)
-        print(
-            indent
-            + " ".join(
-                [
-                    f"Function \033[1;31m{_func.__name__}\033[0m",
-                    f"Types: \033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m",
-                    f"Header: \033[1;35m{header[0]}\033[0m " if header else "",
-                    f"Data: \033[1m{data}\033[0m" if data else "",
-                ]
+class DebugLogger:
+    def __init__(self) -> None:
+        self.indent = ""
+
+    def debug(self, _func: Callable[..., T], *args: Any) -> None:
+        if log.isEnabledFor(10):
+            data, *header = (str(arg).split(r"\n")[0] for arg in args)
+            print(
+                indent
+                + " ".join(
+                    [
+                        f"Function \033[1;31m{_func.__name__}\033[0m",
+                        f"Types: \033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m",  # noqa: E501
+                        f"Header: \033[1;35m{header[0]}\033[0m " if header else "",
+                        f"Data: \033[1m{data}\033[0m" if data else "",
+                    ]
+                )
             )
-        )
+            self.indent += "│ "
 
-        indent += "│ "
+    def undebug(self, _type: type, *args: Any) -> None:
+        self.indent = self.indent[:-2]
+        if log.isEnabledFor(10):
+            print(f"{indent}└─ " + f"Returning {_type}")
 
 
-def _undebug(_type: type, *args: Any) -> None:
-    global indent
-    indent = indent[:-2]
-    if log.isEnabledFor(10):
-        print(f"{indent}└─ " + f"Returning {_type}")
+_debug_logger = DebugLogger()
+
+
+def debug(func: Callable[..., T]) -> Callable[..., T]:
+    @wraps(func)
+    def wrapper(*args: Any) -> T:
+        _debug_logger.debug(func, *args)
+        result = func(*args)
+        _debug_logger.undebug(type(result), *args)
+        return result
+
+    return wrapper
 
 
 def mapping_view_table() -> NewTable:
@@ -109,17 +122,6 @@ def prepare_dict(item: JSONDict) -> JSONDict:
     return item
 
 
-def debug(func: Callable[..., T]) -> Callable[..., T]:
-    @wraps(func)
-    def wrapper(*args: Any) -> T:
-        _debug(func, *args)
-        result = func(*args)
-        _undebug(type(result), *args)
-        return result
-
-    return wrapper
-
-
 @multidispatch
 @debug
 def flexitable(data: Any) -> RenderableType:
@@ -138,9 +140,9 @@ def _header(data: Any, header: str) -> RenderableType:
     if header not in fields.FIELDS_MAP or isinstance(data, list):
         return flexitable(data)
 
-    with suppress(Exception):
-        data = _get_val(data, header)
-    if not isinstance(data, str) and isinstance(data, type(data)):
+    data = _get_val(data, header)
+
+    if not isinstance(data, str):
         return flexitable(data)
 
     return data
@@ -207,7 +209,7 @@ def _int_list(data: Sequence[int]) -> Columns:
 def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
     data = list(filter(None, data))
     if not data:
-        return
+        return None
 
     if not all(isinstance(d, dict) for d in data):
         return list_table(

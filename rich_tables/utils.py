@@ -4,6 +4,7 @@ import colorsys
 import random
 import re
 from collections.abc import Iterable, Sequence
+from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from itertools import groupby
@@ -171,8 +172,6 @@ class NewTable(Table):
             for field in (f for f in data if f not in existing_cols):
                 self.add_column(field)
                 self.columns[-1]._cells = [""] * self.row_count
-                if sort_columns:
-                    self.columns = sorted(self.columns, key=lambda c: c.header)
 
         values = [data.get(c, "") for c in self.colnames]
         self.add_row(
@@ -375,10 +374,8 @@ def timestamp2datetime(timestamp: str | float | None) -> datetime:
             "%Y-%m-%dT%H:%M:%S%z",
         ]
         for fmt in formats:
-            try:
+            with suppress(ValueError):
                 return datetime.strptime(timestamp, fmt)
-            except ValueError:
-                pass
     return datetime.fromtimestamp(int(float(timestamp or 0)), tz=timezone.utc)
 
 

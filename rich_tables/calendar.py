@@ -44,7 +44,7 @@ class Period:
     fmt: str
 
     @classmethod
-    def make(cls, **kwargs) -> Period:
+    def make(cls, **kwargs: Any) -> Period:
         kwargs["fmt"] = (
             "dim strike"
             if kwargs["end"] < datetime.now(tz=kwargs["end"].tzinfo)
@@ -97,7 +97,7 @@ class Event:
     start: datetime
 
     @classmethod
-    def make(cls, start: Datetime, end: Datetime, summary: str, **kwargs) -> Event:
+    def make(cls, start: Datetime, end: Datetime, summary: str, **kwargs: Any) -> Event:
         return cls(
             start=cls.get_datetime(start),
             end=cls.get_datetime(end),
@@ -189,7 +189,7 @@ def get_months(events: list[Event]) -> Iterable[RenderableType]:
         yield border_panel(table, title=year_and_month)
 
 
-def get_table(events_data: list[JSONDict], **__) -> Iterable[RenderableType]:
+def get_table(events_data: list[JSONDict], **__: Any) -> Iterable[RenderableType]:
     events = [Event.make(**e) for e in events_data]
     yield get_legend(events)
     yield from get_months(events)

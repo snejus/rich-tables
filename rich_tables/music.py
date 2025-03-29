@@ -201,7 +201,7 @@ def album_panel(tracks: list[JSONDict]) -> Panel:
     )
 
 
-def albums_table(all_tracks: list[JSONDict], **__) -> Iterable[ConsoleRenderable]:
+def albums_table(all_tracks: list[JSONDict], **__: Any) -> Iterable[ConsoleRenderable]:
     def get_album(track: JSONDict) -> str:
         return track.get("album") or ""
 

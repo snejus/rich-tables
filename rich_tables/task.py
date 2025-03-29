@@ -102,7 +102,7 @@ class Task:
         return tree
 
     def get_row(
-        self, extract_data: Callable[[JSONDict], JSONDict], *args, **kwargs
+        self, extract_data: Callable[[JSONDict], JSONDict], *_: Any, **kwargs: Any
     ) -> JSONDict:
         data = extract_data(asdict(self))
         data["tree"] = self.get_tree(**kwargs)
@@ -139,7 +139,9 @@ fields_map: JSONDict = {
 }
 
 
-def get_table(tasks_data_by_group: dict[str, list[JSONDict]], **__) -> Iterator[Panel]:
+def get_table(
+    tasks_data_by_group: dict[str, list[JSONDict]], **__: Any
+) -> Iterator[Panel]:
     """Yield a table for each tasks group."""
     FIELDS_MAP.update(fields_map)
     headers = get_headers(next(t for g in tasks_data_by_group.values() for t in g))

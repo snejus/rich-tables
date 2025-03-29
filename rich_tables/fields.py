@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from collections.abc import Iterable, MutableMapping
+from contextlib import suppress
 from datetime import datetime
 from functools import singledispatch
 from itertools import islice
@@ -297,7 +298,7 @@ DISPLAY_HEADER: dict[str, str] = {
 }
 
 
-def _get_val(value: Any, field: str) -> RenderableType:
+def _get_val(value: float | str | None, field: str) -> RenderableType:
     if value is None:
         return "None"
 
@@ -306,18 +307,12 @@ def _get_val(value: Any, field: str) -> RenderableType:
 
     if isinstance(value, str):
         value = format_string(value)
-
-    if isinstance(value, (int, float)):
+    elif isinstance(value, (int, float)):
         value = str(value)
 
     if field in FIELDS_MAP:
-        try:
+        with suppress(TypeError):
             return FIELDS_MAP[field](value)
-        except TypeError:
-            return value
-
-    if field.endswith("_group") and isinstance(value, list):
-        return format_with_color(value)
 
     return value
 
@@ -328,7 +323,7 @@ def get_val(obj: JSONDict | object, field: str) -> Any:
 
 
 @get_val.register
-def _(obj: dict, field: str) -> Any:
+def _(obj: dict, field: str) -> Any:  # type: ignore[type-arg]
     return _get_val(obj.get(field), field)
 
 

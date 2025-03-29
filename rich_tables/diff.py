@@ -4,7 +4,7 @@ from difflib import SequenceMatcher
 from itertools import starmap, zip_longest
 from pprint import pformat
 from string import printable, punctuation
-from typing import Any
+from typing import Any, Hashable, Literal
 
 from multimethod import multimethod
 from rich.text import Text
@@ -60,7 +60,7 @@ def make_difftext(
     ]
     for i in reversed(to_remove_ids):
         a, b = ops[i - 1], ops[i + 1]
-        action = "replace"
+        action: Literal["replace"] = "replace"
 
         ops[i] = (action, a[1], b[2], a[3], b[4])
 
@@ -72,15 +72,14 @@ def make_difftext(
     )
 
 
-class HashableList(UserList):
+class HashableList(UserList[Any]):
     def __hash__(self) -> int:
         return hash(tuple(self.data))
 
 
-class HashableDict(UserDict):
+class HashableDict(UserDict[str, Any]):
     def __hash__(self) -> int:
         return hash(tuple(self.data.items()))
-
 
 
 @multimethod
@@ -89,12 +88,12 @@ def to_hashable(value: Any) -> Any:
 
 
 @to_hashable.register
-def _(value: list[Any]) -> list[Any]:
+def _(value: list[Any]) -> Hashable:
     return HashableList(map(to_hashable, value))
 
 
 @to_hashable.register
-def _(value: dict[str, Any]) -> dict[str, Any]:
+def _(value: dict[str, Any]) -> Hashable:
     return HashableDict({k: to_hashable(v) for k, v in value.items()})
 
 
@@ -120,7 +119,7 @@ def _(before: list[Any], after: list[Any]) -> Any:
 
 
 @diff.register
-def _(before: list[str], after: list[str]) -> Any:
+def _(before: list[str], after: list[str]) -> list[str]:
     before_set, after_set = dict.fromkeys(before), dict.fromkeys(after)
     common = [k for k in before_set if k in after_set]
     return [
@@ -136,7 +135,7 @@ def _(before: list[str], after: list[str]) -> Any:
 
 
 @diff.register
-def _(before: dict, after: dict) -> Any:
+def _(before: dict[str, Any], after: dict[str, Any]) -> dict[str, str]:
     data = {}
     keys = sorted(before.keys() | after.keys())
     for key in keys:

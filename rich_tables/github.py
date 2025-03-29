@@ -342,6 +342,7 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
     @property
     def panel(self) -> Panel:
         comments = self.comments
+        content: RenderableType
         if self.verbose or not self.resolved:
             comments_col = list_table((c.panel for c in comments), padding=(1, 0, 0, 0))
             content = new_table(
@@ -553,7 +554,7 @@ class PullRequestTable(PullRequest):
 
 
 def pulls_table(
-    data: list[Mapping[str, Any]], **kwargs
+    data: list[Mapping[str, Any]], **kwargs: Any
 ) -> Iterable[str | ConsoleRenderable]:
     FIELDS_MAP.update(PR_FIELDS_MAP)
 

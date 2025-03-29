@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from __future__ import annotations
 
 import argparse
@@ -33,7 +34,7 @@ console = make_console()
 install(console=console, show_locals=True, width=console.width)
 
 
-def lights_table(lights: list[JSONDict], **__) -> Iterator[Table]:
+def lights_table(lights: list[JSONDict], **__: Any) -> Iterator[Table]:
     from rgbxy import Converter
 
     headers = lights[0].keys()
@@ -114,13 +115,15 @@ TABLE_BY_NAME: dict[str, Callable[..., Any]] = {
 
 
 @singledispatch
-def draw_data(data: Any, **kwargs) -> Iterator[RenderableType]:
+def draw_data(data: Any, **kwargs: Any) -> Iterator[RenderableType]:
     """Render the provided data."""
     yield data
 
 
 @draw_data.register(dict)
-def _draw_data_dict(data: JSONDict | NamedData, **kwargs) -> Iterator[RenderableType]:
+def _draw_data_dict(
+    data: JSONDict | NamedData, **kwargs: Any
+) -> Iterator[RenderableType]:
     if (title := data.get("title")) and (values := data.get("values")):
         table = TABLE_BY_NAME.get(title, flexitable)
         yield from table(values, **kwargs)
@@ -129,7 +132,7 @@ def _draw_data_dict(data: JSONDict | NamedData, **kwargs) -> Iterator[Renderable
 
 
 @draw_data.register(list)
-def _draw_data_list(data: list[JSONDict], **kwargs) -> Iterator[RenderableType]:
+def _draw_data_list(data: list[JSONDict], **kwargs: Any) -> Iterator[RenderableType]:
     if data:
         yield flexitable(data)
 
@@ -148,7 +151,8 @@ def main() -> None:
                 console.print(renderable)
 
     if args.save:
-        filename = tempfile.NamedTemporaryFile(suffix=".html", delete=False).name
+        with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as file:
+            filename = file.filename
         console.save_html(filename)
         print(f"Saved output as {filename}", file=sys.stderr)
 
