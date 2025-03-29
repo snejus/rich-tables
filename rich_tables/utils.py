@@ -160,11 +160,7 @@ class NewTable(Table):
             self.add_row(*row)
 
     def add_dict_row(
-        self,
-        data: JSONDict,
-        ignore_extra_fields: bool = False,
-        sort_columns: bool = False,
-        **kwargs: Any,
+        self, data: JSONDict, ignore_extra_fields: bool = False, **kwargs: Any
     ) -> None:
         """Add a row to the table from a dictionary."""
         if not ignore_extra_fields:

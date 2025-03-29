@@ -115,6 +115,10 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/tasks.svg)
 
+### Text diff
+
+![image](svgs/text_diff.svg)
+
 ### Timed
 
 ![image](svgs/timed.svg)
