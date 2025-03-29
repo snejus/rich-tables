@@ -17,7 +17,7 @@ import platformdirs
 from rich import box
 from rich.align import Align, VerticalAlignMethod
 from rich.bar import Bar
-from rich.console import Console, ConsoleRenderable, RenderableType, RichCast
+from rich.console import Console, RenderableType, RenderResult
 from rich.errors import MarkupError
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -35,6 +35,20 @@ T = TypeVar("T")
 
 BOLD_GREEN = "b green"
 BOLD_RED = "b red"
+DISPLAY_HEADER: dict[RenderableType, str] = {
+    "track": "#",
+    "bpm": "🚀",
+    "last_played": ":timer_clock: ",
+    "mtime": "updated",
+    "data_source": "source",
+    "helicopta": ":helicopter: ",
+    "hidden": ":no_entry: ",
+    "track_alt": ":cd: ",
+    "catalognum": ":pen: ",
+    "plays": "b :play_button: ",
+    "skips": "b :stop_button: ",
+    "albumtypes": "types",
+}
 
 
 class Pat:
@@ -135,6 +149,13 @@ class NewTable(Table):
 
         super().__init__(*args, **kwargs)
 
+    def __rich_console__(self, *args: Any, **kwargs: Any) -> RenderResult:
+        for column in self.columns:
+            if display_header := DISPLAY_HEADER.get(column.header):
+                column.header = display_header
+
+        return super().__rich_console__(*args, **kwargs)
+
     def add_column(self, *args: Any, **kwargs: Any) -> None:
         for k, v in self.column_kwargs.items():
             kwargs.setdefault(k, v)
@@ -160,7 +181,11 @@ class NewTable(Table):
             self.add_row(*row)
 
     def add_dict_row(
-        self, data: JSONDict, ignore_extra_fields: bool = False, **kwargs: Any
+        self,
+        data: JSONDict,
+        ignore_extra_fields: bool = False,
+        transform: Callable[..., RenderableType] = None,
+        **kwargs: Any,
     ) -> None:
         """Add a row to the table from a dictionary."""
         if not ignore_extra_fields:
@@ -169,14 +194,7 @@ class NewTable(Table):
                 self.add_column(field)
                 self.columns[-1]._cells = [""] * self.row_count
 
-        values = [data.get(c, "") for c in self.colnames]
-        self.add_row(
-            *(
-                (v if isinstance(v, (ConsoleRenderable, RichCast, str)) else str(v))
-                for v in values
-            ),
-            **kwargs,
-        )
+        self.add_row(*(transform(v, k) for k, v in data.items()), **kwargs)
 
     @property
     def colnames(self) -> list[str]:
@@ -371,7 +389,7 @@ def timestamp2datetime(timestamp: str | float | None) -> datetime:
         ]
         for fmt in formats:
             with suppress(ValueError):
-                return datetime.strptime(timestamp, fmt)
+                return datetime.strptime(timestamp, fmt).replace(tzinfo=timezone.utc)
     return datetime.fromtimestamp(int(float(timestamp or 0)), tz=timezone.utc)
 
 

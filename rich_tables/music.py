@@ -9,8 +9,9 @@ from rich import box
 from rich.align import Align
 from rich.console import ConsoleRenderable, Group
 
-from .fields import DISPLAY_HEADER, FIELDS_MAP
+from .fields import FIELDS_MAP
 from .utils import (
+    DISPLAY_HEADER,
     NewTable,
     border_panel,
     new_table,

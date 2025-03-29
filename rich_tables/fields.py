@@ -282,21 +282,6 @@ for func, fields in fields_by_func.items():
     for field in fields:
         FIELDS_MAP[field] = func
 
-DISPLAY_HEADER: dict[str, str] = {
-    "track": "#",
-    "bpm": "🚀",
-    "last_played": ":timer_clock: ",
-    "mtime": "updated",
-    "data_source": "source",
-    "helicopta": ":helicopter: ",
-    "hidden": ":no_entry: ",
-    "track_alt": ":cd: ",
-    "catalognum": ":pen: ",
-    "plays": wrap(":play_button: ", BOLD_GREEN),
-    "skips": wrap(":stop_button: ", BOLD_RED),
-    "albumtypes": "types",
-}
-
 
 def _get_val(value: float | str | None, field: str) -> RenderableType:
     if value is None:

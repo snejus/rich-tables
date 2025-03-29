@@ -7,7 +7,7 @@ import sys
 import tempfile
 from functools import singledispatch
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Iterator
 
 from rich.traceback import install
 from typing_extensions import TypedDict
@@ -126,9 +126,9 @@ def _draw_data_dict(
 ) -> Iterator[RenderableType]:
     if (title := data.get("title")) and (values := data.get("values")):
         table = TABLE_BY_NAME.get(title, flexitable)
-        yield from table(values, **kwargs)
+        return table(values, **kwargs)
     else:
-        yield from flexitable(data)
+        return flexitable(data)
 
 
 @draw_data.register(list)
@@ -147,7 +147,11 @@ def main() -> None:
             console.print_json(data=data)
         elif data:
             console.record = True
-            for renderable in filter(None, draw_data(data, verbose=args.verbose)):
+            content = draw_data(data, verbose=args.verbose)
+            if not isinstance(content, Iterator):
+                content = iter([content])
+
+            for renderable in content:
                 console.print(renderable)
 
     if args.save:

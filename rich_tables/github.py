@@ -517,7 +517,7 @@ class PullRequestTable(PullRequest):
         field_rows = flexitable(pairs)
         return border_panel(
             new_table(
-                rows=[list(field_rows), [md_panel(self.body)], [self.files_commits]]
+                rows=[[field_rows], [md_panel(self.body)], [self.files_commits]]
             ),
             title=f"{self.name} @ {self.repo}",
             box=box.DOUBLE_EDGE,
