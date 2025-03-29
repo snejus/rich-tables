@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 from rich.text import Text
 
+from .diff import pretty_diff
 from .utils import (
     BOLD_GREEN,
     BOLD_RED,
@@ -23,7 +24,6 @@ from .utils import (
     get_country,
     human_dt,
     md_panel,
-    pretty_diff,
     progress_bar,
     simple_panel,
     split_with_color,

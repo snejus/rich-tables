@@ -12,11 +12,12 @@ from rich.traceback import install
 from typing_extensions import TypedDict
 
 from . import calendar, task
+from .diff import pretty_diff
 from .fields import get_val
 from .generic import flexitable
 from .github import pulls_table
 from .music import albums_table
-from .utils import make_console, new_table, pretty_diff, wrap
+from .utils import make_console, new_table, wrap
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

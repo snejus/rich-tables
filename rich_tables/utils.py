@@ -3,21 +3,16 @@ from __future__ import annotations
 import colorsys
 import random
 import re
-import time
 from collections.abc import Iterable, Sequence
 from datetime import datetime, timedelta, timezone
-from difflib import SequenceMatcher
 from functools import lru_cache
-from itertools import groupby, islice, starmap, zip_longest
+from itertools import groupby
 from math import copysign
-from pprint import pformat
 from re import Match
-from string import printable, punctuation
 from typing import TYPE_CHECKING, Any, Callable, Protocol, SupportsFloat, TypeVar
 
 import humanize
 import platformdirs
-from multimethod import multimethod
 from rich import box
 from rich.align import Align, VerticalAlignMethod
 from rich.bar import Bar
@@ -37,18 +32,15 @@ if TYPE_CHECKING:
 JSONDict = dict[str, Any]
 T = TypeVar("T")
 
+BOLD_GREEN = "b green"
+BOLD_RED = "b red"
+
 
 class Pat:
     SPLIT_PAT = re.compile(r"[;,] ?")
     PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
     HTML_PARAGRAPH = re.compile(r"</?p>")
-    CONSECUTIVE_SPACE = re.compile("(?:^ +)|(?: +$)")
     OPENING_BRACKET = re.compile(r"\[(?!http)")
-
-
-BOLD_GREEN = "b green"
-BOLD_RED = "b red"
-SECONDS_PER_DAY = 86400
 
 
 _T_contra = TypeVar("_T_contra", contravariant=True)
@@ -81,64 +73,6 @@ def wrap(text: Any, tag: str) -> str:
     return f"[{tag}]{format_string(str(text))}[/]"
 
 
-def format_space(string: str) -> str:
-    return Pat.CONSECUTIVE_SPACE.sub(r"[u]\g<0>[/]", string)
-
-
-def format_new(string: str) -> str:
-    string = re.sub("^\n+", lambda m: m[0].replace("\n", "⮠\n"), string)
-    return wrap(format_space(string), BOLD_GREEN)
-
-
-def format_old(string: str) -> str:
-    string = re.sub("^\n|\n$", lambda m: m[0].replace("\n", "⮠ "), string)
-    return wrap(string, f"s {BOLD_RED}")
-
-
-def fmtdiff(change: str, before: str, after: str) -> str:
-    if change == "insert":
-        return format_new(after)
-    if change == "delete":
-        return format_old(before)
-    if change == "replace":
-        return "".join(
-            (format_old(a) + format_new(b)) if a != b else a
-            for a, b in zip(before.partition("\n"), after.rpartition("\n"))
-        )
-
-    return wrap(before, "dim")
-
-
-def make_difftext(
-    before: str,
-    after: str,
-    junk: str = "".join(sorted((set(punctuation) - {"_", "-", ":"}) | {"\n"})),
-) -> str:
-    matcher = SequenceMatcher(lambda x: x in "", autojunk=False, a=before, b=after)
-    ops = matcher.get_opcodes()
-    to_remove_ids = [
-        i
-        for i, (op, a, b, c, d) in enumerate(ops)
-        if 0 < i < len(ops) - 1
-        and op == "equal"
-        and b - a < 5
-        and before[a:b].strip()
-        and after[c:d].strip()
-    ]
-    for i in reversed(to_remove_ids):
-        a, b = ops[i - 1], ops[i + 1]
-        action = "replace"
-
-        ops[i] = (action, a[1], b[2], a[3], b[4])
-
-        del ops[i + 1]
-        del ops[i - 1]
-
-    return "".join(
-        fmtdiff(code, before[a1:a2], after[b1:b2]) or "" for code, a1, a2, b1, b2 in ops
-    )
-
-
 def duration2human(duration: SupportsFloat) -> str:
     diff = timedelta(seconds=float(duration))
     days = f"{diff.days}d " if diff.days else ""
@@ -166,14 +100,14 @@ def get_theme() -> Theme | None:
 
 
 class SafeConsole(Console):
-    def render_str(self, text: str, **kwargs) -> Text:
+    def render_str(self, text: str, **kwargs: Any) -> Text:
         try:
             return super().render_str(text, **kwargs)
         except MarkupError:
             kwargs["markup"] = False
             return super().render_str(text, **kwargs)
 
-    def print(self, *args, **kwargs):
+    def print(self, *args: Any, **kwargs: Any) -> None:
         try:
             super().print(*args, **kwargs)
         except MarkupError:
@@ -181,7 +115,7 @@ class SafeConsole(Console):
             super().print(*args, **kwargs)
 
 
-def make_console(**kwargs) -> SafeConsole:
+def make_console(**kwargs: Any) -> SafeConsole:
     kwargs.setdefault("theme", get_theme())
     kwargs.setdefault("force_terminal", True)
     kwargs.setdefault("force_interactive", False)
@@ -193,21 +127,21 @@ console = make_console()
 
 
 class NewTable(Table):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         table_kwarg_names = set(Table.__init__.__code__.co_varnames)
         column_kwarg_names = kwargs.keys() - table_kwarg_names
         self.column_kwargs = {k: kwargs.pop(k) for k in column_kwarg_names}
 
         super().__init__(*args, **kwargs)
 
-    def add_column(self, *args, **kwargs) -> None:
+    def add_column(self, *args: Any, **kwargs: Any) -> None:
         for k, v in self.column_kwargs.items():
             kwargs.setdefault(k, v)
 
         self.show_header = True
         super().add_column(*args, **kwargs)
 
-    def add_row(self, *args: RenderableType | None, **kwargs) -> None:
+    def add_row(self, *args: RenderableType | None, **kwargs: Any) -> None:
         rends = list(args)
         if (overflow := self.column_kwargs.get("overflow")) and (
             max_width := self.column_kwargs.get("max_width")
@@ -229,7 +163,7 @@ class NewTable(Table):
         data: JSONDict,
         ignore_extra_fields: bool = False,
         sort_columns: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Add a row to the table from a dictionary."""
         if not ignore_extra_fields:
@@ -256,7 +190,7 @@ class NewTable(Table):
 
 
 def new_table(
-    *headers: str, rows: Iterable[Iterable[RenderableType]] | None = None, **kwargs
+    *headers: str, rows: Iterable[Iterable[RenderableType]] | None = None, **kwargs: Any
 ) -> NewTable:
     if headers:
         kwargs.setdefault("header_style", "bold misty_rose1")
@@ -281,7 +215,7 @@ def new_table(
     return table
 
 
-def list_table(items: Iterable[RenderableType], **kwargs) -> NewTable:
+def list_table(items: Iterable[RenderableType], **kwargs: Any) -> NewTable:
     return new_table(rows=[[i] for i in items], **kwargs)
 
 
@@ -347,7 +281,9 @@ def fmt_pred_color(m: Match[str]) -> str:
 
 
 def simple_panel(
-    content: RenderableType, vertical_align: VerticalAlignMethod | None = None, **kwargs
+    content: RenderableType,
+    vertical_align: VerticalAlignMethod | None = None,
+    **kwargs: Any,
 ) -> Panel:
     kwargs.setdefault("title_align", "left")
     kwargs.setdefault("subtitle_align", "right")
@@ -362,7 +298,7 @@ def simple_panel(
     return Panel(content, **kwargs)
 
 
-def border_panel(content: RenderableType, **kwargs) -> Panel:
+def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
     kwargs.setdefault("box", box.ROUNDED)
     kwargs.setdefault("border_style", "dim")
     return simple_panel(content, **kwargs)
@@ -387,7 +323,7 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
 
 
 def new_tree(
-    values: Iterable[RenderableType] | None = None, title: str = "", **kwargs
+    values: Iterable[RenderableType] | None = None, title: str = "", **kwargs: Any
 ) -> Tree:
     if values is None:
         values = []
@@ -500,20 +436,6 @@ def human_dt(timestamp: str | float) -> str:
     return f"[b {color}]{human_dt}[/]"
 
 
-def diff_dt(timestamp: str | float, acc: int = 2) -> str:
-    try:
-        datetime = timestamp2datetime(timestamp)
-    except ValueError:
-        return str(timestamp)
-
-    diff = datetime.timestamp() - time.time()
-    fmted = " ".join(islice(fmt_time(int(diff)), acc))
-
-    strtime = datetime.strftime("%F" if abs(diff) >= SECONDS_PER_DAY else "%T")
-
-    return f"{wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN)} {strtime}"
-
-
 def syntax(*args: Any, **kwargs: Any) -> Syntax:
     kwargs.setdefault("theme", "paraiso-dark")
     kwargs.setdefault("background_color", "black")
@@ -538,93 +460,3 @@ def sql_syntax(sql_string: str) -> Syntax:
         background_color="black",
         word_wrap=True,
     )
-
-
-class hashable_list(list):
-    def __hash__(self) -> int:
-        return hash(tuple(self))
-
-
-class hashable_dict(dict):
-    def __hash__(self) -> int:
-        return hash(tuple(self.items()))
-
-
-@multimethod
-def to_hashable(value: Any) -> Any:
-    return value
-
-
-@to_hashable.register
-def _(value: list[Any]) -> list[Any]:
-    return hashable_list(map(to_hashable, value))
-
-
-@to_hashable.register
-def _(value: dict[str, Any]) -> dict[str, Any]:
-    return hashable_dict({k: to_hashable(v) for k, v in value.items()})
-
-
-def diff_serialize(value: Any) -> str:
-    if value is None:
-        return ""
-    return '""' if value == "" else str(value)
-
-
-@multimethod
-def diff(before: str, after: str) -> str:
-    return make_difftext(before, after, printable)
-
-
-@diff.register
-def _(before: Any, after: Any) -> Any:
-    return diff(diff_serialize(before), diff_serialize(after))
-
-
-@diff.register
-def _(before: list[Any], after: list[Any]) -> Any:
-    return list(starmap(diff, zip_longest(before, after)))
-
-
-@diff.register
-def _(before: list[str], after: list[str]) -> Any:
-    before_set, after_set = dict.fromkeys(before), dict.fromkeys(after)
-    common = [k for k in before_set if k in after_set]
-    return [
-        *list(starmap(diff, zip(common, common))),
-        *[
-            diff(before or "", after or "")
-            for before, after in zip_longest(
-                [k for k in before_set if k not in common],
-                [k for k in after_set if k not in common],
-            )
-        ],
-    ]
-
-
-@diff.register
-def _(before: dict, after: dict) -> Any:
-    data = {}
-    keys = sorted(before.keys() | after.keys())
-    for key in keys:
-        if key not in before:
-            data[wrap(key, BOLD_GREEN)] = wrap(diff_serialize(after[key]), BOLD_GREEN)
-        elif key not in after:
-            data[wrap(key, BOLD_RED)] = wrap(diff_serialize(before[key]), BOLD_RED)
-        else:
-            data[key] = diff(before[key], after[key])
-
-    return data
-
-
-def pretty_diff(before: Any, after: Any, **kwargs) -> Text:
-    result = diff(to_hashable(before), to_hashable(after))
-    if not isinstance(result, str):
-        result = (
-            pformat(result, indent=2, width=300, sort_dicts=False)
-            .replace("'", "")
-            .replace('"', "")
-            .replace("\\\\", "\\")
-        )
-
-    return Text.from_markup(result, **kwargs)

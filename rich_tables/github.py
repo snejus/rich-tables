@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import time
 from collections import defaultdict
 from dataclasses import dataclass
+from itertools import islice
 from typing import TYPE_CHECKING, Any, Callable, Protocol
 
 from rich import box
@@ -15,7 +17,7 @@ from .generic import flexitable
 from .utils import (
     JSONDict,
     border_panel,
-    diff_dt,
+    fmt_time,
     format_with_color,
     format_with_color_on_black,
     list_table,
@@ -24,6 +26,7 @@ from .utils import (
     predictably_random_color,
     simple_panel,
     sortgroup_by,
+    timestamp2datetime,
     wrap,
 )
 
@@ -34,6 +37,8 @@ if TYPE_CHECKING:
     from rich.panel import Panel
     from rich.table import Table
 
+SECONDS_PER_DAY = 86400
+
 
 def b_green(text: str) -> str:
     """Make the text bold green."""
@@ -43,6 +48,20 @@ def b_green(text: str) -> str:
 def b_red(text: str) -> str:
     """Make the text bold red."""
     return wrap(text, "b red")
+
+
+def diff_dt(timestamp: str | float, acc: int = 2) -> str:
+    try:
+        datetime = timestamp2datetime(timestamp)
+    except ValueError:
+        return str(timestamp)
+
+    diff = datetime.timestamp() - time.time()
+    fmted = " ".join(islice(fmt_time(int(diff)), acc))
+
+    strtime = datetime.strftime("%F" if abs(diff) >= SECONDS_PER_DAY else "%T")
+
+    return f"{(b_red if diff < 0 else b_green)(fmted)} {strtime}"
 
 
 def fmt_add_del(added: int, deleted: int) -> list[str]:
