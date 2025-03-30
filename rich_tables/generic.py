@@ -257,8 +257,8 @@ def get_data_trees(items: list[JSONDict]) -> Iterator[Tree]:
 
 def _render_dict_list(data: list[JSONDict]) -> RenderableType:
     """Render a list of dictionaries with consistent structure handling."""
-    if any(MATCH_COUNT_HEADER.search(k) for k in data[0]):
-        data = add_count_bars(data)
+    if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
+        data = add_count_bars(data, count_key)
 
     keys = dict.fromkeys(k for k in data[0] if any(i.get(k) for i in data)).keys()
 

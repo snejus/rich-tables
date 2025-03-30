@@ -38,66 +38,50 @@ if TYPE_CHECKING:
     from rich.console import RenderableType
 
 
-MATCH_COUNT_HEADER = re.compile(r"duration|(_sum$|_?count$)")
+MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|_?count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
 
 
-def add_count_bars(data: list[JSONDict]) -> list[JSONDict]:
-    count_header = ""
-    subcount_header = None
-    ordered_headers = []
-    for key in data[0]:
-        if key.endswith("_subcount"):
-            subcount_header = key
-        elif MATCH_COUNT_HEADER.search(key):
-            if count_header:
-                ordered_headers.append(key)
-            else:
-                count_header = key
-        else:
-            ordered_headers.append(key)
+def add_count_bars(data: list[JSONDict], count_key: str) -> list[JSONDict]:
+    all_keys = list(data[0].keys())
+    subcount_key = next((k for k in all_keys if k.endswith("_subcount")), None)
+    if subcount_key:
+        new_count_key = f"{subcount_key.removesuffix('_subcount')}/{count_key.removesuffix('_count')}"  # noqa: E501
+    else:
+        new_count_key = count_key
 
-    all_counts = [float(i.get(count_header, 0)) for i in data]
-    num_type = int if len({c % 1 for c in all_counts}) == 1 else float
+    all_counts = [float(i[count_key]) for i in data]
     max_value = max(all_counts)
 
-    if subcount_header:
-        count_header = f"{subcount_header}/{count_header}".replace(
-            "_count", ""
-        ).replace("_subcount", "")
-
-    keys = ordered_headers
-    new_data = []
-    for item, count in zip(data, all_counts):
+    bar_key = f"{count_key}_bar"
+    for item in data:
         subcount = None
-        inverse = False
-        count_val = str(count)
-        if subcount_header:
-            subcount = float(item[subcount_header])
-            count_val = f"{num_type(subcount)}/{num_type(count)}"
-        elif "duration" in count_header:
-            inverse = True
-            if num_type is int:
-                count_val = duration2human(count)
+        inverse = count_key.endswith("duration")
+        count = item[count_key]
+        if subcount_key:
+            subcount = float(item[subcount_key])
+            count_val = f"{subcount}/{count}"
+        elif count_key.endswith("duration"):
+            count_val = duration2human(count)
         else:
-            count_val = str(num_type(count))
+            count_val = str(count)
 
-        new_item = {k: item.get(k) for k in keys}
-        new_item[count_header] = count_val
-        new_item[f"{count_header}_bar"] = progress_bar(
+        item.pop(count_key, None)
+        item[new_count_key] = count_val
+        item[bar_key] = progress_bar(
             end=subcount, width=max_value, size=count, inverse=inverse
         )
-        new_data.append(new_item)
 
-    if count_header in {"duration", "total_duration"}:
-        new_data.append(
+    if count_key in {"duration", "total_duration"}:
+        data.append(
             {
-                keys[0]: "TOTAL",
-                count_header: duration2human(float(sum(all_counts))),
+                all_keys[0]: "TOTAL",
+                count_key: duration2human(sum(all_counts)),
+                bar_key: "",
             }
         )
 
-    return new_data
+    return data
 
 
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
