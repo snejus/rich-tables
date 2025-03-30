@@ -32,6 +32,7 @@ jobs:
 
       - name: Upload coverage data to coveralls.io
         run: poetry run coveralls --service=github
+        continue-on-error: true
 
       - name: Lint flake8
         run: poetry run flake8 . --output-file flake.log --exit-zero
