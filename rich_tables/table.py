@@ -5,9 +5,10 @@ import argparse
 import json
 import sys
 import tempfile
+from contextlib import contextmanager
 from functools import singledispatch
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterator
+from typing import TYPE_CHECKING, Any, Callable
 
 from rich.traceback import install
 from typing_extensions import TypedDict
@@ -121,44 +122,46 @@ def draw_data(data: Any, **kwargs: Any) -> Iterator[RenderableType]:
 
 
 @draw_data.register(dict)
-def _draw_data_dict(
-    data: JSONDict | NamedData, **kwargs: Any
-) -> Iterator[RenderableType]:
+def _draw_data_dict(data: JSONDict | NamedData, **kwargs: Any) -> None:
     if (title := data.get("title")) and (values := data.get("values")):
         table = TABLE_BY_NAME.get(title, flexitable)
-        return table(values, **kwargs)
+        for renderable in table(values, **kwargs):
+            console.print(renderable)
     else:
-        return flexitable(data)
+        console.print(flexitable(data))
 
 
 @draw_data.register(list)
-def _draw_data_list(data: list[JSONDict], **kwargs: Any) -> Iterator[RenderableType]:
-    if data:
-        yield flexitable(data)
+def _draw_data_list(data: list[JSONDict], **__: Any) -> None:
+    console.print(flexitable(data))
+
+
+@contextmanager
+def handle_save(save: bool) -> Iterator[None]:
+    if save:
+        yield
+
+        if save:
+            with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as file:
+                filename = file.name
+            console.save_html(filename)
+            print(f"Saved output as {filename}", file=sys.stderr)
+    else:
+        yield
 
 
 def main() -> None:
     args = get_args()
-    if args.command == "diff":
-        console.print(pretty_diff(args.before, args.after), markup=False)
-    else:
-        data = load_data("/dev/stdin")
-        if args.json:
-            console.print_json(data=data)
-        elif data:
-            console.record = True
-            content = draw_data(data, verbose=args.verbose)
-            if not isinstance(content, Iterator):
-                content = iter([content])
 
-            for renderable in content:
-                console.print(renderable)
-
-    if args.save:
-        with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as file:
-            filename = file.filename
-        console.save_html(filename)
-        print(f"Saved output as {filename}", file=sys.stderr)
+    with handle_save(args.save):
+        if args.command == "diff":
+            console.print(pretty_diff(args.before, args.after), markup=False)
+        else:
+            data = load_data("/dev/stdin")
+            if args.json:
+                console.print_json(data=data)
+            elif data:
+                draw_data(data, verbose=args.verbose)
 
 
 if __name__ == "__main__":
