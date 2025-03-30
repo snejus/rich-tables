@@ -45,8 +45,8 @@ DISPLAY_HEADER: dict[RenderableType, str] = {
     "hidden": ":no_entry: ",
     "track_alt": ":cd: ",
     "catalognum": ":pen: ",
-    "plays": "b :play_button: ",
-    "skips": "b :stop_button: ",
+    "plays": "[b green]:play_button: [/]",
+    "skips": "[b red]:stop_button: [/]",
     "albumtypes": "types",
 }
 
@@ -184,7 +184,7 @@ class NewTable(Table):
         self,
         data: JSONDict,
         ignore_extra_fields: bool = False,
-        transform: Callable[..., RenderableType] = None,
+        transform: Callable[..., RenderableType] = lambda v, _: v,
         **kwargs: Any,
     ) -> None:
         """Add a row to the table from a dictionary."""
@@ -194,7 +194,9 @@ class NewTable(Table):
                 self.add_column(field)
                 self.columns[-1]._cells = [""] * self.row_count
 
-        self.add_row(*(transform(v, k) for k, v in data.items()), **kwargs)
+        values = (transform(data.get(k), k) for k in self.colnames)
+
+        self.add_row(*values, **kwargs)
 
     @property
     def colnames(self) -> list[str]:

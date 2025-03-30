@@ -42,10 +42,11 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterable, Iterator
 
     from rich.table import Table
     from rich.tree import Tree
+
 
 JSONDict = dict[str, Any]
 T = TypeVar("T")
@@ -228,11 +229,11 @@ def _handle_mixed_list_items(data: Sequence[Any]) -> RenderableType:
     )
 
 
-def get_item_list_table(items: list[JSONDict]) -> Table:
+def get_item_list_table(items: list[JSONDict], keys: Iterable[str]) -> Table:
     """Add rows for normal sized dictionary items as a sub-table."""
-    table = simple_head_table(show_header=True)
+    table = simple_head_table(*keys, show_header=True)
     for item in items:
-        table.add_dict_row(item, transform=flexitable)
+        table.add_dict_row(item, ignore_extra_fields=True, transform=flexitable)
 
     for column in table.columns:
         column.header_style = predictably_random_color(str(column.header))
@@ -256,12 +257,10 @@ def get_data_trees(items: list[JSONDict]) -> Iterator[Tree]:
 
 def _render_dict_list(data: list[JSONDict]) -> RenderableType:
     """Render a list of dictionaries with consistent structure handling."""
-    all_keys = dict.fromkeys(k for item in data for k in item)
-    if not all_keys:
-        return simple_head_table()
-
-    if any(MATCH_COUNT_HEADER.search(k) for k in all_keys):
+    if any(MATCH_COUNT_HEADER.search(k) for k in data[0]):
         data = add_count_bars(data)
+
+    keys = dict.fromkeys(k for k in data[0] if any(i.get(k) for i in data)).keys()
 
     data_by_size: dict[bool, list[JSONDict]] = defaultdict(list)
     for item in data:
@@ -269,7 +268,7 @@ def _render_dict_list(data: list[JSONDict]) -> RenderableType:
         data_by_size[too_big].append(item)
 
     table = simple_head_table()
-    table.add_row(get_item_list_table(data_by_size[False]))
+    table.add_row(get_item_list_table(data_by_size[False], keys))
     for tree in get_data_trees(data_by_size[True]):
         table.add_row(tree)
 
