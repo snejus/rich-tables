@@ -132,8 +132,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     ),
     category=lambda x: "/".join(map(format_with_color, x.split("/"))),
     country=get_country,
-    helicopta=lambda x: (":fire: " if int(x) else "") if str(x).isdigit() else x,
-    hidden=lambda x: (":shit: " if int(x) else "") if str(x).isdigit() else x,
+    helicopta=lambda x: ":fire: " if x == "1" else "",
+    hidden=lambda x: ":shit: " if x == "1" else "",
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
     comments=lambda x: md_panel(

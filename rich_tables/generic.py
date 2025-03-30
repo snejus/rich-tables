@@ -13,6 +13,7 @@ lists, strings and other types.
 from __future__ import annotations
 
 import itertools as it
+from contextlib import suppress
 import logging
 import os
 from collections import defaultdict
@@ -154,7 +155,8 @@ def _header(data: Any, header: str) -> RenderableType:
     if header not in fields.FIELDS_MAP or isinstance(data, list):
         return flexitable(data)
 
-    data = _get_val(data, header)
+    with suppress(AttributeError):
+        data = _get_val(data, header)
 
     if not isinstance(data, str):
         return flexitable(data)
