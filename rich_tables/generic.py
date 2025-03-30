@@ -15,20 +15,18 @@ from __future__ import annotations
 import itertools as it
 import logging
 import os
+from collections import defaultdict
 from collections.abc import Generator, Sequence
 from datetime import datetime, timezone
 from functools import partial, wraps
-from typing import Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from multimethod import multidispatch
 from rich import box
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group, RenderableType
 from rich.logging import RichHandler
-from rich.panel import Panel
-from rich.table import Table
 from rich.text import Text
-from rich.tree import Tree
 
 from . import fields
 from .fields import MATCH_COUNT_HEADER, _get_val, add_count_bars
@@ -41,8 +39,13 @@ from .utils import (
     new_table,
     new_tree,
     predictably_random_color,
-    wrap,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from rich.table import Table
+    from rich.tree import Tree
 
 JSONDict = dict[str, Any]
 T = TypeVar("T")
@@ -217,7 +220,7 @@ def _int_list(data: Sequence[int]) -> Columns:
 def _handle_mixed_list_items(data: Sequence[Any]) -> RenderableType:
     """Handle a list containing mixed item types."""
     return list_table(
-        [Group(*flexitable(d)) for d in data],
+        [flexitable(d) for d in data],
         show_lines=True,
         border_style="dim",
         show_edge=True,
@@ -237,37 +240,18 @@ def get_item_list_table(items: list[JSONDict]) -> Table:
     return table
 
 
-def _get_rendered_value(value: Any, key: str) -> RenderableType:
-    """Get a rendered version of a value with appropriate formatting."""
-    transformed_value = flexitable(value, key)
-    header = wrap(key, "b")
-
-    if isinstance(transformed_value, str):
-        return f"{header}: {transformed_value}"
-
-    if isinstance(transformed_value, (Panel, NewTable)):
-        transformed_value = new_tree([transformed_value], header)
-    elif isinstance(transformed_value, Tree):
-        transformed_value.label = header
-    elif isinstance(transformed_value, Generator):
-        return new_tree([Group(*transformed_value, fit=False)], header)
-
-    return transformed_value
-
-
-def _add_large_dict_rows(table: NewTable, items: list[JSONDict]) -> None:
+def get_data_trees(items: list[JSONDict]) -> Iterator[Tree]:
     """Add rows for large dictionary items as trees."""
     for item in items:
-        values = (
-            flexitable(*x)
-            for x in sorted(
+        values = it.starmap(
+            flexitable,
+            sorted(
                 [(v or "", k) for k, v in item.items()],
                 key=lambda x: str(type(next(iter(x)))),
                 reverse=True,
-            )
+            ),
         )
-        tree = new_tree(values, "")
-        table.add_row(tree)
+        yield new_tree(values, "")
 
 
 def _render_dict_list(data: list[JSONDict]) -> RenderableType:
@@ -279,18 +263,17 @@ def _render_dict_list(data: list[JSONDict]) -> RenderableType:
     if any(MATCH_COUNT_HEADER.search(k) for k in all_keys):
         data = add_count_bars(data)
 
-    keys = [k for k in all_keys if any((item.get(k) is not None) for item in data)]
+    data_by_size: dict[bool, list[JSONDict]] = defaultdict(list)
+    for item in data:
+        too_big = len(str(item.values())) > MAX_DICT_LENGTH
+        data_by_size[too_big].append(item)
 
-    size_rank_with_data = [(len(str(i.values())) > MAX_DICT_LENGTH, i) for i in data]
-    large_table = simple_head_table()
-    large_table.add_row(
-        get_item_list_table([i for too_big, i in size_rank_with_data if not too_big])
-    )
-    _add_large_dict_rows(
-        large_table, [i for too_big, i in size_rank_with_data if too_big]
-    )
+    table = simple_head_table()
+    table.add_row(get_item_list_table(data_by_size[False]))
+    for tree in get_data_trees(data_by_size[True]):
+        table.add_row(tree)
 
-    return large_table
+    return table
 
 
 @flexitable.register

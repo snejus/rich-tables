@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from collections.abc import Iterable, MutableMapping
 from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import singledispatch
 from itertools import islice
 from typing import TYPE_CHECKING, Any, Callable
@@ -130,7 +130,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     since=lambda x: (
         x
         if isinstance(x, str)
-        else datetime.fromtimestamp(float(x)).strftime("%F %H:%M")
+        else datetime.fromtimestamp(float(x), tz=timezone.utc).strftime("%F %H:%M")
     ),
     wait_per_play=lambda x: wrap(
         " ".join(islice(fmt_time(int(float(x))), 1)), BOLD_GREEN
