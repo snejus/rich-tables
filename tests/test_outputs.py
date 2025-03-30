@@ -1,4 +1,3 @@
-import locale
 import re
 import sys
 from collections.abc import Iterator
@@ -30,11 +29,10 @@ def _populate_readme() -> Iterator[None]:
         for f in TEST_FILES
     )
 
-    with Path("README.md").open("r+", encoding=locale.getpreferredencoding(False)) as f:
-        readme = f.read()
-        f.seek(0)
-        readme = re.sub(r"(?<=## Examples\n\n).*", svgs, readme, flags=re.S)
-        f.write(readme)
+    readme_path = Path("README.md")
+    readme = readme_path.read_text()
+    readme = re.sub(r"(?<=## Examples\n\n).*", svgs, readme, flags=re.S)
+    readme_path.write_text(readme)
 
 
 @freeze_time("2022-04-01")

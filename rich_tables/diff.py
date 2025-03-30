@@ -7,7 +7,7 @@ with specialized formatting for each type.
 """
 
 import re
-from collections import UserDict, UserList
+from collections import UserDict
 from difflib import SequenceMatcher
 from functools import partial
 from itertools import starmap, zip_longest
@@ -98,18 +98,13 @@ def make_difftext(before: str, after: str) -> str:
     )
 
 
-class HashableList(UserList[Any]):
-    def __hash__(self) -> int:
-        return hash(tuple(self.data))
-
-
-class HashableDict(UserDict[str, Any]):
+class HashableDict(UserDict[str, Hashable]):
     def __hash__(self) -> int:
         return hash(tuple(self.data.items()))
 
 
 @multimethod
-def to_hashable(value: Any) -> Any:
+def to_hashable(value: Hashable) -> Hashable:
     """Convert potentially unhashable objects to hashable equivalents.
 
     Base implementation for primitive hashable types.
@@ -120,7 +115,7 @@ def to_hashable(value: Any) -> Any:
 
 @to_hashable.register
 def _(value: list[Any]) -> Hashable:
-    return HashableList(map(to_hashable, value))
+    return tuple(map(to_hashable, value))
 
 
 @to_hashable.register
@@ -156,7 +151,7 @@ def _(before: list[Any], after: list[Any]) -> Any:
 
 
 @diff.register
-def _(before: list[str], after: list[str]) -> list[str]:
+def _(before: tuple[Hashable, ...], after: tuple[Hashable, ...]) -> list[str]:
     before_set, after_set = dict.fromkeys(before), dict.fromkeys(after)
     common = [k for k in before_set if k in after_set]
     return [
@@ -172,7 +167,7 @@ def _(before: list[str], after: list[str]) -> list[str]:
 
 
 @diff.register
-def _(before: dict[str, Any], after: dict[str, Any]) -> dict[str, str]:
+def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
     data = {}
     keys = sorted(before.keys() | after.keys())
     for key in keys:
