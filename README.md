@@ -67,6 +67,10 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/album.svg)
 
+### Albums
+
+![image](svgs/albums.svg)
+
 ### Calendar
 
 ![image](svgs/calendar.svg)
@@ -87,6 +91,10 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/jira_diff.svg)
 
+### Music list
+
+![image](svgs/music_list.svg)
+
 ### Nested JSON
 
 ![image](svgs/nested_json.svg)
@@ -106,6 +114,10 @@ deal with a huge diff with a lot of unrelated changes.
 ### Tasks
 
 ![image](svgs/tasks.svg)
+
+### Text diff
+
+![image](svgs/text_diff.svg)
 
 ### Timed
 

@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Iterator, List
+from typing import TYPE_CHECKING, Any, Callable
 
-from funcy import join
 from typing_extensions import Literal, TypedDict
 
 from .fields import FIELDS_MAP, get_val
@@ -19,6 +18,8 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+
     from rich.panel import Panel
     from rich.tree import Tree
 
@@ -42,7 +43,7 @@ COLOR_BY_STATUS = {
     "recurring": "i magenta",
 }
 
-JSONDict = Dict[str, Any]
+JSONDict = dict[str, Any]
 
 
 def keep_keys(keys: Iterable[str], item: JSONDict) -> JSONDict:
@@ -101,7 +102,7 @@ class Task:
         return tree
 
     def get_row(
-        self, extract_data: Callable[[JSONDict], JSONDict], *args, **kwargs
+        self, extract_data: Callable[[JSONDict], JSONDict], *_: Any, **kwargs: Any
     ) -> JSONDict:
         data = extract_data(asdict(self))
         data["tree"] = self.get_tree(**kwargs)
@@ -109,7 +110,7 @@ class Task:
         return data
 
 
-def get_headers(task_headers: Iterable[str]) -> List[str]:
+def get_headers(task_headers: Iterable[str]) -> list[str]:
     """Return the list of headers that will be used in the table."""
     ordered_keys = dict.fromkeys([*INITIAL_HEADERS, *sorted(task_headers)]).keys()
     return [*[k for k in ordered_keys if k not in SKIP_HEADERS], "tree"]
@@ -136,24 +137,26 @@ fields_map: JSONDict = {
     if ann
     else None,
 }
-FIELDS_MAP.update(fields_map)
 
 
-def get_table(tasks_data_by_group: Dict[str, list[JSONDict]], **__) -> Iterator[Panel]:
+def get_table(
+    tasks_data_by_group: dict[str, list[JSONDict]], **__: Any
+) -> Iterator[Panel]:
     """Yield a table for each tasks group."""
-    headers = get_headers(next(iter(join(tasks_data_by_group.values()))))
+    FIELDS_MAP.update(fields_map)
+    headers = get_headers(next(t for g in tasks_data_by_group.values() for t in g))
     keep_headers = partial(keep_keys, headers)
 
     tasks_by_group = {
         g: [Task(**t) for t in tasks_data]
         for g, tasks_data in tasks_data_by_group.items()
     }
-    desc_by_uuid = {t.uuid: t.desc for t in join(tasks_by_group.values())}
+    desc_by_uuid = {t.uuid: t.desc for g in tasks_by_group.values() for t in g}
     for group, tasks in tasks_by_group.items():
         yield border_panel(
-            flexitable([
-                t.get_row(keep_headers, get_desc=desc_by_uuid.get) for t in tasks
-            ]),
+            flexitable(
+                [t.get_row(keep_headers, get_desc=desc_by_uuid.get) for t in tasks]
+            ),
             title=wrap(group, "b"),
             style=predictably_random_color(group),
         )

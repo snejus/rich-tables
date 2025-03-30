@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python: ["3.9", "3.10", "3.11", "3.12"]
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -32,6 +32,7 @@ jobs:
 
       - name: Upload coverage data to coveralls.io
         run: poetry run coveralls --service=github
+        continue-on-error: true
 
       - name: Lint flake8
         run: poetry run flake8 . --output-file flake.log --exit-zero
@@ -46,8 +47,8 @@ jobs:
         run: echo PROJECT_VERSION="$(git describe --tags | sed 's/-[^-]*$//')" >> $GITHUB_ENV
 
       - name: SonarCloud Scan
-        if: matrix.python == '3.8'
-        uses: SonarSource/sonarcloud-github-action@master
+        if: matrix.python == '3.9'
+        uses: SonarSource/sonarqube-scan-action@v5.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

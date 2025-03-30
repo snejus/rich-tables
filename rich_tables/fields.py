@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from datetime import datetime
+from collections.abc import Iterable, MutableMapping
+from contextlib import suppress
+from datetime import datetime, timezone
 from functools import singledispatch
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Callable, Iterable, MutableMapping
+from typing import TYPE_CHECKING, Any, Callable
 
 from rich.text import Text
 
+from .diff import pretty_diff
 from .utils import (
     BOLD_GREEN,
     BOLD_RED,
@@ -22,8 +25,6 @@ from .utils import (
     get_country,
     human_dt,
     md_panel,
-    new_table,
-    pretty_diff,
     progress_bar,
     simple_panel,
     split_with_color,
@@ -35,61 +36,52 @@ from .utils import (
 
 if TYPE_CHECKING:
     from rich.console import RenderableType
-    from rich.table import Table
 
 
-MATCH_COUNT_HEADER = re.compile(r"duration|(_sum$|_?count$)")
-MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 230))
+MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|_?count$)")
+MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
 
 
-def counts_table(data: list[JSONDict]) -> Table:
-    count_header = ""
-    subcount_header = None
-    ordered_headers = []
-    for key in data[0]:
-        if key.endswith("_subcount"):
-            subcount_header = key
-        elif MATCH_COUNT_HEADER.search(key):
-            if count_header:
-                ordered_headers.append(key)
-            else:
-                count_header = key
-        else:
-            ordered_headers.append(key)
+def add_count_bars(data: list[JSONDict], count_key: str) -> list[JSONDict]:
+    all_keys = list(data[0].keys())
+    subcount_key = next((k for k in all_keys if k.endswith("_subcount")), None)
+    if subcount_key:
+        new_count_key = f"{subcount_key.removesuffix('_subcount')}/{count_key.removesuffix('_count')}"  # noqa: E501
+    else:
+        new_count_key = count_key
 
-    all_counts = [float(i[count_header]) for i in data]
-    num_type = int if len({c % 1 for c in all_counts}) == 1 else float
+    all_counts = [float(i[count_key]) for i in data]
     max_value = max(all_counts)
 
-    if subcount_header:
-        count_header = f"{subcount_header}/{count_header}".replace(
-            "_count", ""
-        ).replace("_subcount", "")
-
-    table = new_table(*ordered_headers, count_header, count_header, expand=True)
-    for item, count in zip(data, all_counts):
+    bar_key = f"{count_key}_bar"
+    for item in data:
         subcount = None
-        inverse = False
-        count_val = str(count)
-        if subcount_header:
-            subcount = float(item[subcount_header])
-            count_val = f"{num_type(subcount)}/{num_type(count)}"
-        elif "duration" in count_header:
-            inverse = True
-            if num_type is int:
-                count_val = duration2human(count)
+        inverse = count_key.endswith("duration")
+        count = item[count_key]
+        if subcount_key:
+            subcount = float(item[subcount_key])
+            count_val = f"{subcount}/{count}"
+        elif count_key.endswith("duration"):
+            count_val = duration2human(count)
         else:
-            count_val = str(num_type(count))
+            count_val = str(count)
 
-        table.add_row(
-            *(get_val(item, h) for h in ordered_headers),
-            count_val,
-            progress_bar(end=subcount, width=max_value, size=count, inverse=inverse),
+        item.pop(count_key, None)
+        item[new_count_key] = count_val
+        item[bar_key] = progress_bar(
+            end=subcount, width=max_value, size=count, inverse=inverse
         )
-    if count_header in {"duration", "total_duration"}:
-        table.caption = "Total " + duration2human(float(sum(all_counts)))
-        table.caption_justify = "left"
-    return table
+
+    if count_key in {"duration", "total_duration"}:
+        data.append(
+            {
+                all_keys[0]: "TOTAL",
+                count_key: duration2human(sum(all_counts)),
+                bar_key: "",
+            }
+        )
+
+    return data
 
 
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
@@ -106,19 +98,24 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
             ).split("; "),
         )
     ),
-    author=format_with_color_on_black,
+    author=lambda x: (
+        format_with_color_on_black(x) if isinstance(x, (str, list, tuple, set)) else x
+    ),
     labels=lambda x: (
-        wrap("    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x), "b")
+        wrap(
+            "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x),
+            "b",
+        )
         if isinstance(x, list)
         else format_with_color(x.upper())
+        if isinstance(x, str)
+        else x
     ),
-    avg_last_played=lambda x: human_dt(x, acc=2),
     since=lambda x: (
         x
         if isinstance(x, str)
-        else datetime.fromtimestamp(float(x)).strftime("%F %H:%M")
+        else datetime.fromtimestamp(float(x), tz=timezone.utc).strftime("%F %H:%M")
     ),
-    dt=lambda x: human_dt(x, acc=5),
     wait_per_play=lambda x: wrap(
         " ".join(islice(fmt_time(int(float(x))), 1)), BOLD_GREEN
     ),
@@ -135,8 +132,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     ),
     category=lambda x: "/".join(map(format_with_color, x.split("/"))),
     country=get_country,
-    helicopta=lambda x: ":fire: " if x and int(x) else "",
-    hidden=lambda x: ":shit: " if x and int(x) else "",
+    helicopta=lambda x: ":fire: " if x == "1" else "",
+    hidden=lambda x: ":shit: " if x == "1" else "",
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
     comments=lambda x: md_panel(
@@ -169,6 +166,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
     sql=lambda x: border_panel(sql_syntax(x.replace(r"\[", "["))),
+    slug=format_with_color_on_black,
 )
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     format_with_color: (
@@ -176,6 +174,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "album",
         "albumtype",
         "app",
+        "app_label",
         "area",
         "assignee",
         "brand",
@@ -183,6 +182,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "catalognum",
         "categories",
         "Category",
+        "classname",
         "data_source",
         "default_start_time",
         "default_end_time",
@@ -199,7 +199,6 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "group_source",
         "Interests",
         "issuetype",
-        "key",
         "kind",
         "label",
         "mastering",
@@ -209,6 +208,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "primary",
         "priority",
         "project",
+        "reporter",
         "short_name",
         "source",
         "status",
@@ -222,14 +222,19 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "to",
         "tables",
         "test",
+        "type",
         "type_name",
         "user",
+        "client",
+        "env",
     ),
     split_with_color: ("genre", "genres"),
     human_dt: (
         "added",
         "committedDate",
+        "created",
         "due",
+        "done_date",
         "start",
         "end",
         "entry",
@@ -239,15 +244,19 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "mtime",
         "updated",
         "providerPublishTime",
+        "release_date",
     ),
     md_panel: (
         "answer",
         "benefits",
+        "body",
         "bodyHTML",
         "creditText",
         "description",
+        "Description",
         "desc",
-        # "instructions",
+        "doc",
+        "content",
         "interview",
         "notes",
         "text",
@@ -257,36 +266,24 @@ for func, fields in fields_by_func.items():
     for field in fields:
         FIELDS_MAP[field] = func
 
-DISPLAY_HEADER: dict[str, str] = {
-    "track": "#",
-    "bpm": "🚀",
-    "last_played": ":timer_clock: ",
-    "mtime": "updated",
-    "data_source": "source",
-    "helicopta": ":helicopter: ",
-    "hidden": ":no_entry: ",
-    "track_alt": ":cd: ",
-    "catalognum": ":pen: ",
-    "plays": wrap(":play_button: ", BOLD_GREEN),
-    "skips": wrap(":stop_button: ", BOLD_RED),
-    "albumtypes": "types",
-}
 
-
-def _get_val(value: Any, field: str) -> RenderableType:
+def _get_val(value: float | str | None, field: str) -> RenderableType:
     if value is None:
         return "None"
 
+    if field.endswith(".py"):
+        return border_panel(syntax(value, "python"), title=field)
+
     if isinstance(value, str):
         value = format_string(value)
-
-    if isinstance(value, (int, float)):
+    elif isinstance(value, (int, float)):
         value = str(value)
 
-    if field not in FIELDS_MAP and field.endswith("_group") and isinstance(value, list):
-        return format_with_color(value)
+    if field in FIELDS_MAP:
+        with suppress(TypeError):
+            return FIELDS_MAP[field](value)
 
-    return FIELDS_MAP[field](value)
+    return value
 
 
 @singledispatch
@@ -295,7 +292,7 @@ def get_val(obj: JSONDict | object, field: str) -> Any:
 
 
 @get_val.register
-def _(obj: dict, field: str) -> Any:
+def _(obj: dict, field: str) -> Any:  # type: ignore[type-arg]
     return _get_val(obj.get(field), field)
 
 

@@ -2,45 +2,42 @@
 
 from __future__ import annotations
 
+import time
 from collections import defaultdict
 from dataclasses import dataclass
-from itertools import chain
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Iterable,
-    List,
-    Mapping,
-    Protocol,
-    Union,
-)
+from itertools import islice
+from typing import TYPE_CHECKING, Any, Callable, Protocol
 
 from rich import box
 from rich.syntax import Syntax
-from typing_extensions import TypedDict
+from typing_extensions import Literal, TypedDict
 
-from .fields import FIELDS_MAP, _get_val, get_val
+from .fields import FIELDS_MAP, get_val
 from .generic import flexitable
 from .utils import (
     JSONDict,
     border_panel,
-    diff_dt,
+    fmt_time,
     format_with_color,
     format_with_color_on_black,
-    group_by,
     list_table,
     md_panel,
     new_table,
     predictably_random_color,
     simple_panel,
+    sortgroup_by,
+    timestamp2datetime,
     wrap,
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
     from rich.console import ConsoleRenderable, RenderableType
     from rich.panel import Panel
     from rich.table import Table
+
+SECONDS_PER_DAY = 86400
 
 
 def b_green(text: str) -> str:
@@ -53,7 +50,21 @@ def b_red(text: str) -> str:
     return wrap(text, "b red")
 
 
-def fmt_add_del(added: int, deleted: int) -> List[str]:
+def diff_dt(timestamp: str | float, acc: int = 2) -> str:
+    try:
+        datetime = timestamp2datetime(timestamp)
+    except ValueError:
+        return str(timestamp)
+
+    diff = datetime.timestamp() - time.time()
+    fmted = " ".join(islice(fmt_time(int(diff)), acc))
+
+    strtime = datetime.strftime("%F" if abs(diff) >= SECONDS_PER_DAY else "%T")
+
+    return f"{(b_red if diff < 0 else b_green)(fmted)} {strtime}"
+
+
+def fmt_add_del(added: int, deleted: int) -> list[str]:
     """Format added and deleted diff counts."""
     additions = f"+{added}" if added else ""
     deletions = f"-{deleted}" if deleted else ""
@@ -85,7 +96,7 @@ def fmt_state(state: str) -> str:
     return wrap(state, f"b {COLOR_BY_STATE[state]}")
 
 
-def diff_panel(title: str, rows: List[List[str]]) -> Panel:
+def diff_panel(title: str, rows: list[list[str]]) -> Panel:
     return border_panel(
         new_table(rows=rows),
         title=title,
@@ -142,11 +153,11 @@ class Commit:
     statusCheckRollup: str
 
     @property
-    def diff(self) -> List[str]:
+    def diff(self) -> list[str]:
         return fmt_add_del(self.additions, self.deletions)
 
     @property
-    def parts(self) -> List[str]:
+    def parts(self) -> list[str]:
         return [
             *self.diff,
             get_val(self, "statusCheckRollup"),
@@ -157,7 +168,7 @@ class Commit:
 
 @dataclass
 class Commits:
-    commits: List[Commit]
+    commits: list[Commit]
 
     @property
     def panel(self) -> Panel:
@@ -170,7 +181,7 @@ class Reaction:
     content: str
 
     def __str__(self) -> str:
-        return f":{self.content.lower()}: {_get_val(self.user, 'author')}"
+        return f":{self.content.lower()}: {get_val(self, 'user')}"
 
 
 class CreatedMixin(Protocol):
@@ -181,7 +192,7 @@ class CreatedMixin(Protocol):
 
 @dataclass
 class PanelMixin:
-    def get_title(self, fields: List[str]) -> str:
+    def get_title(self, fields: list[str]) -> str:
         return " ".join(get_val(self, f) for f in fields)
 
     @property
@@ -211,10 +222,10 @@ class Content(CreatedPanelMixin):
 
 @dataclass
 class Comment(Content):
-    reactions: List[Reaction]
+    reactions: list[Reaction]
 
     @classmethod
-    def make(cls, reactions: List[JSONDict], **kwargs: Any) -> Comment:
+    def make(cls, reactions: list[JSONDict], **kwargs: Any) -> Comment:
         kwargs["reactions"] = [Reaction(**c) for c in reactions]
         return cls(**kwargs)
 
@@ -286,14 +297,15 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
     isResolved: bool
     isOutdated: bool
     resolvedBy: str
-    comments: List[ReviewComment]
+    comments: list[ReviewComment]
+    verbose: bool
 
     @property
     def resolved(self) -> bool:
         return self.isResolved
 
     @classmethod
-    def make(cls, comments: List[JSONDict], **kwargs: Any) -> ReviewThread:
+    def make(cls, comments: list[JSONDict], **kwargs: Any) -> ReviewThread:
         kwargs["comments"] = [ReviewComment.make(**c) for c in comments]
         return cls(**kwargs)
 
@@ -319,21 +331,28 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
 
     @property
     def title(self) -> str:
-        return " ".join([
-            wrap(self.path, "b magenta"),
-            self.formatted_state,
-            fmt_state("OUTDATED") if self.isOutdated else "",
-        ])
+        return " ".join(
+            [
+                wrap(self.path, "b magenta"),
+                self.formatted_state,
+                fmt_state("OUTDATED") if self.isOutdated else "",
+            ]
+        )
 
     @property
     def panel(self) -> Panel:
         comments = self.comments
-        comments_col = list_table((c.panel for c in comments), padding=(1, 0, 0, 0))
-        return border_panel(
-            new_table(
+        content: RenderableType
+        if self.verbose or not self.resolved:
+            comments_col = list_table((c.panel for c in comments), padding=(1, 0, 0, 0))
+            content = new_table(
                 rows=[[self.comments[0].diff, simple_panel(comments_col)]],
                 highlight=False,
-            ),
+            )
+        else:
+            content = ""
+        return border_panel(
+            content,
             highlight=False,
             border_style=self.border_color,
             title=self.title,
@@ -344,8 +363,8 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
 class Review(Content, ResolvedMixin):
     id: str
     state: str
-    threads: List[ReviewThread]
-    comments: List[ReviewComment]
+    threads: list[ReviewThread]
+    comments: list[ReviewComment]
 
     verbose: bool
 
@@ -360,7 +379,7 @@ class Review(Content, ResolvedMixin):
             rows.append(md_panel(self.body))
 
         if not self.resolved or self.verbose:
-            self.threads.sort(key=lambda t: t.isResolved)
+            self.threads.sort(key=lambda t: t.resolved)
             rows.extend(t.panel for t in self.threads)
 
         return border_panel(
@@ -374,20 +393,34 @@ class Review(Content, ResolvedMixin):
     @property
     def status(self) -> str:
         resolved_count = sum(t.isResolved for t in self.threads)
-        total_count = len(self.threads)
-        if not total_count:
-            return ""
-
-        if total_count == resolved_count:
-            return wrap("RESOLVED", COLOR_BY_STATE["RESOLVED"])
-
-        return b_green(" ⬤ " * resolved_count) + b_red(
-            " ◯ " * (total_count - resolved_count)
-        )
+        if total_count := len(self.threads):
+            return (
+                wrap("RESOLVED", COLOR_BY_STATE["RESOLVED"])
+                if total_count == resolved_count
+                else b_green(" ⬤ " * resolved_count)
+                + b_red(" ◯ " * (total_count - resolved_count))
+            )
+        return ""
 
     @property
     def title(self) -> str:
         return self.get_title(["state", "author", "created_at", "status"])
+
+
+@dataclass
+class Issue:
+    number: int
+    title: str
+    state: Literal["OPEN", "CLOSED"]
+    url: str
+
+    @property
+    def status(self) -> str:
+        return {"OPEN": "[b green][/]", "CLOSED": "[b magenta][/]"}[self.state]
+
+    @property
+    def fmt(self) -> str:
+        return f"{self.title} {self.url}"
 
 
 @dataclass
@@ -399,20 +432,21 @@ class PullRequest:
     additions: int
     commits: Commits
     deletions: int
-    files: List[File]
+    files: list[File]
     headRefName: str
-    labels: List[str]
-    participants: List[str]
+    labels: list[str]
+    participants: list[str]
     repository: str
     reviewDecision: str
-    reviewRequests: List[str]
-    reviewThreads: List[ReviewThread]
-    reviews: List[Review]
-    comments: List[IssueComment]
+    reviewRequests: list[str]
+    reviewThreads: list[ReviewThread]
+    reviews: list[Review]
+    comments: list[Comment]
     state: str
     title: str
     updatedAt: str
     url: str
+    issues: list[Issue]
 
     verbose: bool
 
@@ -424,34 +458,33 @@ class PullRequest:
 @dataclass
 class PullRequestTable(PullRequest):
     @classmethod
-    def make(cls, reviews: List[JSONDict], **kwargs: Any) -> PullRequestTable:
-        kwargs["commits"] = Commits([Commit(**c) for c in kwargs["commits"]])
-        kwargs["comments"] = [IssueComment.make(**c) for c in kwargs["comments"]]
-        threads = [ReviewThread.make(**rt) for rt in kwargs["reviewThreads"]]
-        review_comments = list(chain.from_iterable(t.comments for t in threads))
-        review_comments.sort(key=lambda c: c.review_id)
-        comments_by_review_id = dict(group_by(review_comments, lambda c: c.review_id))
-        threads.sort(key=lambda t: t.review_id)
-        threads_by_review_id = dict(group_by(threads, lambda t: t.review_id))
-        kwargs["reviews"] = [
-            Review(
-                **r,
-                threads=threads_by_review_id.pop(r["id"], []),
-                comments=comments_by_review_id.pop(r["id"], []),
-                verbose=kwargs["verbose"],
-            )
-            for r in reviews
-            if (r["id"] in threads_by_review_id or r["body"])
+    def make(cls, reviews: list[JSONDict], **kwargs: Any) -> PullRequestTable:
+        verbose = kwargs["verbose"]
+        threads = [
+            ReviewThread.make(**rt, verbose=verbose) for rt in kwargs["reviewThreads"]
         ]
-        return cls(**kwargs)
-
-    def make_info_subpanel(self, attr: str) -> Panel:
-        return simple_panel(
-            get_val(self, attr),
-            title=wrap(attr, "b"),
-            title_align="center",
-            expand=True,
-            align="center",
+        comments_by_review_id = dict(
+            sortgroup_by(
+                (c for t in threads for c in t.comments),
+                lambda c: c.review_id,
+            )
+        )
+        threads_by_review_id = dict(sortgroup_by(threads, lambda t: t.review_id))
+        return cls(
+            commits=Commits([Commit(**c) for c in kwargs.pop("commits", [])]),
+            comments=[IssueComment.make(**c) for c in kwargs.pop("comments", [])],
+            reviews=[
+                Review(
+                    **r,
+                    threads=threads_by_review_id.pop(r["id"], []),
+                    comments=comments_by_review_id.pop(r["id"], []),
+                    verbose=verbose,
+                )
+                for r in reviews
+                if (r["id"] in threads_by_review_id or r["body"])
+            ],
+            issues=[Issue(**i) for i in kwargs.pop("closingIssuesReferences")],
+            **kwargs,
         )
 
     @property
@@ -467,26 +500,39 @@ class PullRequestTable(PullRequest):
         return "MERGED" if self.state == "MERGED" else self.reviewDecision
 
     @property
+    def fixed_issues(self) -> RenderableType:
+        return list_table([i.fmt for i in self.issues])
+
+    @property
     def info(self) -> Panel:
-        fields = "author", "dates", "headRefName", "participants", "reviewRequests"
-        pairs = [(f, getattr(self, f)) for f in fields]
-        field_rows = [[flexitable({f: v})] for f, v in pairs if v]
+        fields = (
+            "author",
+            "dates",
+            "headRefName",
+            "participants",
+            "reviewRequests",
+            "fixed_issues",
+        )
+        pairs = {f: v for f in fields if (v := getattr(self, f))}
+        field_rows = flexitable(pairs)
         return border_panel(
-            new_table(rows=[*field_rows, [md_panel(self.body)], [self.files_commits]]),
+            new_table(rows=[[field_rows], [md_panel(self.body)], [self.files_commits]]),
             title=f"{self.name} @ {self.repo}",
             box=box.DOUBLE_EDGE,
             border_style=COLOR_BY_STATE[self.pr_state],
             subtitle=(
                 wrap(
-                    " ".join([
-                        fmt_state(self.reviewDecision),
-                        wrap("//", "white"),
-                        fmt_state(self.state),
-                    ]),
+                    " ".join(
+                        [
+                            fmt_state(self.reviewDecision),
+                            wrap("//", "white"),
+                            fmt_state(self.state),
+                        ]
+                    ),
                     "b",
                 )
             ),
-            align="center",
+            vertical_align="middle",
             title_align="center",
             subtitle_align="center",
         )
@@ -496,7 +542,7 @@ class PullRequestTable(PullRequest):
         return new_table(rows=[[get_val(self, "files"), self.commits.panel]])
 
     @property
-    def timestamped_contents(self) -> List[CreatedPanelMixin]:
+    def timestamped_contents(self) -> list[CreatedPanelMixin]:
         return [*self.reviews, *self.comments]
 
     @property
@@ -506,8 +552,8 @@ class PullRequestTable(PullRequest):
 
 
 def pulls_table(
-    data: List[Mapping[str, Any]], **kwargs
-) -> Iterable[Union[str, ConsoleRenderable]]:
+    data: list[Mapping[str, Any]], **kwargs: Any
+) -> Iterable[str | ConsoleRenderable]:
     FIELDS_MAP.update(PR_FIELDS_MAP)
 
     pr = data[0]

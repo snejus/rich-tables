@@ -1,37 +1,24 @@
 from __future__ import annotations
 
+import colorsys
 import random
 import re
-import time
+from collections.abc import Iterable, Sequence
+from contextlib import suppress
 from datetime import datetime, timedelta, timezone
-from difflib import SequenceMatcher
-from itertools import groupby, islice, starmap, zip_longest
+from functools import lru_cache
+from itertools import groupby
 from math import copysign
-from pprint import pformat
-from string import ascii_uppercase, punctuation
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Match,
-    Optional,
-    Protocol,
-    Sequence,
-    SupportsFloat,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from re import Match
+from typing import TYPE_CHECKING, Any, Callable, Protocol, SupportsFloat, TypeVar
 
+import humanize
 import platformdirs
-import sqlparse
-from multimethod import multimethod
 from rich import box
-from rich.align import Align
+from rich.align import Align, VerticalAlignMethod
 from rich.bar import Bar
-from rich.console import Console, RenderableType
+from rich.console import Console, RenderableType, RenderResult
+from rich.errors import MarkupError
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
@@ -40,16 +27,35 @@ from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
 
-JSONDict = Dict[str, Any]
-SPLIT_PAT = re.compile(r"[;,] ?")
-PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
-HTML_PARAGRAPH = re.compile(r"</?p>")
+if TYPE_CHECKING:
+    from coloraide import Color
 
+JSONDict = dict[str, Any]
+T = TypeVar("T")
 
 BOLD_GREEN = "b green"
 BOLD_RED = "b red"
-SECONDS_PER_DAY = 86400
-CONSECUTIVE_SPACE = re.compile("(?:^ +)|(?: +$)")
+DISPLAY_HEADER: dict[RenderableType, str] = {
+    "track": "#",
+    "bpm": "🚀",
+    "last_played": ":timer_clock: ",
+    "mtime": "updated",
+    "data_source": "source",
+    "helicopta": ":helicopter: ",
+    "hidden": ":no_entry: ",
+    "track_alt": ":cd: ",
+    "catalognum": ":pen: ",
+    "plays": "[b green]:play_button: [/]",
+    "skips": "[b red]:stop_button: [/]",
+    "albumtypes": "types",
+}
+
+
+class Pat:
+    SPLIT_PAT = re.compile(r"[;,] ?")
+    PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
+    HTML_PARAGRAPH = re.compile(r"</?p>")
+    OPENING_BRACKET = re.compile(r"\[(?!http)")
 
 
 _T_contra = TypeVar("_T_contra", contravariant=True)
@@ -60,64 +66,26 @@ class SupportsDunderLT(Protocol[_T_contra]):
         pass
 
 
-T = TypeVar("T")
 K = TypeVar("K", bound=SupportsDunderLT[Any])
 
 
-def group_by(iterable: Iterable[T], key: Callable[[T], K]) -> List[Tuple[K, List[T]]]:
+def sortgroup_by(
+    iterable: Iterable[T], key: Callable[[T], K]
+) -> list[tuple[K, list[T]]]:
     return [(k, list(g)) for k, g in groupby(sorted(iterable, key=key), key)]
 
 
 def format_string(text: str) -> str:
     if "pred color]" in text:
-        return PRED_COLOR_PAT.sub(fmt_pred_color, text)
+        return Pat.PRED_COLOR_PAT.sub(fmt_pred_color, text)
     if "[" in text and r"\[" not in text and "[/" not in text:
-        return text.replace("[", r"\[")
+        return Pat.OPENING_BRACKET.sub(r"\[", text)
 
     return text
 
 
-def wrap(text: str, tag: str) -> str:
+def wrap(text: Any, tag: str) -> str:
     return f"[{tag}]{format_string(str(text))}[/]"
-
-
-def format_space(string: str) -> str:
-    return CONSECUTIVE_SPACE.sub(r"[u]\g<0>[/]", string)
-
-
-def format_new(string: str) -> str:
-    return wrap(format_space(string), BOLD_GREEN)
-
-
-def format_old(string: str) -> str:
-    return wrap(wrap(string, BOLD_RED), "s")
-
-
-def fmtdiff(change: str, before: str, after: str) -> str:
-    if change == "insert":
-        return format_new(after)
-    if change == "delete":
-        return format_old(before)
-    if change == "replace":
-        return format_old(before) + format_new(after)
-
-    return wrap(before, "dim")
-
-
-def make_difftext(
-    before: str,
-    after: str,
-    junk: str = "".join(
-        sorted((set(punctuation) - {"_", "-", ":"}) | set(ascii_uppercase))
-    ),
-) -> str:
-    matcher = SequenceMatcher(
-        lambda x: x not in junk, autojunk=False, a=before, b=after
-    )
-    diff = ""
-    for code, a1, a2, b1, b2 in matcher.get_opcodes():
-        diff += fmtdiff(code, before[a1:a2], after[b1:b2]) or ""
-    return diff
 
 
 def duration2human(duration: SupportsFloat) -> str:
@@ -141,84 +109,128 @@ def fmt_time(seconds: int) -> Iterable[str]:
     )
 
 
-def get_theme() -> Optional[Theme]:
+def get_theme() -> Theme | None:
     config_path = platformdirs.user_config_path("rich") / "config.ini"
-    if config_path.exists():
-        return Theme.read(str(config_path))
-    return None
+    return Theme.read(str(config_path)) if config_path.exists() else None
 
 
-def make_console(**kwargs: Any) -> Console:
-    return Console(
-        theme=get_theme(),
-        force_terminal=True,
-        force_interactive=False,
-        emoji=True,
-        **kwargs,
-    )
+class SafeConsole(Console):
+    def render_str(self, text: str, **kwargs: Any) -> Text:
+        try:
+            return super().render_str(text, **kwargs)
+        except MarkupError:
+            kwargs["markup"] = False
+            return super().render_str(text, **kwargs)
+
+    def print(self, *args: Any, **kwargs: Any) -> None:
+        try:
+            super().print(*args, **kwargs)
+        except MarkupError:
+            kwargs["markup"] = False
+            super().print(*args, **kwargs)
+
+
+def make_console(**kwargs: Any) -> SafeConsole:
+    kwargs.setdefault("theme", get_theme())
+    kwargs.setdefault("force_terminal", True)
+    kwargs.setdefault("force_interactive", False)
+    kwargs.setdefault("emoji", True)
+    return SafeConsole(**kwargs)
 
 
 console = make_console()
-print = console.print
 
 
 class NewTable(Table):
-    def __init__(self, *args: str, **kwargs: Any) -> None:
-        ckwargs = {
-            "overflow": kwargs.pop("overflow", "fold"),
-            "justify": kwargs.pop("justify", "left"),
-            "vertical": kwargs.pop("vertical", "middle"),
-        }
-        super().__init__(**kwargs)
-        for arg in args:
-            self.add_column(arg, **ckwargs)
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        table_kwarg_names = set(Table.__init__.__code__.co_varnames)
+        column_kwarg_names = kwargs.keys() - table_kwarg_names
+        self.column_kwargs = {k: kwargs.pop(k) for k in column_kwarg_names}
+
+        super().__init__(*args, **kwargs)
+
+    def __rich_console__(self, *args: Any, **kwargs: Any) -> RenderResult:
+        for column in self.columns:
+            if display_header := DISPLAY_HEADER.get(column.header):
+                column.header = display_header
+
+        return super().__rich_console__(*args, **kwargs)
+
+    def add_column(self, *args: Any, **kwargs: Any) -> None:
+        for k, v in self.column_kwargs.items():
+            kwargs.setdefault(k, v)
+
+        self.show_header = True
+        super().add_column(*args, **kwargs)
+
+    def add_row(self, *args: RenderableType | None, **kwargs: Any) -> None:
+        rends = list(args)
+        if (overflow := self.column_kwargs.get("overflow")) and (
+            max_width := self.column_kwargs.get("max_width")
+        ):
+            rends = [(Text.from_markup(a) if isinstance(a, str) else a) for a in args]
+            for r in rends:
+                if isinstance(r, Text):
+                    r.truncate(max_width, overflow=overflow)
+
+        return super().add_row(*rends, **kwargs)
 
     def add_rows(self, rows: Iterable[Iterable[RenderableType]]) -> None:
         """Add multiple rows to the table."""
         for row in rows:
             self.add_row(*row)
 
+    def add_dict_row(
+        self,
+        data: JSONDict,
+        ignore_extra_fields: bool = False,
+        transform: Callable[..., RenderableType] = lambda v, _: v,
+        **kwargs: Any,
+    ) -> None:
+        """Add a row to the table from a dictionary."""
+        if not ignore_extra_fields:
+            existing_cols = set(self.colnames)
+            for field in (f for f in data if f not in existing_cols):
+                self.add_column(field)
+                self.columns[-1]._cells = [""] * self.row_count
+
+        values = (transform(data.get(k), k) for k in self.colnames)
+
+        self.add_row(*values, **kwargs)
+
     @property
-    def colnames(self) -> List[str]:
+    def colnames(self) -> list[str]:
         """Provide a mapping between columns names / ids and columns."""
         return [str(c.header) for c in self.columns]
 
-    def add_dict_item(
-        self,
-        item: JSONDict,
-        transform: Callable[[Any, str], Any] = lambda x, _: x,
-        **kwargs: Any,
-    ) -> None:
-        """Take the required columns / keys from the given dictionary item."""
-        vals = (transform(item.get(c, ""), c) for c in self.colnames)
-        self.add_row(*vals, **kwargs)
 
-
-def new_table(*headers: str, **kwargs: Any) -> NewTable:
-    default = {
-        "show_edge": False,
-        "show_header": False,
-        "pad_edge": False,
-        "highlight": True,
-        "row_styles": ["white"],
-        "expand": False,
-        "title_justify": "left",
-        "style": "black",
-        "border_style": "black",
-        "box": box.ROUNDED,
-    }
+def new_table(
+    *headers: str, rows: Iterable[Iterable[RenderableType]] | None = None, **kwargs: Any
+) -> NewTable:
     if headers:
-        default.update(
-            header_style="bold misty_rose1", box=box.SIMPLE_HEAVY, show_header=True
-        )
-    rows = kwargs.pop("rows", [])
-    table = NewTable(*headers, **{**default, **kwargs})
+        kwargs.setdefault("header_style", "bold misty_rose1")
+        kwargs.setdefault("show_header", True)
+        kwargs.setdefault("box", box.SIMPLE_HEAVY)
+    else:
+        kwargs.setdefault("show_header", False)
+        kwargs.setdefault("box", box.ROUNDED)
+
+    kwargs.setdefault("show_edge", False)
+    kwargs.setdefault("pad_edge", False)
+    kwargs.setdefault("highlight", True)
+    kwargs.setdefault("row_styles", ["white"])
+    kwargs.setdefault("expand", False)
+    kwargs.setdefault("title_justify", "left")
+    kwargs.setdefault("style", "black")
+    kwargs.setdefault("border_style", "black")
+
+    table = NewTable(*headers, **kwargs)
     if rows:
         table.add_rows(rows)
     return table
 
 
-def list_table(items: Iterable[Any], **kwargs: Any) -> NewTable:
+def list_table(items: Iterable[RenderableType], **kwargs: Any) -> NewTable:
     return new_table(rows=[[i] for i in items], **kwargs)
 
 
@@ -226,13 +238,30 @@ def _randint() -> int:
     return random.randint(50, 205)
 
 
-def predictably_random_color(string: str) -> str:
+def adjust_color_intensity(
+    rgb_color: tuple[int, int, int], factor: float
+) -> tuple[int, ...]:
+    # Convert RGB to HSL
+    h, _l, s = colorsys.rgb_to_hls(*[c / 255.0 for c in rgb_color])
+
+    # Adjust the lightness (intensity) while keeping hue constant
+    new_l = max(0, min(1, 0.5 * factor))
+
+    # Convert back to RGB
+    return tuple(int(c * 255) for c in colorsys.hls_to_rgb(h, new_l, s))
+
+
+@lru_cache
+def predictably_random_color(string: str, intensity: float | None = None) -> str:
     random.seed(string.strip())
+    r, g, b = _randint(), _randint(), _randint()
+    if intensity is not None:
+        r, g, b = adjust_color_intensity((r, g, b), intensity)
 
-    return f"#{_randint():02X}{_randint():02X}{_randint():02X}"
+    return f"#{r:02X}{g:02X}{b:02X}"
 
 
-def _format_with_color(string: str, on: Optional[str] = None) -> str:
+def _format_with_color(string: str, on: str | None = None) -> str:
     color = f"b {predictably_random_color(string)}"
     if on:
         color += f" on {on}"
@@ -240,7 +269,9 @@ def _format_with_color(string: str, on: Optional[str] = None) -> str:
 
 
 def split_with_color(text: str) -> str:
-    return " ".join(_format_with_color(str(x)) for x in sorted(SPLIT_PAT.split(text)))
+    return " ".join(
+        _format_with_color(str(x)) for x in sorted(Pat.SPLIT_PAT.split(text))
+    )
 
 
 def format_with_color(items: str | Sequence[str]) -> str:
@@ -250,9 +281,9 @@ def format_with_color(items: str | Sequence[str]) -> str:
     return " ".join(_format_with_color(str(x)) for x in items)
 
 
-def format_with_color_on_black(items: Union[str, Iterable[str]]) -> str:
-    if not (isinstance(items, Iterable) and not isinstance(items, str)):
-        items = sorted(SPLIT_PAT.split(str(items)))
+def format_with_color_on_black(items: str | Iterable[str]) -> str:
+    if not isinstance(items, Iterable) or isinstance(items, str):
+        items = sorted(Pat.SPLIT_PAT.split(str(items)))
 
     sep = wrap("a", "#000000 on #000000")
     return " ".join(
@@ -264,31 +295,40 @@ def fmt_pred_color(m: Match[str]) -> str:
     return f"{predictably_random_color(m.group(2))}]{m.group(2)}"
 
 
-def simple_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    default: JSONDict = {
-        "title_align": "left",
-        "subtitle_align": "right",
-        "box": box.SIMPLE,
-        "expand": False,
-        "border_style": "red",
-    }
+def simple_panel(
+    content: RenderableType,
+    vertical_align: VerticalAlignMethod | None = None,
+    **kwargs: Any,
+) -> Panel:
+    kwargs.setdefault("title_align", "left")
+    kwargs.setdefault("subtitle_align", "right")
+    kwargs.setdefault("box", box.SIMPLE)
+    kwargs.setdefault("expand", False)
+    kwargs.setdefault("border_style", "red")
     if "title" in kwargs:
         kwargs["title"] = wrap(kwargs["title"], "b")
-    if kwargs.pop("align", "") == "center":
-        content = Align.center(content, vertical="middle")
-    return Panel(content, **{**default, **kwargs})
+
+    if vertical_align:
+        content = Align.center(content, vertical=vertical_align)
+    return Panel(content, **kwargs)
 
 
 def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    return simple_panel(
-        content, **{"box": box.ROUNDED, "border_style": "dim", **kwargs}
-    )
+    kwargs.setdefault("box", box.ROUNDED)
+    kwargs.setdefault("border_style", "dim")
+    return simple_panel(content, **kwargs)
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
+    if "title" not in kwargs and (
+        m := re.match(r"\[title\](.+?)\[/title\]\s+", content)
+    ):
+        kwargs["title"] = m[1]
+        content = content.replace(m[0], "")
+
     return border_panel(
         Markdown(
-            HTML_PARAGRAPH.sub("", content),
+            Pat.HTML_PARAGRAPH.sub("", content),
             inline_code_theme="nord-darker",
             code_theme="nord-darker",
             justify=kwargs.pop("justify", "left"),
@@ -298,11 +338,13 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
 
 
 def new_tree(
-    values: Iterable[RenderableType] = [], title: str = "", **kwargs: Any
+    values: Iterable[RenderableType] | None = None, title: str = "", **kwargs: Any
 ) -> Tree:
-    color = predictably_random_color(title or str(values))
-    default: JSONDict = {"guide_style": color, "highlight": True}
-    tree = Tree(title, **{**default, **kwargs})
+    if values is None:
+        values = []
+    kwargs.setdefault("guide_style", predictably_random_color(title or str(values)))
+    kwargs.setdefault("highlight", True)
+    tree = Tree(title, **kwargs)
 
     for val in values:
         tree.add(val)
@@ -314,7 +356,7 @@ def get_country(code: str) -> str:
 
 
 def progress_bar(
-    size: float, width: float, end: Optional[float] = None, inverse: bool = False
+    size: float, width: float, end: float | None = None, inverse: bool = False
 ) -> Bar:
     if end is None:
         end = size
@@ -337,63 +379,86 @@ def progress_bar(
     )
 
 
-def timestamp2datetime(timestamp: Union[str, int, float, None]) -> datetime:
+def timestamp2datetime(timestamp: str | float | None) -> datetime:
     if isinstance(timestamp, str):
         timestamp = re.sub(r"[.]\d+", "", timestamp.strip("'"))
         formats = [
+            "%Y-%m-%d",
             "%Y-%m-%dT%H:%M:%SZ",
             "%Y%m%dT%H%M%SZ",
             "%Y-%m-%d %H:%M:%S",
             "%Y-%m-%dT%H:%M:%S%z",
         ]
         for fmt in formats:
-            try:
-                return datetime.strptime(timestamp, fmt)
-            except ValueError:
-                pass
+            with suppress(ValueError):
+                return datetime.strptime(timestamp, fmt).replace(tzinfo=timezone.utc)
     return datetime.fromtimestamp(int(float(timestamp or 0)), tz=timezone.utc)
 
 
-def timestamp2timestr(timestamp: Union[str, int, float, None]) -> str:
+def timestamp2timestr(timestamp: str | float | None) -> str:
     return timestamp2datetime(timestamp).strftime("%T")
 
 
-def human_dt(timestamp: Union[int, str, float], acc: int = 1) -> str:
+@lru_cache
+def get_colors_and_periods() -> list[tuple[Color, int, int]]:
+    from coloraide import Color
+
+    return [
+        (c.filter("contrast", 0.5), *p)
+        for c, p in zip(
+            Color("magenta").harmony("wheel", space="oklch", count=7),
+            [
+                (60, 1),  # seconds
+                (60, 60),  # minutes
+                (24, 60 * 60),  # hours
+                (31, 24 * 60 * 60),  # days
+                (12, 31 * 24 * 60 * 60),  # months
+                (365, 12 * 30 * 24 * 60 * 60),  # years
+            ],
+        )
+    ]
+
+
+@lru_cache
+def get_td_color(seconds: float) -> str:
+    for color, max_factor, seconds_in_unit in get_colors_and_periods():
+        if seconds <= seconds_in_unit * max_factor:
+            unit_count = seconds // seconds_in_unit
+            center = max_factor / 2
+            factor = -((unit_count - center) / center / 1.5) + 1
+            return (
+                color.filter("brightness", factor)
+                .clip()
+                .convert("srgb")
+                .to_string(hex=True)
+            )
+
+    raise AssertionError("Shouldn't get here")
+
+
+def human_dt(timestamp: str | float) -> str:
     try:
-        datetime = timestamp2datetime(timestamp)
+        dt = timestamp2datetime(timestamp)
     except ValueError:
         return str(timestamp)
 
-    diff = datetime.timestamp() - time.time()
-    fmted = " ".join(islice(fmt_time(int(diff)), acc))
+    human_dt = humanize.naturaltime(dt)
 
-    return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN)
+    color = get_td_color(abs((dt.now(tz=dt.tzinfo) - dt).total_seconds()))
 
-
-def diff_dt(timestamp: Union[int, str, float], acc: int = 2) -> str:
-    try:
-        datetime = timestamp2datetime(timestamp)
-    except ValueError:
-        return str(timestamp)
-
-    diff = datetime.timestamp() - time.time()
-    fmted = " ".join(islice(fmt_time(int(diff)), acc))
-
-    strtime = datetime.strftime("%F" if abs(diff) > SECONDS_PER_DAY else "%T")
-
-    return wrap(fmted, BOLD_RED if diff < 0 else BOLD_GREEN) + " " + strtime
+    return f"[b {color}]{human_dt}[/]"
 
 
 def syntax(*args: Any, **kwargs: Any) -> Syntax:
-    default = {
-        "theme": "paraiso-dark",
-        "background_color": "black",
-        "word_wrap": True,
-    }
-    return Syntax(*args, **{**default, **kwargs})
+    kwargs.setdefault("theme", "paraiso-dark")
+    kwargs.setdefault("background_color", "black")
+    kwargs.setdefault("word_wrap", True)
+    return Syntax(*args, **kwargs)
 
 
 def sql_syntax(sql_string: str) -> Syntax:
+    import sqlparse
+
     return Syntax(
         sqlparse.format(
             sql_string,
@@ -408,69 +473,3 @@ def sql_syntax(sql_string: str) -> Syntax:
         background_color="black",
         word_wrap=True,
     )
-
-
-def diff_serialize(value: Any) -> str:
-    if value is None:
-        return "null"
-    if value == "":
-        return '""'
-    return str(value)
-
-
-@multimethod
-def diff(before: str, after: str) -> Any:
-    return make_difftext(before, after)
-
-
-@diff.register
-def _(before: Any, after: Any) -> Any:
-    return diff(diff_serialize(before), diff_serialize(after))
-
-
-@diff.register
-def _(before: List[Any], after: List[Any]) -> Any:
-    return list(starmap(diff, zip_longest(before, after)))
-
-
-@diff.register
-def _(before: List[str], after: List[str]) -> Any:
-    before_set, after_set = set(before), set(after)
-    common = before_set & after_set
-    common_list = list(common)
-    return [
-        *list(starmap(diff, zip(common_list, common_list))),
-        *list(
-            starmap(
-                diff,
-                zip_longest(list(before_set - common), list(after_set - common)),
-            )
-        ),
-    ]
-
-
-@diff.register
-def _(before: dict, after: dict) -> Any:
-    data = {}
-    keys = sorted(before.keys() | after.keys())
-    for key in keys:
-        if key not in before:
-            data[wrap(key, BOLD_GREEN)] = wrap(diff_serialize(after[key]), BOLD_GREEN)
-        elif key not in after:
-            data[wrap(key, BOLD_RED)] = wrap(diff_serialize(before[key]), BOLD_RED)
-        else:
-            data[key] = diff(before[key], after[key])
-
-    return data
-
-
-def pretty_diff(before: Any, after: Any) -> Text:
-    result = diff(before, after)
-    if not isinstance(result, str):
-        result = (
-            pformat(result, indent=2, width=300, sort_dicts=False)
-            .replace("'", "")
-            .replace("\\\\", "\\")
-        )
-
-    return Text.from_markup(result)

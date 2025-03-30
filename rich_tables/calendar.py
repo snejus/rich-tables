@@ -3,30 +3,25 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any, Dict, Iterable
+from typing import TYPE_CHECKING, Any
+from zoneinfo import ZoneInfo
 
-from funcy import join
 from rich.bar import Bar
 from rich.columns import Columns
 from typing_extensions import Literal, NotRequired, TypedDict
 
 from .fields import get_val
-from .utils import (
-    border_panel,
-    group_by,
-    new_table,
-    wrap,
-)
+from .utils import border_panel, new_table, sortgroup_by, wrap
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from rich.console import RenderableType
+JSONDict = dict[str, Any]
 
-JSONDict = Dict[str, Any]
-
-PAST_COLOR = "grey7"
 SYMBOL_BY_STATUS = {
     "needsAction": "[b grey3] ? [/]",
-    "accepted": "[b green] ✔ [/]",
+    "accepted": "[b green]   [/]",
     "declined": "[b red] ✖ [/]",
     "tentative": "[b yellow] ? [/]",
 }
@@ -46,16 +41,21 @@ class Period:
     summary: str
     start: datetime
     status_symbol: str
+    fmt: str
 
     @classmethod
-    def make(cls, **kwargs) -> Period:
-        if kwargs["end"].replace(tzinfo=None) < datetime.now():
-            kwargs["color"] = PAST_COLOR
+    def make(cls, **kwargs: Any) -> Period:
+        kwargs["fmt"] = (
+            "dim strike"
+            if kwargs["end"] < datetime.now(tz=kwargs["end"].tzinfo)
+            else ""
+        )
+        kwargs["desc"] = (kwargs["desc"] or "").strip()
         return cls(**kwargs)
 
     @property
     def start_day(self) -> str:
-        return self.start.strftime("%d %a")
+        return self.start.strftime("%d %A")
 
     @property
     def start_year_month(self) -> str:
@@ -82,7 +82,7 @@ class Period:
 
     @property
     def name(self) -> RenderableType:
-        title = self.status_symbol + wrap(self.summary, f"b {self.color}")
+        title = self.status_symbol + wrap(self.summary, f"b {self.color} {self.fmt}")
         return border_panel(get_val(self, "desc"), title=title) if self.desc else title
 
 
@@ -97,7 +97,7 @@ class Event:
     start: datetime
 
     @classmethod
-    def make(cls, start: Datetime, end: Datetime, summary: str, **kwargs) -> Event:
+    def make(cls, start: Datetime, end: Datetime, summary: str, **kwargs: Any) -> Event:
         return cls(
             start=cls.get_datetime(start),
             end=cls.get_datetime(end),
@@ -112,7 +112,8 @@ class Event:
     @staticmethod
     def get_datetime(date_obj: Datetime) -> datetime:
         date = date_obj.get("dateTime") or date_obj.get("date") or ""
-        return datetime.fromisoformat(date.strip("Z"))
+        dt = datetime.fromisoformat(date.strip("Z"))
+        return dt.replace(tzinfo=ZoneInfo(date_obj.get("timeZone") or "UTC"))
 
     def get_periods(self) -> list[Period]:
         diff = self.end - self.start
@@ -167,28 +168,28 @@ def get_legend(events: list[Event]) -> RenderableType:
 
 
 def get_months(events: list[Event]) -> Iterable[RenderableType]:
-    all_periods = join(e.get_periods() for e in events)
+    all_periods = [p for e in events for p in e.get_periods()]
 
     headers = "name", "start_time", "end_time", "bar"
     get_values = attrgetter(*headers)
-    for year_and_month, month_periods in group_by(
+    for year_and_month, month_periods in sortgroup_by(
         all_periods, lambda x: x.start_year_month
     ):
-        table = new_table(*headers, highlight=False, padding=0, show_header=False)
-        for day, day_periods in group_by(month_periods, lambda x: x.start_day):
+        table = new_table(*headers, highlight=True, padding=0, show_header=False)
+        for day, day_periods in sortgroup_by(month_periods, lambda x: x.start_day):
             table.add_row(wrap(day, "b i"))
             for period in day_periods:
                 values = get_values(period)
                 if "Week " in period.summary:
                     table.add_row("")
-                    table.add_row(*values, style=period.color + " on grey7")
+                    table.add_row(*values, style=f"{period.color} on grey3")
                 else:
                     table.add_row(*values)
             table.add_row("")
         yield border_panel(table, title=year_and_month)
 
 
-def get_table(events_data: list[JSONDict], **__) -> Iterable[RenderableType]:
+def get_table(events_data: list[JSONDict], **__: Any) -> Iterable[RenderableType]:
     events = [Event.make(**e) for e in events_data]
     yield get_legend(events)
     yield from get_months(events)

@@ -19,15 +19,16 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4"
+python = ">=3.9,<4"
 
-funcy = ">=2.0"
-multimethod = "*"
+multimethod = "<2"
 rgbxy = ">=0.5"
 platformdirs = ">=4.2.0"
 rich = ">=12.3.0"
 sqlparse = ">=0.4.4"
 typing-extensions = ">=4.7.1"
+humanize = ">=4.11.0"
+coloraide = ">=4.1"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = ">=4.0.1"
@@ -40,7 +41,6 @@ pytest-cov = ">=3.0.0"
 pytest-sugar = "*"
 freezegun = ">=1.2.1"
 
-types-six = ">=1.16.2"
 types-freezegun = ">=1.1.9"
 coveralls = ">=3.3.1"
 snoop = ">=0.4.3"

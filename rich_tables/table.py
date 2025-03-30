@@ -1,35 +1,41 @@
+#!/usr/bin/env python
 from __future__ import annotations
 
 import argparse
 import json
 import sys
 import tempfile
+from contextlib import contextmanager
 from functools import singledispatch
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List
+from typing import TYPE_CHECKING, Any, Callable
 
 from rich.traceback import install
 from typing_extensions import TypedDict
 
 from . import calendar, task
+from .diff import pretty_diff
 from .fields import get_val
 from .generic import flexitable
 from .github import pulls_table
 from .music import albums_table
-from .utils import make_console, new_table, pretty_diff, wrap
+from .utils import make_console, new_table, wrap
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from rich.console import RenderableType
     from rich.table import Table
 
-JSONDict = Dict[str, Any]
+MAX_FILENAME_LEN = 255
+JSONDict = dict[str, Any]
 
 
 console = make_console()
 install(console=console, show_locals=True, width=console.width)
 
 
-def lights_table(lights: List[JSONDict], **__) -> Iterator[Table]:
+def lights_table(lights: list[JSONDict], **__: Any) -> Iterator[Table]:
     from rgbxy import Converter
 
     headers = lights[0].keys()
@@ -55,9 +61,11 @@ def load_data(filepath: str) -> list[JSONDict] | JSONDict | str:
     """
     if filepath == "/dev/stdin":
         text = sys.stdin.read()
+    elif len(filepath) > MAX_FILENAME_LEN or len(filepath.encode()) > MAX_FILENAME_LEN:
+        text = filepath
     else:
         path = Path(filepath)
-        text = path.read_text() if path.exists() and path.is_file() else filepath
+        text = path.read_text() if path.is_file() else filepath
 
     try:
         json_data: JSONDict | list[JSONDict] = json.loads(text)
@@ -98,7 +106,7 @@ class NamedData(TypedDict):
     values: list[JSONDict]
 
 
-TABLE_BY_NAME: Dict[str, Callable[..., Any]] = {
+TABLE_BY_NAME: dict[str, Callable[..., Any]] = {
     "Pull Requests": pulls_table,
     "Hue lights": lights_table,
     "Calendar": calendar.get_table,
@@ -108,42 +116,52 @@ TABLE_BY_NAME: Dict[str, Callable[..., Any]] = {
 
 
 @singledispatch
-def draw_data(data: Any, **kwargs) -> Iterator[RenderableType]:
+def draw_data(data: Any, **kwargs: Any) -> Iterator[RenderableType]:
     """Render the provided data."""
     yield data
 
 
 @draw_data.register(dict)
-def _draw_data_dict(data: JSONDict | NamedData, **kwargs) -> Iterator[RenderableType]:
+def _draw_data_dict(data: JSONDict | NamedData, **kwargs: Any) -> None:
     if (title := data.get("title")) and (values := data.get("values")):
         table = TABLE_BY_NAME.get(title, flexitable)
-        yield from table(values, **kwargs)
+        for renderable in table(values, **kwargs):
+            console.print(renderable)
     else:
-        yield flexitable(data)
+        console.print(flexitable(data))
 
 
 @draw_data.register(list)
-def _draw_data_list(data: list[JSONDict], **kwargs) -> Iterator[RenderableType]:
-    yield flexitable(data)
+def _draw_data_list(data: list[JSONDict], **__: Any) -> None:
+    console.print(flexitable(data))
+
+
+@contextmanager
+def handle_save(save: bool) -> Iterator[None]:
+    if save:
+        yield
+
+        if save:
+            with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as file:
+                filename = file.name
+            console.save_html(filename)
+            print(f"Saved output as {filename}", file=sys.stderr)
+    else:
+        yield
 
 
 def main() -> None:
     args = get_args()
-    if args.command == "diff":
-        console.print(pretty_diff(args.before, args.after))
-    else:
-        data = load_data("/dev/stdin")
-        if args.json:
-            console.print_json(data=data)
-        else:
-            console.record = True
-            for renderable in filter(None, draw_data(data, verbose=args.verbose)):
-                console.print(renderable)
 
-    if args.save:
-        filename = tempfile.NamedTemporaryFile(suffix=".html", delete=False).name
-        console.save_html(filename)
-        print(f"Saved output as {filename}", file=sys.stderr)
+    with handle_save(args.save):
+        if args.command == "diff":
+            console.print(pretty_diff(args.before, args.after), markup=False)
+        else:
+            data = load_data("/dev/stdin")
+            if args.json:
+                console.print_json(data=data)
+            elif data:
+                draw_data(data, verbose=args.verbose)
 
 
 if __name__ == "__main__":
