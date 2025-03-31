@@ -91,7 +91,7 @@ class Task:
         return desc
 
     def get_tree(self, get_desc: Callable[[str], str]) -> Tree:
-        tree = new_tree(title=self.desc, guide_style="white")
+        tree = new_tree(label=self.desc, guide_style="white")
         if self.annotations:
             tree.add(get_val(self, "annotations"))
 

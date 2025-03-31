@@ -12,7 +12,6 @@ lists, strings and other types.
 
 from __future__ import annotations
 
-import itertools as it
 import logging
 import os
 from collections import defaultdict
@@ -34,6 +33,7 @@ from . import fields
 from .fields import MATCH_COUNT_HEADER, _get_val, add_count_bars
 from .utils import (
     NewTable,
+    border_panel,
     format_with_color,
     list_table,
     make_console,
@@ -149,6 +149,12 @@ def _header(data: Any, header: str) -> RenderableType:
     if data in ("", [], {}):
         return ""
 
+    if isinstance(data, dict):
+        tree = _json_dict(data)
+        tree.label = wrap(header, "b")
+        tree.guide_style = f"bold dim {predictably_random_color(str(sorted(data)))}"
+        return tree
+
     if header.endswith(".py") and isinstance(data, str):
         return _get_val(data, header)
 
@@ -182,24 +188,25 @@ def _str(data: str) -> RenderableType:
     return data
 
 
-def get_tree_branch(key: str, value: Any) -> RenderableType:
-    renderable = flexitable(value or "", key)
-    header = wrap(key, "b")
-
-    if isinstance(renderable, str):
-        return f"{header}: {renderable}"
-    if isinstance(renderable, Tree):
-        renderable.label = key
-        return renderable
-
-    return new_tree([renderable], header)
-
-
 @flexitable.register
 @debug
 def _json_dict(data: JSONDict) -> Tree:
-    valid_pairs = [(k, v) for k, v in data.items() if v]
-    return new_tree(it.starmap(get_tree_branch, valid_pairs), "")
+    tree = new_tree()
+    for key, value in data.items():
+        renderable = flexitable(value or "", key)
+        header = wrap(key, "b")
+
+        if isinstance(renderable, str):
+            renderable = f"{header}: {renderable}"
+        elif isinstance(renderable, Tree):
+            # renderable.label = key
+            renderable.guide_style = "bold dim"
+        else:
+            renderable = new_tree([renderable], key, guide_style="bold dim")
+
+        tree.add(renderable)
+    tree.guide_style = f"bold dim {predictably_random_color(str(sorted(data)))}"
+    return tree
 
 
 simple_head_table = partial(
@@ -254,11 +261,15 @@ def _render_dict_list(data: list[JSONDict]) -> RenderableType:
         too_big = len(str(item.values())) > MAX_DICT_LENGTH
         data_by_size[too_big].append(item)
 
-    table = simple_head_table()
+    table = new_table()
     if small_items := data_by_size[False]:
         table.add_row(get_item_list_table(small_items, keys))
-    for item in data_by_size[True]:
-        table.add_row(flexitable(item))
+
+    if large_items := data_by_size[True]:
+        for idx, item in enumerate(large_items):
+            data = flexitable(item)
+            data.hide_root = True
+            table.add_row(str(idx), border_panel(data))
 
     return table
 

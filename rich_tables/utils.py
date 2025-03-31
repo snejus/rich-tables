@@ -338,15 +338,15 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
 
 
 def new_tree(
-    values: Iterable[RenderableType] | None = None, title: str = "", **kwargs: Any
+    values: Iterable[RenderableType] | None = None, label: str = "", **kwargs: Any
 ) -> Tree:
-    if values is None:
-        values = []
-    kwargs.setdefault("guide_style", predictably_random_color(title or str(values)))
+    values_list = list(values) if values else []
     kwargs.setdefault("highlight", True)
-    tree = Tree(title, **kwargs)
+    if label:
+        label = wrap(label, "b")
+    tree = Tree(label, **kwargs)
 
-    for val in values:
+    for val in values_list:
         tree.add(val)
     return tree
 
