@@ -13,11 +13,11 @@ lists, strings and other types.
 from __future__ import annotations
 
 import itertools as it
-from contextlib import suppress
 import logging
 import os
 from collections import defaultdict
-from collections.abc import Generator, Sequence
+from collections.abc import Sequence
+from contextlib import suppress
 from datetime import datetime, timezone
 from functools import partial, wraps
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
@@ -25,28 +25,28 @@ from typing import TYPE_CHECKING, Any, Callable, TypeVar
 from multimethod import multidispatch
 from rich import box
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, Group, RenderableType
+from rich.console import ConsoleRenderable, RenderableType  # noqa: TC002
 from rich.logging import RichHandler
 from rich.text import Text
+from rich.tree import Tree
 
 from . import fields
 from .fields import MATCH_COUNT_HEADER, _get_val, add_count_bars
 from .utils import (
     NewTable,
-    border_panel,
     format_with_color,
     list_table,
     make_console,
     new_table,
     new_tree,
     predictably_random_color,
+    wrap,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Iterable
 
     from rich.table import Table
-    from rich.tree import Tree
 
 
 JSONDict = dict[str, Any]
@@ -182,25 +182,24 @@ def _str(data: str) -> RenderableType:
     return data
 
 
+def get_tree_branch(key: str, value: Any) -> RenderableType:
+    renderable = flexitable(value or "", key)
+    header = wrap(key, "b")
+
+    if isinstance(renderable, str):
+        return f"{header}: {renderable}"
+    if isinstance(renderable, Tree):
+        renderable.label = key
+        return renderable
+
+    return new_tree([renderable], header)
+
+
 @flexitable.register
 @debug
-def _json_dict(data: JSONDict) -> RenderableType:
-    data = prepare_dict(data)
-    table = mapping_view_table()
-    for key, content in data.items():
-        if content is None or (isinstance(content, list) and not content):
-            continue
-
-        value = flexitable(content, key)
-        if isinstance(value, Generator):
-            value = border_panel(Group(*value), title_align="center")
-
-        if isinstance(value, (NewTable, Text, dict, Columns)):
-            value = border_panel(value)
-
-        table.add_row(key, value)
-
-    return table
+def _json_dict(data: JSONDict) -> Tree:
+    valid_pairs = [(k, v) for k, v in data.items() if v]
+    return new_tree(it.starmap(get_tree_branch, valid_pairs), "")
 
 
 simple_head_table = partial(
@@ -243,20 +242,6 @@ def get_item_list_table(items: list[JSONDict], keys: Iterable[str]) -> Table:
     return table
 
 
-def get_data_trees(items: list[JSONDict]) -> Iterator[Tree]:
-    """Add rows for large dictionary items as trees."""
-    for item in items:
-        values = it.starmap(
-            flexitable,
-            sorted(
-                [(v or "", k) for k, v in item.items()],
-                key=lambda x: str(type(next(iter(x)))),
-                reverse=True,
-            ),
-        )
-        yield new_tree(values, "")
-
-
 def _render_dict_list(data: list[JSONDict]) -> RenderableType:
     """Render a list of dictionaries with consistent structure handling."""
     if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
@@ -270,9 +255,10 @@ def _render_dict_list(data: list[JSONDict]) -> RenderableType:
         data_by_size[too_big].append(item)
 
     table = simple_head_table()
-    table.add_row(get_item_list_table(data_by_size[False], keys))
-    for tree in get_data_trees(data_by_size[True]):
-        table.add_row(tree)
+    if small_items := data_by_size[False]:
+        table.add_row(get_item_list_table(small_items, keys))
+    for item in data_by_size[True]:
+        table.add_row(flexitable(item))
 
     return table
 
