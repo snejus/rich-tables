@@ -172,10 +172,12 @@ def _header(data: Any, header: str) -> RenderableType:
         tree.guide_style = f"bold dim {predictably_random_color(str(sorted(data)))}"
         return tree
 
-    if header.endswith(".py") and isinstance(data, str):
+    if (
+        header.endswith(".py") and isinstance(data, str)
+    ) or header in fields.FIELDS_MAP:
         return _get_val(data, header)
 
-    if header not in fields.FIELDS_MAP or isinstance(data, (list, tuple)):
+    if isinstance(data, (list, tuple)):
         return flexitable(data)
 
     with suppress(AttributeError):
@@ -203,6 +205,7 @@ def _str(data: str) -> RenderableType:
 @flexitable.register
 @debug
 def _json_dict(data: HashableDict) -> Tree:
+    data = prepare_dict(data)
     tree = new_tree()
     for key, value in data.items():
         renderable = flexitable(value or "", key)
