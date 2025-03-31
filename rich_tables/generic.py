@@ -15,10 +15,10 @@ from __future__ import annotations
 import logging
 import os
 from collections import defaultdict
-from collections.abc import Sequence
 from contextlib import suppress
 from datetime import datetime, timezone
-from functools import partial, wraps
+from functools import cache, partial, wraps
+from operator import itemgetter
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from multimethod import multidispatch
@@ -30,8 +30,10 @@ from rich.text import Text
 from rich.tree import Tree
 
 from . import fields
+from .diff import to_hashable
 from .fields import MATCH_COUNT_HEADER, _get_val, add_count_bars
 from .utils import (
+    HashableDict,
     NewTable,
     border_panel,
     format_with_color,
@@ -49,7 +51,6 @@ if TYPE_CHECKING:
     from rich.table import Table
 
 
-JSONDict = dict[str, Any]
 T = TypeVar("T")
 console = make_console()
 
@@ -131,13 +132,14 @@ def mapping_view_table() -> NewTable:
     return table
 
 
-def prepare_dict(item: JSONDict) -> JSONDict:
+def prepare_dict(item: HashableDict) -> HashableDict:
     if "before" in item and "after" in item:
         item["diff"] = (item.pop("before"), item.pop("after"))
     return item
 
 
 @multidispatch
+@cache
 @debug
 def flexitable(data: Any) -> RenderableType:
     return str(data)
@@ -145,11 +147,26 @@ def flexitable(data: Any) -> RenderableType:
 
 @flexitable.register
 @debug
+def _list(data: list[Any]) -> RenderableType:
+    return flexitable(to_hashable(data))
+
+
+@flexitable.register
+@debug
+def _dict(data: dict[str, Any]) -> RenderableType:
+    tree = flexitable(to_hashable(data))
+    tree.hide_root = True
+    return tree
+
+
+@flexitable.register
+@cache
+@debug
 def _header(data: Any, header: str) -> RenderableType:
     if data in ("", [], {}):
         return ""
 
-    if isinstance(data, dict):
+    if isinstance(data, HashableDict):
         tree = _json_dict(data)
         tree.label = wrap(header, "b")
         tree.guide_style = f"bold dim {predictably_random_color(str(sorted(data)))}"
@@ -158,7 +175,7 @@ def _header(data: Any, header: str) -> RenderableType:
     if header.endswith(".py") and isinstance(data, str):
         return _get_val(data, header)
 
-    if header not in fields.FIELDS_MAP or isinstance(data, list):
+    if header not in fields.FIELDS_MAP or isinstance(data, (list, tuple)):
         return flexitable(data)
 
     with suppress(AttributeError):
@@ -172,17 +189,12 @@ def _header(data: Any, header: str) -> RenderableType:
 
 @flexitable.register
 @debug
-def _tuple_header(data: tuple, header: str) -> RenderableType:  # type: ignore[type-arg]
-    return fields.FIELDS_MAP[header](data) if header in fields.FIELDS_MAP else str(data)
-
-
-@flexitable.register
-@debug
 def _renderable(data: ConsoleRenderable) -> RenderableType:
     return data
 
 
 @flexitable.register
+@cache
 @debug
 def _str(data: str) -> RenderableType:
     return data
@@ -190,7 +202,7 @@ def _str(data: str) -> RenderableType:
 
 @flexitable.register
 @debug
-def _json_dict(data: JSONDict) -> Tree:
+def _json_dict(data: HashableDict) -> Tree:
     tree = new_tree()
     for key, value in data.items():
         renderable = flexitable(value or "", key)
@@ -199,7 +211,6 @@ def _json_dict(data: JSONDict) -> Tree:
         if isinstance(renderable, str):
             renderable = f"{header}: {renderable}"
         elif isinstance(renderable, Tree):
-            # renderable.label = key
             renderable.guide_style = "bold dim"
         else:
             renderable = new_tree([renderable], key, guide_style="bold dim")
@@ -215,18 +226,27 @@ simple_head_table = partial(
 
 
 @flexitable.register
+@cache
 @debug
-def _str_list(data: Sequence[str]) -> RenderableType:
+def _any_tuple(data: tuple[Any, ...]) -> RenderableType:
+    return _handle_mixed_list_items(data)
+
+
+@flexitable.register
+@cache
+@debug
+def _str_list(data: tuple[str, ...]) -> RenderableType:
     return format_with_color(data)
 
 
 @flexitable.register
+@cache
 @debug
-def _int_list(data: Sequence[int]) -> Columns:
+def _int_list(data: tuple[int, ...]) -> Columns:
     return Columns(str(x) for x in data)
 
 
-def _handle_mixed_list_items(data: Sequence[Any]) -> RenderableType:
+def _handle_mixed_list_items(data: tuple[Any, ...]) -> RenderableType:
     """Handle a list containing mixed item types."""
     return list_table(
         [flexitable(d) for d in data],
@@ -237,7 +257,7 @@ def _handle_mixed_list_items(data: Sequence[Any]) -> RenderableType:
     )
 
 
-def get_item_list_table(items: list[JSONDict], keys: Iterable[str]) -> Table:
+def get_item_list_table(items: list[HashableDict], keys: Iterable[str]) -> Table:
     """Add rows for normal sized dictionary items as a sub-table."""
     table = simple_head_table(*keys, show_header=True)
     for item in items:
@@ -249,15 +269,16 @@ def get_item_list_table(items: list[JSONDict], keys: Iterable[str]) -> Table:
     return table
 
 
-def _render_dict_list(data: list[JSONDict]) -> RenderableType:
+def _render_dict_list(data: tuple[HashableDict, ...]) -> RenderableType:
     """Render a list of dictionaries with consistent structure handling."""
     if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
         data = add_count_bars(data, count_key)
 
     keys = dict.fromkeys(k for k in data[0] if any(i.get(k) for i in data)).keys()
+    get_values = itemgetter(*keys)
 
-    data_by_size: dict[bool, list[JSONDict]] = defaultdict(list)
-    for item in data:
+    data_by_size: dict[bool, list[HashableDict]] = defaultdict(list)
+    for item in [dict(zip(keys, get_values(i))) for i in data]:
         too_big = len(str(item.values())) > MAX_DICT_LENGTH
         data_by_size[too_big].append(item)
 
@@ -275,8 +296,9 @@ def _render_dict_list(data: list[JSONDict]) -> RenderableType:
 
 
 @flexitable.register
+@cache
 @debug
-def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
+def _dict_list(data: tuple[HashableDict, ...]) -> RenderableType:
     """Render a list of dictionaries as a rich table or tree structure.
 
     Processes collections of dictionaries, adapting the presentation format based on:
@@ -293,13 +315,12 @@ def _dict_list(data: Sequence[JSONDict]) -> RenderableType:
     When dictionaries have inconsistent structures, appropriate formatting decisions
     are made to ensure readability, including grouping similar structures together.
     """
-    data = list(filter(None, data))
+    data = tuple(filter(None, data))
     if not data:
         return ""
 
-    # Check if all items are dictionaries
-    if not all(isinstance(d, dict) for d in data):
+    if not all(isinstance(d, HashableDict) for d in data):
         return _handle_mixed_list_items(data)
 
-    data = [prepare_dict(item) for item in data if item]
+    data = tuple(prepare_dict(item) for item in data)
     return _render_dict_list(data)

@@ -15,6 +15,7 @@ from .diff import pretty_diff
 from .utils import (
     BOLD_GREEN,
     BOLD_RED,
+    HashableDict,
     JSONDict,
     border_panel,
     duration2human,
@@ -42,7 +43,9 @@ MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|_?count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
 
 
-def add_count_bars(data: list[JSONDict], count_key: str) -> list[JSONDict]:
+def add_count_bars(
+    data: tuple[HashableDict, ...], count_key: str
+) -> tuple[HashableDict, ...]:
     all_keys = list(data[0].keys())
     subcount_key = next((k for k in all_keys if k.endswith("_subcount")), None)
     if subcount_key:
@@ -73,12 +76,15 @@ def add_count_bars(data: list[JSONDict], count_key: str) -> list[JSONDict]:
         )
 
     if count_key in {"duration", "total_duration"}:
-        data.append(
-            {
-                all_keys[0]: "TOTAL",
-                count_key: duration2human(sum(all_counts)),
-                bar_key: "",
-            }
+        data = (
+            *data,
+            HashableDict(
+                {
+                    all_keys[0]: "TOTAL",
+                    count_key: duration2human(sum(all_counts)),
+                    bar_key: "",
+                }
+            ),
         )
 
     return data
@@ -91,7 +97,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         map(
             format_with_color,
             (
-                ("; ".join(x) if isinstance(x, list) else x)
+                ("; ".join(x) if isinstance(x, (list, tuple)) else x)
                 .replace("compilation", "comp")
                 .replace("dj-mix; broadcast", "dj-mix")
                 .replace("broadcast; dj-mix", "dj-mix")
@@ -106,7 +112,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
             "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x),
             "b",
         )
-        if isinstance(x, list)
+        if isinstance(x, (list, tuple))
         else format_with_color(x.upper())
         if isinstance(x, str)
         else x

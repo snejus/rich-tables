@@ -3,6 +3,7 @@ from __future__ import annotations
 import colorsys
 import random
 import re
+from collections import UserDict
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
@@ -32,6 +33,12 @@ if TYPE_CHECKING:
 
 JSONDict = dict[str, Any]
 T = TypeVar("T")
+
+
+class HashableDict(UserDict[str, Any]):
+    def __hash__(self) -> int:
+        return hash(tuple(self.data.items()))
+
 
 BOLD_GREEN = "b green"
 BOLD_RED = "b red"
@@ -182,7 +189,7 @@ class NewTable(Table):
 
     def add_dict_row(
         self,
-        data: JSONDict,
+        data: JSONDict | HashableDict,
         ignore_extra_fields: bool = False,
         transform: Callable[..., RenderableType] = lambda v, _: v,
         **kwargs: Any,

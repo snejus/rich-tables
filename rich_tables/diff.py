@@ -7,7 +7,6 @@ with specialized formatting for each type.
 """
 
 import re
-from collections import UserDict
 from difflib import SequenceMatcher
 from functools import partial
 from itertools import starmap, zip_longest
@@ -17,7 +16,7 @@ from typing import Any, Hashable, Literal
 from multimethod import multimethod
 from rich.text import Text
 
-from .utils import BOLD_GREEN, BOLD_RED, wrap
+from .utils import BOLD_GREEN, BOLD_RED, HashableDict, wrap
 
 MIN_EQUAL_LENGTH = 5
 
@@ -96,11 +95,6 @@ def make_difftext(before: str, after: str) -> str:
     return "".join(
         fmtdiff(code, before[a1:a2], after[b1:b2]) or "" for code, a1, a2, b1, b2 in ops
     )
-
-
-class HashableDict(UserDict[str, Hashable]):
-    def __hash__(self) -> int:
-        return hash(tuple(self.data.items()))
 
 
 @multimethod
