@@ -190,4 +190,4 @@ def pretty_diff(before: Any, after: Any, **kwargs: Any) -> Text:
             .replace("\\\\", "\\")
         )
 
-    return Text.from_markup(result, **kwargs)
+    return result

@@ -140,7 +140,7 @@ class SafeConsole(Console):
 def make_console(**kwargs: Any) -> SafeConsole:
     kwargs.setdefault("theme", get_theme())
     kwargs.setdefault("force_terminal", True)
-    kwargs.setdefault("force_interactive", False)
+    kwargs.setdefault("force_interactive", True)
     kwargs.setdefault("emoji", True)
     return SafeConsole(**kwargs)
 
