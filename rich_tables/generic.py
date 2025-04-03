@@ -18,7 +18,6 @@ from collections import defaultdict
 from contextlib import suppress
 from datetime import datetime, timezone
 from functools import cache, partial, wraps
-from operator import itemgetter
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from multimethod import multidispatch
@@ -278,10 +277,9 @@ def _render_dict_list(data: tuple[HashableDict, ...]) -> RenderableType:
         data = add_count_bars(data, count_key)
 
     keys = dict.fromkeys(k for k in data[0] if any(i.get(k) for i in data)).keys()
-    get_values = itemgetter(*keys)
 
     data_by_size: dict[bool, list[HashableDict]] = defaultdict(list)
-    for item in [dict(zip(keys, get_values(i))) for i in data]:
+    for item in [{k: v for k, v in i.items() if k in keys} for i in data]:
         too_big = len(str(item.values())) > MAX_DICT_LENGTH
         data_by_size[too_big].append(item)
 

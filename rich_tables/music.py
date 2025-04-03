@@ -10,6 +10,7 @@ from rich.align import Align
 from rich.console import ConsoleRenderable, Group
 
 from .fields import FIELDS_MAP
+from .generic import flexitable
 from .utils import (
     DISPLAY_HEADER,
     NewTable,
@@ -77,12 +78,13 @@ def get_vals(
 
 
 def tracks_table(tracks: list[JSONDict], fields: list[str], color: str) -> NewTable:
-    return new_table(
-        *map(get_header, fields),
-        rows=get_vals(fields, tracks),
-        border_style=color,
-        padding=(0, 0, 0, 1),
-    )
+    get_values = op.itemgetter(*fields)
+    tracks_data = [dict(zip(fields, get_values(t))) for t in tracks]
+    table = new_table(border_style=color, padding=(0, 0, 0, 1))
+    for item in tracks_data:
+        table.add_dict_row(item, transform=flexitable)
+
+    return table
 
 
 T = TypeVar("T")
@@ -166,9 +168,7 @@ def album_panel(tracks: list[JSONDict]) -> Panel:
         track_fields.remove("artist")
 
     # ignore empty fields
-    track_fields = [
-        f for f in track_fields if {t.get(f) for t in tracks} not in ({None}, {""})
-    ]
+    track_fields = [f for f in track_fields if any(t.get(f) for t in tracks)]
     tracks = sorted(tracks, key=op.itemgetter("track", "artist", "title"))
     tracklist = tracks_table(tracks, track_fields, album["album_color"])
 

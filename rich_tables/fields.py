@@ -138,8 +138,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     ),
     category=lambda x: "/".join(map(format_with_color, x.split("/"))),
     country=get_country,
-    helicopta=lambda x: ":fire: " if x == "1" else "",
-    hidden=lambda x: ":shit: " if x == "1" else "",
+    helicopta=lambda x: ":fire: " if x == 1 else "",
+    hidden=lambda x: ":shit: " if x == 1 else "",
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
     comments=lambda x: md_panel(
@@ -282,12 +282,13 @@ def _get_val(value: float | str | None, field: str) -> RenderableType:
 
     if isinstance(value, str):
         value = format_string(value)
-    elif isinstance(value, (int, float)):
-        value = str(value)
 
     if field in FIELDS_MAP:
         with suppress(TypeError):
             return FIELDS_MAP[field](value)
+
+    elif isinstance(value, (int, float)):
+        value = str(value)
 
     return value
 

@@ -157,6 +157,10 @@ class NewTable(Table):
         super().__init__(*args, **kwargs)
 
     def __rich_console__(self, *args: Any, **kwargs: Any) -> RenderResult:
+        if any(c.header for c in self.columns):
+            self.header_style = "bold misty_rose1"
+            self.show_header = True
+            self.box = box.SIMPLE_HEAVY
         for column in self.columns:
             if display_header := DISPLAY_HEADER.get(column.header):
                 column.header = display_header
@@ -191,7 +195,7 @@ class NewTable(Table):
         self,
         data: JSONDict | HashableDict,
         ignore_extra_fields: bool = False,
-        transform: Callable[..., RenderableType] = lambda v, _: v,
+        transform: Callable[..., RenderableType] = lambda v, _: str(v),
         **kwargs: Any,
     ) -> None:
         """Add a row to the table from a dictionary."""
@@ -214,14 +218,8 @@ class NewTable(Table):
 def new_table(
     *headers: str, rows: Iterable[Iterable[RenderableType]] | None = None, **kwargs: Any
 ) -> NewTable:
-    if headers:
-        kwargs.setdefault("header_style", "bold misty_rose1")
-        kwargs.setdefault("show_header", True)
-        kwargs.setdefault("box", box.SIMPLE_HEAVY)
-    else:
-        kwargs.setdefault("show_header", False)
-        kwargs.setdefault("box", box.ROUNDED)
-
+    kwargs.setdefault("show_header", False)
+    kwargs.setdefault("box", box.ROUNDED)
     kwargs.setdefault("show_edge", False)
     kwargs.setdefault("pad_edge", False)
     kwargs.setdefault("highlight", True)
