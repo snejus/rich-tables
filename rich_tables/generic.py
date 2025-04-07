@@ -152,12 +152,6 @@ def _number(data: float) -> RenderableType:
 
 @flexitable.register
 @debug
-def _number_seq(data: tuple[float]) -> RenderableType:
-    return tuple(str(x) for x in data)
-
-
-@flexitable.register
-@debug
 def _list(data: list[Any]) -> RenderableType:
     return flexitable(to_hashable(data))
 
