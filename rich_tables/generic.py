@@ -17,7 +17,8 @@ import os
 from collections import defaultdict
 from contextlib import suppress
 from datetime import datetime, timezone
-from functools import cache, partial, wraps
+from functools import cache, partial, reduce, wraps
+from operator import and_
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from multimethod import multidispatch
@@ -326,7 +327,10 @@ def _dict_list(data: tuple[HashableDict, ...]) -> RenderableType:
     if not data:
         return ""
 
-    if not all(isinstance(d, HashableDict) for d in data):
+    if not all(isinstance(d, HashableDict) for d in data) or (
+        # no shared keys
+        not reduce(and_, (i.keys() for i in data))
+    ):
         return _handle_mixed_list_items(data)
 
     data = tuple(prepare_dict(item) for item in data)

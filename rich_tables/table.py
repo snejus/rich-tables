@@ -155,7 +155,7 @@ def main() -> None:
 
     with handle_save(args.save):
         if args.command == "diff":
-            console.print(pretty_diff(args.before, args.after), markup=False)
+            console.print(pretty_diff(args.before, args.after), markup=True)
         else:
             data = load_data("/dev/stdin")
             if args.json:
