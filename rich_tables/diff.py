@@ -188,6 +188,7 @@ def pretty_diff(before: Any, after: Any, **kwargs: Any) -> Text:
             .replace("'", "")
             .replace('"', "")
             .replace("\\\\", "\\")
+            .replace("()", "[]")
         )
 
     return result
