@@ -158,9 +158,8 @@ class NewTable(Table):
 
     def __rich_console__(self, *args: Any, **kwargs: Any) -> RenderResult:
         if any(c.header for c in self.columns):
-            self.header_style = "bold misty_rose1"
+            # self.header_style = "bold misty_rose1"
             self.show_header = True
-            self.box = box.SIMPLE_HEAVY
         for column in self.columns:
             if display_header := DISPLAY_HEADER.get(column.header):
                 column.header = display_header

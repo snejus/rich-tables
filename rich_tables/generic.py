@@ -17,7 +17,7 @@ import os
 from collections import defaultdict
 from contextlib import suppress
 from datetime import datetime, timezone
-from functools import cache, partial, reduce, wraps
+from functools import cache, reduce, wraps
 from operator import and_
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
@@ -34,7 +34,6 @@ from .diff import to_hashable
 from .fields import MATCH_COUNT_HEADER, _get_val, add_count_bars
 from .utils import (
     HashableDict,
-    NewTable,
     border_panel,
     format_with_color,
     list_table,
@@ -117,19 +116,6 @@ def debug(func: Callable[..., T]) -> Callable[..., T]:
         return result
 
     return wrapper
-
-
-def mapping_view_table() -> NewTable:
-    """Return a table with two columns.
-
-    * First for bold field names
-    * Second one for values.
-    """
-    table = new_table(border_style="cyan", style="cyan", box=box.MINIMAL, expand=False)
-    table.add_column(style="bold misty_rose1")
-    table.add_column()
-    table.show_header = False
-    return table
 
 
 def prepare_dict(item: HashableDict) -> HashableDict:
@@ -229,11 +215,6 @@ def _json_dict(data: HashableDict) -> Tree:
     return tree
 
 
-simple_head_table = partial(
-    new_table, expand=False, box=box.SIMPLE_HEAD, border_style="cyan"
-)
-
-
 @flexitable.register
 @cache
 @debug
@@ -268,7 +249,8 @@ def _handle_mixed_list_items(data: tuple[Any, ...]) -> RenderableType:
 
 def get_item_list_table(items: list[HashableDict], keys: Iterable[str]) -> Table:
     """Add rows for normal sized dictionary items as a sub-table."""
-    table = simple_head_table(*keys, show_header=True)
+    table = new_table(*keys, show_header=True, box=box.SIMPLE_HEAD, border_style="cyan")
+
     for item in items:
         table.add_dict_row(item, ignore_extra_fields=True, transform=flexitable)
 

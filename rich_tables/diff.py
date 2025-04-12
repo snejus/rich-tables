@@ -6,6 +6,7 @@ It supports diffing strings, lists, dictionaries, and other objects
 with specialized formatting for each type.
 """
 
+import json
 import re
 from difflib import SequenceMatcher
 from functools import partial
@@ -163,12 +164,14 @@ def _(before: tuple[Hashable, ...], after: tuple[Hashable, ...]) -> list[str]:
 @diff.register
 def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
     data = {}
-    keys = sorted(before.keys() | after.keys())
+    keys = dict.fromkeys((*before, *after))
     for key in keys:
         if key not in before:
             data[wrap(key, BOLD_GREEN)] = wrap(diff_serialize(after[key]), BOLD_GREEN)
         elif key not in after:
-            data[wrap(key, BOLD_RED)] = wrap(diff_serialize(before[key]), BOLD_RED)
+            data[wrap(key, f"s {BOLD_RED}")] = wrap(
+                diff_serialize(before[key]), f"s {BOLD_RED}"
+            )
         else:
             data[key] = diff(before[key], after[key])
 
@@ -184,7 +187,7 @@ def pretty_diff(before: Any, after: Any, **kwargs: Any) -> Text:
     result = diff(to_hashable(before), to_hashable(after))
     if not isinstance(result, str):
         result = (
-            pformat(result, indent=2, width=300, sort_dicts=False)
+            json.dumps(result, indent=2, sort_keys=False)
             .replace("'", "")
             .replace('"', "")
             .replace("\\\\", "\\")

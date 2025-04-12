@@ -58,7 +58,9 @@ ALBUM_IGNORE = set(TRACK_FIELDS) | {
 }
 
 
-new_table = partial(new_table, collapse_padding=True, expand=True, padding=0)
+new_table = partial(
+    new_table, collapse_padding=True, expand=True, padding=0, box=box.SIMPLE_HEAVY
+)
 
 
 def get_header(key: str) -> str:
@@ -69,12 +71,6 @@ def get_header(key: str) -> str:
 def get_val(track: JSONDict, field: str) -> Any:
     trackdict = dict(track)
     return FIELDS_MAP[field](trackdict[field]) if trackdict.get(field) else ""
-
-
-def get_vals(
-    fields: Iterable[str], tracks: Iterable[JSONDict]
-) -> Iterable[Iterable[str]]:
-    return [[get_val(tuple(t.items()), f) for f in fields] for t in tracks]
 
 
 def tracks_table(tracks: list[JSONDict], fields: list[str], color: str) -> NewTable:
