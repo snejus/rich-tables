@@ -139,7 +139,7 @@ def _(before: Any, after: Any) -> Any:
 
 
 @diff.register
-def _(before: list[Any], after: list[Any]) -> Any:
+def _(before: HashableList[Any], after: HashableList[Any]) -> Any:
     return list(starmap(diff, zip_longest(before, after)))
 
 

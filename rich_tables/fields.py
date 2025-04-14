@@ -44,9 +44,7 @@ MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|_?count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
 
 
-def add_count_bars(
-    data: HashableList[HashableDict], count_key: str
-) -> HashableList[HashableDict..]:
+def add_count_bars(data: HashableList, count_key: str) -> HashableList:
     all_keys = list(data[0].keys())
     subcount_key = next((k for k in all_keys if k.endswith("_subcount")), None)
     if subcount_key:

@@ -218,7 +218,7 @@ def new_table(
     *headers: str, rows: Iterable[Iterable[RenderableType]] | None = None, **kwargs: Any
 ) -> NewTable:
     kwargs.setdefault("show_header", False)
-    kwargs.setdefault("box", box.ROUNDED)
+    kwargs.setdefault("box", box.SIMPLE_HEAVY)
     kwargs.setdefault("show_edge", False)
     kwargs.setdefault("pad_edge", False)
     kwargs.setdefault("highlight", True)

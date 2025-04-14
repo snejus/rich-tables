@@ -58,9 +58,7 @@ ALBUM_IGNORE = set(TRACK_FIELDS) | {
 }
 
 
-new_table = partial(
-    new_table, collapse_padding=True, expand=True, padding=0, box=box.SIMPLE_HEAVY
-)
+new_table = partial(new_table, collapse_padding=True, expand=True, padding=0)
 
 
 def get_header(key: str) -> str:
