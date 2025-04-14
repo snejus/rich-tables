@@ -44,7 +44,9 @@ MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|_?count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
 
 
-def add_count_bars(data: HashableList, count_key: str) -> HashableList:
+def add_count_bars(
+    data: HashableList[HashableDict], count_key: str
+) -> HashableList[HashableDict]:
     all_keys = list(data[0].keys())
     subcount_key = next((k for k in all_keys if k.endswith("_subcount")), None)
     if subcount_key:
@@ -75,15 +77,14 @@ def add_count_bars(data: HashableList, count_key: str) -> HashableList:
         )
 
     if count_key in {"duration", "total_duration"}:
-        data = (
-            *data,
+        data.append(
             HashableDict(
                 {
                     all_keys[0]: "TOTAL",
                     count_key: duration2human(sum(all_counts)),
                     bar_key: "",
                 }
-            ),
+            )
         )
 
     return data
@@ -291,7 +292,7 @@ def _get_val(value: float | str | None, field: str) -> RenderableType:
     elif isinstance(value, (int, float)):
         value = str(value)
 
-    return value
+    return str(value)
 
 
 @singledispatch

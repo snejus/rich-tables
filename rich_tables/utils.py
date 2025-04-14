@@ -40,7 +40,7 @@ class HashableDict(UserDict[str, Any]):
         return hash(tuple(self.data.items()))
 
 
-class HashableList(UserList[Any]):
+class HashableList(UserList[T]):
     def __hash__(self) -> int:  # type: ignore[override]
         return hash(tuple(self.data))
 

@@ -220,18 +220,18 @@ def _json_dict(data: HashableDict) -> Tree:
 @flexitable.register
 @cache
 @debug
-def _str_list(data: HashableList[str, ...]) -> RenderableType:
+def _str_list(data: HashableList[str]) -> RenderableType:
     return format_with_color(data)
 
 
 @flexitable.register
 @cache
 @debug
-def _int_list(data: HashableList[int, ...]) -> Columns:
+def _int_list(data: HashableList[int]) -> Columns:
     return Columns(str(x) for x in data)
 
 
-def _handle_mixed_list_items(data: HashableList[Any, ...]) -> RenderableType:
+def _handle_mixed_list_items(data: HashableList[Any]) -> RenderableType:
     """Handle a list containing mixed item types."""
     return list_table(
         [flexitable(d) for d in data],
@@ -255,7 +255,7 @@ def get_item_list_table(items: list[HashableDict], keys: Iterable[str]) -> Table
     return table
 
 
-def _render_dict_list(data: HashableList[HashableDict, ...]) -> RenderableType:
+def _render_dict_list(data: HashableList[HashableDict]) -> RenderableType:
     """Render a list of dictionaries with consistent structure handling."""
     if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
         data = add_count_bars(data, count_key)
@@ -284,7 +284,7 @@ def _render_dict_list(data: HashableList[HashableDict, ...]) -> RenderableType:
 @flexitable.register
 @cache
 @debug
-def _dict_list(data: HashableList[HashableDict, ...]) -> RenderableType:
+def _dict_list(data: HashableList[HashableDict]) -> RenderableType:
     """Render a list of dictionaries as a rich table or tree structure.
 
     Processes collections of dictionaries, adapting the presentation format based on:

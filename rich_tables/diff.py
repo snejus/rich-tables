@@ -158,7 +158,7 @@ def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
     return data
 
 
-def pretty_diff(before: Any, after: Any, **kwargs: Any) -> str:
+def pretty_diff(before: Any, after: Any) -> str:
     """Generate a Rich Text object showing differences between any two Python objects.
 
     This is the main entry point for the diffing functionality.
