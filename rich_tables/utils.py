@@ -3,7 +3,7 @@ from __future__ import annotations
 import colorsys
 import random
 import re
-from collections import UserDict
+from collections import UserDict, UserList
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
@@ -40,6 +40,11 @@ class HashableDict(UserDict[str, Any]):
         return hash(tuple(self.data.items()))
 
 
+class HashableList(UserList[T]):
+    def __hash__(self) -> int:  # type: ignore[override]
+        return hash(tuple(self.data))
+
+
 BOLD_GREEN = "b green"
 BOLD_RED = "b red"
 DISPLAY_HEADER: dict[RenderableType, str] = {
@@ -60,9 +65,9 @@ DISPLAY_HEADER: dict[RenderableType, str] = {
 
 class Pat:
     SPLIT_PAT = re.compile(r"[;,] ?")
-    PRED_COLOR_PAT = re.compile(r"(pred color)\]([^\[]+)")
+    PRED_COLOR_PAT = re.compile(r"(pred color)\](.*?)(?=\[/)")
     HTML_PARAGRAPH = re.compile(r"</?p>")
-    OPENING_BRACKET = re.compile(r"\[(?!http)")
+    OPENING_BRACKET = re.compile(r"(?<!^)\[(?!/)")
 
 
 _T_contra = TypeVar("_T_contra", contravariant=True)
@@ -83,10 +88,11 @@ def sortgroup_by(
 
 
 def format_string(text: str) -> str:
+    if "[" in text and r"\[" not in text and ("[/" not in text or "pred color" in text):
+        text = Pat.OPENING_BRACKET.sub(r"\[", text)
+
     if "pred color]" in text:
         return Pat.PRED_COLOR_PAT.sub(fmt_pred_color, text)
-    if "[" in text and r"\[" not in text and "[/" not in text:
-        return Pat.OPENING_BRACKET.sub(r"\[", text)
 
     return text
 
@@ -140,7 +146,7 @@ class SafeConsole(Console):
 def make_console(**kwargs: Any) -> SafeConsole:
     kwargs.setdefault("theme", get_theme())
     kwargs.setdefault("force_terminal", True)
-    kwargs.setdefault("force_interactive", False)
+    kwargs.setdefault("force_interactive", True)
     kwargs.setdefault("emoji", True)
     return SafeConsole(**kwargs)
 
@@ -157,18 +163,15 @@ class NewTable(Table):
         super().__init__(*args, **kwargs)
 
     def __rich_console__(self, *args: Any, **kwargs: Any) -> RenderResult:
+        if any(c.header for c in self.columns):
+            self.show_header = True
         for column in self.columns:
             if display_header := DISPLAY_HEADER.get(column.header):
                 column.header = display_header
+            if self.column_kwargs:
+                column.__dict__.update(self.column_kwargs)
 
         return super().__rich_console__(*args, **kwargs)
-
-    def add_column(self, *args: Any, **kwargs: Any) -> None:
-        for k, v in self.column_kwargs.items():
-            kwargs.setdefault(k, v)
-
-        self.show_header = True
-        super().add_column(*args, **kwargs)
 
     def add_row(self, *args: RenderableType | None, **kwargs: Any) -> None:
         rends = list(args)
@@ -191,7 +194,7 @@ class NewTable(Table):
         self,
         data: JSONDict | HashableDict,
         ignore_extra_fields: bool = False,
-        transform: Callable[..., RenderableType] = lambda v, _: v,
+        transform: Callable[..., RenderableType] = lambda v, _: str(v),
         **kwargs: Any,
     ) -> None:
         """Add a row to the table from a dictionary."""
@@ -214,14 +217,8 @@ class NewTable(Table):
 def new_table(
     *headers: str, rows: Iterable[Iterable[RenderableType]] | None = None, **kwargs: Any
 ) -> NewTable:
-    if headers:
-        kwargs.setdefault("header_style", "bold misty_rose1")
-        kwargs.setdefault("show_header", True)
-        kwargs.setdefault("box", box.SIMPLE_HEAVY)
-    else:
-        kwargs.setdefault("show_header", False)
-        kwargs.setdefault("box", box.ROUNDED)
-
+    kwargs.setdefault("show_header", False)
+    kwargs.setdefault("box", box.SIMPLE_HEAVY)
     kwargs.setdefault("show_edge", False)
     kwargs.setdefault("pad_edge", False)
     kwargs.setdefault("highlight", True)
@@ -230,6 +227,7 @@ def new_table(
     kwargs.setdefault("title_justify", "left")
     kwargs.setdefault("style", "black")
     kwargs.setdefault("border_style", "black")
+    kwargs.setdefault("overflow", "fold")
 
     table = NewTable(*headers, **kwargs)
     if rows:
@@ -457,7 +455,7 @@ def human_dt(timestamp: str | float) -> str:
 
 
 def syntax(*args: Any, **kwargs: Any) -> Syntax:
-    kwargs.setdefault("theme", "paraiso-dark")
+    kwargs.setdefault("theme", "nord")
     kwargs.setdefault("background_color", "black")
     kwargs.setdefault("word_wrap", True)
     return Syntax(*args, **kwargs)

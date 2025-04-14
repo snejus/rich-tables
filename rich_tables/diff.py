@@ -6,17 +6,16 @@ It supports diffing strings, lists, dictionaries, and other objects
 with specialized formatting for each type.
 """
 
+import json
 import re
 from difflib import SequenceMatcher
 from functools import partial
 from itertools import starmap, zip_longest
-from pprint import pformat
 from typing import Any, Hashable, Literal
 
 from multimethod import multimethod
-from rich.text import Text
 
-from .utils import BOLD_GREEN, BOLD_RED, HashableDict, wrap
+from .utils import BOLD_GREEN, BOLD_RED, HashableDict, HashableList, wrap
 
 MIN_EQUAL_LENGTH = 5
 
@@ -98,7 +97,7 @@ def make_difftext(before: str, after: str) -> str:
 
 
 @multimethod
-def to_hashable(value: Hashable) -> Hashable:
+def to_hashable(value: Any) -> Any:
     """Convert potentially unhashable objects to hashable equivalents.
 
     Base implementation for primitive hashable types.
@@ -109,7 +108,7 @@ def to_hashable(value: Hashable) -> Hashable:
 
 @to_hashable.register
 def _(value: list[Any]) -> Hashable:
-    return tuple(map(to_hashable, value))
+    return HashableList([to_hashable(v) for v in value])
 
 
 @to_hashable.register
@@ -140,30 +139,14 @@ def _(before: Any, after: Any) -> Any:
 
 
 @diff.register
-def _(before: list[Any], after: list[Any]) -> Any:
+def _(before: HashableList[Any], after: HashableList[Any]) -> Any:
     return list(starmap(diff, zip_longest(before, after)))
-
-
-@diff.register
-def _(before: tuple[Hashable, ...], after: tuple[Hashable, ...]) -> list[str]:
-    before_set, after_set = dict.fromkeys(before), dict.fromkeys(after)
-    common = [k for k in before_set if k in after_set]
-    return [
-        *[diff(a, a) for a in common],
-        *[
-            diff(before or "", after or "")
-            for before, after in zip_longest(
-                [k for k in before_set if k not in common],
-                [k for k in after_set if k not in common],
-            )
-        ],
-    ]
 
 
 @diff.register
 def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
     data = {}
-    keys = sorted(before.keys() | after.keys())
+    keys = dict.fromkeys((*before, *after))
     for key in keys:
         if key not in before:
             data[wrap(key, BOLD_GREEN)] = wrap(diff_serialize(after[key]), BOLD_GREEN)
@@ -175,19 +158,20 @@ def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
     return data
 
 
-def pretty_diff(before: Any, after: Any, **kwargs: Any) -> Text:
+def pretty_diff(before: Any, after: Any) -> str:
     """Generate a Rich Text object showing differences between any two Python objects.
 
     This is the main entry point for the diffing functionality.
     Handles all supported types through the multimethod dispatch system.
     """
     result = diff(to_hashable(before), to_hashable(after))
-    if not isinstance(result, str):
-        result = (
-            pformat(result, indent=2, width=300, sort_dicts=False)
-            .replace("'", "")
-            .replace('"', "")
-            .replace("\\\\", "\\")
-        )
+    if isinstance(result, str):
+        return result
 
-    return Text.from_markup(result, **kwargs)
+    return (
+        json.dumps(result, indent=2, ensure_ascii=False)
+        .replace("'", "")
+        .replace('"', "")
+        .replace("\\", "")
+        .replace("()", "[]")
+    )

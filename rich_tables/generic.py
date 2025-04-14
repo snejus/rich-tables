@@ -15,10 +15,11 @@ from __future__ import annotations
 import logging
 import os
 from collections import defaultdict
+from collections.abc import Iterable
 from contextlib import suppress
 from datetime import datetime, timezone
-from functools import cache, partial, wraps
-from operator import itemgetter
+from functools import cache, reduce, wraps
+from operator import and_
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from multimethod import multidispatch
@@ -34,7 +35,7 @@ from .diff import to_hashable
 from .fields import MATCH_COUNT_HEADER, _get_val, add_count_bars
 from .utils import (
     HashableDict,
-    NewTable,
+    HashableList,
     border_panel,
     format_with_color,
     list_table,
@@ -46,8 +47,6 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from rich.table import Table
 
 
@@ -119,19 +118,6 @@ def debug(func: Callable[..., T]) -> Callable[..., T]:
     return wrapper
 
 
-def mapping_view_table() -> NewTable:
-    """Return a table with two columns.
-
-    * First for bold field names
-    * Second one for values.
-    """
-    table = new_table(border_style="cyan", style="cyan", box=box.MINIMAL, expand=False)
-    table.add_column(style="bold misty_rose1")
-    table.add_column()
-    table.show_header = False
-    return table
-
-
 def prepare_dict(item: HashableDict) -> HashableDict:
     if "before" in item and "after" in item:
         item["diff"] = (item.pop("before"), item.pop("after"))
@@ -146,6 +132,13 @@ def flexitable(data: Any) -> RenderableType:
 
 
 @flexitable.register
+@cache
+@debug
+def _number(data: float) -> RenderableType:
+    return str(data)
+
+
+@flexitable.register
 @debug
 def _list(data: list[Any]) -> RenderableType:
     return flexitable(to_hashable(data))
@@ -154,22 +147,21 @@ def _list(data: list[Any]) -> RenderableType:
 @flexitable.register
 @debug
 def _dict(data: dict[str, Any]) -> RenderableType:
-    tree = flexitable(to_hashable(data))
-    tree.hide_root = True
-    return tree
+    if (rend := flexitable(to_hashable(data))) and isinstance(rend, Tree):
+        rend.hide_root = True
+    return rend
 
 
 @flexitable.register
 @cache
 @debug
 def _header(data: Any, header: str) -> RenderableType:
-    if data in ("", [], {}):
+    if not data and isinstance(data, Iterable):
         return ""
 
     if isinstance(data, HashableDict):
         tree = _json_dict(data)
         tree.label = wrap(header, "b")
-        tree.guide_style = f"bold dim {predictably_random_color(str(sorted(data)))}"
         return tree
 
     if (
@@ -177,7 +169,7 @@ def _header(data: Any, header: str) -> RenderableType:
     ) or header in fields.FIELDS_MAP:
         return _get_val(data, header)
 
-    if isinstance(data, (list, tuple)):
+    if isinstance(data, (list, HashableList)):
         return flexitable(data)
 
     with suppress(AttributeError):
@@ -190,6 +182,7 @@ def _header(data: Any, header: str) -> RenderableType:
 
 
 @flexitable.register
+@cache
 @debug
 def _renderable(data: ConsoleRenderable) -> RenderableType:
     return data
@@ -203,6 +196,7 @@ def _str(data: str) -> RenderableType:
 
 
 @flexitable.register
+@cache
 @debug
 def _json_dict(data: HashableDict) -> Tree:
     data = prepare_dict(data)
@@ -223,33 +217,21 @@ def _json_dict(data: HashableDict) -> Tree:
     return tree
 
 
-simple_head_table = partial(
-    new_table, expand=False, box=box.SIMPLE_HEAD, border_style="cyan"
-)
-
-
 @flexitable.register
 @cache
 @debug
-def _any_tuple(data: tuple[Any, ...]) -> RenderableType:
-    return _handle_mixed_list_items(data)
-
-
-@flexitable.register
-@cache
-@debug
-def _str_list(data: tuple[str, ...]) -> RenderableType:
+def _str_list(data: HashableList[str]) -> RenderableType:
     return format_with_color(data)
 
 
 @flexitable.register
 @cache
 @debug
-def _int_list(data: tuple[int, ...]) -> Columns:
+def _int_list(data: HashableList[int]) -> Columns:
     return Columns(str(x) for x in data)
 
 
-def _handle_mixed_list_items(data: tuple[Any, ...]) -> RenderableType:
+def _handle_mixed_list_items(data: HashableList[Any]) -> RenderableType:
     """Handle a list containing mixed item types."""
     return list_table(
         [flexitable(d) for d in data],
@@ -262,7 +244,8 @@ def _handle_mixed_list_items(data: tuple[Any, ...]) -> RenderableType:
 
 def get_item_list_table(items: list[HashableDict], keys: Iterable[str]) -> Table:
     """Add rows for normal sized dictionary items as a sub-table."""
-    table = simple_head_table(*keys, show_header=True)
+    table = new_table(*keys, show_header=True, box=box.SIMPLE_HEAD, border_style="cyan")
+
     for item in items:
         table.add_dict_row(item, ignore_extra_fields=True, transform=flexitable)
 
@@ -272,16 +255,15 @@ def get_item_list_table(items: list[HashableDict], keys: Iterable[str]) -> Table
     return table
 
 
-def _render_dict_list(data: tuple[HashableDict, ...]) -> RenderableType:
+def _render_dict_list(data: HashableList[HashableDict]) -> RenderableType:
     """Render a list of dictionaries with consistent structure handling."""
     if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
         data = add_count_bars(data, count_key)
 
     keys = dict.fromkeys(k for k in data[0] if any(i.get(k) for i in data)).keys()
-    get_values = itemgetter(*keys)
 
     data_by_size: dict[bool, list[HashableDict]] = defaultdict(list)
-    for item in [dict(zip(keys, get_values(i))) for i in data]:
+    for item in [HashableDict({k: v for k, v in i.items() if k in keys}) for i in data]:
         too_big = len(str(item.values())) > MAX_DICT_LENGTH
         data_by_size[too_big].append(item)
 
@@ -290,10 +272,11 @@ def _render_dict_list(data: tuple[HashableDict, ...]) -> RenderableType:
         table.add_row(get_item_list_table(small_items, keys))
 
     if large_items := data_by_size[True]:
-        for idx, item in enumerate(large_items):
-            data = flexitable(item)
-            data.hide_root = True
-            table.add_row(str(idx), border_panel(data))
+        for item in large_items:
+            rend = flexitable(item)
+            if isinstance(rend, Tree):
+                rend.hide_root = True
+            table.add_row(border_panel(rend))
 
     return table
 
@@ -301,7 +284,7 @@ def _render_dict_list(data: tuple[HashableDict, ...]) -> RenderableType:
 @flexitable.register
 @cache
 @debug
-def _dict_list(data: tuple[HashableDict, ...]) -> RenderableType:
+def _dict_list(data: HashableList[HashableDict]) -> RenderableType:
     """Render a list of dictionaries as a rich table or tree structure.
 
     Processes collections of dictionaries, adapting the presentation format based on:
@@ -318,12 +301,15 @@ def _dict_list(data: tuple[HashableDict, ...]) -> RenderableType:
     When dictionaries have inconsistent structures, appropriate formatting decisions
     are made to ensure readability, including grouping similar structures together.
     """
-    data = tuple(filter(None, data))
+    data = HashableList(filter(None, data))
     if not data:
         return ""
 
-    if not all(isinstance(d, HashableDict) for d in data):
+    if not all(isinstance(d, HashableDict) for d in data) or (
+        # no shared keys
+        not reduce(and_, (i.keys() for i in data))
+    ):
         return _handle_mixed_list_items(data)
 
-    data = tuple(prepare_dict(item) for item in data)
+    data = HashableList(prepare_dict(item) for item in data)
     return _render_dict_list(data)
