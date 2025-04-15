@@ -14,11 +14,11 @@ from __future__ import annotations
 
 import logging
 import os
-from collections import defaultdict
 from collections.abc import Iterable
 from contextlib import suppress
 from datetime import datetime, timezone
 from functools import cache, reduce, wraps
+from itertools import groupby
 from operator import and_
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
@@ -164,13 +164,14 @@ def _header(data: Any, header: str) -> RenderableType:
         tree.label = wrap(header, "b")
         return tree
 
-    if (
-        header.endswith(".py") and isinstance(data, str)
-    ) or header in fields.FIELDS_MAP:
+    if header.endswith(".py") and isinstance(data, str):
         return _get_val(data, header)
 
     if isinstance(data, (list, HashableList)):
         return flexitable(data)
+
+    if header in fields.FIELDS_MAP:
+        return _get_val(data, header)
 
     with suppress(AttributeError):
         data = _get_val(data, header)
@@ -242,7 +243,7 @@ def _handle_mixed_list_items(data: HashableList[Any]) -> RenderableType:
     )
 
 
-def get_item_list_table(items: list[HashableDict], keys: Iterable[str]) -> Table:
+def get_item_list_table(items: Iterable[HashableDict], keys: Iterable[str]) -> Table:
     """Add rows for normal sized dictionary items as a sub-table."""
     table = new_table(*keys, show_header=True, box=box.SIMPLE_HEAD, border_style="cyan")
 
@@ -260,23 +261,25 @@ def _render_dict_list(data: HashableList[HashableDict]) -> RenderableType:
     if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
         data = add_count_bars(data, count_key)
 
-    keys = dict.fromkeys(k for k in data[0] if any(i.get(k) for i in data)).keys()
-
-    data_by_size: dict[bool, list[HashableDict]] = defaultdict(list)
-    for item in [HashableDict({k: v for k, v in i.items() if k in keys}) for i in data]:
-        too_big = len(str(item.values())) > MAX_DICT_LENGTH
-        data_by_size[too_big].append(item)
+    keys = dict.fromkeys(
+        k for k in data[0] if any(i.get(k) not in {"", None} for i in data)
+    ).keys()
+    not_null_data = [
+        HashableDict({k: v for k, v in i.items() if k in keys}) for i in data
+    ]
 
     table = new_table()
-    if small_items := data_by_size[False]:
-        table.add_row(get_item_list_table(small_items, keys))
-
-    if large_items := data_by_size[True]:
-        for item in large_items:
-            rend = flexitable(item)
-            if isinstance(rend, Tree):
-                rend.hide_root = True
-            table.add_row(border_panel(rend))
+    for large, items in groupby(
+        not_null_data, lambda i: len(str(i.values())) > MAX_DICT_LENGTH
+    ):
+        if large:
+            for item in items:
+                rend = flexitable(item)
+                if isinstance(rend, Tree):
+                    rend.hide_root = True
+                table.add_row(border_panel(rend))
+        else:
+            table.add_row(get_item_list_table(items, keys))
 
     return table
 

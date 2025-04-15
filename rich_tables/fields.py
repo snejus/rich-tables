@@ -9,6 +9,7 @@ from functools import singledispatch
 from itertools import islice
 from typing import TYPE_CHECKING, Any, Callable
 
+from rich.console import ConsoleRenderable
 from rich.text import Text
 
 from .diff import pretty_diff
@@ -259,6 +260,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "benefits",
         "body",
         "bodyHTML",
+        "comment",
         "creditText",
         "description",
         "Description",
@@ -285,14 +287,14 @@ def _get_val(value: float | str | RenderableType | None, field: str) -> Renderab
     if isinstance(value, str):
         value = format_string(value)
 
+    if isinstance(value, ConsoleRenderable):
+        return value
+
     if field in FIELDS_MAP:
-        with suppress(TypeError):
+        with suppress(Exception):
             return FIELDS_MAP[field](value)
 
-    if isinstance(value, (int, float)):
-        return str(value)
-
-    return value
+    return str(value)
 
 
 @singledispatch

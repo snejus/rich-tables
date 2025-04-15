@@ -41,7 +41,7 @@ class HashableDict(UserDict[str, Any]):
 
 
 class HashableList(UserList[T]):
-    def __hash__(self) -> int:  # type: ignore[override]
+    def __hash__(self) -> int:
         return hash(tuple(self.data))
 
 
@@ -60,6 +60,9 @@ DISPLAY_HEADER: dict[RenderableType, str] = {
     "plays": "[b green]:play_button: [/]",
     "skips": "[b red]:stop_button: [/]",
     "albumtypes": "types",
+    "assignee": ":person_raising_hand:",
+    "priority": "𐊾 ",
+    "link": ":link:",
 }
 
 
