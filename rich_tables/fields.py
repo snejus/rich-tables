@@ -275,7 +275,7 @@ for func, fields in fields_by_func.items():
         FIELDS_MAP[field] = func
 
 
-def _get_val(value: float | str | None, field: str) -> RenderableType:
+def _get_val(value: float | str | RenderableType | None, field: str) -> RenderableType:
     if value is None:
         return "None"
 
@@ -289,10 +289,10 @@ def _get_val(value: float | str | None, field: str) -> RenderableType:
         with suppress(TypeError):
             return FIELDS_MAP[field](value)
 
-    elif isinstance(value, (int, float)):
-        value = str(value)
+    if isinstance(value, (int, float)):
+        return str(value)
 
-    return str(value)
+    return value
 
 
 @singledispatch
