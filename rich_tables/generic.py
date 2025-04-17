@@ -243,9 +243,14 @@ def _handle_mixed_list_items(data: HashableList[Any]) -> RenderableType:
     )
 
 
-def get_item_list_table(items: Iterable[HashableDict], keys: Iterable[str]) -> Table:
+def get_item_list_table(
+    items: Iterable[HashableDict], keys: Iterable[str], **kwargs: Any
+) -> Table:
     """Add rows for normal sized dictionary items as a sub-table."""
-    table = new_table(*keys, show_header=True, box=box.SIMPLE_HEAD, border_style="cyan")
+    kwargs.setdefault("show_lines", True)
+    kwargs.setdefault("border_style", "cyan")
+    kwargs.setdefault("box", box.SIMPLE_HEAD)
+    table = new_table(*keys, **kwargs)
 
     for item in items:
         table.add_dict_row(item, ignore_extra_fields=True, transform=flexitable)
@@ -268,7 +273,7 @@ def _render_dict_list(data: HashableList[HashableDict]) -> RenderableType:
         HashableDict({k: v for k, v in i.items() if k in keys}) for i in data
     ]
 
-    table = new_table()
+    table = new_table(expand=True)
     for large, items in groupby(
         not_null_data, lambda i: len(str(i.values())) > MAX_DICT_LENGTH
     ):
@@ -277,9 +282,9 @@ def _render_dict_list(data: HashableList[HashableDict]) -> RenderableType:
                 rend = flexitable(item)
                 if isinstance(rend, Tree):
                     rend.hide_root = True
-                table.add_row(border_panel(rend))
+                table.add_row(border_panel(rend, expand=True))
         else:
-            table.add_row(get_item_list_table(items, keys))
+            table.add_row(get_item_list_table(items, keys, expand=True))
 
     return table
 
