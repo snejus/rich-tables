@@ -133,7 +133,8 @@ def _draw_data_dict(data: JSONDict | NamedData, **kwargs: Any) -> None:
 
 @draw_data.register(list)
 def _draw_data_list(data: list[JSONDict], **__: Any) -> None:
-    console.print(flexitable(data))
+    if data:
+        console.print(flexitable(data))
 
 
 @contextmanager

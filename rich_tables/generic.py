@@ -236,9 +236,9 @@ def _handle_mixed_list_items(data: HashableList[Any]) -> RenderableType:
     """Handle a list containing mixed item types."""
     return list_table(
         [flexitable(d) for d in data],
-        show_lines=True,
+        show_lines=False,
         border_style="dim",
-        show_edge=True,
+        show_edge=False,
         box=box.DOUBLE,
     )
 
@@ -247,7 +247,7 @@ def get_item_list_table(
     items: Iterable[HashableDict], keys: Iterable[str], **kwargs: Any
 ) -> Table:
     """Add rows for normal sized dictionary items as a sub-table."""
-    kwargs.setdefault("show_lines", True)
+    kwargs.setdefault("show_header", True)
     kwargs.setdefault("border_style", "cyan")
     kwargs.setdefault("box", box.SIMPLE_HEAD)
     table = new_table(*keys, **kwargs)
