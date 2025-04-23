@@ -481,3 +481,10 @@ def sql_syntax(sql_string: str) -> Syntax:
         background_color="black",
         word_wrap=True,
     )
+
+
+def colored_split(items: str | Iterable[str]) -> str:
+    if isinstance(items, str):
+        items = sorted(Pat.SPLIT_PAT.split(items))
+
+    return " ".join(map(format_with_color, items))
