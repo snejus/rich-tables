@@ -483,6 +483,17 @@ def sql_syntax(sql_string: str) -> Syntax:
     )
 
 
+def colored_with_bg(items: str | Iterable[str]) -> str:
+    if isinstance(items, str):
+        items = sorted(Pat.SPLIT_PAT.split(items))
+
+    sep = wrap("a", "#000000 on #000000")
+    return " ".join(
+        sep + wrap(item, f"bold {predictably_random_color(item)} on #000000") + sep
+        for item in items
+    )
+
+
 def colored_split(items: str | Iterable[str]) -> str:
     if isinstance(items, str):
         items = sorted(Pat.SPLIT_PAT.split(items))
