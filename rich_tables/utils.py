@@ -459,7 +459,7 @@ def human_dt(timestamp: str | float) -> str:
 
 def syntax(*args: Any, **kwargs: Any) -> Syntax:
     kwargs.setdefault("theme", "nord")
-    kwargs.setdefault("background_color", "black")
+    kwargs.setdefault("background_color", "default")
     kwargs.setdefault("word_wrap", True)
     return Syntax(*args, **kwargs)
 
@@ -467,7 +467,7 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 def sql_syntax(sql_string: str) -> Syntax:
     import sqlparse
 
-    return Syntax(
+    return syntax(
         sqlparse.format(
             sql_string,
             indent_columns=True,
@@ -477,9 +477,6 @@ def sql_syntax(sql_string: str) -> Syntax:
             reindent_aligned=False,
         ),
         "sql",
-        theme="gruvbox-dark",
-        background_color="black",
-        word_wrap=True,
     )
 
 
