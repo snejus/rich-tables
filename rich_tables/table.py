@@ -5,7 +5,7 @@ import argparse
 import json
 import sys
 import tempfile
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
@@ -156,7 +156,7 @@ def main() -> None:
 
     with handle_save(args.save):
         if args.command == "diff":
-            console.print(pretty_diff(args.before, args.after), markup=True)
+            console.print(pretty_diff(args.before, args.after), highlight=False)
         else:
             data = load_data("/dev/stdin")
             if args.json:
