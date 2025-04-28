@@ -118,7 +118,7 @@ TABLE_BY_NAME: dict[str, Callable[..., Any]] = {
 @singledispatch
 def draw_data(data: Any, **kwargs: Any) -> Iterator[RenderableType]:
     """Render the provided data."""
-    yield data
+    console.print(data)
 
 
 @draw_data.register(dict)
