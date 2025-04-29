@@ -5,7 +5,7 @@ import argparse
 import json
 import sys
 import tempfile
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable

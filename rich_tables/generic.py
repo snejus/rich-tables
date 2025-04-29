@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from functools import cache, reduce, wraps
 from itertools import groupby
 from operator import and_
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union
 
 from multimethod import multidispatch
 from rich import box
@@ -37,7 +37,7 @@ from .utils import (
     HashableDict,
     HashableList,
     border_panel,
-    format_with_color,
+    format_string,
     list_table,
     make_console,
     new_table,
@@ -128,14 +128,14 @@ def prepare_dict(item: HashableDict) -> HashableDict:
 @cache
 @debug
 def flexitable(data: Any) -> RenderableType:
-    return str(data)
+    return data
 
 
 @flexitable.register
 @cache
 @debug
-def _number(data: float) -> RenderableType:
-    return str(data)
+def _rend(data: Union[str, float]) -> RenderableType:
+    return format_string(str(data))
 
 
 @flexitable.register
@@ -179,25 +179,10 @@ def _header(data: Any, header: str) -> RenderableType:
     if not isinstance(data, str):
         return flexitable(data)
 
-    return data
+    return str(data)
 
 
 @flexitable.register
-@cache
-@debug
-def _renderable(data: ConsoleRenderable) -> RenderableType:
-    return data
-
-
-@flexitable.register
-@cache
-@debug
-def _str(data: str) -> RenderableType:
-    return data
-
-
-@flexitable.register
-@cache
 @debug
 def _json_dict(data: HashableDict) -> Tree:
     data = prepare_dict(data)
@@ -222,13 +207,36 @@ def _json_dict(data: HashableDict) -> Tree:
 @cache
 @debug
 def _str_list(data: HashableList[str]) -> RenderableType:
-    return format_with_color(data)
+    if not data:
+        return ""
+    return Columns(list(map(flexitable, data)))
 
 
 @flexitable.register
 @cache
 @debug
-def _int_list(data: HashableList[int]) -> Columns:
+def _list_list(data: HashableList[HashableList]) -> RenderableType:
+    if not data:
+        return ""
+
+    return border_panel(
+        new_table(
+            rows=[[flexitable(i) for i in d] for d in data],
+            box=box.HORIZONTALS,
+            show_lines=True,
+            pad_edge=True,
+            border_style="dim cyan",
+        ),
+        border_style="dim cyan",
+    )
+
+
+@flexitable.register
+@cache
+@debug
+def _int_list(data: HashableList[int]) -> RenderableType:
+    if not data:
+        return ""
     return Columns(str(x) for x in data)
 
 
@@ -267,7 +275,7 @@ def _render_dict_list(data: HashableList[HashableDict]) -> RenderableType:
         data = add_count_bars(data, count_key)
 
     keys = dict.fromkeys(
-        k for k in data[0] if any(i.get(k) not in {"", None} for i in data)
+        k for k in data[0] if any(((v := i.get(k)) or v == 0) for i in data)
     ).keys()
     not_null_data = [
         HashableDict({k: v for k, v in i.items() if k in keys}) for i in data

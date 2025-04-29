@@ -145,9 +145,6 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     hidden=lambda x: ":shit: " if x == 1 else "",
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
-    comments=lambda x: md_panel(
-        x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
-    ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
     duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
     plays=lambda x: wrap(x, BOLD_GREEN),
@@ -261,6 +258,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "body",
         "bodyHTML",
         "comment",
+        "comments",
         "creditText",
         "description",
         "Description",

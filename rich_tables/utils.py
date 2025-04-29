@@ -35,7 +35,7 @@ JSONDict = dict[str, Any]
 T = TypeVar("T")
 
 
-class HashableDict(UserDict[str, Any]):
+class HashableDict(UserDict[str, T]):
     def __hash__(self) -> int:
         return hash(tuple(self.data.items()))
 
@@ -70,7 +70,7 @@ class Pat:
     SPLIT_PAT = re.compile(r"[;,] ?")
     PRED_COLOR_PAT = re.compile(r"(pred color)\](.*?)(?=\[/)")
     HTML_PARAGRAPH = re.compile(r"</?p>")
-    OPENING_BRACKET = re.compile(r"(?<!^)\[(?!/)")
+    OPENING_BRACKET = re.compile(r"\[(?!/)")
 
 
 _T_contra = TypeVar("_T_contra", contravariant=True)
@@ -95,7 +95,7 @@ def format_string(text: str) -> str:
         text = Pat.OPENING_BRACKET.sub(r"\[", text)
 
     if "pred color]" in text:
-        return Pat.PRED_COLOR_PAT.sub(fmt_pred_color, text)
+        text = Pat.PRED_COLOR_PAT.sub(fmt_pred_color, text)
 
     return text
 
@@ -228,8 +228,8 @@ def new_table(
     kwargs.setdefault("row_styles", ["white"])
     kwargs.setdefault("expand", False)
     kwargs.setdefault("title_justify", "left")
-    kwargs.setdefault("style", "black")
-    kwargs.setdefault("border_style", "black")
+    kwargs.setdefault("style", "default")
+    kwargs.setdefault("border_style", "default")
     kwargs.setdefault("overflow", "fold")
 
     table = NewTable(*headers, **kwargs)
@@ -369,7 +369,7 @@ def progress_bar(
     if end is None:
         end = size
         size = width
-        bgcolor = "black"
+        bgcolor = "default"
     else:
         bgcolor = "#252c3a"
     ratio = end / size if size else 1
@@ -421,7 +421,8 @@ def get_colors_and_periods() -> list[tuple[Color, int, int]]:
                 (24, 60 * 60),  # hours
                 (31, 24 * 60 * 60),  # days
                 (12, 31 * 24 * 60 * 60),  # months
-                (365, 12 * 30 * 24 * 60 * 60),  # years
+                (2, 12 * 30 * 24 * 60 * 60),  # years
+                (5, 12 * 30 * 24 * 60 * 60),  # years
             ],
         )
     ]

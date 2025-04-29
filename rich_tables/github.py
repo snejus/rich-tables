@@ -9,7 +9,6 @@ from itertools import islice
 from typing import TYPE_CHECKING, Any, Callable, Protocol
 
 from rich import box
-from rich.syntax import Syntax
 from typing_extensions import Literal, TypedDict
 
 from .fields import FIELDS_MAP, get_val
@@ -26,6 +25,7 @@ from .utils import (
     predictably_random_color,
     simple_panel,
     sortgroup_by,
+    syntax,
     timestamp2datetime,
     wrap,
 )
@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 
     from rich.console import ConsoleRenderable, RenderableType
     from rich.panel import Panel
+    from rich.syntax import Syntax
     from rich.table import Table
 
 SECONDS_PER_DAY = 86400
@@ -264,9 +265,7 @@ class ReviewComment(Comment):
 
     @property
     def diff(self) -> Syntax:
-        return Syntax(
-            self.diffHunk, "diff", theme="paraiso-dark", background_color="black"
-        )
+        return syntax(self.diffHunk, "diff")
 
     @property
     def review_id(self) -> str:
