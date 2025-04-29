@@ -149,9 +149,9 @@ def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
     keys = dict.fromkeys((*before, *after))
     for key in keys:
         if key not in before:
-            data[wrap(key, BOLD_GREEN)] = wrap(diff_serialize(after[key]), BOLD_GREEN)
+            data[format_new(key)] = format_new(diff_serialize(after[key]))
         elif key not in after:
-            data[wrap(key, BOLD_RED)] = wrap(diff_serialize(before[key]), BOLD_RED)
+            data[format_old(key)] = format_old(diff_serialize(before[key]))
         else:
             data[key] = diff(before[key], after[key])
 
@@ -168,8 +168,10 @@ def pretty_diff(before: Any, after: Any) -> str:
     if isinstance(result, str):
         return result
 
+    from pprint import pformat
+
     return (
-        json.dumps(result, indent=2, ensure_ascii=False)
+        pformat(result, indent=2, compact=True, sort_dicts=False)
         .replace("'", "")
         .replace('"', "")
         .replace("\\", "")

@@ -9,6 +9,7 @@ from functools import singledispatch
 from itertools import islice
 from typing import TYPE_CHECKING, Any, Callable
 
+from rich.console import ConsoleRenderable
 from rich.text import Text
 
 from .diff import pretty_diff
@@ -144,9 +145,6 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     hidden=lambda x: ":shit: " if x == 1 else "",
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
-    comments=lambda x: md_panel(
-        x.replace("\n0", "\n* 0").replace("\n[", "\n* ["), title="comments"
-    ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
     duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
     plays=lambda x: wrap(x, BOLD_GREEN),
@@ -259,6 +257,8 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "benefits",
         "body",
         "bodyHTML",
+        "comment",
+        "comments",
         "creditText",
         "description",
         "Description",
@@ -285,14 +285,14 @@ def _get_val(value: float | str | RenderableType | None, field: str) -> Renderab
     if isinstance(value, str):
         value = format_string(value)
 
+    if isinstance(value, ConsoleRenderable):
+        return value
+
     if field in FIELDS_MAP:
-        with suppress(TypeError):
+        with suppress(Exception):
             return FIELDS_MAP[field](value)
 
-    if isinstance(value, (int, float)):
-        return str(value)
-
-    return value
+    return str(value)
 
 
 @singledispatch

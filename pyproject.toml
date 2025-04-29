@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rich-tables"
-version = "0.7.3"
+version = "0.7.4"
 description = "Ready-made rich tables for various purposes"
 authors = ["Šarūnas Nejus <snejus@pm.me>"]
 readme = "README.md"

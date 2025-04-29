@@ -35,13 +35,13 @@ JSONDict = dict[str, Any]
 T = TypeVar("T")
 
 
-class HashableDict(UserDict[str, Any]):
+class HashableDict(UserDict[str, T]):
     def __hash__(self) -> int:
         return hash(tuple(self.data.items()))
 
 
 class HashableList(UserList[T]):
-    def __hash__(self) -> int:  # type: ignore[override]
+    def __hash__(self) -> int:
         return hash(tuple(self.data))
 
 
@@ -60,6 +60,9 @@ DISPLAY_HEADER: dict[RenderableType, str] = {
     "plays": "[b green]:play_button: [/]",
     "skips": "[b red]:stop_button: [/]",
     "albumtypes": "types",
+    "assignee": ":person_raising_hand:",
+    "priority": "𐊾 ",
+    "link": ":link:",
 }
 
 
@@ -67,7 +70,7 @@ class Pat:
     SPLIT_PAT = re.compile(r"[;,] ?")
     PRED_COLOR_PAT = re.compile(r"(pred color)\](.*?)(?=\[/)")
     HTML_PARAGRAPH = re.compile(r"</?p>")
-    OPENING_BRACKET = re.compile(r"(?<!^)\[(?!/)")
+    OPENING_BRACKET = re.compile(r"\[(?!/)")
 
 
 _T_contra = TypeVar("_T_contra", contravariant=True)
@@ -92,7 +95,7 @@ def format_string(text: str) -> str:
         text = Pat.OPENING_BRACKET.sub(r"\[", text)
 
     if "pred color]" in text:
-        return Pat.PRED_COLOR_PAT.sub(fmt_pred_color, text)
+        text = Pat.PRED_COLOR_PAT.sub(fmt_pred_color, text)
 
     return text
 
@@ -225,8 +228,8 @@ def new_table(
     kwargs.setdefault("row_styles", ["white"])
     kwargs.setdefault("expand", False)
     kwargs.setdefault("title_justify", "left")
-    kwargs.setdefault("style", "black")
-    kwargs.setdefault("border_style", "black")
+    kwargs.setdefault("style", "default")
+    kwargs.setdefault("border_style", "default")
     kwargs.setdefault("overflow", "fold")
 
     table = NewTable(*headers, **kwargs)
@@ -366,7 +369,7 @@ def progress_bar(
     if end is None:
         end = size
         size = width
-        bgcolor = "black"
+        bgcolor = "default"
     else:
         bgcolor = "#252c3a"
     ratio = end / size if size else 1
@@ -418,7 +421,8 @@ def get_colors_and_periods() -> list[tuple[Color, int, int]]:
                 (24, 60 * 60),  # hours
                 (31, 24 * 60 * 60),  # days
                 (12, 31 * 24 * 60 * 60),  # months
-                (365, 12 * 30 * 24 * 60 * 60),  # years
+                (2, 12 * 30 * 24 * 60 * 60),  # years
+                (5, 12 * 30 * 24 * 60 * 60),  # years
             ],
         )
     ]
@@ -456,7 +460,7 @@ def human_dt(timestamp: str | float) -> str:
 
 def syntax(*args: Any, **kwargs: Any) -> Syntax:
     kwargs.setdefault("theme", "nord")
-    kwargs.setdefault("background_color", "black")
+    kwargs.setdefault("background_color", "default")
     kwargs.setdefault("word_wrap", True)
     return Syntax(*args, **kwargs)
 
@@ -464,7 +468,7 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 def sql_syntax(sql_string: str) -> Syntax:
     import sqlparse
 
-    return Syntax(
+    return syntax(
         sqlparse.format(
             sql_string,
             indent_columns=True,
@@ -474,7 +478,22 @@ def sql_syntax(sql_string: str) -> Syntax:
             reindent_aligned=False,
         ),
         "sql",
-        theme="gruvbox-dark",
-        background_color="black",
-        word_wrap=True,
     )
+
+
+def colored_with_bg(items: str | Iterable[str]) -> str:
+    if isinstance(items, str):
+        items = sorted(Pat.SPLIT_PAT.split(items))
+
+    sep = wrap("a", "#000000 on #000000")
+    return " ".join(
+        sep + wrap(item, f"bold {predictably_random_color(item)} on #000000") + sep
+        for item in items
+    )
+
+
+def colored_split(items: str | Iterable[str]) -> str:
+    if isinstance(items, str):
+        items = sorted(Pat.SPLIT_PAT.split(items))
+
+    return " ".join(map(format_with_color, items))

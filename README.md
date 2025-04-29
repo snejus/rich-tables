@@ -95,6 +95,10 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/music_list.svg)
 
+### Nested arrays
+
+![image](svgs/nested_arrays.svg)
+
 ### Nested JSON
 
 ![image](svgs/nested_json.svg)

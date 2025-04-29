@@ -14,13 +14,13 @@ from __future__ import annotations
 
 import logging
 import os
-from collections import defaultdict
 from collections.abc import Iterable
 from contextlib import suppress
 from datetime import datetime, timezone
 from functools import cache, reduce, wraps
+from itertools import groupby
 from operator import and_
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union
 
 from multimethod import multidispatch
 from rich import box
@@ -37,7 +37,7 @@ from .utils import (
     HashableDict,
     HashableList,
     border_panel,
-    format_with_color,
+    format_string,
     list_table,
     make_console,
     new_table,
@@ -128,14 +128,14 @@ def prepare_dict(item: HashableDict) -> HashableDict:
 @cache
 @debug
 def flexitable(data: Any) -> RenderableType:
-    return str(data)
+    return data
 
 
 @flexitable.register
 @cache
 @debug
-def _number(data: float) -> RenderableType:
-    return str(data)
+def _rend(data: Union[str, float]) -> RenderableType:
+    return format_string(str(data))
 
 
 @flexitable.register
@@ -164,13 +164,14 @@ def _header(data: Any, header: str) -> RenderableType:
         tree.label = wrap(header, "b")
         return tree
 
-    if (
-        header.endswith(".py") and isinstance(data, str)
-    ) or header in fields.FIELDS_MAP:
+    if header.endswith(".py") and isinstance(data, str):
         return _get_val(data, header)
 
     if isinstance(data, (list, HashableList)):
         return flexitable(data)
+
+    if header in fields.FIELDS_MAP:
+        return _get_val(data, header)
 
     with suppress(AttributeError):
         data = _get_val(data, header)
@@ -178,25 +179,10 @@ def _header(data: Any, header: str) -> RenderableType:
     if not isinstance(data, str):
         return flexitable(data)
 
-    return data
+    return str(data)
 
 
 @flexitable.register
-@cache
-@debug
-def _renderable(data: ConsoleRenderable) -> RenderableType:
-    return data
-
-
-@flexitable.register
-@cache
-@debug
-def _str(data: str) -> RenderableType:
-    return data
-
-
-@flexitable.register
-@cache
 @debug
 def _json_dict(data: HashableDict) -> Tree:
     data = prepare_dict(data)
@@ -221,13 +207,36 @@ def _json_dict(data: HashableDict) -> Tree:
 @cache
 @debug
 def _str_list(data: HashableList[str]) -> RenderableType:
-    return format_with_color(data)
+    if not data:
+        return ""
+    return Columns(list(map(flexitable, data)))
 
 
 @flexitable.register
 @cache
 @debug
-def _int_list(data: HashableList[int]) -> Columns:
+def _list_list(data: HashableList[HashableList]) -> RenderableType:
+    if not data:
+        return ""
+
+    return border_panel(
+        new_table(
+            rows=[[flexitable(i) for i in d] for d in data],
+            box=box.HORIZONTALS,
+            show_lines=True,
+            pad_edge=True,
+            border_style="dim cyan",
+        ),
+        border_style="dim cyan",
+    )
+
+
+@flexitable.register
+@cache
+@debug
+def _int_list(data: HashableList[int]) -> RenderableType:
+    if not data:
+        return ""
     return Columns(str(x) for x in data)
 
 
@@ -235,16 +244,21 @@ def _handle_mixed_list_items(data: HashableList[Any]) -> RenderableType:
     """Handle a list containing mixed item types."""
     return list_table(
         [flexitable(d) for d in data],
-        show_lines=True,
+        show_lines=False,
         border_style="dim",
-        show_edge=True,
+        show_edge=False,
         box=box.DOUBLE,
     )
 
 
-def get_item_list_table(items: list[HashableDict], keys: Iterable[str]) -> Table:
+def get_item_list_table(
+    items: Iterable[HashableDict], keys: Iterable[str], **kwargs: Any
+) -> Table:
     """Add rows for normal sized dictionary items as a sub-table."""
-    table = new_table(*keys, show_header=True, box=box.SIMPLE_HEAD, border_style="cyan")
+    kwargs.setdefault("show_header", True)
+    kwargs.setdefault("border_style", "cyan")
+    kwargs.setdefault("box", box.SIMPLE_HEAD)
+    table = new_table(*keys, **kwargs)
 
     for item in items:
         table.add_dict_row(item, ignore_extra_fields=True, transform=flexitable)
@@ -260,23 +274,25 @@ def _render_dict_list(data: HashableList[HashableDict]) -> RenderableType:
     if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
         data = add_count_bars(data, count_key)
 
-    keys = dict.fromkeys(k for k in data[0] if any(i.get(k) for i in data)).keys()
+    keys = dict.fromkeys(
+        k for k in data[0] if any(((v := i.get(k)) or v == 0) for i in data)
+    ).keys()
+    not_null_data = [
+        HashableDict({k: v for k, v in i.items() if k in keys}) for i in data
+    ]
 
-    data_by_size: dict[bool, list[HashableDict]] = defaultdict(list)
-    for item in [HashableDict({k: v for k, v in i.items() if k in keys}) for i in data]:
-        too_big = len(str(item.values())) > MAX_DICT_LENGTH
-        data_by_size[too_big].append(item)
-
-    table = new_table()
-    if small_items := data_by_size[False]:
-        table.add_row(get_item_list_table(small_items, keys))
-
-    if large_items := data_by_size[True]:
-        for item in large_items:
-            rend = flexitable(item)
-            if isinstance(rend, Tree):
-                rend.hide_root = True
-            table.add_row(border_panel(rend))
+    table = new_table(expand=True)
+    for large, items in groupby(
+        not_null_data, lambda i: len(str(i.values())) > MAX_DICT_LENGTH
+    ):
+        if large:
+            for item in items:
+                rend = flexitable(item)
+                if isinstance(rend, Tree):
+                    rend.hide_root = True
+                table.add_row(border_panel(rend, expand=True))
+        else:
+            table.add_row(get_item_list_table(items, keys, expand=True))
 
     return table
 

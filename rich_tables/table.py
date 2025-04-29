@@ -118,7 +118,7 @@ TABLE_BY_NAME: dict[str, Callable[..., Any]] = {
 @singledispatch
 def draw_data(data: Any, **kwargs: Any) -> Iterator[RenderableType]:
     """Render the provided data."""
-    yield data
+    console.print(data)
 
 
 @draw_data.register(dict)
@@ -133,7 +133,8 @@ def _draw_data_dict(data: JSONDict | NamedData, **kwargs: Any) -> None:
 
 @draw_data.register(list)
 def _draw_data_list(data: list[JSONDict], **__: Any) -> None:
-    console.print(flexitable(data))
+    if data:
+        console.print(flexitable(data))
 
 
 @contextmanager
@@ -155,7 +156,7 @@ def main() -> None:
 
     with handle_save(args.save):
         if args.command == "diff":
-            console.print(pretty_diff(args.before, args.after), markup=True)
+            console.print(pretty_diff(args.before, args.after), highlight=False)
         else:
             data = load_data("/dev/stdin")
             if args.json:
