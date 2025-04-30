@@ -171,7 +171,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     diffHunk=lambda x: syntax(x, "diff"),
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
-    sql=lambda x: border_panel(sql_syntax(x.replace(r"\[", "["))),
+    sql=lambda x: sql_syntax("---\n\n" + x.replace(r"\[", "[")),
     slug=format_with_color_on_black,
 )
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {

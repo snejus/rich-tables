@@ -220,8 +220,8 @@ def _list_list(data: HashableList[HashableList]) -> RenderableType:
         return ""
 
     return border_panel(
-        new_table(
-            rows=[[flexitable(i) for i in d] for d in data],
+        list_table(
+            map(flexitable, data),
             box=box.HORIZONTALS,
             show_lines=True,
             pad_edge=True,
