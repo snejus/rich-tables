@@ -322,7 +322,7 @@ def simple_panel(
 
 
 def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    kwargs.setdefault("box", box.ROUNDED)
+    kwargs.setdefault("box", box.SQUARE)
     kwargs.setdefault("border_style", "dim")
     return simple_panel(content, **kwargs)
 
