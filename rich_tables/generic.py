@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union
 from multimethod import multidispatch
 from rich import box
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, RenderableType  # noqa: TC002
+from rich.console import RenderableType
 from rich.logging import RichHandler
 from rich.text import Text
 from rich.tree import Tree
@@ -162,7 +162,7 @@ def _header(data: Any, header: str) -> RenderableType:
     if isinstance(data, HashableDict):
         tree = _json_dict(data)
         tree.label = wrap(header, "b")
-        return tree
+        return border_panel(tree)
 
     if header.endswith(".py") and isinstance(data, str):
         return _get_val(data, header)
