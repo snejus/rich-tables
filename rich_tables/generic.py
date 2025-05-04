@@ -14,8 +14,9 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 from collections.abc import Iterable
-from contextlib import suppress
+from contextlib import nullcontext, suppress
 from datetime import datetime, timezone
 from functools import cache, reduce, wraps
 from itertools import groupby
@@ -25,7 +26,7 @@ from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union
 from multimethod import multidispatch
 from rich import box
 from rich.columns import Columns
-from rich.console import RenderableType
+from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
 from rich.text import Text
 from rich.tree import Tree
@@ -77,6 +78,12 @@ if not log.handlers:
     if os.getenv("DEBUG"):
         log.setLevel("DEBUG")
 
+        import snoop
+
+        snooper = snoop
+    else:
+        snooper = nullcontext
+
 
 class DebugLogger:
     def __init__(self) -> None:
@@ -94,14 +101,15 @@ class DebugLogger:
                         f"Header: \033[1;35m{header[0]}\033[0m " if header else "",
                         f"Data: \033[1m{data}\033[0m" if data else "",
                     ]
-                )
+                ),
+                file=sys.stderr,
             )
             self.indent += "│ "
 
     def undebug(self, _type: type) -> None:
         self.indent = self.indent[:-2]
         if log.isEnabledFor(10):
-            print(f"{self.indent}└─ " + f"Returning {_type}")
+            print(f"{self.indent}└─ " + f"Returning {_type}", file=sys.stderr)
 
 
 _debug_logger = DebugLogger()
@@ -128,6 +136,13 @@ def prepare_dict(item: HashableDict) -> HashableDict:
 @cache
 @debug
 def flexitable(data: Any) -> RenderableType:
+    return str(data)
+
+
+@flexitable.register
+@cache
+@debug
+def flexitable(data: ConsoleRenderable) -> RenderableType:
     return data
 
 
@@ -156,30 +171,23 @@ def _dict(data: dict[str, Any]) -> RenderableType:
 @cache
 @debug
 def _header(data: Any, header: str) -> RenderableType:
-    if not data and isinstance(data, Iterable):
-        return ""
+    with snooper():
+        if not data and isinstance(data, Iterable):
+            return ""
 
-    if isinstance(data, HashableDict):
-        tree = _json_dict(data)
-        tree.label = wrap(header, "b")
-        return border_panel(tree)
+        if isinstance(data, HashableDict):
+            tree = _json_dict(data)
+            tree.label = wrap(header, "b")
+            return border_panel(tree)
 
-    if header.endswith(".py") and isinstance(data, str):
-        return _get_val(data, header)
+        if header.endswith(".py") and isinstance(data, str):
+            return _get_val(data, header)
 
-    if isinstance(data, (list, HashableList)):
+        if header in fields.FIELDS_MAP:
+            with suppress(AttributeError):
+                return _get_val(data, header)
+
         return flexitable(data)
-
-    if header in fields.FIELDS_MAP:
-        return _get_val(data, header)
-
-    with suppress(AttributeError):
-        data = _get_val(data, header)
-
-    if not isinstance(data, str):
-        return flexitable(data)
-
-    return str(data)
 
 
 @flexitable.register
