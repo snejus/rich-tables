@@ -124,18 +124,8 @@ def diff_serialize(value: Any) -> str:
 
 
 @multimethod
-def diff(before: str, after: str) -> str:
-    """Generate a formatted diff between two objects.
-
-    Base implementation for strings. Extended via multimethod
-    for lists, dictionaries and generic objects.
-    """
-    return make_difftext(before, after)
-
-
-@diff.register
-def _(before: Any, after: Any) -> Any:
-    return diff(diff_serialize(before), diff_serialize(after))
+def diff(before: Any, after: Any) -> Any:
+    return make_difftext(diff_serialize(before), diff_serialize(after))
 
 
 @diff.register
