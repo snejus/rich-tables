@@ -38,6 +38,7 @@ from .utils import (
     HashableDict,
     HashableList,
     border_panel,
+    colored_with_bg,
     format_string,
     list_table,
     make_console,
@@ -217,7 +218,7 @@ def _json_dict(data: HashableDict) -> Tree:
 def _str_list(data: HashableList[str]) -> RenderableType:
     if not data:
         return ""
-    return Columns(list(map(flexitable, data)))
+    return ", ".join(data)
 
 
 @flexitable.register
