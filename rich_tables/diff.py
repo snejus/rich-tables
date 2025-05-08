@@ -124,7 +124,7 @@ def diff_serialize(value: Any) -> str:
 
 
 @multimethod
-def diff(before: str, after: str) -> str:
+def diff(before: Any, after: Any) -> str:
     """Generate a formatted diff between two objects.
 
     Base implementation for strings. Extended via multimethod
@@ -134,8 +134,8 @@ def diff(before: str, after: str) -> str:
 
 
 @diff.register
-def _(before: Any, after: Any) -> Any:
-    return diff(diff_serialize(before), diff_serialize(after))
+def diff(before: Any, after: Any) -> Any:
+    return make_difftext(diff_serialize(before), diff_serialize(after))
 
 
 @diff.register
@@ -171,7 +171,7 @@ def pretty_diff(before: Any, after: Any) -> str:
     from pprint import pformat
 
     return (
-        pformat(result, indent=2, compact=True, sort_dicts=False)
+        json.dumps(result, indent=2)
         .replace("'", "")
         .replace('"', "")
         .replace("\\", "")
