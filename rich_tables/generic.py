@@ -38,7 +38,6 @@ from .utils import (
     HashableDict,
     HashableList,
     border_panel,
-    colored_with_bg,
     format_string,
     list_table,
     make_console,
@@ -197,7 +196,7 @@ def _json_dict(data: HashableDict) -> Tree:
     data = prepare_dict(data)
     tree = new_tree()
     for key, value in data.items():
-        renderable = flexitable(value or "", key)
+        renderable = flexitable(value, key)
         header = wrap(key, "b")
 
         if isinstance(renderable, str):
@@ -270,7 +269,7 @@ def get_item_list_table(
     table = new_table(*keys, **kwargs)
 
     for item in items:
-        table.add_dict_row(item, ignore_extra_fields=True, transform=flexitable)
+        table.add_dict_row(item, transform=flexitable)
 
     for column in table.columns:
         column.header_style = predictably_random_color(str(column.header))
@@ -283,8 +282,12 @@ def _render_dict_list(data: HashableList[HashableDict]) -> RenderableType:
     if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
         data = add_count_bars(data, count_key)
 
+    all_keys: dict[str, None] = {}
+    for item in data:
+        all_keys.update(dict.fromkeys(item))
+
     keys = dict.fromkeys(
-        k for k in data[0] if any(((v := i.get(k)) or v == 0) for i in data)
+        k for k in all_keys if any((i.get(k) not in {"", None}) for i in data)
     ).keys()
     not_null_data = [
         HashableDict({k: v for k, v in i.items() if k in keys}) for i in data
