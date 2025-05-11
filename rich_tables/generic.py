@@ -267,7 +267,7 @@ def _json_dict(data: HashableDict) -> Tree:
 def _str_list(data: HashableList[str]) -> RenderableType:
     if not data:
         return ""
-    return ", ".join(data)
+    return " ".join(map(flexitable, data))
 
 
 @flexitable.register
