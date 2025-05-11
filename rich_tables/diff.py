@@ -6,16 +6,25 @@ It supports diffing strings, lists, dictionaries, and other objects
 with specialized formatting for each type.
 """
 
-import json
+from __future__ import annotations
+
 import re
 from difflib import SequenceMatcher
 from functools import partial
 from itertools import starmap, zip_longest
-from typing import Any, Hashable, Literal
+from typing import Any, Literal
 
 from multimethod import multimethod
 
-from .utils import BOLD_GREEN, BOLD_RED, HashableDict, HashableList, wrap
+from .utils import (
+    BOLD_GREEN,
+    BOLD_RED,
+    HashableDict,
+    HashableList,
+    console,
+    to_hashable,
+    wrap,
+)
 
 MIN_EQUAL_LENGTH = 5
 
@@ -96,26 +105,6 @@ def make_difftext(before: str, after: str) -> str:
     )
 
 
-@multimethod
-def to_hashable(value: Any) -> Any:
-    """Convert potentially unhashable objects to hashable equivalents.
-
-    Base implementation for primitive hashable types.
-    Extended via multimethod for lists and dictionaries.
-    """
-    return value
-
-
-@to_hashable.register
-def _(value: list[Any]) -> Hashable:
-    return HashableList([to_hashable(v) for v in value])
-
-
-@to_hashable.register
-def _(value: dict[str, Any]) -> Hashable:
-    return HashableDict({k: to_hashable(v) for k, v in value.items()})
-
-
 def diff_serialize(value: Any) -> str:
     """Convert a value to its string representation for diffing."""
     if value is None:
@@ -168,11 +157,8 @@ def pretty_diff(before: Any, after: Any) -> str:
     if isinstance(result, str):
         return result
 
-    from pprint import pformat
-
     return (
-        # pformat(result, indent=2, compact=True, sort_dicts=False)
-        json.dumps(result, indent=2)
+        console.capture_text(result, width=100, highlight=False)
         .replace("'", "")
         .replace('"', "")
         .replace("\\", "")

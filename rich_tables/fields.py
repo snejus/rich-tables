@@ -111,12 +111,9 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         else x
     ),
     labels=lambda x: (
-        wrap(
-            "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x),
-            "b",
-        )
+        wrap(" ".join(wrap(y["name"], f"#{y['color']}") for y in x), "b")
         if isinstance(x, (list, HashableList, tuple))
-        else format_with_color(x.upper())
+        else format_with_color(x)
         if isinstance(x, str)
         else x
     ),
