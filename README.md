@@ -71,6 +71,10 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/albums.svg)
 
+### Aligned object arrays
+
+![image](svgs/aligned_object_arrays.svg)
+
 ### Calendar
 
 ![image](svgs/calendar.svg)

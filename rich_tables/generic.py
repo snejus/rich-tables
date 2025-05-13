@@ -14,8 +14,10 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
+from collections import defaultdict
 from collections.abc import Iterable
-from contextlib import suppress
+from contextlib import nullcontext, suppress
 from datetime import datetime, timezone
 from functools import cache, reduce, wraps
 from itertools import groupby
@@ -25,33 +27,35 @@ from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union
 from multimethod import multidispatch
 from rich import box
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, RenderableType  # noqa: TC002
+from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
+from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
 
 from . import fields
-from .diff import to_hashable
 from .fields import MATCH_COUNT_HEADER, _get_val, add_count_bars
 from .utils import (
     HashableDict,
     HashableList,
+    NewTable,
     border_panel,
+    console,
     format_string,
     list_table,
-    make_console,
     new_table,
     new_tree,
     predictably_random_color,
+    to_hashable,
     wrap,
 )
 
 if TYPE_CHECKING:
-    from rich.table import Table
+    from rich.table import Column
 
 
+R = TypeVar("R", bound=RenderableType)
 T = TypeVar("T")
-console = make_console()
 
 MAX_DICT_LENGTH = int(os.getenv("TABLE_MAX_DICT_LENGTH") or 500)
 
@@ -77,6 +81,12 @@ if not log.handlers:
     if os.getenv("DEBUG"):
         log.setLevel("DEBUG")
 
+        import snoop
+
+        snooper = snoop
+    else:
+        snooper = nullcontext
+
 
 class DebugLogger:
     def __init__(self) -> None:
@@ -92,16 +102,17 @@ class DebugLogger:
                         f"Function \033[1;31m{_func.__name__}\033[0m",
                         f"Types: \033[1;33m{list(_func.__annotations__.values())[:-1]}\033[0m",  # noqa: E501
                         f"Header: \033[1;35m{header[0]}\033[0m " if header else "",
-                        f"Data: \033[1m{data}\033[0m" if data else "",
+                        f"Data: \033[1m{data}\033[0m" if data else "",  # ]]]]]
                     ]
-                )
+                ),
+                file=sys.stderr,
             )
             self.indent += "│ "
 
     def undebug(self, _type: type) -> None:
         self.indent = self.indent[:-2]
         if log.isEnabledFor(10):
-            print(f"{self.indent}└─ " + f"Returning {_type}")
+            print(f"{self.indent}└─ " + f"Returning {_type}", file=sys.stderr)
 
 
 _debug_logger = DebugLogger()
@@ -128,13 +139,20 @@ def prepare_dict(item: HashableDict) -> HashableDict:
 @cache
 @debug
 def flexitable(data: Any) -> RenderableType:
+    return str(data)
+
+
+@flexitable.register
+@cache
+@debug
+def _rend(data: ConsoleRenderable) -> RenderableType:
     return data
 
 
 @flexitable.register
 @cache
 @debug
-def _rend(data: Union[str, float]) -> RenderableType:
+def _num(data: Union[str, float]) -> RenderableType:
     return format_string(str(data))
 
 
@@ -156,30 +174,70 @@ def _dict(data: dict[str, Any]) -> RenderableType:
 @cache
 @debug
 def _header(data: Any, header: str) -> RenderableType:
-    if not data and isinstance(data, Iterable):
-        return ""
+    with snooper():
+        if not data and isinstance(data, Iterable):
+            return ""
 
-    if isinstance(data, HashableDict):
-        tree = _json_dict(data)
-        tree.label = wrap(header, "b")
-        return tree
+        if isinstance(data, HashableDict):
+            tree = _json_dict(data)
+            tree.label = wrap(header, "b")
+            return border_panel(tree)
 
-    if header.endswith(".py") and isinstance(data, str):
-        return _get_val(data, header)
+        if header.endswith(".py") and isinstance(data, str):
+            return _get_val(data, header)
 
-    if isinstance(data, (list, HashableList)):
+        if header in fields.FIELDS_MAP:
+            with suppress(AttributeError):
+                return _get_val(data, header)
+
         return flexitable(data)
 
-    if header in fields.FIELDS_MAP:
-        return _get_val(data, header)
 
-    with suppress(AttributeError):
-        data = _get_val(data, header)
+@flexitable.register
+@debug
+def _json_dict_list(data: HashableDict[str, HashableList[HashableDict]]) -> Tree:
+    """Transform a nested dictionary structure into a displayable Tree.
 
-    if not isinstance(data, str):
-        return flexitable(data)
+    Processes an input dictionary where keys map to lists of records (further
+    dictionaries). Each list of records is converted into a table. Column
+    widths are harmonized across conceptually related columns in different
+    tables before the entire structure is unified into a single Tree.
 
-    return str(data)
+    Example data:
+        {
+            "Group A": [
+                {"name": "Item 1", "value": 100, "status": "active"},
+                {"name": "Item 2", "value": 200, "status": "pending"}
+            ],
+            "Group B": [
+                {"name": "Item 3", "value": 150, "status": "active"},
+                {"name": "Item 4", "value": 300, "status": "inactive"}
+            ]
+        }
+
+        This would produce a Tree where each group key ("Group A", "Group B")
+        contains a formatted table of its records. The "name", "value", and "status"
+        columns would have consistent widths across both tables to ensure visual alignment.
+    """
+    result = HashableDict({f: flexitable(v) for f, v in data.items()})
+    columns_by_header: dict[str, list[Column]] = defaultdict(list)
+    for root_table in result.values():
+        if isinstance(root_table, NewTable):
+            for cell in root_table.columns[0].cells:
+                if isinstance(cell, NewTable):
+                    for col in cell.cols.values():
+                        columns_by_header[NewTable.get_display_header(col)].append(col)
+
+    for header, cols in columns_by_header.items():
+        col_ratio = max(
+            console.measure(_c).minimum + 1
+            for col in cols
+            for _c in [header, *col.cells]
+        )
+        for col in cols:
+            col.ratio = col_ratio
+
+    return flexitable(result)
 
 
 @flexitable.register
@@ -188,7 +246,7 @@ def _json_dict(data: HashableDict) -> Tree:
     data = prepare_dict(data)
     tree = new_tree()
     for key, value in data.items():
-        renderable = flexitable(value or "", key)
+        renderable = flexitable(value, key)
         header = wrap(key, "b")
 
         if isinstance(renderable, str):
@@ -209,19 +267,19 @@ def _json_dict(data: HashableDict) -> Tree:
 def _str_list(data: HashableList[str]) -> RenderableType:
     if not data:
         return ""
-    return Columns(list(map(flexitable, data)))
+    return " ".join(map(flexitable, data))
 
 
 @flexitable.register
 @cache
 @debug
-def _list_list(data: HashableList[HashableList]) -> RenderableType:
+def _list_list(data: HashableList[HashableList]) -> Union[Panel, str]:
     if not data:
         return ""
 
     return border_panel(
-        new_table(
-            rows=[[flexitable(i) for i in d] for d in data],
+        list_table(
+            map(flexitable, data),
             box=box.HORIZONTALS,
             show_lines=True,
             pad_edge=True,
@@ -240,7 +298,7 @@ def _int_list(data: HashableList[int]) -> RenderableType:
     return Columns(str(x) for x in data)
 
 
-def _handle_mixed_list_items(data: HashableList[Any]) -> RenderableType:
+def _handle_mixed_list_items(data: HashableList[Any]) -> NewTable:
     """Handle a list containing mixed item types."""
     return list_table(
         [flexitable(d) for d in data],
@@ -253,7 +311,7 @@ def _handle_mixed_list_items(data: HashableList[Any]) -> RenderableType:
 
 def get_item_list_table(
     items: Iterable[HashableDict], keys: Iterable[str], **kwargs: Any
-) -> Table:
+) -> NewTable:
     """Add rows for normal sized dictionary items as a sub-table."""
     kwargs.setdefault("show_header", True)
     kwargs.setdefault("border_style", "cyan")
@@ -261,7 +319,7 @@ def get_item_list_table(
     table = new_table(*keys, **kwargs)
 
     for item in items:
-        table.add_dict_row(item, ignore_extra_fields=True, transform=flexitable)
+        table.add_dict_row(item, transform=flexitable)
 
     for column in table.columns:
         column.header_style = predictably_random_color(str(column.header))
@@ -269,16 +327,21 @@ def get_item_list_table(
     return table
 
 
-def _render_dict_list(data: HashableList[HashableDict]) -> RenderableType:
+def _render_dict_list(data: HashableList[HashableDict]) -> NewTable:
     """Render a list of dictionaries with consistent structure handling."""
     if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
         data = add_count_bars(data, count_key)
 
-    keys = dict.fromkeys(
-        k for k in data[0] if any(((v := i.get(k)) or v == 0) for i in data)
-    ).keys()
+    all_fields: dict[str, None] = {}
+    for item in data:
+        all_fields.update(dict.fromkeys(item))
+
+    fields = all_fields
+    # fields = dict.fromkeys(
+    #     k for k in all_fields if any((i.get(k) not in {"", None}) for i in data)
+    # ).keys()
     not_null_data = [
-        HashableDict({k: v for k, v in i.items() if k in keys}) for i in data
+        HashableDict({k: v for k, v in i.items() if k in fields}) for i in data
     ]
 
     table = new_table(expand=True)
@@ -292,7 +355,7 @@ def _render_dict_list(data: HashableList[HashableDict]) -> RenderableType:
                     rend.hide_root = True
                 table.add_row(border_panel(rend, expand=True))
         else:
-            table.add_row(get_item_list_table(items, keys, expand=True))
+            table.add_row(get_item_list_table(items, fields, expand=True))
 
     return table
 
@@ -300,7 +363,7 @@ def _render_dict_list(data: HashableList[HashableDict]) -> RenderableType:
 @flexitable.register
 @cache
 @debug
-def _dict_list(data: HashableList[HashableDict]) -> RenderableType:
+def _dict_list(data: HashableList[HashableDict]) -> Union[NewTable, str]:
     """Render a list of dictionaries as a rich table or tree structure.
 
     Processes collections of dictionaries, adapting the presentation format based on:

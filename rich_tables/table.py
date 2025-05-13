@@ -19,7 +19,7 @@ from .fields import get_val
 from .generic import flexitable
 from .github import pulls_table
 from .music import albums_table
-from .utils import make_console, new_table, wrap
+from .utils import console, new_table, wrap
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -31,7 +31,6 @@ MAX_FILENAME_LEN = 255
 JSONDict = dict[str, Any]
 
 
-console = make_console()
 install(console=console, show_locals=True, width=console.width)
 
 

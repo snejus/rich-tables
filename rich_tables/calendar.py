@@ -82,7 +82,7 @@ class Period:
 
     @property
     def name(self) -> RenderableType:
-        title = self.status_symbol + wrap(self.summary, f"b {self.color} {self.fmt}")
+        title = self.status_symbol + wrap(self.summary, f"{self.color} {self.fmt}")
         return border_panel(get_val(self, "desc"), title=title) if self.desc else title
 
 
@@ -113,7 +113,7 @@ class Event:
     def get_datetime(date_obj: Datetime) -> datetime:
         date = date_obj.get("dateTime") or date_obj.get("date") or ""
         dt = datetime.fromisoformat(date.strip("Z"))
-        return dt.replace(tzinfo=ZoneInfo(date_obj.get("timeZone") or "UTC"))
+        return dt
 
     def get_periods(self) -> list[Period]:
         diff = self.end - self.start
@@ -177,7 +177,7 @@ def get_months(events: list[Event]) -> Iterable[RenderableType]:
     ):
         table = new_table(*headers, highlight=True, padding=0, show_header=False)
         for day, day_periods in sortgroup_by(month_periods, lambda x: x.start_day):
-            table.add_row(wrap(day, "b i"))
+            table.add_row(wrap(day, "bold italic"))
             for period in day_periods:
                 values = get_values(period)
                 if "Week " in period.summary:

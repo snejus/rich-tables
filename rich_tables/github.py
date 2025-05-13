@@ -72,6 +72,16 @@ def fmt_add_del(added: int, deleted: int) -> list[str]:
     return [b_green(additions.rjust(5)), b_red(deletions.rjust(3))]
 
 
+def gh_md_panel(body: str, *args: Any, **kwargs: Any) -> Panel:
+    return md_panel(
+        body.replace(":rofl:", ":rolling_on_the_floor_laughing:").replace(
+            "suggestion", "python"
+        ),
+        *args,
+        **kwargs,
+    )
+
+
 COLOR_BY_STATE = defaultdict(
     lambda: "default",
     {
@@ -248,7 +258,7 @@ class IssueComment(Comment):
     @property
     def panel(self) -> Panel:
         return border_panel(
-            list_table([md_panel(self.body)]),
+            list_table([gh_md_panel(self.body)]),
             border_style="b yellow",
             title=self.title,
             subtitle=self.subtitle,
@@ -273,11 +283,7 @@ class ReviewComment(Comment):
 
     @property
     def panel(self) -> Panel:
-        return md_panel(
-            self.body.replace("suggestion", "python"),
-            title=self.title,
-            subtitle=self.subtitle,
-        )
+        return gh_md_panel(self.body, title=self.title, subtitle=self.subtitle)
 
 
 class ResolvedMixin:
@@ -375,7 +381,7 @@ class Review(Content, ResolvedMixin):
     def panel(self) -> Panel:
         rows = []
         if self.body:
-            rows.append(md_panel(self.body))
+            rows.append(gh_md_panel(self.body))
 
         if not self.resolved or self.verbose:
             self.threads.sort(key=lambda t: t.resolved)
@@ -515,7 +521,9 @@ class PullRequestTable(PullRequest):
         pairs = {f: v for f in fields if (v := getattr(self, f))}
         field_rows = flexitable(pairs)
         return border_panel(
-            new_table(rows=[[field_rows], [md_panel(self.body)], [self.files_commits]]),
+            new_table(
+                rows=[[field_rows], [gh_md_panel(self.body)], [self.files_commits]]
+            ),
             title=f"{self.name} @ {self.repo}",
             box=box.DOUBLE_EDGE,
             border_style=COLOR_BY_STATE[self.pr_state],

@@ -4,7 +4,7 @@ import colorsys
 import random
 import re
 from collections import UserDict, UserList
-from collections.abc import Iterable, Sequence
+from collections.abc import Hashable, Iterable, Sequence
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, Callable, Protocol, SupportsFloat, TypeVa
 
 import humanize
 import platformdirs
+from multimethod import multimethod
 from rich import box
 from rich.align import Align, VerticalAlignMethod
 from rich.bar import Bar
@@ -23,7 +24,7 @@ from rich.errors import MarkupError
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
-from rich.table import Table
+from rich.table import Column, Table
 from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
@@ -31,18 +32,45 @@ from rich.tree import Tree
 if TYPE_CHECKING:
     from coloraide import Color
 
+    T = TypeVar("T", default=Any)
+    KT = TypeVar("KT", default=Any)
+    VT = TypeVar("VT", default=Any)
+else:
+    T = TypeVar("T")
+    KT = TypeVar("KT")
+    VT = TypeVar("VT")
+
 JSONDict = dict[str, Any]
-T = TypeVar("T")
 
 
-class HashableDict(UserDict[str, T]):
+class HashableDict(UserDict[KT, VT]):
     def __hash__(self) -> int:
         return hash(tuple(self.data.items()))
 
 
 class HashableList(UserList[T]):
-    def __hash__(self) -> int:
+    def __hash__(self) -> int:  # type: ignore[override]
         return hash(tuple(self.data))
+
+
+@multimethod
+def to_hashable(value: Hashable) -> Hashable:
+    """Convert potentially unhashable objects to hashable equivalents.
+
+    Base implementation for primitive hashable types.
+    Extended via multimethod for lists and dictionaries.
+    """
+    return value
+
+
+@to_hashable.register
+def _(value: list[T]) -> HashableList[T]:
+    return HashableList([to_hashable(v) for v in value])
+
+
+@to_hashable.register
+def _(value: dict[KT, VT]) -> HashableDict[KT, VT]:
+    return HashableDict({k: to_hashable(v) for k, v in value.items()})
 
 
 BOLD_GREEN = "b green"
@@ -145,6 +173,12 @@ class SafeConsole(Console):
             kwargs["markup"] = False
             super().print(*args, **kwargs)
 
+    def capture_text(self, *args: Any, **kwargs: Any) -> str:
+        """Capture text from renderables."""
+        with self.capture() as capture:
+            self.print(*args, **kwargs)
+        return capture.get()
+
 
 def make_console(**kwargs: Any) -> SafeConsole:
     kwargs.setdefault("theme", get_theme())
@@ -169,8 +203,7 @@ class NewTable(Table):
         if any(c.header for c in self.columns):
             self.show_header = True
         for column in self.columns:
-            if display_header := DISPLAY_HEADER.get(column.header):
-                column.header = display_header
+            column.header = self.get_display_header(column)
             if self.column_kwargs:
                 column.__dict__.update(self.column_kwargs)
 
@@ -195,26 +228,30 @@ class NewTable(Table):
 
     def add_dict_row(
         self,
-        data: JSONDict | HashableDict,
+        data: HashableDict,
         ignore_extra_fields: bool = False,
         transform: Callable[..., RenderableType] = lambda v, _: str(v),
         **kwargs: Any,
     ) -> None:
         """Add a row to the table from a dictionary."""
         if not ignore_extra_fields:
-            existing_cols = set(self.colnames)
-            for field in (f for f in data if f not in existing_cols):
+            for field in (f for f in data if f not in self.cols):
                 self.add_column(field)
                 self.columns[-1]._cells = [""] * self.row_count
 
-        values = (transform(data.get(k), k) for k in self.colnames)
+        values = (transform(data.get(k), k) for k in self.cols)
 
         self.add_row(*values, **kwargs)
 
     @property
-    def colnames(self) -> list[str]:
-        """Provide a mapping between columns names / ids and columns."""
-        return [str(c.header) for c in self.columns]
+    def cols(self) -> dict[str, Column]:
+        """Provide a mapping between columns names and columns."""
+        return {str(c.header): c for c in self.columns}
+
+    @staticmethod
+    def get_display_header(col: Column) -> str:
+        """Provide a mapping between columns names and columns."""
+        return DISPLAY_HEADER.get(col.header, str(col.header))
 
 
 def new_table(
@@ -322,7 +359,7 @@ def simple_panel(
 
 
 def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
-    kwargs.setdefault("box", box.ROUNDED)
+    kwargs.setdefault("box", box.SQUARE)
     kwargs.setdefault("border_style", "dim")
     return simple_panel(content, **kwargs)
 
@@ -421,8 +458,8 @@ def get_colors_and_periods() -> list[tuple[Color, int, int]]:
                 (24, 60 * 60),  # hours
                 (31, 24 * 60 * 60),  # days
                 (12, 31 * 24 * 60 * 60),  # months
-                (2, 12 * 30 * 24 * 60 * 60),  # years
-                (5, 12 * 30 * 24 * 60 * 60),  # years
+                (5, 12 * 30 * 24 * 60 * 60),  # 5 years
+                (4, 5 * 12 * 30 * 24 * 60 * 60),  # 20 years
             ],
         )
     ]
@@ -475,7 +512,8 @@ def sql_syntax(sql_string: str) -> Syntax:
             strip_whitespace=True,
             strip_comments=True,
             reindent=True,
-            reindent_aligned=False,
+            reindent_aligned=True,
+            compact=True,
         ),
         "sql",
     )

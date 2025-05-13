@@ -111,12 +111,9 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         else x
     ),
     labels=lambda x: (
-        wrap(
-            "    ".join(wrap(y["name"].upper(), f"#{y['color']}") for y in x),
-            "b",
-        )
+        wrap(" ".join(wrap(y["name"], f"#{y['color']}") for y in x), "b")
         if isinstance(x, (list, HashableList, tuple))
-        else format_with_color(x.upper())
+        else format_with_color(x)
         if isinstance(x, str)
         else x
     ),
@@ -171,7 +168,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     diffHunk=lambda x: syntax(x, "diff"),
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
-    sql=lambda x: border_panel(sql_syntax(x.replace(r"\[", "["))),
+    sql=lambda x: sql_syntax("---\n\n" + x.replace(r"\[", "[")),
     slug=format_with_color_on_black,
 )
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
@@ -203,7 +200,6 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "from",
         "full_name",
         "group_source",
-        "Interests",
         "issuetype",
         "kind",
         "label",
@@ -234,7 +230,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "client",
         "env",
     ),
-    split_with_color: ("genre", "genres"),
+    split_with_color: ("genre", "genres", "Interests"),
     human_dt: (
         "added",
         "committedDate",
