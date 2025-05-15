@@ -88,7 +88,7 @@ def album_stats(tracks: list[JSONDict]) -> JSONDict:
     def agg(field: str, default: T) -> Iterable[T]:
         return ((x.get(field) or default) for x in tracks)
 
-    stats: JSONDict = dict(
+    return dict(
         bpm=round(sum(agg("bpm", 0)) / len(tracks)),
         rating=round(sum(agg("rating", 0)) / len(tracks), 2),
         plays=sum(agg("plays", 0)),
@@ -98,7 +98,6 @@ def album_stats(tracks: list[JSONDict]) -> JSONDict:
         tracktotal=(str(len(tracks)), str(tracks[0].get("tracktotal")) or "0"),
         comments="\n---\n---\n".join(set(agg("comments", ""))),
     )
-    return stats
 
 
 def add_colors(album: JSONDict) -> None:
