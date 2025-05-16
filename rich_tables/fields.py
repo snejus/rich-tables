@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from collections.abc import Iterable, MutableMapping
-from contextlib import suppress
 from datetime import datetime, timezone
 from functools import singledispatch
 from itertools import islice
@@ -285,8 +284,7 @@ def _get_val(value: float | str | RenderableType | None, field: str) -> Renderab
         return value
 
     if field in FIELDS_MAP:
-        with suppress(Exception):
-            return FIELDS_MAP[field](value)
+        return FIELDS_MAP[field](value)
 
     return str(value)
 

@@ -380,7 +380,6 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
         ),
         **kwargs,
     )
-    print(type(content))
     return res
 
 
