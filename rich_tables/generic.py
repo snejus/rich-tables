@@ -187,7 +187,7 @@ def _header(data: Any, header: str) -> RenderableType:
             return _get_val(data, header)
 
         if header in fields.FIELDS_MAP:
-            with suppress(AttributeError):
+            with suppress(AttributeError, TypeError):
                 return _get_val(data, header)
 
         return flexitable(data)
