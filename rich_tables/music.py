@@ -191,6 +191,7 @@ def album_panel(tracks: list[JSONDict]) -> Panel:
         ),
         box=box.DOUBLE_EDGE,
         style=album["albumartist_color"],
+        expand=True,
         subtitle=f"[b white]{url}",
     )
 
