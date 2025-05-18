@@ -119,11 +119,11 @@ def sortgroup_by(
 
 
 def format_string(text: str) -> str:
-    if "[" in text and r"\[" not in text and ("[/" not in text or "pred color" in text):
-        text = Pat.OPENING_BRACKET.sub(r"\[", text)
-
     if "pred color]" in text:
         text = Pat.PRED_COLOR_PAT.sub(fmt_pred_color, text)
+
+    if "[" in text and r"\[" not in text and ("[/" not in text or "pred color" in text):
+        text = Pat.OPENING_BRACKET.sub(r"\[", text)
 
     return text
 
