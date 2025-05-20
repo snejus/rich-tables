@@ -460,7 +460,7 @@ def get_colors_and_periods() -> list[tuple[Color, int, int]]:
                 (31, 24 * 60 * 60),  # days
                 (12, 31 * 24 * 60 * 60),  # months
                 (5, 12 * 30 * 24 * 60 * 60),  # 5 years
-                (4, 5 * 12 * 30 * 24 * 60 * 60),  # 20 years
+                (4, 60 * 12 * 30 * 24 * 60 * 60),  # 60 years
             ],
         )
     ]

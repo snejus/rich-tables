@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from rich.console import RenderableType
 
 
-MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|_?count$)")
+MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|_count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
 
 
