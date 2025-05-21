@@ -344,7 +344,7 @@ def _render_dict_list(data: HashableList[HashableDict]) -> NewTable:
         HashableDict({k: v for k, v in i.items() if k in fields}) for i in data
     ]
 
-    table = new_table(expand=True)
+    table = new_table(expand=False)
     for large, items in groupby(
         not_null_data, lambda i: len(str(i.values())) > MAX_DICT_LENGTH
     ):
