@@ -158,10 +158,9 @@ def pretty_diff(before: Any, after: Any) -> str:
         return result
 
     return (
-        result
-        # console.capture_text(result, width=100, highlight=False)
-        # .replace("'", "")
-        # .replace('"', "")
-        # .replace("\\", "")
-        # .replace("()", "[]")
+        console.capture_text(result, width=100, highlight=False)
+        .replace("'", "")
+        .replace('"', "")
+        .replace("\\", "")
+        .replace("()", "[]")
     )
