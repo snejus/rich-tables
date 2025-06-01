@@ -228,7 +228,7 @@ class NewTable(Table):
 
     def add_dict_row(
         self,
-        data: HashableDict,
+        data: dict[str, Any],
         ignore_extra_fields: bool = False,
         transform: Callable[..., RenderableType] = lambda v, _: str(v),
         **kwargs: Any,
