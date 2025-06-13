@@ -223,6 +223,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "to",
         "tables",
         "test",
+        "ticker",
         "type",
         "type_name",
         "user",
