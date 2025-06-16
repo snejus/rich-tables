@@ -371,7 +371,7 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
         kwargs["title"] = m[1]
         content = content.replace(m[0], "")
 
-    res = border_panel(
+    return border_panel(
         Markdown(
             Pat.HTML_PARAGRAPH.sub("", content),
             inline_code_theme="nord-darker",
@@ -380,7 +380,6 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
         ),
         **kwargs,
     )
-    return res
 
 
 def new_tree(
