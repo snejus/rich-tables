@@ -512,7 +512,7 @@ def sql_syntax(sql_string: str) -> Syntax:
             strip_whitespace=True,
             strip_comments=True,
             reindent=True,
-            reindent_aligned=True,
+            # reindent_aligned=True,
             compact=True,
         ),
         "sql",
