@@ -272,10 +272,19 @@ class ReviewComment(Comment):
     path: str
     diffHunk: str
     pullRequestReview: str
+    originalLine: int
+    originalStartLine: int | None
 
     @property
     def diff(self) -> Syntax:
-        return syntax(self.diffHunk, "diff")
+        return syntax(
+            self.diffHunk,
+            "diff",
+            line_range=(
+                self.originalStartLine or self.originalLine,
+                self.originalLine + 1,
+            ),
+        )
 
     @property
     def review_id(self) -> str:
