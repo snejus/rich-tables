@@ -20,14 +20,14 @@ from collections.abc import Iterable
 from contextlib import nullcontext, suppress
 from datetime import datetime, timezone
 from functools import cache, reduce, wraps
-from itertools import groupby
+from itertools import chain, groupby
 from operator import and_
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union, overload
 
 from multimethod import multidispatch
 from rich import box
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, RenderableType
+from rich.console import ConsoleRenderable, Group, RenderableType
 from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.text import Text
@@ -146,7 +146,7 @@ def flexitable(data: Any) -> RenderableType:
 @flexitable.register
 @cache
 @debug
-def _rend(data: ConsoleRenderable) -> RenderableType:
+def _(data: ConsoleRenderable) -> RenderableType:
     return data
 
 
@@ -220,28 +220,43 @@ def _json_dict_list(data: HashableDict[str, HashableList[HashableDict]]) -> Tree
         contains a formatted table of its records. The "name", "value", and "status"
         columns would have consistent widths across both tables to ensure visual alignment.
     """
-    if {"before", "after"} <= data.keys():
-        return pretty_diff(data["before"], data["after"])
+    tree: Tree = flexitable(HashableDict({f: flexitable(v) for f, v in data.items()}))
+    if len(data) < 2 or any(
+        not isinstance(v, HashableList) or not isinstance(v[0], HashableDict)
+        for v in data.values()
+    ):
+        return tree
 
-    result = HashableDict({f: flexitable(v) for f, v in data.items()})
-    columns_by_header: dict[str, list[Column]] = defaultdict(list)
-    for root_table in result.values():
-        if isinstance(root_table, NewTable):
-            for cell in root_table.columns[0].cells:
-                if isinstance(cell, NewTable):
-                    for col in cell.cols.values():
-                        columns_by_header[NewTable.get_display_header(col)].append(col)
+    values_by_key: dict[str, set[str]] = defaultdict(set)
+    for item in chain.from_iterable(data.values()):
+        for key, value in item.items():
+            values_by_key[key].add(str(value or ""))
 
-    for header, cols in columns_by_header.items():
-        col_ratio = max(
-            console.measure(_c).minimum + 1
-            for col in cols
-            for _c in [header, *col.cells]
+    tab = new_table(
+        *values_by_key,
+        expand=True,
+        show_header=True,
+        rows=[[max(v, key=console.measure) for v in values_by_key.values()]],
+    )
+    ratio_by_key = dict(
+        zip(
+            values_by_key,
+            tab._calculate_column_widths(
+                console, console.options.update_width(console.width - 10)
+            ),
         )
-        for col in cols:
-            col.ratio = col_ratio
+    )
 
-    return flexitable(result)
+    tables = [lc.label for tc in tree.children for lc in tc.label.children]
+    for root_table in tables:
+        root_table.expand = True
+        for cell in root_table.columns[0].cells:
+            if isinstance(cell, NewTable):
+                cell.collapse_padding = True
+                for col in cell.cols.values():
+                    col.ratio = ratio_by_key[col.header]
+
+    return tree
 
 
 @flexitable.register

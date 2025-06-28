@@ -199,7 +199,7 @@ class NewTable(Table):
 
         super().__init__(*args, **kwargs)
 
-    def __rich_console__(self, *args: Any, **kwargs: Any) -> RenderResult:
+    def configure_columns(self) -> None:
         if any(c.header for c in self.columns):
             self.show_header = True
         for column in self.columns:
@@ -207,6 +207,8 @@ class NewTable(Table):
             if self.column_kwargs:
                 column.__dict__.update(self.column_kwargs)
 
+    def __rich_console__(self, *args: Any, **kwargs: Any) -> RenderResult:
+        self.configure_columns()
         return super().__rich_console__(*args, **kwargs)
 
     def add_row(self, *args: RenderableType | None, **kwargs: Any) -> None:
