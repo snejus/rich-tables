@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import time
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from functools import cached_property
 from itertools import islice
 from typing import TYPE_CHECKING, Any, Callable, Protocol
 
@@ -270,20 +271,28 @@ class IssueComment(Comment):
 class ReviewComment(Comment):
     outdated: bool
     path: str
-    diffHunk: str
+    diffHunk: str = field(repr=False)
     pullRequestReview: str
+    line: int  # line number in the file
+    position: int | None  # position in the diff hunk, if applicable
+    startLine: int  # line number in the file
+    # as above but before the diff hunk was changed
     originalLine: int
+    originalPosition: int | None
     originalStartLine: int | None
 
-    @property
+    @cached_property
     def diff(self) -> Syntax:
+        print(self)
         return syntax(
             self.diffHunk,
             "diff",
+            line_numbers=True,
             line_range=(
-                self.originalStartLine or self.originalLine,
-                self.originalLine + 1,
+                self.originalPosition - 2,
+                self.originalPosition + 1,
             ),
+            padding=1,
         )
 
     @property
