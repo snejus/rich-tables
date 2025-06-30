@@ -278,21 +278,25 @@ class ReviewComment(Comment):
     startLine: int  # line number in the file
     # as above but before the diff hunk was changed
     originalLine: int
-    originalPosition: int | None
+    originalPosition: int
     originalStartLine: int | None
 
     @cached_property
     def diff(self) -> Syntax:
-        print(self)
+        focus_start = self.originalStartLine or self.originalLine
+        start_line = focus_start - self.originalPosition
+        end_line = self.originalLine + 1
+        # print(self, f"{focus_start=}, {start_line=}, {end_line=}")
         return syntax(
             self.diffHunk,
             "diff",
             line_numbers=True,
-            line_range=(
-                self.originalPosition - 2,
-                self.originalPosition + 1,
-            ),
+            start_line=start_line,
+            highlight_lines=set(range(focus_start, end_line)),
+            line_range=(2, len(self.diffHunk.splitlines())),
+            # line_range=(max(focus_start - start_line - 5, 1), end_line - start_line),
             padding=1,
+            theme="paraiso-dark",
         )
 
     @property
