@@ -22,14 +22,13 @@ from datetime import datetime, timezone
 from functools import cache, reduce, wraps
 from itertools import chain, groupby
 from operator import and_
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union, overload
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union
 
 from multimethod import multidispatch
 from rich import box
 from rich.columns import Columns
-from rich.console import ConsoleRenderable, Group, RenderableType
+from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
-from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
 
@@ -52,7 +51,7 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from rich.table import Column
+    from rich.panel import Panel
 
 
 R = TypeVar("R", bound=RenderableType)
@@ -220,7 +219,8 @@ def _json_dict_list(data: HashableDict[str, HashableList[HashableDict]]) -> Tree
         contains a formatted table of its records. The "name", "value", and "status"
         columns would have consistent widths across both tables to ensure visual alignment.
     """
-    tree: Tree = flexitable(HashableDict({f: flexitable(v) for f, v in data.items()}))
+    tree = flexitable(HashableDict({f: flexitable(v) for f, v in data.items()}))
+    assert isinstance(tree, Tree)
     if len(data) < 2 or any(
         not isinstance(v, HashableList) or not isinstance(v[0], HashableDict)
         for v in data.values()
