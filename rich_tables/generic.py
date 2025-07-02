@@ -29,6 +29,7 @@ from rich import box
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, RenderableType
 from rich.logging import RichHandler
+from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
 
@@ -51,7 +52,7 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from rich.panel import Panel
+    from rich.table import Column
 
 
 R = TypeVar("R", bound=RenderableType)
@@ -145,7 +146,7 @@ def flexitable(data: Any) -> RenderableType:
 @flexitable.register
 @cache
 @debug
-def _(data: ConsoleRenderable) -> RenderableType:
+def _rend(data: ConsoleRenderable) -> RenderableType:
     return data
 
 
