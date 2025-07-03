@@ -287,13 +287,15 @@ class ReviewComment(Comment):
         start_line = focus_start - self.originalPosition
         end_line = self.originalLine + 1
         # print(self, f"{focus_start=}, {start_line=}, {end_line=}")
+        line_count = len(self.diffHunk.splitlines())
         return syntax(
             self.diffHunk,
             "diff",
             line_numbers=True,
             start_line=start_line,
             highlight_lines=set(range(focus_start, end_line)),
-            line_range=(2, len(self.diffHunk.splitlines())),
+            line_range=(max(line_count - 10, 0), line_count),
+            # line_range=(2, len(self.diffHunk.splitlines())),
             # line_range=(max(focus_start - start_line - 5, 1), end_line - start_line),
             padding=1,
             theme="paraiso-dark",
