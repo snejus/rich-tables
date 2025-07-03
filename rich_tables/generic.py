@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from functools import cache, reduce, wraps
 from itertools import chain, groupby
 from operator import and_
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union
+from typing import Any, Callable, TypeVar, Union
 
 from multimethod import multidispatch
 from rich import box
@@ -50,10 +50,6 @@ from .utils import (
     to_hashable,
     wrap,
 )
-
-if TYPE_CHECKING:
-    from rich.table import Column
-
 
 R = TypeVar("R", bound=RenderableType)
 T = TypeVar("T")
@@ -139,7 +135,7 @@ def prepare_dict(item: HashableDict) -> HashableDict:
 @multidispatch
 @cache
 @debug
-def flexitable(data: Any) -> RenderableType:
+def flexitable(data: Any) -> Any:
     return str(data)
 
 
@@ -160,7 +156,7 @@ def _num(data: Union[str, float]) -> RenderableType:
 @flexitable.register
 @debug
 def _list(data: list[Any]) -> RenderableType:
-    return flexitable(to_hashable(data))
+    return flexitable(to_hashable(data))  # type: ignore[no-any-return]
 
 
 @flexitable.register
@@ -168,35 +164,30 @@ def _list(data: list[Any]) -> RenderableType:
 def _dict(data: dict[str, Any]) -> RenderableType:
     if (rend := flexitable(to_hashable(data))) and isinstance(rend, Tree):
         rend.hide_root = True
-    return rend
+    return rend  # type: ignore[no-any-return]
 
 
 @flexitable.register
 @cache
 @debug
 def _header(data: Any, header: str) -> RenderableType:
-    with snooper():
-        if not data and isinstance(data, Iterable):
-            return ""
+    if not data and isinstance(data, Iterable):
+        return ""
 
-        if isinstance(data, HashableDict):
-            tree = _json_dict(data)
-            tree.label = wrap(header, "b")
-            return border_panel(tree)
-
-        if header.endswith(".py") and isinstance(data, str):
+    if (
+        header.endswith(".py") and isinstance(data, str)
+    ) or header in fields.FIELDS_MAP:
+        with suppress(AttributeError, TypeError):
             return _get_val(data, header)
 
-        if header in fields.FIELDS_MAP:
-            with suppress(AttributeError, TypeError):
-                return _get_val(data, header)
-
-        return flexitable(data)
+    return flexitable(data)  # type: ignore[no-any-return]
 
 
 @flexitable.register
 @debug
-def _json_dict_list(data: HashableDict[str, HashableList[HashableDict]]) -> Tree:
+def _json_dict_list(
+    data: HashableDict[str, HashableList[HashableDict]],
+) -> RenderableType:
     """Transform a nested dictionary structure into a displayable Tree.
 
     Processes an input dictionary where keys map to lists of records (further
@@ -218,13 +209,18 @@ def _json_dict_list(data: HashableDict[str, HashableList[HashableDict]]) -> Tree
 
         This would produce a Tree where each group key ("Group A", "Group B")
         contains a formatted table of its records. The "name", "value", and "status"
-        columns would have consistent widths across both tables to ensure visual alignment.
+        columns would have consistent widths across both tables to ensure visual
+        alignment.
     """
-    tree = flexitable(HashableDict({f: flexitable(v) for f, v in data.items()}))
-    assert isinstance(tree, Tree)
-    if len(data) < 2 or any(
-        not isinstance(v, HashableList) or not isinstance(v[0], HashableDict)
-        for v in data.values()
+    tree: Tree = flexitable(HashableDict({f: flexitable(v) for f, v in data.items()}))
+
+    if (
+        not isinstance(tree, Tree)
+        or len(data) == 1
+        or any(
+            not isinstance(v, HashableList) or not isinstance(v[0], HashableDict)
+            for v in data.values()
+        )
     ):
         return tree
 
@@ -242,20 +238,36 @@ def _json_dict_list(data: HashableDict[str, HashableList[HashableDict]]) -> Tree
     ratio_by_key = dict(
         zip(
             values_by_key,
-            tab._calculate_column_widths(
+            tab._calculate_column_widths(  # noqa: SLF001
                 console, console.options.update_width(console.width - 10)
             ),
         )
     )
 
-    tables = [lc.label for tc in tree.children for lc in tc.label.children]
-    for root_table in tables:
+    renderables = [
+        lc.label
+        for tc in tree.children
+        if isinstance(tc.label, Tree)
+        for lc in tc.label.children
+    ]
+
+    for renderable in renderables:
+        if isinstance(renderable, Panel) and isinstance(
+            renderable.renderable, NewTable
+        ):
+            renderable.expand = True
+            root_table = renderable.renderable
+        elif isinstance(renderable, NewTable):
+            root_table = renderable
+        else:
+            continue
+
         root_table.expand = True
         for cell in root_table.columns[0].cells:
             if isinstance(cell, NewTable):
                 cell.collapse_padding = True
                 for col in cell.cols.values():
-                    col.ratio = ratio_by_key[col.header]
+                    col.ratio = ratio_by_key[str(col.header)]
 
     return tree
 
@@ -264,20 +276,27 @@ def _json_dict_list(data: HashableDict[str, HashableList[HashableDict]]) -> Tree
 @debug
 def _json_dict(data: HashableDict) -> Tree:
     data = prepare_dict(data)
-    tree = new_tree()
+    tree = new_tree(
+        guide_style=f"bold dim {predictably_random_color(str(sorted(data)))}"
+    )
     for key, value in data.items():
         renderable = flexitable(value, key)
         header = wrap(key, "b")
 
         if isinstance(renderable, str):
             renderable = f"{header}: {renderable}"
-        elif isinstance(renderable, Tree):
-            renderable.guide_style = "bold dim"
         else:
-            renderable = new_tree([renderable], key, guide_style="bold dim")
+            color = predictably_random_color(key)
+            if isinstance(renderable, Panel):
+                renderable.border_style = color
+            if isinstance(renderable, Tree):
+                renderable.guide_style = f"dim {color}"
+                renderable.label = header
+            else:
+                renderable = new_tree([renderable], key, guide_style=color)
+            # renderable.
 
         tree.add(renderable)
-    tree.guide_style = f"bold dim {predictably_random_color(str(sorted(data)))}"
     return tree
 
 
@@ -347,7 +366,7 @@ def get_item_list_table(
     return table
 
 
-def _render_dict_list(data: HashableList[HashableDict]) -> NewTable:
+def _render_dict_list(data: HashableList[HashableDict]) -> Panel:
     """Render a list of dictionaries with consistent structure handling."""
     if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
         data = add_count_bars(data, count_key)
@@ -356,10 +375,10 @@ def _render_dict_list(data: HashableList[HashableDict]) -> NewTable:
     for item in data:
         all_fields.update(dict.fromkeys(item))
 
-    fields = all_fields
-    # fields = dict.fromkeys(
-    #     k for k in all_fields if any((i.get(k) not in {"", None}) for i in data)
-    # ).keys()
+    # fields = all_fields
+    fields = dict.fromkeys(
+        k for k in all_fields if any((i.get(k) not in {"", None}) for i in data)
+    ).keys()
     not_null_data = [
         HashableDict({k: v for k, v in i.items() if k in fields}) for i in data
     ]
@@ -373,17 +392,17 @@ def _render_dict_list(data: HashableList[HashableDict]) -> NewTable:
                 rend = flexitable(item)
                 if isinstance(rend, Tree):
                     rend.hide_root = True
-                table.add_row(border_panel(rend, expand=True))
+                table.add_row(border_panel(rend))
         else:
             table.add_row(get_item_list_table(items, fields, expand=True))
 
-    return table
+    return border_panel(table, border_style="dim black", expand=False)
 
 
 @flexitable.register
 @cache
 @debug
-def _dict_list(data: HashableList[HashableDict]) -> Union[NewTable, str]:
+def _dict_list(data: HashableList[HashableDict]) -> RenderableType:
     """Render a list of dictionaries as a rich table or tree structure.
 
     Processes collections of dictionaries, adapting the presentation format based on:

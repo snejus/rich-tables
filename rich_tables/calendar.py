@@ -95,7 +95,6 @@ class Event:
     summary: str
     status: Literal["accepted", "needsAction", "declined", "tentative"]
     start: datetime
-    location: str
 
     @classmethod
     def make(cls, start: Datetime, end: Datetime, summary: str, **kwargs: Any) -> Event:

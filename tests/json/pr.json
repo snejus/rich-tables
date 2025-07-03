@@ -5,16 +5,21 @@
       "createdAt": "2022-03-15T22:16:46Z",
       "author": "snejus",
       "body": "## Description\r\n\r\nFixes #400.  <!-- Insert issue number here if applicable. -->\r\nRelated to #2686\r\n\r\nAs I mentioned in https://github.com/beetbox/beets/issues/400#issuecomment-1067666254, this adds a patch that allows to disable the MusicBrainz metadata source during the import process.\r\n\r\nI had a little go at making the `MusicBrainz Options` section in the docs a little bit more consistent, and copied over the entire default config section for clarity.\r\n\r\n## To Do\r\n\r\n- [x] Documentation. (If you've add a new command-line flag, for example, find the appropriate page under `docs/` to describe it.)\r\n- [x] Changelog. (Add an entry to `docs/changelog.rst` near the top of the document.)\r\n- [ ] Tests. (Encouraged but not strictly required.)\r\n",
+      "id": "PR_kwDOAAygxs40fzZb",
       "updatedAt": "2022-03-24T11:25:23Z",
       "title": "Ability to optionally disable the musicbrainz metadata source",
       "url": "https://github.com/beetbox/beets/pull/4319",
       "state": "MERGED",
       "additions": 35,
       "deletions": 22,
-      "reviewDecision": "APPROVED",
-      "headRefName": "branch-name",
+      "headRefName": "disable-musicbrainz-plugin",
+      "reviewDecision": null,
       "repository": "beets",
-      "participants": ["snejus", "sampsyo", "wisp3rwind"],
+      "participants": [
+        "snejus",
+        "sampsyo",
+        "wisp3rwind"
+      ],
       "labels": [],
       "files": [
         {
@@ -44,14 +49,14 @@
           "deletions": 0,
           "committedDate": "2022-03-15T07:43:26Z",
           "message": "Nicely disable musicbrainz",
-          "statusCheckRollup": null
+          "statusCheckRollup": "SUCCESS"
         },
         {
           "additions": 53,
           "deletions": 8,
           "committedDate": "2022-03-15T21:57:33Z",
           "message": "Update docs",
-          "statusCheckRollup": null
+          "statusCheckRollup": "SUCCESS"
         },
         {
           "additions": 3,
@@ -65,21 +70,21 @@
           "deletions": 25,
           "committedDate": "2022-03-18T05:05:58Z",
           "message": "Move the logic to hooks.py",
-          "statusCheckRollup": "SUCCESS"
+          "statusCheckRollup": null
         },
         {
           "additions": 7,
           "deletions": 41,
           "committedDate": "2022-03-18T05:14:29Z",
           "message": "Remove optional docs changes",
-          "statusCheckRollup": "SUCCESS"
+          "statusCheckRollup": null
         },
         {
           "additions": 4,
           "deletions": 4,
           "committedDate": "2022-03-18T22:57:22Z",
           "message": "Rename handle_exc to invoke_mb",
-          "statusCheckRollup": "SUCCESS"
+          "statusCheckRollup": null
         },
         {
           "additions": 1,
@@ -93,7 +98,7 @@
           "deletions": 3,
           "committedDate": "2022-03-23T16:34:13Z",
           "message": "Do not assign extra variable to keep things within max line_length",
-          "statusCheckRollup": "SUCCESS"
+          "statusCheckRollup": null
         },
         {
           "additions": 10,
@@ -107,7 +112,7 @@
           "deletions": 11,
           "committedDate": "2022-03-23T17:02:45Z",
           "message": "Move musicbrainz.enabled section below network config in config.rst",
-          "statusCheckRollup": "SUCCESS"
+          "statusCheckRollup": null
         }
       ],
       "comments": [
@@ -124,7 +129,9 @@
           "reactions": []
         }
       ],
-      "reviewRequests": ["wisp3rwind"],
+      "reviewRequests": [
+        "wisp3rwind"
+      ],
       "reviews": [
         {
           "createdAt": "2022-03-16T18:19:23Z",
@@ -214,122 +221,170 @@
       "reviewThreads": [
         {
           "path": "beets/autotag/mb.py",
-          "isResolved": false,
+          "isResolved": true,
           "isOutdated": true,
-          "resolvedBy": null,
+          "resolvedBy": "snejus",
           "comments": [
             {
               "createdAt": "2022-03-16T18:19:23Z",
               "author": "sampsyo",
               "body": "The `.get(bool)` bit here is actually unnecessary; using this in an `if` does that automatically.",
-              "path": "beets/autotag/mb.py",
-              "outdated": true,
-              "diffHunk": "@@ -482,6 +482,9 @@ def match_album(artist, album, tracks=None, extra_tags=None):\n     The query consists of an artist name, an album name, and,\n     optionally, a number of tracks on the album and any other extra tags.\n     \"\"\"\n+    if not config[\"musicbrainz\"][\"enabled\"].get(bool):",
               "reactions": [
                 {
                   "user": "snejus",
                   "content": "THUMBS_UP"
                 }
               ],
+              "path": "beets/autotag/mb.py",
+              "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 4,
+              "originalLine": 485,
+              "startLine": null,
+              "originalStartLine": null,
+              "diffHunk": "@@ -482,6 +482,9 @@ def match_album(artist, album, tracks=None, extra_tags=None):\n     The query consists of an artist name, an album name, and,\n     optionally, a number of tracks on the album and any other extra tags.\n     \"\"\"\n+    if not config[\"musicbrainz\"][\"enabled\"].get(bool):",
               "pullRequestReview": "PRR_kwDOAAygxs42XTyf"
             },
             {
               "createdAt": "2022-03-17T23:42:03Z",
               "author": "snejus",
               "body": "That's helpful, thanks!",
+              "reactions": [],
               "path": "beets/autotag/mb.py",
               "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 4,
+              "originalLine": 485,
+              "startLine": null,
+              "originalStartLine": null,
               "diffHunk": "@@ -482,6 +482,9 @@ def match_album(artist, album, tracks=None, extra_tags=None):\n     The query consists of an artist name, an album name, and,\n     optionally, a number of tracks on the album and any other extra tags.\n     \"\"\"\n+    if not config[\"musicbrainz\"][\"enabled\"].get(bool):",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42d7dh"
             }
           ]
         },
         {
           "path": "docs/reference/config.rst",
-          "isResolved": false,
+          "isResolved": true,
           "isOutdated": true,
-          "resolvedBy": null,
+          "resolvedBy": "snejus",
           "comments": [
             {
               "createdAt": "2022-03-16T18:20:28Z",
               "author": "sampsyo",
               "body": "Just for my own sanity, could we keep this PR's docs changes focused on the new option? Some refactoring, reordering, and adding examples would be nice too, but it will be easier to think about in a separate PR. Thank you!",
+              "reactions": [],
               "path": "docs/reference/config.rst",
               "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 4,
+              "originalLine": 719,
+              "startLine": null,
+              "originalStartLine": null,
               "diffHunk": "@@ -716,6 +716,39 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+Default configuration::",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42XTyf"
             },
             {
               "createdAt": "2022-03-17T23:41:44Z",
               "author": "snejus",
               "body": "Of course, I'll move them out to another branch!",
+              "reactions": [],
               "path": "docs/reference/config.rst",
               "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 4,
+              "originalLine": 719,
+              "startLine": null,
+              "originalStartLine": null,
               "diffHunk": "@@ -716,6 +716,39 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+Default configuration::",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42d7bV"
             }
           ]
         },
         {
           "path": "beets/autotag/hooks.py",
-          "isResolved": false,
+          "isResolved": true,
           "isOutdated": true,
-          "resolvedBy": null,
+          "resolvedBy": "snejus",
           "comments": [
             {
               "createdAt": "2022-03-18T22:29:53Z",
               "author": "wisp3rwind",
               "body": "In my opinion, this pattern would be much more readable as\r\n\r\n```python\r\n    if artist and album and config[\"musicbrainz\"][\"enabled\"]:\r\n        yield from handle_exc(mb.match_album, artist, *common_args)\r\n```\r\n\r\nwith the check for MB being enabled removed from `handle_exc`. This would separate exception handling and checking whether to query musicbrainz somewhat more cleanly.\r\n\r\nIf not going this way, renaming `handle_exc` -> `invoke_mb` or similar would also help.",
-              "path": "beets/autotag/hooks.py",
-              "outdated": true,
-              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]\n     # Base candidates if we have album and artist to match.\n     if artist and album:\n-        try:\n-            yield from mb.match_album(artist, album, len(items),\n-                                      extra_tags)\n-        except mb.MusicBrainzAPIError as exc:\n-            exc.log(log)\n+        yield from handle_exc(mb.match_album, artist, *common_args)",
               "reactions": [
                 {
                   "user": "sampsyo",
                   "content": "THUMBS_UP"
                 }
               ],
+              "path": "beets/autotag/hooks.py",
+              "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 29,
+              "originalLine": 625,
+              "startLine": null,
+              "originalStartLine": 624,
+              "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]\n     # Base candidates if we have album and artist to match.\n     if artist and album:\n-        try:\n-            yield from mb.match_album(artist, album, len(items),\n-                                      extra_tags)\n-        except mb.MusicBrainzAPIError as exc:\n-            exc.log(log)\n+        yield from handle_exc(mb.match_album, artist, *common_args)",
               "pullRequestReview": "PRR_kwDOAAygxs42iH5m"
             },
             {
               "createdAt": "2022-03-18T22:58:19Z",
               "author": "snejus",
               "body": "Good point, @wisp3rwind. I've just renamed the function to `invoke_mb` ",
+              "reactions": [],
               "path": "beets/autotag/hooks.py",
               "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 29,
+              "originalLine": 625,
+              "startLine": null,
+              "originalStartLine": 624,
               "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]\n     # Base candidates if we have album and artist to match.\n     if artist and album:\n-        try:\n-            yield from mb.match_album(artist, album, len(items),\n-                                      extra_tags)\n-        except mb.MusicBrainzAPIError as exc:\n-            exc.log(log)\n+        yield from handle_exc(mb.match_album, artist, *common_args)",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42iKXw"
             }
           ]
         },
         {
           "path": "beets/autotag/hooks.py",
-          "isResolved": false,
+          "isResolved": true,
           "isOutdated": true,
-          "resolvedBy": null,
+          "resolvedBy": "snejus",
           "comments": [
             {
               "createdAt": "2022-03-19T14:23:13Z",
               "author": "sampsyo",
               "body": "I do sort of like @wisp3rwind's suggestion to consider moving this out of the `invoke_mb` utility—it might make it a little clearer what's going on!",
+              "reactions": [],
               "path": "beets/autotag/hooks.py",
               "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 6,
+              "originalLine": 603,
+              "startLine": null,
+              "originalStartLine": 602,
               "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42ieZf"
             },
             {
               "createdAt": "2022-03-20T10:27:58Z",
               "author": "wisp3rwind",
               "body": "I think I'm also fine with the current version (renamed to `invoke_mb`); I was mostly concerned about `handle_exc` being actively misleading since it does more than handling exceptions. So, from my side, I'd say it's up to you @snejus which variant you prefer.",
+              "reactions": [],
               "path": "beets/autotag/hooks.py",
               "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 6,
+              "originalLine": 603,
+              "startLine": null,
+              "originalStartLine": 602,
               "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42ixHA"
             }
           ]
@@ -344,116 +399,165 @@
               "createdAt": "2022-03-19T14:23:46Z",
               "author": "sampsyo",
               "body": "I think this might cause a crash when an exception occurs. Namely, it seems like this function needs to return an iterable, right? So I think this exception handler should probably `return ()` or similar…",
+              "reactions": [],
               "path": "beets/autotag/hooks.py",
               "outdated": false,
+              "line": 605,
+              "position": 8,
+              "originalPosition": 11,
+              "originalLine": 608,
+              "startLine": null,
+              "originalStartLine": null,
               "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()\n+\n+    try:\n+        return call_func(*args)\n+    except mb.MusicBrainzAPIError as exc:\n+        exc.log(log)",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42ieZf"
             },
             {
               "createdAt": "2022-03-20T10:29:27Z",
               "author": "wisp3rwind",
               "body": "Nice catch! Yes, I'd suspect the same.",
+              "reactions": [],
               "path": "beets/autotag/hooks.py",
               "outdated": false,
+              "line": 605,
+              "position": 8,
+              "originalPosition": 11,
+              "originalLine": 608,
+              "startLine": null,
+              "originalStartLine": null,
               "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()\n+\n+    try:\n+        return call_func(*args)\n+    except mb.MusicBrainzAPIError as exc:\n+        exc.log(log)",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42ixJe"
             },
             {
               "createdAt": "2022-03-23T16:23:16Z",
               "author": "snejus",
               "body": "Well caught! Fixed in e1ffadb2",
+              "reactions": [],
               "path": "beets/autotag/hooks.py",
               "outdated": false,
+              "line": 605,
+              "position": 8,
+              "originalPosition": 11,
+              "originalLine": 608,
+              "startLine": null,
+              "originalStartLine": null,
               "diffHunk": "@@ -598,6 +598,16 @@ def tracks_for_id(track_id):\n             yield t\n \n \n+def invoke_mb(call_func, *args):\n+    if not config[\"musicbrainz\"][\"enabled\"]:\n+        return ()\n+\n+    try:\n+        return call_func(*args)\n+    except mb.MusicBrainzAPIError as exc:\n+        exc.log(log)",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42x-Md"
             }
           ]
         },
         {
           "path": "beets/autotag/hooks.py",
-          "isResolved": false,
+          "isResolved": true,
           "isOutdated": true,
-          "resolvedBy": null,
+          "resolvedBy": "snejus",
           "comments": [
             {
               "createdAt": "2022-03-19T14:24:48Z",
               "author": "sampsyo",
               "body": "I know this might be bikeshedding, but I actually think the repetition (passing the same set of arguments to the two calls to `mb.match_album`) is a little more intelligible.",
+              "reactions": [],
               "path": "beets/autotag/hooks.py",
               "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 21,
+              "originalLine": 622,
+              "startLine": null,
+              "originalStartLine": null,
               "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42ieZf"
             },
             {
               "createdAt": "2022-03-23T16:27:53Z",
               "author": "snejus",
               "body": "True. I must admit I sometimes treat the maximum line length a bit too religiously and adjust the code accordingly ... in unconventional ways 😆 ",
+              "reactions": [],
               "path": "beets/autotag/hooks.py",
               "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 21,
+              "originalLine": 622,
+              "startLine": null,
+              "originalStartLine": null,
               "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42x_5i"
             }
           ]
         },
         {
           "path": "beets/autotag/hooks.py",
-          "isResolved": false,
+          "isResolved": true,
           "isOutdated": true,
-          "resolvedBy": null,
+          "resolvedBy": "snejus",
           "comments": [
             {
               "createdAt": "2022-03-19T14:25:13Z",
               "author": "sampsyo",
               "body": "This stanza and the next could share a single `if config[\"musicbrainz\"][\"enabled\"]:`.",
+              "reactions": [],
               "path": "beets/autotag/hooks.py",
               "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 23,
+              "originalLine": 624,
+              "startLine": null,
+              "originalStartLine": null,
               "diffHunk": "@@ -609,25 +619,17 @@ def album_candidates(items, artist, album, va_likely, extra_tags):\n     constrain the search.\n     \"\"\"\n \n+    common_args = [album, len(items), extra_tags]\n     # Base candidates if we have album and artist to match.\n     if artist and album:",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42ieZf"
             }
           ]
         },
         {
           "path": "docs/reference/config.rst",
-          "isResolved": false,
+          "isResolved": true,
           "isOutdated": true,
-          "resolvedBy": null,
+          "resolvedBy": "snejus",
           "comments": [
             {
               "createdAt": "2022-03-19T14:26:22Z",
               "author": "sampsyo",
               "body": "I think this documentation stuff might be out of order—it makes the \"top-level\" description below appear to be part of the \"enabled\" subsection. I think this should appear among the other subsections below (which start with \"searchlimit\").",
+              "reactions": [],
               "path": "docs/reference/config.rst",
               "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 13,
+              "originalLine": 728,
+              "startLine": null,
+              "originalStartLine": 719,
               "diffHunk": "@@ -716,6 +716,17 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+.. _musicbrainz.enabled:\n+\n+enabled\n+~~~~~~~\n+\n+This option allows you to disable using MusicBrainz as a metadata source. This applies\n+if you use plugins that fetch data from alternative sources and should make the import\n+process quicker.\n+\n+Default: ``yes``.",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42ieZf"
             },
             {
               "createdAt": "2022-03-23T17:03:22Z",
               "author": "snejus",
               "body": "Agree - have moved it below.",
+              "reactions": [],
               "path": "docs/reference/config.rst",
               "outdated": true,
+              "line": null,
+              "position": null,
+              "originalPosition": 13,
+              "originalLine": 728,
+              "startLine": null,
+              "originalStartLine": 719,
               "diffHunk": "@@ -716,6 +716,17 @@ Default: ``{}`` (empty).\n MusicBrainz Options\n -------------------\n \n+.. _musicbrainz.enabled:\n+\n+enabled\n+~~~~~~~\n+\n+This option allows you to disable using MusicBrainz as a metadata source. This applies\n+if you use plugins that fetch data from alternative sources and should make the import\n+process quicker.\n+\n+Default: ``yes``.",
-              "reactions": [],
               "pullRequestReview": "PRR_kwDOAAygxs42yNbF"
             }
           ]
         }
       ],
-      "id": "PR_kwDOAAygxs40fzZb",
-      "closingIssuesReferences": [{
-        "number": 5133,
-        "state": "OPEN",
-        "title": "lyrics: config in tests not reset before each test",
-        "url": "https://github.com/beetbox/beets/issues/5133"
-      }]
+      "closingIssuesReferences": [
+        {
+          "number": 400,
+          "state": "CLOSED",
+          "title": "Optionally disable the MusicBrainz data source",
+          "url": "https://github.com/beetbox/beets/issues/400"
+        }
+      ]
     }
   ]
 }
