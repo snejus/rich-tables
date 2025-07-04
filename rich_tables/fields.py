@@ -50,7 +50,7 @@ def add_count_bars(
     all_keys = list(data[0].keys())
     subcount_key = next((k for k in all_keys if k.endswith("_subcount")), None)
     if subcount_key:
-        new_count_key = f"{subcount_key.removesuffix('_subcount')}/{count_key.removesuffix('_count')}"  # noqa: E501
+        new_count_key = f"{subcount_key.removesuffix('_subcount')}/{count_key.removesuffix('_count') or 'total'}"  # noqa: E501
     else:
         new_count_key = count_key
 
@@ -63,7 +63,7 @@ def add_count_bars(
         inverse = count_key.endswith("duration")
         count = item[count_key]
         if subcount_key:
-            subcount = float(item[subcount_key])
+            subcount = item[subcount_key]
             count_val = f"{subcount}/{count}"
         elif count_key.endswith("duration"):
             count_val = duration2human(count)

@@ -178,7 +178,7 @@ def _header(data: Any, header: str) -> RenderableType:
         header.endswith(".py") and isinstance(data, str)
     ) or header in fields.FIELDS_MAP:
         with suppress(AttributeError, TypeError):
-            return _get_val(data, header)
+            data = _get_val(data, header)
 
     return flexitable(data)  # type: ignore[no-any-return]
 
