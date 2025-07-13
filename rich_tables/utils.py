@@ -321,9 +321,12 @@ def split_with_color(text: str) -> str:
     )
 
 
-def format_with_color(items: str | Sequence[str]) -> str:
+def format_with_color(items: Any) -> Any:
     if isinstance(items, str):
         items = [items]
+
+    if not isinstance(items, Sequence):
+        return items
 
     return " ".join(_format_with_color(str(x)) for x in items)
 

@@ -115,6 +115,10 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/simple_json.svg)
 
+### Simple nested object
+
+![image](svgs/simple_nested_object.svg)
+
 ### Sql
 
 ![image](svgs/sql.svg)
