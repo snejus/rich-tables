@@ -17,6 +17,7 @@ from .generic import flexitable
 from .utils import (
     JSONDict,
     border_panel,
+    console,
     fmt_time,
     format_with_color,
     format_with_color_on_black,
@@ -75,9 +76,13 @@ def fmt_add_del(added: int, deleted: int) -> list[str]:
 
 def gh_md_panel(body: str, *args: Any, **kwargs: Any) -> Panel:
     return md_panel(
-        body.replace(":rofl:", ":rolling_on_the_floor_laughing:").replace(
-            "suggestion", "python"
-        ),
+        console.render_str(
+            body.replace(":rofl:", ":rolling_on_the_floor_laughing:").replace(
+                "suggestion", "python"
+            ),
+            highlight=False,
+            markup=False,
+        ).markup,
         *args,
         **kwargs,
     )
