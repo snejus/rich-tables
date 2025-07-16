@@ -157,7 +157,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if name == "is blocked by"
         else name
     ),
-    code=lambda x: syntax(x, "python"),
+    code=lambda x: syntax(x, "python") if isinstance(x, str) else x,
     context=lambda x: syntax(x, "python"),
     python=lambda x: syntax(x, "python"),
     CreatedBy=lambda x: syntax(x.replace(";", "\n"), "sh"),
