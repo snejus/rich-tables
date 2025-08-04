@@ -154,11 +154,12 @@ def pretty_diff(before: Any, after: Any) -> str:
     Handles all supported types through the multimethod dispatch system.
     """
     result = diff(to_hashable(before), to_hashable(after))
+    console.print(result)
     if isinstance(result, str):
         return result
 
     return (
-        console.capture_text(result, width=100, highlight=False)
+        console.capture_text(result, width=100, highlight=False, markup=False)
         .replace("'", "")
         .replace('"', "")
         .replace("\\", "")
