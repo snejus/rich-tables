@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from rich.console import RenderableType
 
 
-MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|_?count$)")
+MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|_count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
 
 
@@ -57,20 +57,21 @@ def add_count_bars(
     all_counts = [float(i[count_key]) for i in data]
     max_value = max(all_counts)
 
-    bar_key = f"{count_key}_bar"
+    bar_key = f"{new_count_key}_bar"
     for item in data:
         subcount = None
         inverse = count_key.endswith("duration")
         count = item[count_key]
-        if subcount_key:
-            subcount = item[subcount_key]
-            count_val = f"{subcount}/{count}"
-        elif count_key.endswith("duration"):
+        if count_key.endswith("duration"):
             count_val = duration2human(count)
         else:
             count_val = str(count)
 
-        item.pop(count_key, None)
+        if subcount_key:
+            subcount = item[subcount_key]
+            count_val = f"{subcount}/{count}"
+
+        # item.pop(count_key, None)
         item[new_count_key] = count_val
         item[bar_key] = progress_bar(
             end=subcount, width=max_value, size=count, inverse=inverse
@@ -248,7 +249,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "providerPublishTime",
         "release_date",
         "sunrise",
-        "sunset"
+        "sunset",
     ),
     md_panel: (
         "answer",
