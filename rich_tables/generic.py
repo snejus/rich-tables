@@ -369,7 +369,8 @@ def get_item_list_table(
 def _render_dict_list(data: HashableList[HashableDict]) -> Panel:
     """Render a list of dictionaries with consistent structure handling."""
     if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
-        data = add_count_bars(data, count_key)
+        with suppress(ValueError):
+            data = add_count_bars(data, count_key)
 
     all_fields: dict[str, None] = {}
     for item in data:

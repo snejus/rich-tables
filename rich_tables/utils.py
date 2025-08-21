@@ -133,10 +133,17 @@ def wrap(text: Any, tag: str) -> str:
 
 
 def duration2human(duration: SupportsFloat) -> str:
-    diff = timedelta(seconds=float(duration))
-    days = f"{diff.days}d " if diff.days else ""
-    time_parts = [diff.seconds // 3600, diff.seconds % 3600 // 60, diff.seconds % 60]
-    return "{:>12}".format(days + ":".join(map("{0:0>2}".format, time_parts)))
+    with suppress(ValueError):
+        diff = timedelta(seconds=float(duration))
+        days = f"{diff.days}d " if diff.days else ""
+        time_parts = [
+            diff.seconds // 3600,
+            diff.seconds % 3600 // 60,
+            diff.seconds % 60,
+        ]
+        return "{:>12}".format(days + ":".join(map("{0:0>2}".format, time_parts)))
+
+    return duration
 
 
 def fmt_time(seconds: int) -> Iterable[str]:
