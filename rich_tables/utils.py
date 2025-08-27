@@ -22,6 +22,7 @@ from rich.bar import Bar
 from rich.console import Console, RenderableType, RenderResult
 from rich.errors import MarkupError
 from rich.markdown import Markdown
+# from rich.style
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Column, Table
@@ -376,6 +377,14 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
     return simple_panel(content, **kwargs)
 
 
+def markdown(content: str, **kwargs: Any) -> Markdown:
+    kwargs.setdefault("code_theme", "nord-darker")
+    kwargs.setdefault("inline_code_theme", "nord-darker")
+    kwargs.setdefault("justify", "left")
+
+    return Markdown(Pat.HTML_PARAGRAPH.sub("", content), **kwargs)
+
+
 def md_panel(content: str, **kwargs: Any) -> Panel:
     if "title" not in kwargs and (
         m := re.match(r"\[title\](.+?)\[/title\]\s+", content)
@@ -383,15 +392,7 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
         kwargs["title"] = m[1]
         content = content.replace(m[0], "")
 
-    return border_panel(
-        Markdown(
-            Pat.HTML_PARAGRAPH.sub("", content),
-            inline_code_theme="nord-darker",
-            code_theme="nord-darker",
-            justify=kwargs.pop("justify", "left"),
-        ),
-        **kwargs,
-    )
+    return border_panel(markdown(content), **kwargs)
 
 
 def new_tree(
