@@ -5,10 +5,19 @@ from __future__ import annotations
 import re
 import time
 from collections import defaultdict
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field
 from functools import cached_property
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Callable, Protocol
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Optional,
+    Protocol,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 from rich import box
 from typing_extensions import Literal, Self, TypedDict
@@ -160,13 +169,31 @@ class File(Diff):
     path: str
 
 
+def convert(type_: Any, value: Any) -> Any:
+    """Pre-process field value if required."""
+    type_origin = get_origin(type_)
+
+    if type_origin is list:
+        subtype, *_ = get_args(type_)
+        return [convert(subtype, v) for v in value]
+
+    if (
+        isinstance(type_, type)
+        and issubclass(type_, Entity)
+        and not isinstance(value, Entity)
+    ):
+        return type_.make(value)
+
+    return value
+
+
 @dataclass
 class Entity:
     @classmethod
-    def make(cls, **kwargs: Any) -> Self:
-        field_names = {f.name for f in fields(cls)}
-        filtered_kwargs = {k: v for k, v in kwargs.items() if k in field_names}
-        return cls(**filtered_kwargs)
+    def make(cls, data: JSONDict) -> Self:
+        """Select the fields defined on the class and create an Entity instance."""
+        data = {f: convert(_type, data[f]) for f, _type in get_type_hints(cls).items()}
+        return cls(**data)
 
 
 @dataclass
@@ -189,15 +216,6 @@ class Commit(Entity):
             get_val(self, "message"),
             get_val(self, "committedDate"),
         ]
-
-
-@dataclass
-class Commits(Entity):
-    commits: list[Commit]
-
-    @property
-    def panel(self) -> Panel:
-        return diff_panel("commits", [commit.parts for commit in self.commits])
 
 
 @dataclass
@@ -249,11 +267,6 @@ class Content(CreatedPanelMixin):
 class Comment(Content):
     reactions: list[Reaction]
 
-    @classmethod
-    def make(cls, reactions: list[JSONDict], **kwargs: Any) -> Comment:
-        kwargs["reactions"] = [Reaction.make(**c) for c in reactions]
-        return super().make(**kwargs)
-
     @property
     def title(self) -> str:
         return self.get_title(["author", "created_at"])
@@ -284,12 +297,12 @@ class IssueComment(Comment):
 class DiffHunk(Entity):
     diffHunk: str = field(repr=False)
     line: int  # line number in the file
-    position: int | None  # position in the diff hunk, if applicable
+    position: Optional[int]  # position in the diff hunk, if applicable
     startLine: int  # line number in the file
     # as above but before the diff hunk was changed
     originalLine: int
     originalPosition: int
-    originalStartLine: int | None
+    originalStartLine: Optional[int]
 
     @cached_property
     def focus_start(self) -> int:
@@ -369,13 +382,13 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
         return self.isResolved
 
     @classmethod
-    def make(cls, comments: list[JSONDict], **kwargs: Any) -> ReviewThread:
-        diff_hunk = DiffHunk.make(**comments[0])
+    def make(cls, kwargs: JSONDict) -> ReviewThread:
+        diff_hunk = DiffHunk.make(kwargs["comments"][0])
         kwargs["diffHunk"] = diff_hunk
-        kwargs["comments"] = [
-            ReviewComment.make(**c, before=diff_hunk.before) for c in comments
-        ]
-        return super().make(**kwargs)
+        for comment in kwargs["comments"]:
+            comment["before"] = diff_hunk.before
+
+        return super().make(kwargs)
 
     @property
     def review_id(self) -> str:
@@ -498,7 +511,7 @@ class PullRequest(Entity):
     author: str
     body: str
     additions: int
-    commits: Commits
+    commits: list[Commit]
     deletions: int
     files: list[File]
     headRefName: str
@@ -507,9 +520,8 @@ class PullRequest(Entity):
     repository: str
     reviewDecision: str
     reviewRequests: list[str]
-    reviewThreads: list[ReviewThread]
     reviews: list[Review]
-    comments: list[Comment]
+    comments: list[IssueComment]
     state: str
     title: str
     updatedAt: str
@@ -526,34 +538,32 @@ class PullRequest(Entity):
 @dataclass
 class PullRequestTable(PullRequest):
     @classmethod
-    def make(cls, reviews: list[JSONDict], **kwargs: Any) -> PullRequestTable:
-        verbose = kwargs["verbose"]
+    def make(cls, kwargs: JSONDict) -> PullRequestTable:
         threads = [
-            ReviewThread.make(**rt, verbose=verbose) for rt in kwargs["reviewThreads"]
+            ReviewThread.make({**rt, "verbose": kwargs["verbose"]})
+            for rt in kwargs["reviewThreads"]
         ]
         comments_by_review_id = dict(
             sortgroup_by(
-                (c for t in threads for c in t.comments),
-                lambda c: c.review_id,
+                (c for t in threads for c in t.comments), lambda c: c.review_id
             )
         )
         threads_by_review_id = dict(sortgroup_by(threads, lambda t: t.review_id))
-        return super().make(
-            commits=Commits([Commit(**c) for c in kwargs.pop("commits", [])]),
-            comments=[IssueComment.make(**c) for c in kwargs.pop("comments", [])],
+
+        kwargs.update(
             reviews=[
-                Review(
+                {
                     **r,
-                    threads=threads_by_review_id.pop(r["id"], []),
-                    comments=comments_by_review_id.pop(r["id"], []),
-                    verbose=verbose,
-                )
-                for r in reviews
+                    "verbose": kwargs["verbose"],
+                    "threads": threads_by_review_id.pop(r["id"], []),
+                    "comments": comments_by_review_id.pop(r["id"], []),
+                }
+                for r in kwargs["reviews"]
                 if (r["id"] in threads_by_review_id or r["body"])
             ],
-            issues=[Issue(**i) for i in kwargs.pop("closingIssuesReferences")],
-            **kwargs,
+            issues=kwargs.pop("closingIssuesReferences", []),
         )
+        return super().make(kwargs)
 
     @property
     def name(self) -> str:
@@ -609,7 +619,14 @@ class PullRequestTable(PullRequest):
 
     @property
     def files_commits(self) -> Table:
-        return new_table(rows=[[get_val(self, "files"), self.commits.panel]])
+        return new_table(
+            rows=[
+                [
+                    get_val(self, "files"),
+                    diff_panel("commits", [commit.parts for commit in self.commits]),
+                ]
+            ]
+        )
 
     @property
     def timestamped_contents(self) -> list[CreatedPanelMixin]:
@@ -626,7 +643,7 @@ def pulls_table(
 ) -> Iterable[str | ConsoleRenderable]:
     FIELDS_MAP.update(PR_FIELDS_MAP)
 
-    pr = data[0]
-    pr_table = PullRequestTable.make(**pr, verbose=kwargs["verbose"])
+    pr = {**data[0], "verbose": kwargs.get("verbose", False)}
+    pr_table = PullRequestTable.make(pr)
     yield pr_table.info
     yield from pr_table.panels
