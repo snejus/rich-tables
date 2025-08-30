@@ -147,6 +147,16 @@ def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
     return data
 
 
+@diff.register
+def _(before: HashableDict, after: None) -> dict[str, str]:
+    return diff(before, HashableDict())
+
+
+@diff.register
+def _(before: None, after: HashableDict) -> dict[str, str]:
+    return diff(HashableDict(), after)
+
+
 def pretty_diff(before: Any, after: Any) -> str:
     """Generate a Rich Text object showing differences between any two Python objects.
 

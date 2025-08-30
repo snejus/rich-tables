@@ -84,7 +84,7 @@ Otherwise, use command 'diff' to compare two JSON objects or blocks of text.""",
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-j", "--json", action="store_true", help="output as JSON")
     parser.add_argument(
-        "-s", "--save", action="store_true", help="save the output as HTML"
+        "-o", "--output-file", type=Path, help="save as SVG to provided file"
     )
 
     subparsers = parser.add_subparsers(
@@ -137,23 +137,20 @@ def _draw_data_list(data: list[JSONDict], **__: Any) -> None:
 
 
 @contextmanager
-def handle_save(save: bool) -> Iterator[None]:
-    if save:
-        yield
+def handle_save(output_file: Path | None) -> Iterator[None]:
+    if output_file:
+        console.record = True
 
-        if save:
-            with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as file:
-                filename = file.name
-            console.save_html(filename)
-            print(f"Saved output as {filename}", file=sys.stderr)
-    else:
-        yield
+    yield
+
+    if output_file:
+        console.save_svg(str(output_file))
 
 
 def main() -> None:
     args = get_args()
 
-    with handle_save(args.save):
+    with handle_save(args.output_file):
         if args.command == "diff":
             console.print(pretty_diff(args.before, args.after), highlight=False)
         else:
