@@ -54,7 +54,12 @@ def add_count_bars(
     else:
         new_count_key = count_key
 
-    all_counts = [float(i[count_key]) for i in data]
+    for item in data:
+        item[count_key] = float(item[count_key])
+        if subcount_key:
+            item[subcount_key] = float(item[subcount_key])
+
+    all_counts = [i[count_key] for i in data]
     max_value = max(all_counts)
 
     bar_key = f"{new_count_key}_bar"
