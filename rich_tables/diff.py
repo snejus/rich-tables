@@ -134,7 +134,6 @@ def _(before: HashableList[Any], after: HashableList[Any]) -> Any:
 
 @diff.register
 def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
-    print(f"{before=}, {after=}")
     data = {}
     keys = dict.fromkeys((*before, *after))
     for key in keys:
