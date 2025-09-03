@@ -70,7 +70,7 @@ def add_count_bars(
         if count_key.endswith("duration"):
             count_val = duration2human(count)
         else:
-            count_val = str(count)
+            count_val = str(int(count))
 
         if subcount_key:
             subcount = item[subcount_key]
