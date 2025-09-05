@@ -22,6 +22,7 @@ from rich.bar import Bar
 from rich.console import Console, RenderableType, RenderResult
 from rich.errors import MarkupError
 from rich.markdown import Markdown
+
 # from rich.style
 from rich.panel import Panel
 from rich.syntax import Syntax
@@ -129,8 +130,8 @@ def format_string(text: str) -> str:
     return text
 
 
-def wrap(text: Any, tag: str) -> str:
-    return f"[{tag}]{format_string(str(text))}[/]"
+def wrap(text: str, tag: str) -> str:
+    return f"[{tag}]{format_string(str(text))}[/{tag}]"
 
 
 def duration2human(duration: SupportsFloat) -> str:

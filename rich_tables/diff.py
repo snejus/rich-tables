@@ -123,12 +123,12 @@ def diff(before: str, after: str) -> str:
 
 
 @diff.register
-def _(before: Any, after: Any) -> Any:
+def _(before: Any, after: Any) -> int:
     return diff(diff_serialize(before), diff_serialize(after))
 
 
 @diff.register
-def _(before: HashableList[Any], after: HashableList[Any]) -> Any:
+def _(before: HashableList[Any], after: HashableList[Any]) -> int:
     return list(starmap(diff, zip_longest(before, after)))
 
 
@@ -148,8 +148,8 @@ def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
 
 
 @diff.register
-def _(before: HashableDict, after: None) -> dict[str, str]:
-    return diff(before, HashableDict())
+def _(before: HashableDict[str, str], after: None) -> dict[str, str]:
+    return diff(before, HashableDict[str, str]())
 
 
 @diff.register
