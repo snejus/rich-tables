@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from rich.console import RenderableType
 
 
-MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|_?count$)")
+MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|(?<![a-z])count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
 
 
@@ -55,9 +55,9 @@ def add_count_bars(
         new_count_key = count_key
 
     for item in data:
-        item[count_key] = float(item[count_key])
+        item[count_key] = item[count_key]
         if subcount_key:
-            item[subcount_key] = float(item[subcount_key])
+            item[subcount_key] = item[subcount_key]
 
     all_counts = [i[count_key] for i in data]
     max_value = max(all_counts)
