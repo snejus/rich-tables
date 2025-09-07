@@ -31,6 +31,7 @@ from .utils import (
     fmt_time,
     format_with_color,
     format_with_color_on_black,
+    human_dt,
     list_table,
     md_panel,
     new_table,
@@ -140,8 +141,8 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
     "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
     "dates": lambda x: new_table(
         rows=[
-            [b_green(r" ⬤ "), diff_dt(x[0])],
-            [wrap(r" ◯ ", "b yellow"), diff_dt(x[1])],
+            [b_green(r" ⬤ "), human_dt(x[0])],
+            [wrap(r" ◯ ", "b yellow"), human_dt(x[1])],
         ]
     ),
     "path": lambda x: wrap(x, "b"),
