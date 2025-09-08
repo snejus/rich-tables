@@ -287,14 +287,14 @@ def _get_val(value: float | str | RenderableType | None, field: str) -> Renderab
     if field.endswith(".py"):
         return border_panel(syntax(value, "python"), title=field)
 
-    if isinstance(value, str):
-        value = format_string(value)
-
     if isinstance(value, ConsoleRenderable):
         return value
 
     if field in FIELDS_MAP:
         return FIELDS_MAP[field](value)
+
+    if isinstance(value, str):
+        value = format_string(value)
 
     return str(value)
 
