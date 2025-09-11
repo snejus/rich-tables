@@ -123,12 +123,12 @@ def diff(before: str, after: str) -> str:
 
 
 @diff.register
-def _(before: Any, after: Any) -> int:
+def _(before: Any, after: Any) -> Any:
     return diff(diff_serialize(before), diff_serialize(after))
 
 
 @diff.register
-def _(before: HashableList[Any], after: HashableList[Any]) -> int:
+def _(before: HashableList[Any], after: HashableList[Any]) -> Any:
     return list(starmap(diff, zip_longest(before, after)))
 
 
@@ -148,17 +148,17 @@ def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
 
 
 @diff.register
-def _(before: HashableDict[str, str], after: None) -> dict[str, str]:
+def _(before: HashableDict[str, str], _: None) -> dict[str, str]:
     return diff(before, HashableDict[str, str]())
 
 
 @diff.register
-def _(before: None, after: HashableDict) -> dict[str, str]:
+def _(_: None, after: HashableDict) -> dict[str, str]:
     return diff(HashableDict(), after)
 
 
 @diff.register
-def _(before: None, after: HashableList) -> list[str, str]:
+def _(_: None, after: HashableList) -> list[str, str]:
     return diff(HashableList(), after)
 
 
@@ -173,7 +173,7 @@ def pretty_diff(before: Any, after: Any) -> str:
         return result
 
     return (
-        console.capture_text(result, width=100, highlight=False, markup=False)
+        console.capture_text(result, width=100, highlight=False)
         .replace("'", "")
         .replace('"', "")
         .replace("\\", "")
