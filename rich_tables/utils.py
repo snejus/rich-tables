@@ -46,6 +46,9 @@ JSONDict = dict[str, Any]
 
 
 class HashableDict(UserDict[KT, VT]):
+    def __init__(self, dict: dict[KT, VT] | None = None, /, **kwargs) -> None:
+        super().__init__({k: v for k, v in (dict or {}).items() if v != []}, **kwargs)
+
     def __hash__(self) -> int:
         return hash(tuple(self.data.items()))
 
@@ -134,7 +137,7 @@ def wrap(text: str, tag: str) -> str:
     return f"[{tag}]{format_string(str(text))}[/{tag}]"
 
 
-def duration2human(duration: SupportsFloat) -> str:
+def duration2human(duration: SupportsFloat) -> str | SupportsFloat:
     with suppress(ValueError):
         diff = timedelta(seconds=float(duration))
         days = f"{diff.days}d " if diff.days else ""

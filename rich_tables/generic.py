@@ -376,7 +376,6 @@ def _render_dict_list(data: HashableList[HashableDict]) -> Panel:
     for item in data:
         all_fields.update(dict.fromkeys(item))
 
-    # fields = all_fields
     fields = dict.fromkeys(
         k for k in all_fields if any((i.get(k) not in {"", None}) for i in data)
     ).keys()
