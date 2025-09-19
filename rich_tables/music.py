@@ -114,16 +114,17 @@ def format_title(title: str) -> str:
 
 
 def album_title(album: JSONDict) -> Table:
-    name = album["album"]
     artist = album.get("albumartist") or album.get("artist")
-    genre = album.get("genre") or ""
-    released = album.get("released", "")
-    title = (
-        f"{name} by {artist}"
-        if album["albumtypes"] != "single"
-        else f"singles by {artist}"
+    title = " by ".join(filter(None, (album["album"], artist)))
+    return new_table(
+        rows=[
+            [
+                format_title(title),
+                format_title(album.get("released", "")),
+                album.get("genre") or "",
+            ]
+        ]
     )
-    return new_table(rows=[[format_title(title), format_title(released), genre]])
 
 
 def album_info(tracks: list[JSONDict]) -> JSONDict:
@@ -132,7 +133,7 @@ def album_info(tracks: list[JSONDict]) -> JSONDict:
 
     album = defaultdict(str, zip(fields, op.itemgetter(*fields)(first)))
     if not album["album"]:
-        album.update(album="Singles", albumartist=first["artist"])
+        album.update(album="Singles", albumartist="")
     album.update(**album_stats(tracks))
     add_colors(album)
     for field, _ in filter(op.truth, sorted(album.items())):
