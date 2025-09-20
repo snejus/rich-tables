@@ -28,7 +28,7 @@ jobs:
         run: poetry install --all-extras
 
       - name: Pytest
-        run: poetry run pytest -vv
+        run: poetry run pytest -s -vv
 
       - name: Upload coverage data to coveralls.io
         run: poetry run coveralls --service=github
