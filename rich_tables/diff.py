@@ -123,24 +123,24 @@ def diff(before: str, after: str) -> str:
 
 
 @diff.register
-def _(before: Any, after: Any) -> Any:
+def _anys(before: Any, after: Any) -> Any:
     return diff(diff_serialize(before), diff_serialize(after))
 
 
 @diff.register
-def _(before: HashableList[Any], after: HashableList[Any]) -> Any:
-    return list(starmap(diff, zip_longest(before, after)))
+def _lists(before: HashableList[Any], after: HashableList[Any]) -> Any:
+    return HashableList(starmap(diff, zip_longest(before, after)))
 
 
 @diff.register
-def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
+def _dicts(before: HashableDict, after: HashableDict) -> dict[str, str]:
     data = {}
-    keys = dict.fromkeys((*before, *after))
+    keys = HashableDict.fromkeys((*before, *after))
     for key in keys:
         if key not in before:
-            data[format_new(key)] = format_new(diff_serialize(after[key]))
+            data[format_new(key)] = diff(None, after[key])
         elif key not in after:
-            data[format_old(key)] = format_old(diff_serialize(before[key]))
+            data[format_old(key)] = diff(before[key], None)
         else:
             data[key] = diff(before[key], after[key])
 
@@ -148,17 +148,22 @@ def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
 
 
 @diff.register
-def _(before: HashableDict[str, str], _: None) -> dict[str, str]:
+def _dict_none(before: HashableDict, _: None) -> dict[str, str]:
     return diff(before, HashableDict[str, str]())
 
 
 @diff.register
-def _(_: None, after: HashableDict) -> dict[str, str]:
+def _list_none(before: HashableList, _: None) -> dict[str, str]:
+    return diff(before, HashableList())
+
+
+@diff.register
+def _none_dict(_: None, after: HashableDict) -> dict[str, str]:
     return diff(HashableDict(), after)
 
 
 @diff.register
-def _(_: None, after: HashableList) -> list[str, str]:
+def _none_list(_: None, after: HashableList) -> list[str, str]:
     return diff(HashableList(), after)
 
 
