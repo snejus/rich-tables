@@ -100,7 +100,7 @@ DISPLAY_HEADER: dict[RenderableType, str] = {
 
 
 class Pat:
-    SPLIT_PAT = re.compile(r"[;,] ?")
+    SPLIT_PAT = re.compile(r"[;,\␀] ?")
     PRED_COLOR_PAT = re.compile(r"(pred color)\](.*?)(?=\[/)")
     HTML_PARAGRAPH = re.compile(r"</?p>")
     OPENING_BRACKET = re.compile(r"\[(?!/)")
@@ -529,8 +529,8 @@ def sql_syntax(sql_string: str) -> Syntax:
             strip_whitespace=True,
             strip_comments=True,
             reindent=True,
-            # reindent_aligned=True,
-            compact=True,
+            reindent_aligned=False,
+            compact=False,
         ),
         "sql",
     )

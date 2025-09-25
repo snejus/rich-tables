@@ -175,6 +175,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
     sql=lambda x: sql_syntax("---\n\n" + x.replace(r"\[", "[")),
+    parent_id=format_with_color_on_black,
     slug=format_with_color_on_black,
 )
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
@@ -186,6 +187,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "app",
         "app_label",
         "area",
+        "artists",
         "assignee",
         "brand",
         "calendar",
