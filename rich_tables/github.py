@@ -155,9 +155,7 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
         ],
     ),
     "reviewRequests": format_with_color_on_black,
-    "participants": lambda x: "\n".join(
-        map(format_with_color, map("{:^20}".format, x))
-    ),
+    "participants": lambda x: " ".join(map(format_with_color_on_black, x)),
 }
 
 
@@ -508,6 +506,7 @@ class Issue(Entity):
 @dataclass
 class PullRequest(Entity):
     id: str
+    number: int
     createdAt: str
     author: str
     body: str
@@ -568,7 +567,7 @@ class PullRequestTable(PullRequest):
 
     @property
     def name(self) -> str:
-        return wrap(self.title, f"b {predictably_random_color(self.title)}")
+        return wrap(f"{wrap(f'#{self.number}', 'dim')} {self.title}", "b white")
 
     @property
     def repo(self) -> str:
