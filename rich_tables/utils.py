@@ -396,6 +396,8 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
         kwargs["title"] = m[1]
         content = content.replace(m[0], "")
 
+    content = content.replace("- [x]", "* :ballot_box_with_check:")
+
     return border_panel(markdown(content), **kwargs)
 
 

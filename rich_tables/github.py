@@ -87,11 +87,13 @@ def fmt_add_del(added: int, deleted: int) -> list[str]:
 
 def gh_md_panel(body: str, *args: Any, **kwargs: Any) -> Panel:
     return md_panel(
-        console.render_str(
-            body.replace(":rofl:", ":rolling_on_the_floor_laughing:"),
-            highlight=False,
-            markup=False,
-        ).markup,
+        body,
+
+        # console.render_str(
+        #     body.replace(":rofl:", ":rolling_on_the_floor_laughing:"),
+        #     highlight=False,
+        #     markup=False,
+        # ).markup,
         *args,
         **kwargs,
     )
