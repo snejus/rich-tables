@@ -120,6 +120,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if isinstance(x, (list, HashableList, tuple))
         else format_with_color(x)
         if isinstance(x, str)
+        else ""
+        if x is None
         else x
     ),
     since=lambda x: (
@@ -285,7 +287,7 @@ for func, fields in fields_by_func.items():
 
 def _get_val(value: float | str | RenderableType | None, field: str) -> RenderableType:
     if value is None:
-        return "None"
+        return ""
 
     if field.endswith(".py"):
         return border_panel(syntax(value, "python"), title=field)
