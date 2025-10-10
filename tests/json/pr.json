@@ -12,6 +12,7 @@
       "state": "MERGED",
       "additions": 35,
       "deletions": 22,
+      "number": 1000,
       "headRefName": "disable-musicbrainz-plugin",
       "reviewDecision": null,
       "repository": "beets",

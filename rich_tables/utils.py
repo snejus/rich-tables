@@ -551,6 +551,6 @@ def colored_with_bg(items: str | Iterable[str]) -> str:
 
 def colored_split(items: str | Iterable[str]) -> str:
     if isinstance(items, str):
-        items = sorted(Pat.SPLIT_PAT.split(items))
+        items = Pat.SPLIT_PAT.split(items)
 
     return " ".join(map(format_with_color, items))
