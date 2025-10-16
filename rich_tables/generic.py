@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from functools import cache, reduce, wraps
 from itertools import chain, groupby
 from operator import and_
-from typing import Any, Callable, TypeVar, Union
+from typing import Any, Callable, SupportsFloat, TypeVar, Union
 
 from multimethod import multidispatch
 from rich import box
@@ -368,7 +368,9 @@ def get_item_list_table(
 
 def _render_dict_list(data: HashableList[HashableDict]) -> Panel:
     """Render a list of dictionaries with consistent structure handling."""
-    if count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None):
+    if (
+        count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None)
+    ) and isinstance(data[0][count_key], SupportsFloat):
         with suppress(ValueError):
             data = add_count_bars(data, count_key)
 
