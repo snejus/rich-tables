@@ -212,6 +212,9 @@ def _json_dict_list(
         columns would have consistent widths across both tables to ensure visual
         alignment.
     """
+    if {"before", "after"} <= data.keys():
+        return pretty_diff(data["before"], data["after"])
+
     tree: Tree = flexitable(HashableDict({f: flexitable(v) for f, v in data.items()}))
 
     if (
