@@ -27,6 +27,7 @@ from .utils import (
     get_country,
     human_dt,
     md_panel,
+    predictably_random_color,
     progress_bar,
     simple_panel,
     split_with_color,
@@ -149,6 +150,15 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     hidden=lambda x: ":shit: " if x == 1 else "",
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
+    # members=lambda x: " ".join(
+    #     wrap(wrap(a, clr), f"on {clr}")
+    #     for a in x
+    #     if (
+    #         clr := predictably_random_color(
+    #             "".join(chr(int(a[i : i + 3])) for i in range(0, len(a), 3))
+    #         )
+    #     )
+    # ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
     duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
     plays=lambda x: wrap(x, BOLD_GREEN),
@@ -200,6 +210,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "data_source",
         "default_start_time",
         "default_end_time",
+        "departments",
         "Description",
         "endpoint",
         "entity",
