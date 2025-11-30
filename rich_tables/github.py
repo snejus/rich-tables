@@ -27,7 +27,6 @@ from .generic import flexitable
 from .utils import (
     JSONDict,
     border_panel,
-    console,
     fmt_time,
     format_with_color,
     format_with_color_on_black,
@@ -88,7 +87,6 @@ def fmt_add_del(added: int, deleted: int) -> list[str]:
 def gh_md_panel(body: str, *args: Any, **kwargs: Any) -> Panel:
     return md_panel(
         body,
-
         # console.render_str(
         #     body.replace(":rofl:", ":rolling_on_the_floor_laughing:"),
         #     highlight=False,
@@ -257,7 +255,7 @@ class Content(CreatedPanelMixin):
 
     @property
     def created_at(self) -> str:
-        return f"""[white]{self.createdAt.replace("T", " ").replace("Z", "")}[/]"""
+        return self.createdAt
 
     @property
     def created(self) -> str:

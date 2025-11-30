@@ -6,9 +6,11 @@ from collections.abc import Iterable, MutableMapping
 from datetime import datetime, timezone
 from functools import singledispatch
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
+from multimethod import multidispatch
 from rich.console import ConsoleRenderable
+from rich.panel import Panel
 from rich.text import Text
 
 from .diff import pretty_diff
@@ -26,8 +28,8 @@ from .utils import (
     format_with_color_on_black,
     get_country,
     human_dt,
+    markdown,
     md_panel,
-    predictably_random_color,
     progress_bar,
     simple_panel,
     split_with_color,
@@ -95,6 +97,33 @@ def add_count_bars(
         )
 
     return data
+
+
+TD = TypeVar("TD", bound=dict[str, Any])
+
+
+@multidispatch
+def comment_panel(content: str | TD, **kwargs) -> Panel:
+    raise NotImplementedError
+
+
+@comment_panel.register
+def _comment_panel_str(content: str, **kwargs) -> Panel:
+    if m := re.match(r"\[title\](.+?)\[/title\]\s+", content):
+        kwargs["title"] = m[1]
+        content = content.replace(m[0], "")
+
+    content = content.replace("- [x]", "* :ballot_box_with_check:")
+
+    return border_panel(markdown(content), **kwargs)
+
+
+@comment_panel.register
+def _comment_panel_dict(content: TD, **kwargs) -> Panel:
+    body = content.pop("body")
+    title = " ".join(_get_val(v, k) for k, v in content.items())
+
+    return comment_panel(body, title=title)
 
 
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
@@ -187,6 +216,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
     sql=lambda x: sql_syntax("---\n\n" + x.replace(r"\[", "[")),
+    # created_at=lambda x: f"[white]{x.replace('T', ' ').replace('Z', '')}[/]",
+    comment=comment_panel,
     parent_id=format_with_color_on_black,
     slug=format_with_color_on_black,
 )
@@ -258,6 +289,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "added",
         "committedDate",
         "created",
+        "created_at",
         "due",
         "done_date",
         "start",
@@ -272,13 +304,13 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "release_date",
         "sunrise",
         "sunset",
+        "updated_at",
     ),
     md_panel: (
         "answer",
         "benefits",
         "body",
         "bodyHTML",
-        "comment",
         "comments",
         "creditText",
         "description",
