@@ -58,18 +58,18 @@ def add_count_bars(
         new_count_key = count_key
 
     for item in data:
-        item[count_key] = item[count_key]
+        item[count_key] = item.get(count_key, 0)
         if subcount_key:
             item[subcount_key] = item[subcount_key]
 
-    all_counts = [i[count_key] for i in data]
+    all_counts = [i.get(count_key, 0) for i in data]
     max_value = max(all_counts)
 
     bar_key = f"{new_count_key}_bar"
     for item in data:
         subcount = None
         inverse = count_key.endswith("duration")
-        count = item[count_key]
+        count = item.get(count_key, 0)
         if count_key.endswith("duration"):
             count_val = duration2human(count)
         else:
