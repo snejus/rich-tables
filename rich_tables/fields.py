@@ -224,6 +224,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     format_with_color: (
         "__typename",
+        "action",
         "album",
         "albumtype",
         "allowedValues",
@@ -238,6 +239,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "categories",
         "Category",
         "classname",
+        "clinician",
         "data_source",
         "default_start_time",
         "default_end_time",
