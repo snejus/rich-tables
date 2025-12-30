@@ -399,7 +399,7 @@ def _render_dict_list(data: HashableList[HashableDict]) -> Panel:
                     rend.hide_root = True
                 table.add_row(border_panel(rend))
         else:
-            table.add_row(get_item_list_table(items, fields, expand=True))
+            table.add_row(get_item_list_table(items, fields, expand=False))
 
     return border_panel(table, border_style="dim black", expand=False)
 
