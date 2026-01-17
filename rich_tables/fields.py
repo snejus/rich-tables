@@ -6,7 +6,7 @@ from collections.abc import Iterable, MutableMapping
 from datetime import datetime, timezone
 from functools import singledispatch
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, TypeVar
 
 from multimethod import multidispatch
 from rich.console import ConsoleRenderable
@@ -354,8 +354,9 @@ def get_val(obj: JSONDict | object, field: str) -> Any:
     """Definition of a generic get_val function."""
 
 
-@get_val.register
-def _(obj: dict, field: str) -> Any:  # type: ignore[type-arg]
+@get_val.register(dict)
+@get_val.register(HashableDict)
+def _(obj: dict | HashableDict, field: str) -> Any:  # type: ignore[type-arg]
     return _get_val(obj.get(field), field)
 
 

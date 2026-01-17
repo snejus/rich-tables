@@ -36,6 +36,7 @@ from rich.tree import Tree
 from . import fields
 from .diff import pretty_diff
 from .fields import MATCH_COUNT_HEADER, _get_val, add_count_bars
+from .types import TypeName, get_renderable
 from .utils import (
     HashableDict,
     HashableList,
@@ -155,6 +156,12 @@ def _num(data: Union[str, float]) -> RenderableType:
 
 @flexitable.register
 @debug
+def _tuple(data: tuple[Any, ...]) -> RenderableType:
+    return HashableList()
+
+
+@flexitable.register
+@debug
 def _list(data: list[Any]) -> RenderableType:
     return flexitable(to_hashable(data))  # type: ignore[no-any-return]
 
@@ -215,8 +222,14 @@ def _json_dict_list(
     if {"before", "after"} <= data.keys():
         return pretty_diff(data["before"], data["after"])
 
-    tree: Tree = flexitable(HashableDict({f: flexitable(v) for f, v in data.items()}))
+    tree: RenderableType = flexitable(
+        HashableDict({f: flexitable(v) for f, v in data.items()})
+    )
 
+    # Only apply ratio alignment when we have:
+    # - a `Tree` (so we can traverse children renderables),
+    # - more than one branch of data (alignment is pointless for a single table),
+    # - and values shaped like lists of dict-like rows (so keys/values can be aggregated).
     if (
         not isinstance(tree, Tree)
         or len(data) == 1
@@ -227,11 +240,18 @@ def _json_dict_list(
     ):
         return tree
 
+    # Collect all observed stringified values per key across every row so we can
+    # estimate realistic column widths from the full dataset (not per-table).
     values_by_key: dict[str, set[str]] = defaultdict(set)
     for item in chain.from_iterable(data.values()):
         for key, value in item.items():
-            values_by_key[key].add(str(value or ""))
+            # Coerce to `str` because Rich measures rendered text width, not Python
+            # object sizes.
+            values_by_key[key].add(str(value))
 
+    # Build a "probe" table that mirrors the final table structure and includes
+    # a single representative row (the widest value per column).
+    # This lets Rich compute width distribution using its own internal rules.
     tab = new_table(
         *values_by_key,
         expand=True,
@@ -241,12 +261,17 @@ def _json_dict_list(
     ratio_by_key = dict(
         zip(
             values_by_key,
+            # Ask Rich to calculate column widths for (roughly) the available width.
+            # The `- 10` provides a small buffer for tree guides/padding so tables
+            # don't overflow in nested layouts.
             tab._calculate_column_widths(  # noqa: SLF001
                 console, console.options.update_width(console.width - 10)
             ),
         )
     )
 
+    # Extract renderables that are nested `Tree` labels (the actual tables tend
+    # to live inside these label trees).
     renderables = [
         lc.label
         for tc in tree.children
@@ -255,21 +280,26 @@ def _json_dict_list(
     ]
 
     for renderable in renderables:
+        # Tables might be wrapped in a `Panel`, or be a bare `NewTable`.
         if isinstance(renderable, Panel) and isinstance(
             renderable.renderable, NewTable
         ):
-            renderable.expand = True
+            renderable.expand = True  # Ensure the wrapper allows full-width content.
             root_table = renderable.renderable
         elif isinstance(renderable, NewTable):
             root_table = renderable
         else:
             continue
 
-        root_table.expand = True
+        root_table.expand = True  # Make the root table consume available width.
         for cell in root_table.columns[0].cells:
+            # Only inner cells that are nested tables need ratio propagation.
             if isinstance(cell, NewTable):
-                cell.collapse_padding = True
+                cell.collapse_padding = (
+                    True  # Reduce horizontal waste in nested tables.
+                )
                 for col in cell.cols.values():
+                    # Apply the precomputed width ratio so sibling tables align.
                     col.ratio = ratio_by_key[str(col.header)]
 
     return tree
@@ -277,7 +307,12 @@ def _json_dict_list(
 
 @flexitable.register
 @debug
-def _json_dict(data: HashableDict) -> Tree:
+def _json_dict(data: HashableDict) -> RenderableType:
+    if (_type := data.pop("_type", None)) and (
+        _renderable := get_renderable(_type, **data)
+    ):
+        return _renderable
+
     data = prepare_dict(data)
     tree = new_tree(
         guide_style=f"bold dim {predictably_random_color(str(sorted(data)))}"
@@ -369,7 +404,7 @@ def get_item_list_table(
     return table
 
 
-def _render_dict_list(data: HashableList[HashableDict]) -> Panel:
+def _render_dict_list(data: HashableList[HashableDict]) -> NewTable:
     """Render a list of dictionaries with consistent structure handling."""
     if (
         count_key := next((k for k in data[0] if MATCH_COUNT_HEADER.search(k)), None)
@@ -388,20 +423,27 @@ def _render_dict_list(data: HashableList[HashableDict]) -> Panel:
         HashableDict({k: v for k, v in i.items() if k in fields}) for i in data
     ]
 
-    table = new_table(expand=False)
+    table = new_table(
+        expand=False,
+        border_style="dim cyan",
+        show_lines=True,
+        box=box.DOUBLE_EDGE,
+        show_edge=True,
+        pad_edge=True,
+    )
     for large, items in groupby(
-        not_null_data, lambda i: len(str(i.values())) > MAX_DICT_LENGTH
+        not_null_data, lambda i: "_type" in i or len(str(i.values())) > MAX_DICT_LENGTH
     ):
         if large:
             for item in items:
                 rend = flexitable(item)
                 if isinstance(rend, Tree):
                     rend.hide_root = True
-                table.add_row(border_panel(rend))
+                table.add_row(rend)
         else:
             table.add_row(get_item_list_table(items, fields, expand=False))
 
-    return border_panel(table, border_style="dim black", expand=False)
+    return table
 
 
 @flexitable.register

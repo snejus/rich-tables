@@ -47,7 +47,8 @@ JSONDict = dict[str, Any]
 
 class HashableDict(UserDict[KT, VT]):
     def __init__(self, dict: dict[KT, VT] | None = None, /, **kwargs) -> None:
-        super().__init__({k: v for k, v in (dict or {}).items() if v != []}, **kwargs)
+        # super().__init__({k: v for k, v in (dict or {}).items() if v != []}, **kwargs)
+        super().__init__({k: v for k, v in (dict or {}).items()}, **kwargs)
 
     def __hash__(self) -> int:
         return hash(tuple(self.data.items()))
@@ -69,7 +70,9 @@ def to_hashable(value: Hashable) -> Hashable:
 
 
 @to_hashable.register
-def _(value: list[T]) -> HashableList[T]:
+def _(value: list[T]) -> Hashable:
+    if not value:
+        return tuple()
     return HashableList([to_hashable(v) for v in value])
 
 

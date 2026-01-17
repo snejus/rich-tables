@@ -10,12 +10,12 @@ repository = "https://github.com/snejus/rich-tables"
 
 keywords = ["json", "pretty", "rich", "console", "terminal"]
 classifiers = [
-  "Development Status :: 1 - Planning",
-  "Environment :: Console",
-  "Intended Audience :: End Users/Desktop",
-  "Intended Audience :: System Administrators",
-  "Operating System :: OS Independent",
-  "Topic :: Utilities",
+    "Development Status :: 1 - Planning",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Topic :: Utilities",
 ]
 
 [tool.poetry.dependencies]
@@ -54,3 +54,10 @@ table = "rich_tables.table:main"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+target-version = "py39"
+
+[tool.ruff.lint]
+future-annotations = true
+ignore = ["UP037"]

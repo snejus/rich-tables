@@ -11,21 +11,21 @@ from itertools import islice
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
-    Optional,
+    Literal,
     Protocol,
+    Union,
     get_args,
     get_origin,
     get_type_hints,
 )
 
 from rich import box
-from typing_extensions import Literal, Self, TypedDict
+from typing_extensions import Self, TypedDict
 
 from .fields import FIELDS_MAP, get_val
 from .generic import flexitable
+from .types import GithubReaction, get_renderable
 from .utils import (
-    JSONDict,
     border_panel,
     fmt_time,
     format_with_color,
@@ -43,12 +43,14 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Callable, Iterable, Mapping
 
     from rich.console import ConsoleRenderable, RenderableType
     from rich.panel import Panel
     from rich.syntax import Syntax
     from rich.table import Table
+
+    from .utils import JSONDict
 
 SECONDS_PER_DAY = 86400
 
@@ -217,15 +219,6 @@ class Commit(Entity):
         ]
 
 
-@dataclass
-class Reaction(Entity):
-    user: str
-    content: str
-
-    def __str__(self) -> str:
-        return f":{self.content.lower()}: {get_val(self, 'user')}"
-
-
 class CreatedMixin(Protocol):
     @property
     def created(self) -> str:
@@ -264,31 +257,23 @@ class Content(CreatedPanelMixin):
 
 @dataclass
 class Comment(Content):
-    reactions: list[Reaction]
+    reactions: list[GithubReaction]
+
+    def get_state(self) -> str:
+        return "COMMENTED"
+
+    def get_body(self) -> str:
+        return self.body
 
     @property
-    def title(self) -> str:
-        return self.get_title(["author", "created_at"])
-
-    @property
-    def subtitle(self) -> str:
-        return (
-            " ".join(map(str, self.reactions))
-            .replace(":laugh:", ":laughing:")
-            .replace(":hooray:", ":party_popper:")
-        )
-
-
-@dataclass
-class IssueComment(Comment):
-    @property
-    def panel(self) -> Panel:
-        return border_panel(
-            list_table([gh_md_panel(self.body)]),
-            border_style="b yellow",
-            title=self.title,
-            subtitle=self.subtitle,
-            box=box.ROUNDED,
+    def panel(self) -> ConsoleRenderable:
+        return get_renderable(
+            "GithubComment",
+            author=self.author,
+            created_at=self.created_at,
+            reactions=self.reactions,
+            state=self.get_state(),
+            body=self.get_body(),
         )
 
 
@@ -296,12 +281,12 @@ class IssueComment(Comment):
 class DiffHunk(Entity):
     diffHunk: str = field(repr=False)
     line: int  # line number in the file
-    position: Optional[int]  # position in the diff hunk, if applicable
+    position: Union[int, None]  # position in the diff hunk, if applicable
     startLine: int  # line number in the file
     # as above but before the diff hunk was changed
     originalLine: int
     originalPosition: int
-    originalStartLine: Optional[int]
+    originalStartLine: Union[int, None]
 
     @cached_property
     def focus_start(self) -> int:
@@ -339,13 +324,8 @@ class ReviewComment(Comment):
     pullRequestReview: str
     before: str
 
-    @property
-    def review_id(self) -> str:
-        return self.pullRequestReview
-
-    @property
-    def panel(self) -> Panel:
-        body = re.sub(
+    def get_body(self) -> str:
+        return re.sub(
             r"(?<=```)suggestion(.*?)(?=\n```)",
             lambda m: (
                 "diff\n-" + self.before.replace("\n", "\n-") + m[1].replace("\n", "\n+")
@@ -353,7 +333,10 @@ class ReviewComment(Comment):
             self.body,
             flags=re.DOTALL,
         )
-        return gh_md_panel(body, title=self.title, subtitle=self.subtitle)
+
+    @property
+    def review_id(self) -> str:
+        return self.pullRequestReview
 
 
 class ResolvedMixin:
@@ -440,13 +423,16 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
 
 
 @dataclass
-class Review(Content, ResolvedMixin):
+class Review(Comment, ResolvedMixin):
     id: str
     state: str
     threads: list[ReviewThread]
     comments: list[ReviewComment]
 
     verbose: bool
+
+    def get_state(self) -> str:
+        return self.state
 
     @property
     def resolved(self) -> bool:
@@ -456,7 +442,7 @@ class Review(Content, ResolvedMixin):
     def panel(self) -> Panel:
         rows = []
         if self.body:
-            rows.append(gh_md_panel(self.body))
+            rows.append(super().panel)
 
         if not self.resolved or self.verbose:
             self.threads.sort(key=lambda t: t.resolved)
@@ -484,7 +470,7 @@ class Review(Content, ResolvedMixin):
 
     @property
     def title(self) -> str:
-        return self.get_title(["state", "author", "created_at", "status"])
+        return self.get_title(["state", "status"])
 
 
 @dataclass
@@ -521,7 +507,7 @@ class PullRequest(Entity):
     reviewDecision: str
     reviewRequests: list[str]
     reviews: list[Review]
-    comments: list[IssueComment]
+    comments: list[Comment]
     state: str
     title: str
     updatedAt: str

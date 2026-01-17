@@ -4,10 +4,10 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from functools import singledispatch
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from rich.traceback import install
 from typing_extensions import TypedDict
@@ -21,9 +21,8 @@ from .music import albums_table
 from .utils import console, new_table, wrap
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
-    from rich.console import RenderableType
     from rich.table import Table
 
 MAX_FILENAME_LEN = 255
@@ -59,6 +58,9 @@ def load_data(filepath: str) -> list[JSONDict] | JSONDict | str:
     """
     if filepath == "/dev/stdin":
         text = sys.stdin.read()
+        # attach terminal because Console.pager uses pydoc which won't page when either
+        # stdin or stdout is not a terminal
+        sys.stdin = Path("/dev/tty").open()  # noqa: SIM115
     elif len(filepath) > MAX_FILENAME_LEN or len(filepath.encode()) > MAX_FILENAME_LEN:
         text = filepath
     else:
@@ -79,6 +81,9 @@ def get_args() -> argparse.Namespace:
 By default, read JSON data from stdin and prettify it.
 Otherwise, use command 'diff' to compare two JSON objects or blocks of text.""",
         formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser.add_argument(
+        "-p", "--pager", action="store_true", help="use pager for output"
     )
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-j", "--json", action="store_true", help="output as JSON")
@@ -114,7 +119,7 @@ TABLE_BY_NAME: dict[str, Callable[..., Any]] = {
 
 
 @singledispatch
-def draw_data(data: Any, **kwargs: Any) -> Iterator[RenderableType]:
+def draw_data(data: Any, **kwargs: Any) -> None:
     """Render the provided data."""
     console.print(data)
 
@@ -149,7 +154,10 @@ def handle_save(output_file: Path | None) -> Iterator[None]:
 def main() -> None:
     args = get_args()
 
-    with handle_save(args.output_file):
+    with (
+        console.pager(styles=True) if args.pager else nullcontext(),
+        handle_save(args.output_file),
+    ):
         if args.command == "diff":
             console.print(pretty_diff(args.before, args.after), highlight=False)
         else:
