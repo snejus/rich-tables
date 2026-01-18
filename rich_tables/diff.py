@@ -12,7 +12,7 @@ import re
 from difflib import SequenceMatcher
 from functools import partial
 from itertools import starmap, zip_longest
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from multimethod import multimethod
 
@@ -25,6 +25,9 @@ from .utils import (
     to_hashable,
     wrap,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 MIN_EQUAL_LENGTH = 5
 
@@ -123,8 +126,10 @@ def _strs(before: str, after: str) -> str:
     return make_difftext(before, after)
 
 
-@diff.register
-def _lists(before: HashableList[Any], after: HashableList[Any]) -> Any:
+@diff.register(HashableList[Any], HashableList[Any])
+@diff.register(HashableList[Any], tuple)
+@diff.register(tuple, HashableList[Any])
+def _lists(before: Sequence[Any], after: Sequence[Any]) -> Any:
     return HashableList(starmap(diff, zip_longest(before, after)))
 
 

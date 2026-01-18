@@ -13,7 +13,6 @@
     "plays": 8,
     "skips": 2,
     "helicopta": 0,
-    "hidden": 0
   },
   {
     "albumtypes": "album",
@@ -29,7 +28,6 @@
     "plays": 19,
     "skips": 0,
     "helicopta": 0,
-    "hidden": 0
   },
   {
     "albumtypes": "album",
@@ -45,7 +43,6 @@
     "plays": 14,
     "skips": 1,
     "helicopta": 0,
-    "hidden": 0
   },
   {
     "albumtypes": "single",
@@ -61,7 +58,6 @@
     "plays": 20,
     "skips": 1,
     "helicopta": 0,
-    "hidden": 0
   },
   {
     "albumtypes": "album",
@@ -77,7 +73,6 @@
     "plays": 17,
     "skips": 0,
     "helicopta": 0,
-    "hidden": 0
   },
   {
     "albumtypes": "album",
@@ -93,7 +88,6 @@
     "plays": 6,
     "skips": 0,
     "helicopta": 0,
-    "hidden": 0
   },
   {
     "albumtypes": "album",
@@ -109,7 +103,6 @@
     "plays": 15,
     "skips": 1,
     "helicopta": 0,
-    "hidden": 0
   },
   {
     "albumtypes": "album",
@@ -125,7 +118,6 @@
     "plays": 19,
     "skips": 0,
     "helicopta": 0,
-    "hidden": 0
   },
   {
     "albumtypes": "album",
@@ -141,7 +133,6 @@
     "plays": 16,
     "skips": 1,
     "helicopta": 0,
-    "hidden": 0
   },
   {
     "albumtypes": "album",
@@ -157,6 +148,5 @@
     "plays": 19,
     "skips": 3,
     "helicopta": 0,
-    "hidden": 0
   }
 ]

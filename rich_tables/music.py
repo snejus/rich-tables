@@ -43,7 +43,6 @@ TRACK_FIELDS = [
     "plays",
     "skips",
     "helicopta",
-    "hidden",
     "lyrics",
 ]
 ALBUM_IGNORE = set(TRACK_FIELDS) | {

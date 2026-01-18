@@ -27,6 +27,7 @@ from .generic import flexitable
 from .types import GithubReaction, get_renderable
 from .utils import (
     border_panel,
+    console,
     fmt_time,
     format_with_color,
     format_with_color_on_black,
@@ -88,12 +89,14 @@ def fmt_add_del(added: int, deleted: int) -> list[str]:
 
 def gh_md_panel(body: str, *args: Any, **kwargs: Any) -> Panel:
     return md_panel(
-        body,
-        # console.render_str(
-        #     body.replace(":rofl:", ":rolling_on_the_floor_laughing:"),
-        #     highlight=False,
-        #     markup=False,
-        # ).markup,
+        # body,
+        console.render_str(
+            body.replace(":rofl:", ":rolling_on_the_floor_laughing:").replace(
+                ":ballot_box_with_check:", "☑ "
+            ),
+            highlight=False,
+            markup=False,
+        ).markup,
         *args,
         **kwargs,
     )
