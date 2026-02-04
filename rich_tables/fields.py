@@ -310,6 +310,8 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     ),
     md_panel: (
         "answer",
+        "covers",
+        "covered_by",
         "benefits",
         "body",
         "bodyHTML",
