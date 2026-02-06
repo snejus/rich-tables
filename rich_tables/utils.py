@@ -505,6 +505,8 @@ def get_td_color(seconds: float) -> str:
 
 
 def human_dt(timestamp: str | float) -> str:
+    if not isinstance(timestamp, (str, float)):
+        return timestamp
     try:
         dt = timestamp2datetime(timestamp)
     except ValueError:
