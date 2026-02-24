@@ -103,7 +103,7 @@ DISPLAY_HEADER: dict[RenderableType, str] = {
 
 
 class Pat:
-    SPLIT_PAT = re.compile(r"[;,\␀] ?")
+    SPLIT_PAT = re.compile(r"(?:\\␀|[;,] ?)")
     PRED_COLOR_PAT = re.compile(r"(pred color)\](.*?)(?=\[/)")
     HTML_PARAGRAPH = re.compile(r"</?p>")
     OPENING_BRACKET = re.compile(r"\[(?!/)")
@@ -331,9 +331,7 @@ def _format_with_color(string: str, on: str | None = None) -> str:
 
 
 def split_with_color(text: str) -> str:
-    return " ".join(
-        _format_with_color(str(x)) for x in sorted(Pat.SPLIT_PAT.split(text))
-    )
+    return " ".join(_format_with_color(x) for x in sorted(Pat.SPLIT_PAT.split(text)))
 
 
 def format_with_color(items: Any) -> Any:
