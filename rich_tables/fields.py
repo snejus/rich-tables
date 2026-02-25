@@ -9,7 +9,7 @@ from itertools import islice
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, TypeVar
 
 from multimethod import multidispatch
-from rich.console import ConsoleRenderable
+from rich.console import ConsoleRenderable, RenderableType
 from rich.panel import Panel
 from rich.text import Text
 
@@ -40,7 +40,7 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from rich.console import RenderableType
+    from collections.abc import Sequence
 
 
 MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|(?<![a-z])count$)")
@@ -232,6 +232,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "app_label",
         "area",
         "artists",
+        "albumartists",
         "assignee",
         "brand",
         "calendar",
