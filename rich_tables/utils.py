@@ -133,7 +133,11 @@ def format_string(text: str) -> str:
     if "[" in text and r"\[" not in text and ("[/" not in text or "pred color" in text):
         text = Pat.OPENING_BRACKET.sub(r"\[", text)
 
-    return text.replace(":laugh:", ":laughing:").replace(":hooray:", ":party_popper:")
+    return (
+        text.replace(":laugh:", ":laughing:")
+        .replace(":hooray:", ":party_popper:")
+        .replace("[//", r"\[//")
+    )
 
 
 def wrap(text: str, tag: str) -> str:
