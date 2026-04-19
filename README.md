@@ -71,10 +71,6 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/albums.svg)
 
-### Aligned object arrays
-
-![image](svgs/aligned_object_arrays.svg)
-
 ### Calendar
 
 ![image](svgs/calendar.svg)
@@ -110,6 +106,10 @@ deal with a huge diff with a lot of unrelated changes.
 ### Nested JSON
 
 ![image](svgs/nested_json.svg)
+
+### Object arrays
+
+![image](svgs/object_arrays.svg)
 
 ### Pr
 
