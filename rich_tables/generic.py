@@ -134,22 +134,22 @@ def prepare_dict(item: HashableDict) -> HashableDict:
 
 
 @multidispatch
-@cache
 @debug
+@cache
 def flexitable(data: Any) -> Any:
     return str(data)
 
 
 @flexitable.register
-@cache
 @debug
+@cache
 def _rend(data: ConsoleRenderable) -> RenderableType:
     return data
 
 
 @flexitable.register
-@cache
 @debug
+@cache
 def _num(data: Union[str, float]) -> RenderableType:
     return format_string(str(data))
 
@@ -175,8 +175,8 @@ def _dict(data: dict[str, Any]) -> RenderableType:
 
 
 @flexitable.register
-@cache
 @debug
+@cache
 def _header(data: Any, header: str) -> RenderableType:
     if not data and isinstance(data, Iterable):
         return ""
@@ -339,8 +339,8 @@ def _json_dict(data: HashableDict) -> RenderableType:
 
 
 @flexitable.register
-@cache
 @debug
+@cache
 def _str_list(data: HashableList[str]) -> RenderableType:
     if not data:
         return ""
@@ -348,8 +348,8 @@ def _str_list(data: HashableList[str]) -> RenderableType:
 
 
 @flexitable.register
-@cache
 @debug
+@cache
 def _list_list(data: HashableList[HashableList]) -> Union[Panel, str]:
     if not data:
         return ""
@@ -367,8 +367,8 @@ def _list_list(data: HashableList[HashableList]) -> Union[Panel, str]:
 
 
 @flexitable.register
-@cache
 @debug
+@cache
 def _int_list(data: HashableList[int]) -> RenderableType:
     if not data:
         return ""
@@ -447,8 +447,8 @@ def _render_dict_list(data: HashableList[HashableDict]) -> NewTable:
 
 
 @flexitable.register
-@cache
 @debug
+@cache
 def _dict_list(data: HashableList[HashableDict]) -> RenderableType:
     """Render a list of dictionaries as a rich table or tree structure.
 
