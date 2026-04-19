@@ -15,11 +15,15 @@ classifiers = [
     "Intended Audience :: End Users/Desktop",
     "Intended Audience :: System Administrators",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Utilities",
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4"
+python = ">=3.10,<4"
 
 multimethod = ">=2"
 rgbxy = ">=0.5"
