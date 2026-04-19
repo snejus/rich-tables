@@ -22,6 +22,8 @@ from rich.bar import Bar
 from rich.console import Console, RenderableType, RenderResult
 from rich.errors import MarkupError
 from rich.markdown import Markdown
+
+# from rich.style
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Column, Table
@@ -44,6 +46,10 @@ JSONDict = dict[str, Any]
 
 
 class HashableDict(UserDict[KT, VT]):
+    def __init__(self, dict: dict[KT, VT] | None = None, /, **kwargs) -> None:
+        # super().__init__({k: v for k, v in (dict or {}).items() if v != []}, **kwargs)
+        super().__init__({k: v for k, v in (dict or {}).items()}, **kwargs)
+
     def __hash__(self) -> int:
         return hash(tuple(self.data.items()))
 
@@ -64,7 +70,9 @@ def to_hashable(value: Hashable) -> Hashable:
 
 
 @to_hashable.register
-def _(value: list[T]) -> HashableList[T]:
+def _(value: list[T]) -> Hashable:
+    if not value:
+        return tuple()
     return HashableList([to_hashable(v) for v in value])
 
 
@@ -95,7 +103,7 @@ DISPLAY_HEADER: dict[RenderableType, str] = {
 
 
 class Pat:
-    SPLIT_PAT = re.compile(r"[;,] ?")
+    SPLIT_PAT = re.compile(r"(?:\\␀|[;,] ?)")
     PRED_COLOR_PAT = re.compile(r"(pred color)\](.*?)(?=\[/)")
     HTML_PARAGRAPH = re.compile(r"</?p>")
     OPENING_BRACKET = re.compile(r"\[(?!/)")
@@ -119,24 +127,35 @@ def sortgroup_by(
 
 
 def format_string(text: str) -> str:
-    if "[" in text and r"\[" not in text and ("[/" not in text or "pred color" in text):
-        text = Pat.OPENING_BRACKET.sub(r"\[", text)
-
     if "pred color]" in text:
         text = Pat.PRED_COLOR_PAT.sub(fmt_pred_color, text)
 
-    return text
+    if "[" in text and r"\[" not in text and ("[/" not in text or "pred color" in text):
+        text = Pat.OPENING_BRACKET.sub(r"\[", text)
+
+    return (
+        text.replace(":laugh:", ":laughing:")
+        .replace(":hooray:", ":party_popper:")
+        .replace("[//", r"\[//")
+    )
 
 
-def wrap(text: Any, tag: str) -> str:
-    return f"[{tag}]{format_string(str(text))}[/]"
+def wrap(text: str, tag: str) -> str:
+    return f"[{tag}]{format_string(str(text))}[/{tag}]"
 
 
-def duration2human(duration: SupportsFloat) -> str:
-    diff = timedelta(seconds=float(duration))
-    days = f"{diff.days}d " if diff.days else ""
-    time_parts = [diff.seconds // 3600, diff.seconds % 3600 // 60, diff.seconds % 60]
-    return "{:>12}".format(days + ":".join(map("{0:0>2}".format, time_parts)))
+def duration2human(duration: SupportsFloat) -> str | SupportsFloat:
+    with suppress(ValueError):
+        diff = timedelta(seconds=float(duration))
+        days = f"{diff.days}d " if diff.days else ""
+        time_parts = [
+            diff.seconds // 3600,
+            diff.seconds % 3600 // 60,
+            diff.seconds % 60,
+        ]
+        return "{:>12}".format(days + ":".join(map("{0:0>2}".format, time_parts)))
+
+    return duration
 
 
 def fmt_time(seconds: int) -> Iterable[str]:
@@ -199,7 +218,7 @@ class NewTable(Table):
 
         super().__init__(*args, **kwargs)
 
-    def __rich_console__(self, *args: Any, **kwargs: Any) -> RenderResult:
+    def configure_columns(self) -> None:
         if any(c.header for c in self.columns):
             self.show_header = True
         for column in self.columns:
@@ -207,6 +226,8 @@ class NewTable(Table):
             if self.column_kwargs:
                 column.__dict__.update(self.column_kwargs)
 
+    def __rich_console__(self, *args: Any, **kwargs: Any) -> RenderResult:
+        self.configure_columns()
         return super().__rich_console__(*args, **kwargs)
 
     def add_row(self, *args: RenderableType | None, **kwargs: Any) -> None:
@@ -228,7 +249,7 @@ class NewTable(Table):
 
     def add_dict_row(
         self,
-        data: HashableDict,
+        data: dict[str, Any] | HashableDict[str, Any],
         ignore_extra_fields: bool = False,
         transform: Callable[..., RenderableType] = lambda v, _: str(v),
         **kwargs: Any,
@@ -314,14 +335,15 @@ def _format_with_color(string: str, on: str | None = None) -> str:
 
 
 def split_with_color(text: str) -> str:
-    return " ".join(
-        _format_with_color(str(x)) for x in sorted(Pat.SPLIT_PAT.split(text))
-    )
+    return " ".join(_format_with_color(x) for x in sorted(Pat.SPLIT_PAT.split(text)))
 
 
-def format_with_color(items: str | Sequence[str]) -> str:
+def format_with_color(items: Any) -> Any:
     if isinstance(items, str):
         items = [items]
+
+    if not isinstance(items, Sequence):
+        return items
 
     return " ".join(_format_with_color(str(x)) for x in items)
 
@@ -364,6 +386,14 @@ def border_panel(content: RenderableType, **kwargs: Any) -> Panel:
     return simple_panel(content, **kwargs)
 
 
+def markdown(content: str, **kwargs: Any) -> Markdown:
+    kwargs.setdefault("code_theme", "nord-darker")
+    kwargs.setdefault("inline_code_theme", "nord-darker")
+    kwargs.setdefault("justify", "left")
+
+    return Markdown(Pat.HTML_PARAGRAPH.sub("", content), **kwargs)
+
+
 def md_panel(content: str, **kwargs: Any) -> Panel:
     if "title" not in kwargs and (
         m := re.match(r"\[title\](.+?)\[/title\]\s+", content)
@@ -371,15 +401,9 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
         kwargs["title"] = m[1]
         content = content.replace(m[0], "")
 
-    return border_panel(
-        Markdown(
-            Pat.HTML_PARAGRAPH.sub("", content),
-            inline_code_theme="nord-darker",
-            code_theme="nord-darker",
-            justify=kwargs.pop("justify", "left"),
-        ),
-        **kwargs,
-    )
+    content = content.replace("- [x]", "* :ballot_box_with_check:")
+
+    return border_panel(markdown(content), **kwargs)
 
 
 def new_tree(
@@ -408,7 +432,7 @@ def progress_bar(
         size = width
         bgcolor = "default"
     else:
-        bgcolor = "#252c3a"
+        bgcolor = "#1b202a"
     ratio = end / size if size else 1
     if inverse:
         ratio = 1 - ratio
@@ -459,7 +483,7 @@ def get_colors_and_periods() -> list[tuple[Color, int, int]]:
                 (31, 24 * 60 * 60),  # days
                 (12, 31 * 24 * 60 * 60),  # months
                 (5, 12 * 30 * 24 * 60 * 60),  # 5 years
-                (4, 5 * 12 * 30 * 24 * 60 * 60),  # 20 years
+                (4, 60 * 12 * 30 * 24 * 60 * 60),  # 60 years
             ],
         )
     ]
@@ -483,6 +507,8 @@ def get_td_color(seconds: float) -> str:
 
 
 def human_dt(timestamp: str | float) -> str:
+    if not isinstance(timestamp, (str, float, int)):
+        return timestamp
     try:
         dt = timestamp2datetime(timestamp)
     except ValueError:
@@ -512,8 +538,8 @@ def sql_syntax(sql_string: str) -> Syntax:
             strip_whitespace=True,
             strip_comments=True,
             reindent=True,
-            reindent_aligned=True,
-            compact=True,
+            reindent_aligned=False,
+            compact=False,
         ),
         "sql",
     )
@@ -532,6 +558,6 @@ def colored_with_bg(items: str | Iterable[str]) -> str:
 
 def colored_split(items: str | Iterable[str]) -> str:
     if isinstance(items, str):
-        items = sorted(Pat.SPLIT_PAT.split(items))
+        items = Pat.SPLIT_PAT.split(items)
 
     return " ".join(map(format_with_color, items))

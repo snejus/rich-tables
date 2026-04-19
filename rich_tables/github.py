@@ -2,23 +2,36 @@
 
 from __future__ import annotations
 
+import re
 import time
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from functools import cached_property
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Callable, Protocol
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    Protocol,
+    Union,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 from rich import box
-from typing_extensions import Literal, TypedDict
+from typing_extensions import Self, TypedDict
 
 from .fields import FIELDS_MAP, get_val
 from .generic import flexitable
+from .types import GithubReaction, get_renderable
 from .utils import (
-    JSONDict,
     border_panel,
+    console,
     fmt_time,
     format_with_color,
     format_with_color_on_black,
+    human_dt,
     list_table,
     md_panel,
     new_table,
@@ -31,12 +44,14 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Callable, Iterable, Mapping
 
     from rich.console import ConsoleRenderable, RenderableType
     from rich.panel import Panel
     from rich.syntax import Syntax
     from rich.table import Table
+
+    from .utils import JSONDict
 
 SECONDS_PER_DAY = 86400
 
@@ -74,9 +89,14 @@ def fmt_add_del(added: int, deleted: int) -> list[str]:
 
 def gh_md_panel(body: str, *args: Any, **kwargs: Any) -> Panel:
     return md_panel(
-        body.replace(":rofl:", ":rolling_on_the_floor_laughing:").replace(
-            "suggestion", "python"
-        ),
+        body,
+        # console.render_str(
+        #     body.replace(":rofl:", ":rolling_on_the_floor_laughing:").replace(
+        #         ":ballot_box_with_check:", "☑ "
+        #     ),
+        #     highlight=False,
+        #     markup=False,
+        # ).markup,
         *args,
         **kwargs,
     )
@@ -126,8 +146,8 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
     "reviewDecision": lambda x: wrap(fmt_state(x), "b"),
     "dates": lambda x: new_table(
         rows=[
-            [b_green(r" ⬤ "), diff_dt(x[0])],
-            [wrap(r" ◯ ", "b yellow"), diff_dt(x[1])],
+            [b_green(r" ⬤ "), human_dt(x[0])],
+            [wrap(r" ◯ ", "b yellow"), human_dt(x[1])],
         ]
     ),
     "path": lambda x: wrap(x, "b"),
@@ -140,9 +160,7 @@ PR_FIELDS_MAP: Mapping[str, Callable[..., RenderableType]] = {
         ],
     ),
     "reviewRequests": format_with_color_on_black,
-    "participants": lambda x: "\n".join(
-        map(format_with_color, map("{:^20}".format, x))
-    ),
+    "participants": lambda x: " ".join(map(format_with_color_on_black, x)),
 }
 
 
@@ -155,8 +173,35 @@ class File(Diff):
     path: str
 
 
+def convert(type_: Any, value: Any) -> Any:
+    """Pre-process field value if required."""
+    type_origin = get_origin(type_)
+
+    if type_origin is list:
+        subtype, *_ = get_args(type_)
+        return [convert(subtype, v) for v in value]
+
+    if (
+        isinstance(type_, type)
+        and issubclass(type_, Entity)
+        and not isinstance(value, Entity)
+    ):
+        return type_.make(value)
+
+    return value
+
+
 @dataclass
-class Commit:
+class Entity:
+    @classmethod
+    def make(cls, data: JSONDict) -> Self:
+        """Select the fields defined on the class and create an Entity instance."""
+        data = {f: convert(_type, data[f]) for f, _type in get_type_hints(cls).items()}
+        return cls(**data)
+
+
+@dataclass
+class Commit(Entity):
     additions: int
     deletions: int
     committedDate: str
@@ -177,24 +222,6 @@ class Commit:
         ]
 
 
-@dataclass
-class Commits:
-    commits: list[Commit]
-
-    @property
-    def panel(self) -> Panel:
-        return diff_panel("commits", [commit.parts for commit in self.commits])
-
-
-@dataclass
-class Reaction:
-    user: str
-    content: str
-
-    def __str__(self) -> str:
-        return f":{self.content.lower()}: {get_val(self, 'user')}"
-
-
 class CreatedMixin(Protocol):
     @property
     def created(self) -> str:
@@ -202,7 +229,7 @@ class CreatedMixin(Protocol):
 
 
 @dataclass
-class PanelMixin:
+class PanelMixin(Entity):
     def get_title(self, fields: list[str]) -> str:
         return " ".join(get_val(self, f) for f in fields)
 
@@ -224,7 +251,7 @@ class Content(CreatedPanelMixin):
 
     @property
     def created_at(self) -> str:
-        return f"""[white]{self.createdAt.replace("T", " ").replace("Z", "")}[/]"""
+        return self.createdAt
 
     @property
     def created(self) -> str:
@@ -233,36 +260,63 @@ class Content(CreatedPanelMixin):
 
 @dataclass
 class Comment(Content):
-    reactions: list[Reaction]
+    reactions: list[GithubReaction]
 
-    @classmethod
-    def make(cls, reactions: list[JSONDict], **kwargs: Any) -> Comment:
-        kwargs["reactions"] = [Reaction(**c) for c in reactions]
-        return cls(**kwargs)
+    def get_state(self) -> str:
+        return "COMMENTED"
 
-    @property
-    def title(self) -> str:
-        return self.get_title(["author", "created_at"])
+    def get_body(self) -> str:
+        return self.body
 
     @property
-    def subtitle(self) -> str:
-        return (
-            " ".join(map(str, self.reactions))
-            .replace(":laugh:", ":laughing:")
-            .replace(":hooray:", ":party_popper:")
+    def panel(self) -> ConsoleRenderable:
+        return get_renderable(
+            "GithubComment",
+            author=self.author,
+            created_at=self.created_at,
+            reactions=self.reactions,
+            state=self.get_state(),
+            body=self.get_body(),
         )
 
 
 @dataclass
-class IssueComment(Comment):
-    @property
-    def panel(self) -> Panel:
-        return border_panel(
-            list_table([gh_md_panel(self.body)]),
-            border_style="b yellow",
-            title=self.title,
-            subtitle=self.subtitle,
-            box=box.ROUNDED,
+class DiffHunk(Entity):
+    diffHunk: str = field(repr=False)
+    line: int  # line number in the file
+    position: Union[int, None]  # position in the diff hunk, if applicable
+    startLine: int  # line number in the file
+    # as above but before the diff hunk was changed
+    originalLine: int
+    originalPosition: int
+    originalStartLine: Union[int, None]
+
+    @cached_property
+    def focus_start(self) -> int:
+        return self.originalStartLine or self.originalLine or 0
+
+    @cached_property
+    def lines(self) -> list[str]:
+        return self.diffHunk.splitlines()
+
+    @cached_property
+    def before(self) -> str:
+        return "\n".join(
+            re.sub(r"^[+-]", "", ln) for ln in self.lines[self.focus_start :]
+        )
+
+    @cached_property
+    def panel(self) -> Syntax:
+        line_count = len(self.lines)
+        return syntax(
+            self.diffHunk,
+            "diff",
+            line_numbers=True,
+            start_line=0,
+            highlight_lines=set(range(self.focus_start, line_count + 1)),
+            line_range=(max(line_count - 5, 0), None),
+            padding=1,
+            theme="paraiso-dark",
         )
 
 
@@ -270,20 +324,22 @@ class IssueComment(Comment):
 class ReviewComment(Comment):
     outdated: bool
     path: str
-    diffHunk: str
     pullRequestReview: str
+    before: str
 
-    @property
-    def diff(self) -> Syntax:
-        return syntax(self.diffHunk, "diff")
+    def get_body(self) -> str:
+        return re.sub(
+            r"(?<=```)suggestion(.*?)(?=\n```)",
+            lambda m: (
+                "diff\n-" + self.before.replace("\n", "\n-") + m[1].replace("\n", "\n+")
+            ),
+            self.body,
+            flags=re.DOTALL,
+        )
 
     @property
     def review_id(self) -> str:
         return self.pullRequestReview
-
-    @property
-    def panel(self) -> Panel:
-        return gh_md_panel(self.body, title=self.title, subtitle=self.subtitle)
 
 
 class ResolvedMixin:
@@ -302,6 +358,7 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
     isResolved: bool
     isOutdated: bool
     resolvedBy: str
+    diffHunk: DiffHunk
     comments: list[ReviewComment]
     verbose: bool
 
@@ -310,9 +367,13 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
         return self.isResolved
 
     @classmethod
-    def make(cls, comments: list[JSONDict], **kwargs: Any) -> ReviewThread:
-        kwargs["comments"] = [ReviewComment.make(**c) for c in comments]
-        return cls(**kwargs)
+    def make(cls, kwargs: JSONDict) -> ReviewThread:
+        diff_hunk = DiffHunk.make(kwargs["comments"][0])
+        kwargs["diffHunk"] = diff_hunk
+        for comment in kwargs["comments"]:
+            comment["before"] = diff_hunk.before
+
+        return super().make(kwargs)
 
     @property
     def review_id(self) -> str:
@@ -351,7 +412,7 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
         if self.verbose or not self.resolved:
             comments_col = list_table((c.panel for c in comments), padding=(1, 0, 0, 0))
             content = new_table(
-                rows=[[self.comments[0].diff, simple_panel(comments_col)]],
+                rows=[[self.diffHunk.panel, simple_panel(comments_col)]],
                 highlight=False,
             )
         else:
@@ -365,13 +426,16 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
 
 
 @dataclass
-class Review(Content, ResolvedMixin):
+class Review(Comment, ResolvedMixin):
     id: str
     state: str
     threads: list[ReviewThread]
     comments: list[ReviewComment]
 
     verbose: bool
+
+    def get_state(self) -> str:
+        return self.state
 
     @property
     def resolved(self) -> bool:
@@ -381,7 +445,7 @@ class Review(Content, ResolvedMixin):
     def panel(self) -> Panel:
         rows = []
         if self.body:
-            rows.append(gh_md_panel(self.body))
+            rows.append(super().panel)
 
         if not self.resolved or self.verbose:
             self.threads.sort(key=lambda t: t.resolved)
@@ -409,11 +473,11 @@ class Review(Content, ResolvedMixin):
 
     @property
     def title(self) -> str:
-        return self.get_title(["state", "author", "created_at", "status"])
+        return self.get_title(["state", "status"])
 
 
 @dataclass
-class Issue:
+class Issue(Entity):
     number: int
     title: str
     state: Literal["OPEN", "CLOSED"]
@@ -429,13 +493,14 @@ class Issue:
 
 
 @dataclass
-class PullRequest:
+class PullRequest(Entity):
     id: str
+    number: int
     createdAt: str
     author: str
     body: str
     additions: int
-    commits: Commits
+    commits: list[Commit]
     deletions: int
     files: list[File]
     headRefName: str
@@ -444,7 +509,6 @@ class PullRequest:
     repository: str
     reviewDecision: str
     reviewRequests: list[str]
-    reviewThreads: list[ReviewThread]
     reviews: list[Review]
     comments: list[Comment]
     state: str
@@ -463,38 +527,36 @@ class PullRequest:
 @dataclass
 class PullRequestTable(PullRequest):
     @classmethod
-    def make(cls, reviews: list[JSONDict], **kwargs: Any) -> PullRequestTable:
-        verbose = kwargs["verbose"]
+    def make(cls, kwargs: JSONDict) -> PullRequestTable:
         threads = [
-            ReviewThread.make(**rt, verbose=verbose) for rt in kwargs["reviewThreads"]
+            ReviewThread.make({**rt, "verbose": kwargs["verbose"]})
+            for rt in kwargs["reviewThreads"]
         ]
         comments_by_review_id = dict(
             sortgroup_by(
-                (c for t in threads for c in t.comments),
-                lambda c: c.review_id,
+                (c for t in threads for c in t.comments), lambda c: c.review_id
             )
         )
         threads_by_review_id = dict(sortgroup_by(threads, lambda t: t.review_id))
-        return cls(
-            commits=Commits([Commit(**c) for c in kwargs.pop("commits", [])]),
-            comments=[IssueComment.make(**c) for c in kwargs.pop("comments", [])],
+
+        kwargs.update(
             reviews=[
-                Review(
+                {
                     **r,
-                    threads=threads_by_review_id.pop(r["id"], []),
-                    comments=comments_by_review_id.pop(r["id"], []),
-                    verbose=verbose,
-                )
-                for r in reviews
+                    "verbose": kwargs["verbose"],
+                    "threads": threads_by_review_id.pop(r["id"], []),
+                    "comments": comments_by_review_id.pop(r["id"], []),
+                }
+                for r in kwargs["reviews"]
                 if (r["id"] in threads_by_review_id or r["body"])
             ],
-            issues=[Issue(**i) for i in kwargs.pop("closingIssuesReferences")],
-            **kwargs,
+            issues=kwargs.pop("closingIssuesReferences", []),
         )
+        return super().make(kwargs)
 
     @property
     def name(self) -> str:
-        return wrap(self.title, f"b {predictably_random_color(self.title)}")
+        return wrap(f"{wrap(f'#{self.number}', 'dim')} {self.title}", "b white")
 
     @property
     def repo(self) -> str:
@@ -546,7 +608,14 @@ class PullRequestTable(PullRequest):
 
     @property
     def files_commits(self) -> Table:
-        return new_table(rows=[[get_val(self, "files"), self.commits.panel]])
+        return new_table(
+            rows=[
+                [
+                    get_val(self, "files"),
+                    diff_panel("commits", [commit.parts for commit in self.commits]),
+                ]
+            ]
+        )
 
     @property
     def timestamped_contents(self) -> list[CreatedPanelMixin]:
@@ -563,7 +632,7 @@ def pulls_table(
 ) -> Iterable[str | ConsoleRenderable]:
     FIELDS_MAP.update(PR_FIELDS_MAP)
 
-    pr = data[0]
-    pr_table = PullRequestTable.make(**pr, verbose=kwargs["verbose"])
+    pr = {**data[0], "verbose": kwargs.get("verbose", False)}
+    pr_table = PullRequestTable.make(pr)
     yield pr_table.info
     yield from pr_table.panels

@@ -4,11 +4,10 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import tempfile
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext, suppress
 from functools import singledispatch
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from rich.traceback import install
 from typing_extensions import TypedDict
@@ -22,9 +21,8 @@ from .music import albums_table
 from .utils import console, new_table, wrap
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
-    from rich.console import RenderableType
     from rich.table import Table
 
 MAX_FILENAME_LEN = 255
@@ -60,6 +58,10 @@ def load_data(filepath: str) -> list[JSONDict] | JSONDict | str:
     """
     if filepath == "/dev/stdin":
         text = sys.stdin.read()
+        # attach terminal because Console.pager uses pydoc which won't page when either
+        # stdin or stdout is not a terminal
+        with suppress(OSError):
+            sys.stdin = Path("/dev/tty").open()  # noqa: SIM115
     elif len(filepath) > MAX_FILENAME_LEN or len(filepath.encode()) > MAX_FILENAME_LEN:
         text = filepath
     else:
@@ -81,10 +83,13 @@ By default, read JSON data from stdin and prettify it.
 Otherwise, use command 'diff' to compare two JSON objects or blocks of text.""",
         formatter_class=argparse.RawTextHelpFormatter,
     )
+    parser.add_argument(
+        "-p", "--pager", action="store_true", help="use pager for output"
+    )
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-j", "--json", action="store_true", help="output as JSON")
     parser.add_argument(
-        "-s", "--save", action="store_true", help="save the output as HTML"
+        "-o", "--output-file", type=Path, help="save as SVG to provided file"
     )
 
     subparsers = parser.add_subparsers(
@@ -115,7 +120,7 @@ TABLE_BY_NAME: dict[str, Callable[..., Any]] = {
 
 
 @singledispatch
-def draw_data(data: Any, **kwargs: Any) -> Iterator[RenderableType]:
+def draw_data(data: Any, **kwargs: Any) -> None:
     """Render the provided data."""
     console.print(data)
 
@@ -137,23 +142,23 @@ def _draw_data_list(data: list[JSONDict], **__: Any) -> None:
 
 
 @contextmanager
-def handle_save(save: bool) -> Iterator[None]:
-    if save:
-        yield
+def handle_save(output_file: Path | None) -> Iterator[None]:
+    if output_file:
+        console.record = True
 
-        if save:
-            with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as file:
-                filename = file.name
-            console.save_html(filename)
-            print(f"Saved output as {filename}", file=sys.stderr)
-    else:
-        yield
+    yield
+
+    if output_file:
+        console.save_svg(str(output_file))
 
 
 def main() -> None:
     args = get_args()
 
-    with handle_save(args.save):
+    with (
+        console.pager(styles=True) if args.pager else nullcontext(),
+        handle_save(args.output_file),
+    ):
         if args.command == "diff":
             console.print(pretty_diff(args.before, args.after), highlight=False)
         else:

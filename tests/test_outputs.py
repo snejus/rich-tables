@@ -39,7 +39,7 @@ def _populate_readme() -> Iterator[None]:
 @pytest.mark.parametrize("testcase", TEST_FILES, ids=str)
 def test_outputs(testcase: Path) -> None:
     sys.stdin = testcase.open()
-    sys.argv[1:] = []
+    sys.argv[1:] = ["-v"]
 
     table.console = make_console(record=True, width=156)
     table.main()

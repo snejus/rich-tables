@@ -3,13 +3,14 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 from collections.abc import Iterable, MutableMapping
-from contextlib import suppress
 from datetime import datetime, timezone
 from functools import singledispatch
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, TypeVar
 
-from rich.console import ConsoleRenderable
+from multimethod import multidispatch
+from rich.console import ConsoleRenderable, RenderableType
+from rich.panel import Panel
 from rich.text import Text
 
 from .diff import pretty_diff
@@ -27,6 +28,7 @@ from .utils import (
     format_with_color_on_black,
     get_country,
     human_dt,
+    markdown,
     md_panel,
     progress_bar,
     simple_panel,
@@ -38,10 +40,10 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from rich.console import RenderableType
+    from collections.abc import Sequence
 
 
-MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|_?count$)")
+MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|(?<![a-z])count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
 
 
@@ -51,27 +53,33 @@ def add_count_bars(
     all_keys = list(data[0].keys())
     subcount_key = next((k for k in all_keys if k.endswith("_subcount")), None)
     if subcount_key:
-        new_count_key = f"{subcount_key.removesuffix('_subcount')}/{count_key.removesuffix('_count')}"  # noqa: E501
+        new_count_key = f"{subcount_key.removesuffix('_subcount')}/{count_key.removesuffix('_count') or 'total'}"  # noqa: E501
     else:
         new_count_key = count_key
 
-    all_counts = [float(i[count_key]) for i in data]
+    for item in data:
+        item[count_key] = item.get(count_key, 0)
+        if subcount_key:
+            item[subcount_key] = item[subcount_key]
+
+    all_counts = [i.get(count_key, 0) for i in data]
     max_value = max(all_counts)
 
-    bar_key = f"{count_key}_bar"
+    bar_key = f"{new_count_key}_bar"
     for item in data:
         subcount = None
         inverse = count_key.endswith("duration")
-        count = item[count_key]
-        if subcount_key:
-            subcount = float(item[subcount_key])
-            count_val = f"{subcount}/{count}"
-        elif count_key.endswith("duration"):
+        count = item.get(count_key, 0)
+        if count_key.endswith("duration"):
             count_val = duration2human(count)
         else:
-            count_val = str(count)
+            count_val = str(int(count))
 
-        item.pop(count_key, None)
+        if subcount_key:
+            subcount = item[subcount_key]
+            count_val = f"{subcount}/{count}"
+
+        # item.pop(count_key, None)
         item[new_count_key] = count_val
         item[bar_key] = progress_bar(
             end=subcount, width=max_value, size=count, inverse=inverse
@@ -89,6 +97,33 @@ def add_count_bars(
         )
 
     return data
+
+
+TD = TypeVar("TD", bound=dict[str, Any])
+
+
+@multidispatch
+def comment_panel(content: str | TD, **kwargs) -> Panel:
+    raise NotImplementedError
+
+
+@comment_panel.register
+def _comment_panel_str(content: str, **kwargs) -> Panel:
+    if m := re.match(r"\[title\](.+?)\[/title\]\s+", content):
+        kwargs["title"] = m[1]
+        content = content.replace(m[0], "")
+
+    content = content.replace("- [x]", "* :ballot_box_with_check:")
+
+    return border_panel(markdown(content), **kwargs)
+
+
+@comment_panel.register
+def _comment_panel_dict(content: TD, **kwargs) -> Panel:
+    body = content.pop("body")
+    title = " ".join(_get_val(v, k) for k, v in content.items())
+
+    return comment_panel(body, title=title)
 
 
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
@@ -115,6 +150,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if isinstance(x, (list, HashableList, tuple))
         else format_with_color(x)
         if isinstance(x, str)
+        else ""
+        if x is None
         else x
     ),
     since=lambda x: (
@@ -142,6 +179,15 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     hidden=lambda x: ":shit: " if x == 1 else "",
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
+    # members=lambda x: " ".join(
+    #     wrap(wrap(a, clr), f"on {clr}")
+    #     for a in x
+    #     if (
+    #         clr := predictably_random_color(
+    #             "".join(chr(int(a[i : i + 3])) for i in range(0, len(a), 3))
+    #         )
+    #     )
+    # ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
     duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
     plays=lambda x: wrap(x, BOLD_GREEN),
@@ -158,27 +204,35 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if name == "is blocked by"
         else name
     ),
-    code=lambda x: syntax(x, "python"),
+    code=lambda x: syntax(x, "python") if isinstance(x, str) else x,
     context=lambda x: syntax(x, "python"),
     python=lambda x: syntax(x, "python"),
     CreatedBy=lambda x: syntax(x.replace(";", "\n"), "sh"),
     file=lambda x: "/".join(map(format_with_color, x.split("/"))),
     field=lambda x: ".".join(map(format_with_color, x.split("."))),
+    text=lambda x: syntax(x, "markdown"),
     unified_diff=lambda x: syntax(x, "diff"),
     diffHunk=lambda x: syntax(x, "diff"),
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
     sql=lambda x: sql_syntax("---\n\n" + x.replace(r"\[", "[")),
+    # created_at=lambda x: f"[white]{x.replace('T', ' ').replace('Z', '')}[/]",
+    comment=comment_panel,
+    parent_id=format_with_color_on_black,
     slug=format_with_color_on_black,
 )
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     format_with_color: (
         "__typename",
+        "action",
         "album",
         "albumtype",
+        "allowedValues",
         "app",
         "app_label",
         "area",
+        "artists",
+        "albumartists",
         "assignee",
         "brand",
         "calendar",
@@ -186,9 +240,11 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "categories",
         "Category",
         "classname",
+        "clinician",
         "data_source",
         "default_start_time",
         "default_end_time",
+        "departments",
         "Description",
         "endpoint",
         "entity",
@@ -224,6 +280,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "to",
         "tables",
         "test",
+        "ticker",
         "type",
         "type_name",
         "user",
@@ -235,6 +292,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "added",
         "committedDate",
         "created",
+        "created_at",
         "due",
         "done_date",
         "start",
@@ -247,13 +305,17 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "updated",
         "providerPublishTime",
         "release_date",
+        "sunrise",
+        "sunset",
+        "updated_at",
     ),
     md_panel: (
         "answer",
+        "covers",
+        "covered_by",
         "benefits",
         "body",
         "bodyHTML",
-        "comment",
         "comments",
         "creditText",
         "description",
@@ -273,20 +335,19 @@ for func, fields in fields_by_func.items():
 
 def _get_val(value: float | str | RenderableType | None, field: str) -> RenderableType:
     if value is None:
-        return "None"
+        return ""
 
     if field.endswith(".py"):
         return border_panel(syntax(value, "python"), title=field)
-
-    if isinstance(value, str):
-        value = format_string(value)
 
     if isinstance(value, ConsoleRenderable):
         return value
 
     if field in FIELDS_MAP:
-        with suppress(Exception):
-            return FIELDS_MAP[field](value)
+        return FIELDS_MAP[field](value)
+
+    if isinstance(value, str):
+        value = format_string(value)
 
     return str(value)
 
@@ -296,8 +357,9 @@ def get_val(obj: JSONDict | object, field: str) -> Any:
     """Definition of a generic get_val function."""
 
 
-@get_val.register
-def _(obj: dict, field: str) -> Any:  # type: ignore[type-arg]
+@get_val.register(dict)
+@get_val.register(HashableDict)
+def _(obj: dict | HashableDict, field: str) -> Any:  # type: ignore[type-arg]
     return _get_val(obj.get(field), field)
 
 

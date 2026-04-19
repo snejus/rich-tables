@@ -12,8 +12,7 @@
     "last_played": 1730240944,
     "plays": 8,
     "skips": 2,
-    "helicopta": 0,
-    "hidden": 0
+    "helicopta": 0
   },
   {
     "albumtypes": "album",
@@ -28,8 +27,7 @@
     "last_played": 1730240618,
     "plays": 19,
     "skips": 0,
-    "helicopta": 0,
-    "hidden": 0
+    "helicopta": 0
   },
   {
     "albumtypes": "album",
@@ -44,8 +42,7 @@
     "last_played": 1730240339,
     "plays": 14,
     "skips": 1,
-    "helicopta": 0,
-    "hidden": 0
+    "helicopta": 0
   },
   {
     "albumtypes": "single",
@@ -60,8 +57,7 @@
     "last_played": 1730240038,
     "plays": 20,
     "skips": 1,
-    "helicopta": 0,
-    "hidden": 0
+    "helicopta": 0
   },
   {
     "albumtypes": "album",
@@ -76,8 +72,7 @@
     "last_played": 1730239586,
     "plays": 17,
     "skips": 0,
-    "helicopta": 0,
-    "hidden": 0
+    "helicopta": 0
   },
   {
     "albumtypes": "album",
@@ -92,8 +87,7 @@
     "last_played": 1730239221,
     "plays": 6,
     "skips": 0,
-    "helicopta": 0,
-    "hidden": 0
+    "helicopta": 0
   },
   {
     "albumtypes": "album",
@@ -108,8 +102,7 @@
     "last_played": 1730238987,
     "plays": 15,
     "skips": 1,
-    "helicopta": 0,
-    "hidden": 0
+    "helicopta": 0
   },
   {
     "albumtypes": "album",
@@ -124,8 +117,7 @@
     "last_played": 1730238639,
     "plays": 19,
     "skips": 0,
-    "helicopta": 0,
-    "hidden": 0
+    "helicopta": 0
   },
   {
     "albumtypes": "album",
@@ -140,8 +132,7 @@
     "last_played": 1730238309,
     "plays": 16,
     "skips": 1,
-    "helicopta": 0,
-    "hidden": 0
+    "helicopta": 0
   },
   {
     "albumtypes": "album",
@@ -156,7 +147,6 @@
     "last_played": 1730237947,
     "plays": 19,
     "skips": 3,
-    "helicopta": 0,
-    "hidden": 0
+    "helicopta": 0
   }
 ]

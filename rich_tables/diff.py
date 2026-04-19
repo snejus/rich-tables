@@ -12,7 +12,7 @@ import re
 from difflib import SequenceMatcher
 from functools import partial
 from itertools import starmap, zip_longest
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from multimethod import multimethod
 
@@ -25,6 +25,9 @@ from .utils import (
     to_hashable,
     wrap,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 MIN_EQUAL_LENGTH = 5
 
@@ -113,38 +116,56 @@ def diff_serialize(value: Any) -> str:
 
 
 @multimethod
-def diff(before: str, after: str) -> str:
-    """Generate a formatted diff between two objects.
-
-    Base implementation for strings. Extended via multimethod
-    for lists, dictionaries and generic objects.
-    """
-    return make_difftext(before, after)
-
-
-@diff.register
-def _(before: Any, after: Any) -> Any:
+def diff(before: Any, after: Any) -> Any:
+    """Generate a formatted diff between two objects."""
     return diff(diff_serialize(before), diff_serialize(after))
 
 
 @diff.register
-def _(before: HashableList[Any], after: HashableList[Any]) -> Any:
-    return list(starmap(diff, zip_longest(before, after)))
+def _strs(before: str, after: str) -> str:
+    return make_difftext(before, after)
+
+
+@diff.register(HashableList[Any], HashableList[Any])
+@diff.register(HashableList[Any], tuple)
+@diff.register(tuple, HashableList[Any])
+def _lists(before: Sequence[Any], after: Sequence[Any]) -> Any:
+    return HashableList(starmap(diff, zip_longest(before, after)))
 
 
 @diff.register
-def _(before: HashableDict, after: HashableDict) -> dict[str, str]:
+def _dicts(before: HashableDict, after: HashableDict) -> dict[str, str]:
     data = {}
-    keys = dict.fromkeys((*before, *after))
+    keys = HashableDict.fromkeys((*before, *after))
     for key in keys:
         if key not in before:
-            data[format_new(key)] = format_new(diff_serialize(after[key]))
+            data[format_new(key)] = diff(None, after[key])
         elif key not in after:
-            data[format_old(key)] = format_old(diff_serialize(before[key]))
+            data[format_old(key)] = diff(before[key], None)
         else:
             data[key] = diff(before[key], after[key])
 
     return data
+
+
+@diff.register
+def _dict_none(before: HashableDict, _: None) -> dict[str, str]:
+    return diff(before, HashableDict[str, str]())
+
+
+@diff.register
+def _list_none(before: HashableList, _: None) -> dict[str, str]:
+    return diff(before, HashableList())
+
+
+@diff.register
+def _none_dict(_: None, after: HashableDict) -> dict[str, str]:
+    return diff(HashableDict(), after)
+
+
+@diff.register
+def _none_list(_: None, after: HashableList) -> list[str, str]:
+    return diff(HashableList(), after)
 
 
 def pretty_diff(before: Any, after: Any) -> str:

@@ -152,11 +152,16 @@ def get_table(
         for g, tasks_data in tasks_data_by_group.items()
     }
     desc_by_uuid = {t.uuid: t.desc for g in tasks_by_group.values() for t in g}
-    for group, tasks in tasks_by_group.items():
-        yield border_panel(
-            flexitable(
-                [t.get_row(keep_headers, get_desc=desc_by_uuid.get) for t in tasks]
-            ),
-            title=wrap(group, "b"),
-            style=predictably_random_color(group),
-        )
+    tasks_by_group = {
+        k: [t.get_row(keep_headers, get_desc=desc_by_uuid.get) for t in tasks]
+        for k, tasks in tasks_by_group.items()
+    }
+    yield flexitable(tasks_by_group)
+    # for group, tasks in tasks_by_group.items():
+    #     yield border_panel(
+    #         flexitable(
+    #             [t.get_row(keep_headers, get_desc=desc_by_uuid.get) for t in tasks]
+    #         ),
+    #         title=wrap(group, "b"),
+    #         expand=True
+    #     )

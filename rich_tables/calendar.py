@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
 from typing import TYPE_CHECKING, Any
-from zoneinfo import ZoneInfo
 
 from rich.bar import Bar
 from rich.columns import Columns
@@ -120,8 +119,6 @@ class Event:
         h_after_midnight = (24 * diff.days + (diff.seconds // 3600)) - (
             24 - self.start.hour
         )
-
-        end = (self.start + timedelta(days=1)).replace(hour=0, minute=0, second=0)
 
         def eod(day_offset: int) -> datetime:
             return (self.start + timedelta(days=day_offset)).replace(

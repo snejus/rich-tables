@@ -71,10 +71,6 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/albums.svg)
 
-### Aligned object arrays
-
-![image](svgs/aligned_object_arrays.svg)
-
 ### Calendar
 
 ![image](svgs/calendar.svg)
@@ -86,6 +82,10 @@ deal with a huge diff with a lot of unrelated changes.
 ### Emails
 
 ![image](svgs/emails.svg)
+
+### Hello
+
+![image](svgs/hello.svg)
 
 ### Hue
 
@@ -107,6 +107,10 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/nested_json.svg)
 
+### Object arrays
+
+![image](svgs/object_arrays.svg)
+
 ### Pr
 
 ![image](svgs/pr.svg)
@@ -114,6 +118,10 @@ deal with a huge diff with a lot of unrelated changes.
 ### Simple JSON
 
 ![image](svgs/simple_json.svg)
+
+### Simple nested object
+
+![image](svgs/simple_nested_object.svg)
 
 ### Sql
 

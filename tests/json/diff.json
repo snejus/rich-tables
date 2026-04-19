@@ -20,7 +20,9 @@
     "release_track_id": null,
     "style": null,
     "title": "Arangel",
-    "year": 2020
+    "year": 2020,
+    "object": null,
+    "empty": []
   },
   "after": {
     "album": "",
@@ -43,6 +45,14 @@
     "release_track_id": null,
     "style": null,
     "title": "Arangel",
-    "year": 2020
+    "year": 2020,
+    "object": {
+      "with": "some lonnggggggggggggggggggggggggggggggggggggggggggggggggggggg ",
+      "text": "ggggggggggggggggggggggggggggggggggggggggggggggggggggggggg text"
+    },
+    "empty": [
+      "not",
+      "empty"
+    ]
   }
 }
