@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from contextlib import contextmanager, nullcontext
+from contextlib import contextmanager, nullcontext, suppress
 from functools import singledispatch
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -60,7 +60,8 @@ def load_data(filepath: str) -> list[JSONDict] | JSONDict | str:
         text = sys.stdin.read()
         # attach terminal because Console.pager uses pydoc which won't page when either
         # stdin or stdout is not a terminal
-        sys.stdin = Path("/dev/tty").open()  # noqa: SIM115
+        with suppress(OSError):
+            sys.stdin = Path("/dev/tty").open()  # noqa: SIM115
     elif len(filepath) > MAX_FILENAME_LEN or len(filepath.encode()) > MAX_FILENAME_LEN:
         text = filepath
     else:
