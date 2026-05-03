@@ -35,7 +35,6 @@ TRACK_FIELDS = [
     "track",
     "track_alt",
     "length",
-    "artist",
     "artists",
     "artwork_url",
     "title",
@@ -152,12 +151,12 @@ def album_panel(tracks: list[JSONDict]) -> Panel:
 
     track_fields = list(TRACK_FIELDS)
     # ignore the artist field if there is only one found
-    if len(tracks) > 1 and len({t.get("artist") for t in tracks}) == 1:
-        track_fields.remove("artist")
+    if len(tracks) > 1 and len({tuple(t.get("artists", [])) for t in tracks}) == 1:
+        track_fields.remove("artists")
 
     # ignore empty fields
     track_fields = [f for f in track_fields if any(t.get(f) for t in tracks)]
-    tracks = sorted(tracks, key=op.itemgetter("track", "artist", "title"))
+    tracks = sorted(tracks, key=op.itemgetter("track", "artists", "title"))
     tracklist = tracks_table(tracks, track_fields, album["album_color"])
 
     last_track_index = tracks.index(
