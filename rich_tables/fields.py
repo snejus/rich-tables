@@ -255,6 +255,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "event",
         "from",
         "full_name",
+        "genres",
         "group_source",
         "issuetype",
         "kind",
@@ -287,7 +288,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "client",
         "env",
     ),
-    split_with_color: ("genre", "genres", "Interests"),
+    split_with_color: ("genre", "Interests"),
     human_dt: (
         "added",
         "committedDate",
