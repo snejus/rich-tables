@@ -280,6 +280,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "table",
         "to",
         "tables",
+        "tags",
         "test",
         "ticker",
         "type",
