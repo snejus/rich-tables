@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from rich import box
 from rich.align import Align
-from rich.console import ConsoleRenderable, Group
+from rich.console import ConsoleRenderable, Group, NewLine, RenderableType
 
 from .fields import get_val
 from .generic import flexitable
@@ -15,6 +15,7 @@ from .utils import (
     DISPLAY_HEADER,
     NewTable,
     border_panel,
+    format_with_color_on_black,
     new_table,
     predictably_random_color,
     simple_panel,
@@ -31,6 +32,8 @@ if TYPE_CHECKING:
 
 JSONDict = dict[str, Any]
 
+MOST_RECENTLY_PLAYED_TRACK_STYLE = "b white on #000000"
+TRACK_SORT_FIELDS = ["disc", "track", "artists", "title"]
 TRACK_FIELDS = [
     "track",
     "track_alt",
@@ -44,6 +47,7 @@ TRACK_FIELDS = [
     "skips",
     "helicopta",
     "lyrics",
+    "wait_per_play",
 ]
 ALBUM_IGNORE = set(TRACK_FIELDS) | {
     "album_color",
@@ -54,6 +58,7 @@ ALBUM_IGNORE = set(TRACK_FIELDS) | {
     "genre",
     "tracktotal",
     "albumartist",
+    "disc",
 }
 
 
@@ -64,12 +69,36 @@ def get_header(key: str) -> str:
     return DISPLAY_HEADER.get(key, key)
 
 
-def tracks_table(tracks: list[JSONDict], fields: list[str], color: str) -> NewTable:
-    get_values = op.itemgetter(*fields)
-    tracks_data = [dict(zip(fields, get_values(t))) for t in tracks]
-    table = new_table(border_style=color, padding=(0, 0, 0, 1))
-    for item in tracks_data:
-        table.add_dict_row(item, transform=flexitable)
+def tracks_table(
+    tracks: list[JSONDict], fields: list[str], album: JSONDict
+) -> NewTable:
+    table = new_table(*fields, border_style=album["album_color"], padding=(0, 0, 0, 1))
+    most_recently_played_track = max(tracks, key=lambda t: t.get("last_played", 0))
+    disc_and_disc_tracks = sortgroup_by(tracks, lambda t: t["disc"])
+    single_disc = len(disc_and_disc_tracks) == 1
+    for disc, disc_tracks in disc_and_disc_tracks:
+        if not single_disc:
+            table.add_row(format_with_color_on_black(f"Disc {disc}"))
+        for track in disc_tracks:
+            table.add_dict_row(
+                track,
+                transform=flexitable,
+                ignore_extra_fields=True,
+                style=(
+                    MOST_RECENTLY_PLAYED_TRACK_STYLE
+                    if track == most_recently_played_track
+                    else None
+                ),
+            )
+        last_disc = disc_and_disc_tracks[-1][0]
+        if not single_disc and disc != last_disc:
+            table.add_section()
+
+    album_totals = [album.get({"track": "tracktotal"}.get(k, k)) or "" for k in fields]
+    table.add_row(
+        *((format_with_color_on_black(at) if at else at) for at in album_totals),
+        style="d white",
+    )
 
     return table
 
@@ -81,6 +110,8 @@ def album_stats(tracks: list[JSONDict]) -> JSONDict:
     def agg(field: str, default: T) -> Iterable[T]:
         return ((x.get(field) or default) for x in tracks)
 
+    tracktotal_by_disc = {i["disc"]: i["tracktotal"] for i in tracks}
+    total_tracktotal = sum(tracktotal_by_disc.values())
     return dict(
         bpm=round(sum(agg("bpm", 0)) / len(tracks)),
         rating=round(sum(agg("rating", 0)) / len(tracks), 2),
@@ -88,8 +119,8 @@ def album_stats(tracks: list[JSONDict]) -> JSONDict:
         skips=sum(agg("skips", 0)),
         mtime=max(agg("mtime", 0)),
         last_played=max(agg("last_played", 0)),
-        tracktotal=(str(len(tracks)), str(tracks[0].get("tracktotal")) or "0"),
-        comments="\n---\n---\n".join(set(agg("comments", ""))),
+        tracktotal=(str(len(tracks)), total_tracktotal),
+        comments="\n---\n---\n".join(set(agg("comments", ""))) or None,
     )
 
 
@@ -150,39 +181,30 @@ def album_panel(tracks: list[JSONDict]) -> Panel:
     url = album.pop("url", "")
 
     track_fields = list(TRACK_FIELDS)
+    tracks = sorted(tracks, key=op.itemgetter(*TRACK_SORT_FIELDS))
     # ignore the artist field if there is only one found
     if len(tracks) > 1 and len({tuple(t.get("artists", [])) for t in tracks}) == 1:
         track_fields.remove("artists")
 
     # ignore empty fields
     track_fields = [f for f in track_fields if any(t.get(f) for t in tracks)]
-    tracks = sorted(tracks, key=op.itemgetter("track", "artists", "title"))
-    tracklist = tracks_table(tracks, track_fields, album["album_color"])
 
-    last_track_index = tracks.index(
-        next(
-            iter(sorted(tracks, key=lambda t: t.get("last_played") or 0, reverse=True))
+    vertical_parts: list[RenderableType] = [album["album_title"]]
+    if comments := album.get("comments"):
+        comments_table = Align.center(
+            simple_panel(comments, style="grey54", expand=True, vertical_align="middle")
+        )
+        vertical_parts.append(comments_table)
+    else:
+        vertical_parts.append(NewLine())
+    vertical_parts.append(
+        new_table(
+            rows=[[album_info_table(album), tracks_table(tracks, track_fields, album)]],
         )
     )
-    tracklist.rows[last_track_index].style = "b white on #000000"
-    tracklist.add_row(
-        *[album.get(k) or "" for k in ["tracktotal", *track_fields[1:]]],
-        style="d white on grey11",
-    )
 
-    comments = album.get("comments")
     return border_panel(
-        Group(
-            album["album_title"],
-            Align.center(
-                simple_panel(
-                    comments, style="grey54", expand=True, vertical_align="middle"
-                )
-            )
-            if comments
-            else "",
-            new_table(rows=[[album_info_table(album), tracklist]]),
-        ),
+        Group(*vertical_parts),
         box=box.DOUBLE_EDGE,
         style=album["albumartist_color"],
         expand=True,
