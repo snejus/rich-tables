@@ -2,7 +2,16 @@ from __future__ import annotations
 
 import inspect
 import sys
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Protocol, runtime_checkable
+from dataclasses import dataclass
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    NamedTuple,
+    Protocol,
+    TypedDict,
+    runtime_checkable,
+)
 
 from rich import box
 from rich.console import RichCast
@@ -69,6 +78,119 @@ class GithubComment(NamedTuple):
         )
 
 
+class GithubLabel(TypedDict):
+    name: str
+    color: str
+
+
+class IssueReference(TypedDict):
+    number: int
+    title: str
+
+
+@dataclass
+class GithubPRCard(RichCastFactory):
+    url: str
+    title: str
+    author: str
+    state: str  # already Rich markup from your data
+    additions: int
+    deletions: int
+    labels: list[GithubLabel]
+    created_at: str
+    updated_at: str
+    reactions: list[GithubReaction]
+    last_comment: GithubComment | None
+    closingIssuesReferences: list[IssueReference]
+
+    @classmethod
+    def make(cls, *args: Any, **kwargs: Any) -> Self:
+        raw_lc = kwargs.pop("last_comment", None)
+        kwargs["last_comment"] = GithubComment.make(**raw_lc) if raw_lc else None
+        kwargs["reactions"] = [GithubReaction(**r) for r in kwargs.get("reactions", [])]
+        kwargs.setdefault("additions", 0)
+        kwargs.setdefault("deletions", 0)
+        return cls(*args, **kwargs)
+
+    @staticmethod
+    def _border(state: str) -> str:
+        for emoji, colour in {
+            "⏳": "green",
+            "✅": "bright_green",
+            "⛔": "red",
+            "❔": "yellow",
+        }.items():
+            if emoji in state:
+                return colour
+        return "dim"
+
+    def __rich__(self) -> ConsoleRenderable:
+        from rich import box
+
+        from .fields import FIELDS_MAP
+        from .utils import (
+            border_panel,
+            format_with_color_on_black,
+            human_dt,
+            list_table,
+            new_table,
+            simple_panel,
+            wrap,
+        )
+
+        additions = f"+{self.additions}" if self.additions else ""
+        deletions = f"-{self.deletions}" if self.deletions else ""
+
+        meta = new_table(
+            rows=[
+                [wrap("state", "dim"), self.state],
+                [
+                    wrap("churn", "dim"),
+                    wrap(additions, "b green") + " " + wrap(deletions, "b red"),
+                ],
+                [wrap("opened", "dim"), human_dt(self.created_at)],
+                [wrap("updated", "dim"), human_dt(self.updated_at)],
+                # [wrap("issue", "dim"), wrap(self.issue_ref, "dim cyan")],
+                [
+                    wrap("labels", "dim"),
+                    FIELDS_MAP["labels"](self.labels)
+                    if self.labels
+                    else wrap("—", "dim"),
+                ],
+            ],
+            show_header=False,
+            highlight=False,
+            box=box.SIMPLE,
+            expand=False,
+            padding=(0, 1),
+        )
+        body = list_table(
+            [
+                meta,
+                simple_panel(
+                    self.last_comment or wrap("no comments yet", "dim"),
+                    title="last comment",
+                    border_style="dim",
+                ),
+            ],
+            padding=(0, 0, 1, 0),
+        )
+        card_title = " ".join(
+            [
+                wrap(self.title, "b white"),
+                wrap("by", "dim"),
+                format_with_color_on_black(self.author),
+            ]
+        )
+        return border_panel(
+            body,
+            title=card_title,
+            title_align="left",
+            border_style=self._border(self.state),
+            subtitle=f"[link]{self.url}[/link]",
+        )
+
+
 TYPE_BY_NAME: dict[str, type[RichCastFactory]] = {
     name: obj
     for name, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass)
@@ -76,5 +198,7 @@ TYPE_BY_NAME: dict[str, type[RichCastFactory]] = {
 }
 
 
-def get_renderable(_type: Literal["GithubComment"], **kwargs: Any) -> RichCastFactory:
+def get_renderable(
+    _type: Literal["GithubComment", "GithubPRCard"], **kwargs: Any
+) -> RichCastFactory:
     return TYPE_BY_NAME[_type].make(**kwargs)
