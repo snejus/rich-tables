@@ -45,6 +45,11 @@ else:
 JSONDict = dict[str, Any]
 
 
+class MyText(Text):
+    def __hash__(self) -> int:
+        return hash(id(self._text))
+
+
 class HashableDict(UserDict[KT, VT]):
     def __init__(self, dict: dict[KT, VT] | None = None, /, **kwargs) -> None:
         # super().__init__({k: v for k, v in (dict or {}).items() if v != []}, **kwargs)
@@ -288,7 +293,7 @@ def new_table(
     kwargs.setdefault("title_justify", "left")
     kwargs.setdefault("style", "default")
     kwargs.setdefault("border_style", "default")
-    kwargs.setdefault("overflow", "fold")
+    kwargs.setdefault("overflow", "ellipsis")
 
     table = NewTable(*headers, **kwargs)
     if rows:

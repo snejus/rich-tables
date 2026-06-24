@@ -375,6 +375,7 @@ def _int_list(data: HashableList[int]) -> RenderableType:
     return Columns(str(x) for x in data)
 
 
+@debug
 def _handle_mixed_list_items(data: HashableList[Any]) -> NewTable:
     """Handle a list containing mixed item types."""
     return list_table(
@@ -404,6 +405,7 @@ def get_item_list_table(
     return table
 
 
+@debug
 def _render_dict_list(data: HashableList[HashableDict]) -> NewTable:
     """Render a list of dictionaries with consistent structure handling."""
     if (

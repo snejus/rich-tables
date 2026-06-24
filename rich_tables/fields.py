@@ -20,6 +20,7 @@ from .utils import (
     HashableDict,
     HashableList,
     JSONDict,
+    MyText,
     border_panel,
     duration2human,
     fmt_time,
@@ -220,6 +221,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     comment=comment_panel,
     parent_id=format_with_color_on_black,
     slug=format_with_color_on_black,
+    url=lambda x: MyText(x, style=f"cyan dim bold link {x}"),
 )
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     format_with_color: (
