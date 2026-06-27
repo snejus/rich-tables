@@ -207,6 +207,7 @@ class Commit(Entity):
     committedDate: str
     message: str
     statusCheckRollup: str
+    author: str
 
     @property
     def diff(self) -> list[str]:
@@ -216,6 +217,7 @@ class Commit(Entity):
     def parts(self) -> list[str]:
         return [
             *self.diff,
+            get_val(self, "author"),
             get_val(self, "statusCheckRollup"),
             get_val(self, "message"),
             get_val(self, "committedDate"),

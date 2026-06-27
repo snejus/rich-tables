@@ -48,6 +48,7 @@
       "commits": [
         {
           "additions": 10,
+          "author": "snejus",
           "deletions": 0,
           "committedDate": "2022-03-15T07:43:26Z",
           "message": "Nicely disable musicbrainz",
@@ -55,6 +56,7 @@
         },
         {
           "additions": 53,
+          "author": "snejus",
           "deletions": 8,
           "committedDate": "2022-03-15T21:57:33Z",
           "message": "Update docs",
@@ -62,6 +64,7 @@
         },
         {
           "additions": 3,
+          "author": "snejus",
           "deletions": 1,
           "committedDate": "2022-03-15T22:13:23Z",
           "message": "Add a changelog entry",
@@ -69,6 +72,7 @@
         },
         {
           "additions": 15,
+          "author": "snejus",
           "deletions": 25,
           "committedDate": "2022-03-18T05:05:58Z",
           "message": "Move the logic to hooks.py",
@@ -76,6 +80,7 @@
         },
         {
           "additions": 7,
+          "author": "snejus",
           "deletions": 41,
           "committedDate": "2022-03-18T05:14:29Z",
           "message": "Remove optional docs changes",
@@ -83,6 +88,7 @@
         },
         {
           "additions": 4,
+          "author": "snejus",
           "deletions": 4,
           "committedDate": "2022-03-18T22:57:22Z",
           "message": "Rename handle_exc to invoke_mb",
@@ -90,6 +96,7 @@
         },
         {
           "additions": 1,
+          "author": "snejus",
           "deletions": 0,
           "committedDate": "2022-03-23T16:20:06Z",
           "message": "Return iterable from the exception handler",
@@ -97,6 +104,7 @@
         },
         {
           "additions": 4,
+          "author": "snejus",
           "deletions": 3,
           "committedDate": "2022-03-23T16:34:13Z",
           "message": "Do not assign extra variable to keep things within max line_length",
@@ -104,6 +112,7 @@
         },
         {
           "additions": 10,
+          "author": "snejus",
           "deletions": 12,
           "committedDate": "2022-03-23T16:59:21Z",
           "message": "Move musicbrainz.enabled check out from invoke_mb",
@@ -111,6 +120,7 @@
         },
         {
           "additions": 11,
+          "author": "snejus",
           "deletions": 11,
           "committedDate": "2022-03-23T17:02:45Z",
           "message": "Move musicbrainz.enabled section below network config in config.rst",
