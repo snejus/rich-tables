@@ -87,21 +87,6 @@ def fmt_add_del(added: int, deleted: int) -> list[str]:
     return [b_green(additions.rjust(5)), b_red(deletions.rjust(3))]
 
 
-def gh_md_panel(body: str, *args: Any, **kwargs: Any) -> Panel:
-    return md_panel(
-        body,
-        # console.render_str(
-        #     body.replace(":rofl:", ":rolling_on_the_floor_laughing:").replace(
-        #         ":ballot_box_with_check:", "☑ "
-        #     ),
-        #     highlight=False,
-        #     markup=False,
-        # ).markup,
-        *args,
-        **kwargs,
-    )
-
-
 COLOR_BY_STATE = defaultdict(
     lambda: "default",
     {
@@ -586,7 +571,7 @@ class PullRequestTable(PullRequest):
         field_rows = flexitable(pairs)
         return border_panel(
             new_table(
-                rows=[[field_rows], [gh_md_panel(self.body)], [self.files_commits]]
+                rows=[[field_rows], [get_val(self, "body")], [self.files_commits]]
             ),
             title=f"{self.name} @ {self.repo}",
             box=box.DOUBLE_EDGE,

@@ -6,7 +6,7 @@ from collections.abc import Iterable, MutableMapping
 from datetime import datetime, timezone
 from functools import singledispatch
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, SupportsFloat, TypeVar
 
 from multimethod import multidispatch
 from rich.console import ConsoleRenderable, RenderableType
@@ -144,7 +144,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     author=lambda x: (
         format_with_color_on_black(x)
         if isinstance(x, (str, list, HashableList, tuple, set))
-        else x
+        else ""
     ),
     labels=lambda x: (
         wrap(" ".join(wrap(y["name"], f"#{y['color']}") for y in x), "b")
@@ -153,7 +153,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if isinstance(x, str)
         else ""
         if x is None
-        else x
+        else str(x)
     ),
     since=lambda x: (
         x
@@ -166,7 +166,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     bpm=lambda x: (
         wrap(str(x), next(c for c, m in MAX_BPM_COLOR if x < m))
         if isinstance(x, int)
-        else x
+        else ""
     ),
     length=timestamp2timestr,
     tracktotal=lambda x: (
@@ -180,17 +180,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     hidden=lambda x: ":shit: " if x == 1 else "",
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
-    # members=lambda x: " ".join(
-    #     wrap(wrap(a, clr), f"on {clr}")
-    #     for a in x
-    #     if (
-    #         clr := predictably_random_color(
-    #             "".join(chr(int(a[i : i + 3])) for i in range(0, len(a), 3))
-    #         )
-    #     )
-    # ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
-    duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
+    duration=lambda x: str(duration2human(x) if isinstance(x, SupportsFloat) else x),
     plays=lambda x: wrap(x, BOLD_GREEN),
     skips=lambda x: wrap(x, BOLD_RED),
     new=lambda x: (
@@ -203,9 +194,9 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if name == "blocks"
         else wrap(name, BOLD_RED)
         if name == "is blocked by"
-        else name
+        else str(name)
     ),
-    code=lambda x: syntax(x, "python") if isinstance(x, str) else x,
+    code=lambda x: syntax(x, "python") if isinstance(x, str) else "",
     context=lambda x: syntax(x, "python"),
     python=lambda x: syntax(x, "python"),
     CreatedBy=lambda x: syntax(x.replace(";", "\n"), "sh"),
@@ -222,6 +213,11 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     parent_id=format_with_color_on_black,
     slug=format_with_color_on_black,
     url=lambda x: MyText(x, style=f"cyan dim bold link {x}"),
+    body=lambda body: md_panel(
+        body.replace(":rofl:", ":rolling_on_the_floor_laughing:")
+        .replace("[x]", "☑ ")
+        .replace("[ ]", "☐ ")
+    ),
 )
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     format_with_color: (
@@ -319,7 +315,6 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "covers",
         "covered_by",
         "benefits",
-        "body",
         "bodyHTML",
         "comments",
         "creditText",
@@ -358,16 +353,16 @@ def _get_val(value: float | str | RenderableType | None, field: str) -> Renderab
 
 
 @singledispatch
-def get_val(obj: JSONDict | object, field: str) -> Any:
+def get_val(obj: JSONDict | object, field: str) -> RenderableType:
     """Definition of a generic get_val function."""
 
 
 @get_val.register(dict)
 @get_val.register(HashableDict)
-def _(obj: dict | HashableDict, field: str) -> Any:  # type: ignore[type-arg]
+def _(obj: dict | HashableDict, field: str) -> RenderableType:  # type: ignore[type-arg]
     return _get_val(obj.get(field), field)
 
 
 @get_val.register
-def _(obj: object, field: str) -> Any:
+def _(obj: object, field: str) -> RenderableType:
     return _get_val(getattr(obj, field, None), field)
