@@ -17,8 +17,17 @@ from rich import box
 from rich.console import RichCast
 from typing_extensions import Self
 
-from .fields import get_val
-from .utils import md_panel
+from .fields import FIELDS_MAP, get_val
+from .utils import (
+    border_panel,
+    format_with_color_on_black,
+    human_dt,
+    list_table,
+    md_panel,
+    new_table,
+    simple_panel,
+    wrap,
+)
 
 if TYPE_CHECKING:
     from rich.console import ConsoleRenderable
@@ -93,7 +102,8 @@ class GithubPRCard(RichCastFactory):
     url: str
     title: str
     author: str
-    state: str  # already Rich markup from your data
+    state: str
+    body: str
     additions: int
     deletions: int
     labels: list[GithubLabel]
@@ -107,7 +117,9 @@ class GithubPRCard(RichCastFactory):
     def make(cls, *args: Any, **kwargs: Any) -> Self:
         raw_lc = kwargs.pop("last_comment", None)
         kwargs["last_comment"] = GithubComment.make(**raw_lc) if raw_lc else None
-        kwargs["reactions"] = [GithubReaction(**r) for r in kwargs.get("reactions", [])]
+        kwargs["reactions"] = [
+            GithubReaction.make(**r) for r in kwargs.get("reactions", [])
+        ]
         kwargs.setdefault("additions", 0)
         kwargs.setdefault("deletions", 0)
         return cls(*args, **kwargs)
@@ -125,19 +137,6 @@ class GithubPRCard(RichCastFactory):
         return "dim"
 
     def __rich__(self) -> ConsoleRenderable:
-        from rich import box
-
-        from .fields import FIELDS_MAP
-        from .utils import (
-            border_panel,
-            format_with_color_on_black,
-            human_dt,
-            list_table,
-            new_table,
-            simple_panel,
-            wrap,
-        )
-
         additions = f"+{self.additions}" if self.additions else ""
         deletions = f"-{self.deletions}" if self.deletions else ""
 
@@ -157,6 +156,7 @@ class GithubPRCard(RichCastFactory):
                     if self.labels
                     else wrap("—", "dim"),
                 ],
+                [wrap("body", "dim"), md_panel(self.body)],
             ],
             show_header=False,
             highlight=False,
