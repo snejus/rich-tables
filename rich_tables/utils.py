@@ -149,6 +149,10 @@ def wrap(text: str, tag: str) -> str:
     return f"[{tag}]{format_string(str(text))}[/{tag}]"
 
 
+def link(text: str, link: str) -> str:
+    return f"[link={link}]{text}[/link]"
+
+
 def duration2human(duration: SupportsFloat) -> str | SupportsFloat:
     with suppress(ValueError):
         diff = timedelta(seconds=float(duration))

@@ -20,6 +20,7 @@ from typing import (
 )
 
 from rich import box
+from rich.text import Text
 from typing_extensions import Self, TypedDict
 
 from .fields import FIELDS_MAP, get_val
@@ -32,6 +33,7 @@ from .utils import (
     format_with_color,
     format_with_color_on_black,
     human_dt,
+    link,
     list_table,
     md_panel,
     new_table,
@@ -235,6 +237,7 @@ class Content(CreatedPanelMixin):
     createdAt: str
     author: str
     body: str
+    url: str
 
     @property
     def created_at(self) -> str:
@@ -261,6 +264,7 @@ class Comment(Content):
             "GithubComment",
             author=self.author,
             created_at=self.created_at,
+            url=self.url,
             reactions=self.reactions,
             state=self.get_state(),
             body=self.get_body(),
@@ -543,7 +547,9 @@ class PullRequestTable(PullRequest):
 
     @property
     def name(self) -> str:
-        return wrap(f"{wrap(f'#{self.number}', 'dim')} {self.title}", "b white")
+        return wrap(
+            f"{wrap(link(f'#{self.number}', self.url), 'dim')} {self.title}", "b white"
+        )
 
     @property
     def repo(self) -> str:

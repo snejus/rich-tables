@@ -22,6 +22,7 @@ from .utils import (
     border_panel,
     format_with_color_on_black,
     human_dt,
+    link,
     list_table,
     md_panel,
     new_table,
@@ -65,6 +66,7 @@ class GithubComment(NamedTuple):
     body: str
     author: str
     created_at: str
+    url: str
     state: Literal["CHANGES_REQUESTED", "APPROVED", "COMMENTED"]
     reactions: list[GithubReaction]
 
@@ -74,9 +76,11 @@ class GithubComment(NamedTuple):
         return cls(*args, **kwargs)
 
     def __rich__(self) -> ConsoleRenderable:
+        created = link(get_val(self, "created_at"), self.url)
+        author = get_val(self, "author")
         return md_panel(
             self.body,
-            title=" ".join(get_val(self, f) for f in ["author", "created_at"]),
+            title=f"{author} {created}",
             subtitle=" ".join(map(str, self.reactions)),
             border_style={
                 "APPROVED": "green",
@@ -187,7 +191,7 @@ class GithubPRCard(RichCastFactory):
             title=card_title,
             title_align="left",
             border_style=self._border(self.state),
-            subtitle=f"[link]{self.url}[/link]",
+            subtitle=link(self.url, self.url),
         )
 
 
