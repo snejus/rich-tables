@@ -190,11 +190,12 @@ class Entity:
 @dataclass
 class Commit(Entity):
     additions: int
-    deletions: int
+    author: str
     committedDate: str
+    deletions: int
     message: str
     statusCheckRollup: str
-    author: str
+    url: str
 
     @property
     def diff(self) -> list[str]:
@@ -207,7 +208,7 @@ class Commit(Entity):
             get_val(self, "author"),
             get_val(self, "statusCheckRollup"),
             get_val(self, "message"),
-            get_val(self, "committedDate"),
+            link(get_val(self, "committedDate"), self.url),
         ]
 
 
