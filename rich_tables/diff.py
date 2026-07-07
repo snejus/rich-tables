@@ -39,11 +39,15 @@ mark_newline = partial(
 
 def format_new(string: str) -> str:
     """Format added text in bold green with visible whitespace markers."""
+    if not string:
+        return string
     return wrap(mark_newline(underscore_space(string)), BOLD_GREEN)
 
 
 def format_old(string: str) -> str:
     """Format deleted text in bold red with strikethrough."""
+    if not string:
+        return string
     return wrap(mark_newline(string), f"s {BOLD_RED}")
 
 
