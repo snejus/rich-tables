@@ -79,7 +79,7 @@ class GithubComment(NamedTuple):
         created = link(get_val(self, "created_at"), self.url)
         author = get_val(self, "author")
         return md_panel(
-            self.body,
+            self.body.replace(":100:", "💯 "),
             title=f"{author} {created}",
             subtitle=" ".join(map(str, self.reactions)),
             border_style={
