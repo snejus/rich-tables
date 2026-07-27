@@ -481,7 +481,7 @@ class Issue(Entity):
 
     @property
     def fmt(self) -> str:
-        return f"{self.title} {self.url}"
+        return link(wrap(self.title, "b"), self.url)
 
 
 @dataclass
@@ -547,6 +547,10 @@ class PullRequestTable(PullRequest):
         return super().make(kwargs)
 
     @property
+    def diff(self) -> str:
+        return " ".join(fmt_add_del(self.additions, self.deletions))
+
+    @property
     def name(self) -> str:
         return wrap(
             f"{wrap(link(f'#{self.number}', self.url), 'dim')} {self.title}", "b white"
@@ -568,6 +572,7 @@ class PullRequestTable(PullRequest):
     def info(self) -> Panel:
         fields = (
             "author",
+            "diff",
             "dates",
             "headRefName",
             "participants",
