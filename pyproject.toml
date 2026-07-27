@@ -93,6 +93,8 @@ select = [
 ]
 ignore = [
     "TC006", # no need to quote 'cast's since we use 'from __future__ import annotations'
+    "B905", # it's fine to use zip without explicit `strict=False`
+    "N815", # we need mixedCase names since we parse external JSON data
 ]
 
 [tool.ruff.lint.isort]

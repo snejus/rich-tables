@@ -112,16 +112,16 @@ def album_stats(tracks: list[JSONDict]) -> JSONDict:
 
     tracktotal_by_disc = {i["disc"]: i["tracktotal"] for i in tracks}
     total_tracktotal = sum(tracktotal_by_disc.values())
-    return dict(
-        bpm=round(sum(agg("bpm", 0)) / len(tracks)),
-        rating=round(sum(agg("rating", 0)) / len(tracks), 2),
-        plays=sum(agg("plays", 0)),
-        skips=sum(agg("skips", 0)),
-        mtime=max(agg("mtime", 0)),
-        last_played=max(agg("last_played", 0)),
-        tracktotal=(str(len(tracks)), total_tracktotal),
-        comments="\n---\n---\n".join(set(agg("comments", ""))) or None,
-    )
+    return {
+        "bpm": round(sum(agg("bpm", 0)) / len(tracks)),
+        "rating": round(sum(agg("rating", 0)) / len(tracks), 2),
+        "plays": sum(agg("plays", 0)),
+        "skips": sum(agg("skips", 0)),
+        "mtime": max(agg("mtime", 0)),
+        "last_played": max(agg("last_played", 0)),
+        "tracktotal": (str(len(tracks)), total_tracktotal),
+        "comments": "\n---\n---\n".join(set(agg("comments", ""))) or None,
+    }
 
 
 def add_colors(album: JSONDict) -> None:

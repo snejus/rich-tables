@@ -2,15 +2,14 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from collections.abc import Iterable, MutableMapping
+from collections.abc import Callable, Iterable, MutableMapping
 from datetime import datetime, timezone
 from functools import singledispatch
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, SupportsFloat, TypeVar
+from typing import TYPE_CHECKING, Any, SupportsFloat, TypeVar
 
 from multimethod import multidispatch
 from rich.console import ConsoleRenderable, RenderableType
-from rich.panel import Panel
 from rich.text import Text
 
 from .diff import pretty_diff
@@ -41,8 +40,7 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
+    from rich.panel import Panel
 
 MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|(?<![a-z])count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
@@ -80,7 +78,6 @@ def add_count_bars(
             subcount = item[subcount_key]
             count_val = f"{subcount}/{count}"
 
-        # item.pop(count_key, None)
         item[new_count_key] = count_val
         item[bar_key] = progress_bar(
             end=subcount, width=max_value, size=count, inverse=inverse
@@ -208,7 +205,6 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
     sql=lambda x: sql_syntax("---\n\n" + x.replace(r"\[", "[")),
-    # created_at=lambda x: f"[white]{x.replace('T', ' ').replace('Z', '')}[/]",
     comment=comment_panel,
     parent_id=format_with_color_on_black,
     slug=format_with_color_on_black,

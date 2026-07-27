@@ -33,7 +33,7 @@ install(console=console, show_locals=True, width=console.width)
 
 
 def lights_table(lights: list[JSONDict], **__: Any) -> Iterator[Table]:
-    from rgbxy import Converter
+    from rgbxy import Converter  # noqa: PLC0415
 
     headers = lights[0].keys()
     table = new_table(*headers)
@@ -61,7 +61,7 @@ def load_data(filepath: str) -> list[JSONDict] | JSONDict | str:
         # attach terminal because Console.pager uses pydoc which won't page when either
         # stdin or stdout is not a terminal
         with suppress(OSError):
-            sys.stdin = Path("/dev/tty").open()  # noqa: SIM115
+            sys.stdin = Path("/dev/tty").open()
     elif len(filepath) > MAX_FILENAME_LEN or len(filepath.encode()) > MAX_FILENAME_LEN:
         text = filepath
     else:

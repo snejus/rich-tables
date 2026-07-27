@@ -13,14 +13,12 @@ from typing import (
     Any,
     Literal,
     Protocol,
-    Union,
     get_args,
     get_origin,
     get_type_hints,
 )
 
 from rich import box
-from rich.text import Text
 from typing_extensions import Self, TypedDict
 
 from .fields import FIELDS_MAP, get_val
@@ -28,14 +26,12 @@ from .generic import flexitable
 from .types import GithubReaction, get_renderable
 from .utils import (
     border_panel,
-    console,
     fmt_time,
     format_with_color,
     format_with_color_on_black,
     human_dt,
     link,
     list_table,
-    md_panel,
     new_table,
     predictably_random_color,
     simple_panel,
@@ -276,12 +272,12 @@ class Comment(Content):
 class DiffHunk(Entity):
     diffHunk: str = field(repr=False)
     line: int  # line number in the file
-    position: Union[int, None]  # position in the diff hunk, if applicable
+    position: int | None  # position in the diff hunk, if applicable
     startLine: int  # line number in the file
     # as above but before the diff hunk was changed
     originalLine: int
     originalPosition: int
-    originalStartLine: Union[int, None]
+    originalStartLine: int | None
 
     @cached_property
     def focus_start(self) -> int:

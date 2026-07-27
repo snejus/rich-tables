@@ -1,13 +1,18 @@
+from __future__ import annotations
+
 import re
 import sys
-from collections.abc import Iterator
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from freezegun import freeze_time
 
 from rich_tables import table
 from rich_tables.utils import make_console
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 JSON_DIR = Path("tests/json")
 SVG_DIR = Path("svgs")

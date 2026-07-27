@@ -16,13 +16,13 @@ import logging
 import os
 import sys
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from contextlib import nullcontext, suppress
 from datetime import datetime, timezone
 from functools import cache, reduce, wraps
 from itertools import chain, groupby
 from operator import and_
-from typing import Any, Callable, SupportsFloat, TypeVar, Union
+from typing import Any, SupportsFloat, TypeVar
 
 from multimethod import multidispatch
 from rich import box
@@ -36,7 +36,7 @@ from rich.tree import Tree
 from . import fields
 from .diff import pretty_diff
 from .fields import MATCH_COUNT_HEADER, _get_val, add_count_bars
-from .types import TypeName, get_renderable
+from .types import get_renderable
 from .utils import (
     HashableDict,
     HashableList,
@@ -150,13 +150,13 @@ def _rend(data: ConsoleRenderable) -> RenderableType:
 @flexitable.register
 @debug
 @cache
-def _num(data: Union[str, float]) -> RenderableType:
+def _num(data: str | float) -> RenderableType:
     return format_string(str(data))
 
 
 @flexitable.register
 @debug
-def _tuple(data: tuple[Any, ...]) -> RenderableType:
+def _tuple(_: tuple[Any, ...]) -> RenderableType:
     return HashableList()
 
 
@@ -229,7 +229,7 @@ def _json_dict_list(
     # Only apply ratio alignment when we have:
     # - a `Tree` (so we can traverse children renderables),
     # - more than one branch of data (alignment is pointless for a single table),
-    # - and values shaped like lists of dict-like rows (so keys/values can be aggregated).
+    # - and values shaped like lists of dict-like rows (to aggregate keys/values).
     if (
         not isinstance(tree, Tree)
         or len(data) == 1
@@ -264,7 +264,7 @@ def _json_dict_list(
             # Ask Rich to calculate column widths for (roughly) the available width.
             # The `- 10` provides a small buffer for tree guides/padding so tables
             # don't overflow in nested layouts.
-            tab._calculate_column_widths(  # noqa: SLF001
+            tab._calculate_column_widths(
                 console, console.options.update_width(console.width - 10)
             ),
         )
@@ -350,7 +350,7 @@ def _str_list(data: HashableList[str]) -> RenderableType:
 @flexitable.register
 @debug
 @cache
-def _list_list(data: HashableList[HashableList]) -> Union[Panel, str]:
+def _list_list(data: HashableList[HashableList]) -> Panel | str:
     if not data:
         return ""
 

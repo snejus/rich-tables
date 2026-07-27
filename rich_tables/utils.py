@@ -4,14 +4,14 @@ import colorsys
 import random
 import re
 from collections import UserDict, UserList
-from collections.abc import Hashable, Iterable, Sequence
+from collections.abc import Callable, Hashable, Iterable
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from itertools import groupby
 from math import copysign
 from re import Match
-from typing import TYPE_CHECKING, Any, Callable, Protocol, SupportsFloat, TypeVar
+from typing import TYPE_CHECKING, Any, Protocol, SupportsFloat, TypeVar
 
 import humanize
 import platformdirs
@@ -51,8 +51,7 @@ class MyText(Text):
 
 
 class HashableDict(UserDict[KT, VT]):
-    def __init__(self, dict: dict[KT, VT] | None = None, /, **kwargs) -> None:
-        # super().__init__({k: v for k, v in (dict or {}).items() if v != []}, **kwargs)
+    def __init__(self, dict: dict[KT, VT] | None = None, /, **kwargs) -> None:  # noqa: A002
         super().__init__({k: v for k, v in (dict or {}).items()}, **kwargs)
 
     def __hash__(self) -> int:
@@ -77,7 +76,7 @@ def to_hashable(value: Hashable) -> Hashable:
 @to_hashable.register
 def _(value: list[T]) -> Hashable:
     if not value:
-        return tuple()
+        return ()
     return HashableList([to_hashable(v) for v in value])
 
 
@@ -310,7 +309,7 @@ def list_table(items: Iterable[RenderableType], **kwargs: Any) -> NewTable:
 
 
 def _randint() -> int:
-    return random.randint(50, 205)
+    return random.randint(50, 205)  # noqa: S311
 
 
 def adjust_color_intensity(
@@ -479,7 +478,7 @@ def timestamp2timestr(timestamp: str | float | None) -> str:
 
 @lru_cache
 def get_colors_and_periods() -> list[tuple[Color, int, int]]:
-    from coloraide import Color
+    from coloraide import Color  # noqa: PLC0415
 
     return [
         (c.filter("contrast", 0.5), *p)
@@ -538,7 +537,7 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 
 
 def sql_syntax(sql_string: str) -> Syntax:
-    import sqlparse
+    import sqlparse  # noqa: PLC0415
 
     return syntax(
         sqlparse.format(

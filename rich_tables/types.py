@@ -153,7 +153,6 @@ class GithubPRCard(RichCastFactory):
                 ],
                 [wrap("opened", "dim"), human_dt(self.created_at)],
                 [wrap("updated", "dim"), human_dt(self.updated_at)],
-                # [wrap("issue", "dim"), wrap(self.issue_ref, "dim cyan")],
                 [
                     wrap("labels", "dim"),
                     FIELDS_MAP["labels"](self.labels)

@@ -75,7 +75,7 @@ def make_difftext(before: str, after: str) -> str:
     Creates a unified, styled representation merging small equal sections
     into larger replace operations for improved readability.
     """
-    matcher = SequenceMatcher(lambda x: x in "", autojunk=False, a=before, b=after)
+    matcher = SequenceMatcher(lambda x: x == "", autojunk=False, a=before, b=after)
     ops = matcher.get_opcodes()
     # Identify small "equal" sections that should be merged with surrounding changes
     # This creates more cohesive diff chunks by avoiding tiny unchanged fragments

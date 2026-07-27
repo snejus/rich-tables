@@ -2,23 +2,16 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Literal
 
-from typing_extensions import Literal, TypedDict
+from typing_extensions import TypedDict
 
 from .fields import FIELDS_MAP, get_val
 from .generic import flexitable
-from .utils import (
-    border_panel,
-    format_with_color,
-    human_dt,
-    new_tree,
-    predictably_random_color,
-    wrap,
-)
+from .utils import format_with_color, human_dt, new_tree, wrap
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Callable, Iterable, Iterator
 
     from rich.panel import Panel
     from rich.tree import Tree
@@ -159,11 +152,3 @@ def get_table(
         for k, tasks in tasks_by_group.items()
     }
     yield flexitable(tasks_by_group)
-    # for group, tasks in tasks_by_group.items():
-    #     yield border_panel(
-    #         flexitable(
-    #             [t.get_row(keep_headers, get_desc=desc_by_uuid.get) for t in tasks]
-    #         ),
-    #         title=wrap(group, "b"),
-    #         expand=True
-    #     )
