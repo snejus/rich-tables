@@ -18,13 +18,15 @@
           "author": "snejus",
           "body": "I do agree, will add the logic to `hooks.py` in a second.",
           "createdAt": "2022-03-17T23:44:08Z",
-          "reactions": []
+          "reactions": [],
+          "url": "https://github.com/beetbox/beets/pull/4319#issuecomment-1071855186"
         },
         {
           "author": "snejus",
           "body": "It did end up being cleaner once the error handling logic got abstracted away. ",
           "createdAt": "2022-03-18T05:25:44Z",
-          "reactions": []
+          "reactions": [],
+          "url": "https://github.com/beetbox/beets/pull/4319#issuecomment-1072045826"
         }
       ],
       "commits": [
@@ -34,7 +36,8 @@
           "committedDate": "2022-03-15T07:43:26Z",
           "deletions": 0,
           "message": "Nicely disable musicbrainz",
-          "statusCheckRollup": "SUCCESS"
+          "statusCheckRollup": "SUCCESS",
+          "url": "https://github.com/beetbox/beets/commit/ffe63a64f5dc6724054e22dd88d4181068c5f4e4"
         },
         {
           "additions": 53,
@@ -42,7 +45,8 @@
           "committedDate": "2022-03-15T21:57:33Z",
           "deletions": 8,
           "message": "Update docs",
-          "statusCheckRollup": "SUCCESS"
+          "statusCheckRollup": "SUCCESS",
+          "url": "https://github.com/beetbox/beets/commit/85c4310e47b0e5e4f34aa7c538f8fe68083bd5f8"
         },
         {
           "additions": 3,
@@ -50,7 +54,8 @@
           "committedDate": "2022-03-15T22:13:23Z",
           "deletions": 1,
           "message": "Add a changelog entry",
-          "statusCheckRollup": "SUCCESS"
+          "statusCheckRollup": "SUCCESS",
+          "url": "https://github.com/beetbox/beets/commit/f10b70444c47cd3e70395aaeda941e0633b10be2"
         },
         {
           "additions": 15,
@@ -58,7 +63,8 @@
           "committedDate": "2022-03-18T05:05:58Z",
           "deletions": 25,
           "message": "Move the logic to hooks.py",
-          "statusCheckRollup": null
+          "statusCheckRollup": null,
+          "url": "https://github.com/beetbox/beets/commit/6f23c9b41a31712c121f8b3c94247a0a7895d562"
         },
         {
           "additions": 7,
@@ -66,7 +72,8 @@
           "committedDate": "2022-03-18T05:14:29Z",
           "deletions": 41,
           "message": "Remove optional docs changes",
-          "statusCheckRollup": null
+          "statusCheckRollup": null,
+          "url": "https://github.com/beetbox/beets/commit/2193b3749bb65648d36aa662e1f9c4b6bda8b07f"
         },
         {
           "additions": 4,
@@ -74,7 +81,8 @@
           "committedDate": "2022-03-18T22:57:22Z",
           "deletions": 4,
           "message": "Rename handle_exc to invoke_mb",
-          "statusCheckRollup": null
+          "statusCheckRollup": null,
+          "url": "https://github.com/beetbox/beets/commit/f14eac857b91311b27bd3d934a3c87dbdd9b8fce"
         },
         {
           "additions": 1,
@@ -82,7 +90,8 @@
           "committedDate": "2022-03-23T16:20:06Z",
           "deletions": 0,
           "message": "Return iterable from the exception handler",
-          "statusCheckRollup": null
+          "statusCheckRollup": null,
+          "url": "https://github.com/beetbox/beets/commit/e1ffadb2d6bbff8654c7bf593bda0dc40ac5f070"
         },
         {
           "additions": 4,
@@ -90,7 +99,8 @@
           "committedDate": "2022-03-23T16:34:13Z",
           "deletions": 3,
           "message": "Do not assign extra variable to keep things within max line_length",
-          "statusCheckRollup": null
+          "statusCheckRollup": null,
+          "url": "https://github.com/beetbox/beets/commit/e9972491f1e4d49cbabcaec258add299e6ea0efe"
         },
         {
           "additions": 10,
@@ -98,7 +108,8 @@
           "committedDate": "2022-03-23T16:59:21Z",
           "deletions": 12,
           "message": "Move musicbrainz.enabled check out from invoke_mb",
-          "statusCheckRollup": null
+          "statusCheckRollup": null,
+          "url": "https://github.com/beetbox/beets/commit/a6e7105449ffc89a5cb463451527feafe93a7012"
         },
         {
           "additions": 11,
@@ -106,7 +117,8 @@
           "committedDate": "2022-03-23T17:02:45Z",
           "deletions": 11,
           "message": "Move musicbrainz.enabled section below network config in config.rst",
-          "statusCheckRollup": null
+          "statusCheckRollup": null,
+          "url": "https://github.com/beetbox/beets/commit/5d6f808d33492ef450dd835da6de109a8bf3b731"
         }
       ],
       "createdAt": "2022-03-15T22:16:46Z",
@@ -135,7 +147,13 @@
       ],
       "headRefName": "disable-musicbrainz-plugin",
       "id": "PR_kwDOAAygxs40fzZb",
-      "labels": [],
+      "labels": [
+        {
+          "color": "F9D0C4",
+          "description": "musicbrainz plugin",
+          "name": "musicbrainz"
+        }
+      ],
       "number": 4319,
       "participants": [
         "snejus",
@@ -544,7 +562,8 @@
           "createdAt": "2022-03-16T18:19:23Z",
           "id": "PRR_kwDOAAygxs42XTyf",
           "reactions": [],
-          "state": "COMMENTED"
+          "state": "COMMENTED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-912080031"
         },
         {
           "author": "snejus",
@@ -571,7 +590,8 @@
           "createdAt": "2022-03-17T23:41:44Z",
           "id": "PRR_kwDOAAygxs42d7bV",
           "reactions": [],
-          "state": "COMMENTED"
+          "state": "COMMENTED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-913815253"
         },
         {
           "author": "snejus",
@@ -598,7 +618,8 @@
           "createdAt": "2022-03-17T23:42:03Z",
           "id": "PRR_kwDOAAygxs42d7dh",
           "reactions": [],
-          "state": "COMMENTED"
+          "state": "COMMENTED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-913815393"
         },
         {
           "author": "wisp3rwind",
@@ -630,7 +651,8 @@
           "createdAt": "2022-03-18T22:29:53Z",
           "id": "PRR_kwDOAAygxs42iH5m",
           "reactions": [],
-          "state": "COMMENTED"
+          "state": "COMMENTED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-914914918"
         },
         {
           "author": "snejus",
@@ -657,7 +679,8 @@
           "createdAt": "2022-03-18T22:58:19Z",
           "id": "PRR_kwDOAAygxs42iKXw",
           "reactions": [],
-          "state": "COMMENTED"
+          "state": "COMMENTED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-914925040"
         },
         {
           "author": "sampsyo",
@@ -752,7 +775,8 @@
           "createdAt": "2022-03-19T14:23:13Z",
           "id": "PRR_kwDOAAygxs42ieZf",
           "reactions": [],
-          "state": "COMMENTED"
+          "state": "COMMENTED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-915007071"
         },
         {
           "author": "wisp3rwind",
@@ -779,7 +803,8 @@
           "createdAt": "2022-03-20T10:27:57Z",
           "id": "PRR_kwDOAAygxs42ixHA",
           "reactions": [],
-          "state": "COMMENTED"
+          "state": "COMMENTED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-915083712"
         },
         {
           "author": "wisp3rwind",
@@ -806,7 +831,8 @@
           "createdAt": "2022-03-20T10:29:27Z",
           "id": "PRR_kwDOAAygxs42ixJe",
           "reactions": [],
-          "state": "COMMENTED"
+          "state": "COMMENTED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-915083870"
         },
         {
           "author": "snejus",
@@ -833,7 +859,8 @@
           "createdAt": "2022-03-23T16:23:16Z",
           "id": "PRR_kwDOAAygxs42x-Md",
           "reactions": [],
-          "state": "COMMENTED"
+          "state": "COMMENTED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-919069469"
         },
         {
           "author": "snejus",
@@ -860,7 +887,8 @@
           "createdAt": "2022-03-23T16:27:52Z",
           "id": "PRR_kwDOAAygxs42x_5i",
           "reactions": [],
-          "state": "COMMENTED"
+          "state": "COMMENTED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-919076450"
         },
         {
           "author": "snejus",
@@ -887,7 +915,8 @@
           "createdAt": "2022-03-23T17:03:22Z",
           "id": "PRR_kwDOAAygxs42yNbF",
           "reactions": [],
-          "state": "COMMENTED"
+          "state": "COMMENTED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-919131845"
         },
         {
           "author": "sampsyo",
@@ -901,12 +930,13 @@
               "content": "HOORAY"
             }
           ],
-          "state": "APPROVED"
+          "state": "APPROVED",
+          "url": "https://github.com/beetbox/beets/pull/4319#pullrequestreview-919455288"
         }
       ],
       "state": "MERGED",
       "title": "Ability to optionally disable the musicbrainz metadata source",
-      "updatedAt": "2022-03-24T11:25:23Z",
+      "updatedAt": "2026-04-05T17:09:38Z",
       "url": "https://github.com/beetbox/beets/pull/4319"
     }
   ]
