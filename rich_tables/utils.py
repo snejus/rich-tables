@@ -51,7 +51,7 @@ class MyText(Text):
 
 
 class HashableDict(UserDict[KT, VT]):
-    def __init__(self, dict: dict[KT, VT] | None = None, /, **kwargs) -> None:  # noqa: A002
+    def __init__(self, dict: dict[KT, VT] | None = None, /, **kwargs: Any) -> None:  # noqa: A002
         super().__init__({k: v for k, v in (dict or {}).items()}, **kwargs)
 
     def __hash__(self) -> int:
@@ -515,8 +515,6 @@ def get_td_color(seconds: float) -> str:
 
 
 def human_dt(timestamp: str | float) -> str:
-    if not isinstance(timestamp, (str, float, int)):
-        return timestamp
     try:
         dt = timestamp2datetime(timestamp)
     except ValueError:

@@ -133,7 +133,7 @@ def _strs(before: str, after: str) -> str:
 @diff.register(HashableList[Any], HashableList[Any])
 @diff.register(HashableList[Any], tuple)
 @diff.register(tuple, HashableList[Any])
-def _lists(before: Sequence[Any], after: Sequence[Any]) -> Any:
+def _sequences(before: Sequence[Any], after: Sequence[Any]) -> HashableList[Any]:
     return HashableList(starmap(diff, zip_longest(before, after)))
 
 
@@ -154,22 +154,22 @@ def _dicts(before: HashableDict, after: HashableDict) -> dict[str, str]:
 
 @diff.register
 def _dict_none(before: HashableDict, _: None) -> dict[str, str]:
-    return diff(before, HashableDict[str, str]())
+    return diff(before, HashableDict[str, str]())  # type: ignore[no-any-return]
 
 
 @diff.register
 def _list_none(before: HashableList, _: None) -> dict[str, str]:
-    return diff(before, HashableList())
+    return diff(before, HashableList())  # type: ignore[no-any-return]
 
 
 @diff.register
 def _none_dict(_: None, after: HashableDict) -> dict[str, str]:
-    return diff(HashableDict(), after)
+    return diff(HashableDict(), after)  # type: ignore[no-any-return]
 
 
 @diff.register
-def _none_list(_: None, after: HashableList) -> list[str, str]:
-    return diff(HashableList(), after)
+def _none_list(_: None, after: HashableList) -> list[str]:
+    return diff(HashableList(), after)  # type: ignore[no-any-return]
 
 
 def pretty_diff(before: Any, after: Any) -> str:

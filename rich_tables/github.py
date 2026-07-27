@@ -44,7 +44,7 @@ from .utils import (
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Mapping
 
-    from rich.console import ConsoleRenderable, RenderableType
+    from rich.console import RenderableType
     from rich.panel import Panel
     from rich.syntax import Syntax
     from rich.table import Table
@@ -220,7 +220,7 @@ class PanelMixin(Entity):
         return " ".join(get_val(self, f) for f in fields)
 
     @property
-    def panel(self) -> Panel:
+    def panel(self) -> RenderableType:
         raise NotImplementedError
 
 
@@ -256,7 +256,7 @@ class Comment(Content):
         return self.body
 
     @property
-    def panel(self) -> ConsoleRenderable:
+    def panel(self) -> RenderableType:
         return get_renderable(
             "GithubComment",
             author=self.author,
@@ -614,14 +614,14 @@ class PullRequestTable(PullRequest):
         return [*self.reviews, *self.comments]
 
     @property
-    def panels(self) -> Iterable[Panel]:
+    def panels(self) -> Iterable[RenderableType]:
         for content in sorted(self.timestamped_contents, key=lambda c: c.created):
             yield content.panel
 
 
 def pulls_table(
     data: list[Mapping[str, Any]], **kwargs: Any
-) -> Iterable[str | ConsoleRenderable]:
+) -> Iterable[RenderableType]:
     FIELDS_MAP.update(PR_FIELDS_MAP)
 
     pr = {**data[0], "verbose": kwargs.get("verbose", False)}

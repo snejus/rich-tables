@@ -6,9 +6,8 @@ from collections.abc import Callable, Iterable, MutableMapping
 from datetime import datetime, timezone
 from functools import singledispatch
 from itertools import islice
-from typing import TYPE_CHECKING, Any, SupportsFloat, TypeVar
+from typing import Any, SupportsFloat, TypeVar
 
-from multimethod import multidispatch
 from rich.console import ConsoleRenderable, RenderableType
 from rich.text import Text
 
@@ -28,7 +27,6 @@ from .utils import (
     format_with_color_on_black,
     get_country,
     human_dt,
-    markdown,
     md_panel,
     progress_bar,
     simple_panel,
@@ -38,9 +36,6 @@ from .utils import (
     timestamp2timestr,
     wrap,
 )
-
-if TYPE_CHECKING:
-    from rich.panel import Panel
 
 MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|(?<![a-z])count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
@@ -98,30 +93,6 @@ def add_count_bars(
 
 
 TD = TypeVar("TD", bound=dict[str, Any])
-
-
-@multidispatch
-def comment_panel(content: str | TD, **kwargs) -> Panel:
-    raise NotImplementedError
-
-
-@comment_panel.register
-def _comment_panel_str(content: str, **kwargs) -> Panel:
-    if m := re.match(r"\[title\](.+?)\[/title\]\s+", content):
-        kwargs["title"] = m[1]
-        content = content.replace(m[0], "")
-
-    content = content.replace("- [x]", "* :ballot_box_with_check:")
-
-    return border_panel(markdown(content), **kwargs)
-
-
-@comment_panel.register
-def _comment_panel_dict(content: TD, **kwargs) -> Panel:
-    body = content.pop("body")
-    title = " ".join(_get_val(v, k) for k, v in content.items())
-
-    return comment_panel(body, title=title)
 
 
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
@@ -205,7 +176,6 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
     sql=lambda x: sql_syntax("---\n\n" + x.replace(r"\[", "[")),
-    comment=comment_panel,
     parent_id=format_with_color_on_black,
     slug=format_with_color_on_black,
     url=lambda x: MyText(x, style=f"cyan dim bold link {x}"),
@@ -345,13 +315,13 @@ def _get_val(value: float | str | RenderableType | None, field: str) -> Renderab
 
 
 @singledispatch
-def get_val(obj: JSONDict | object, field: str) -> RenderableType:
+def get_val(obj: JSONDict | object, field: str) -> Any:
     """Definition of a generic get_val function."""
 
 
 @get_val.register(dict)
 @get_val.register(HashableDict)
-def _(obj: dict | HashableDict, field: str) -> RenderableType:  # type: ignore[type-arg]
+def _(obj: JSONDict | HashableDict, field: str) -> RenderableType:
     return _get_val(obj.get(field), field)
 
 

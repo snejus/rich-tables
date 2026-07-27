@@ -46,6 +46,6 @@ def test_outputs(testcase: Path) -> None:
     sys.stdin = testcase.open()
     sys.argv[1:] = ["-v"]
 
-    table.console = make_console(record=True, width=156)
+    table.console = make_console(record=True, width=156)  # type: ignore[attr-defined]
     table.main()
-    table.console.save_svg(str(SVG_DIR / f"{testcase.stem}.svg"))
+    table.console.save_svg(str(SVG_DIR / f"{testcase.stem}.svg"))  # type: ignore[attr-defined]

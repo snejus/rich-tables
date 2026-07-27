@@ -197,11 +197,11 @@ class GithubPRCard(RichCastFactory):
 TYPE_BY_NAME: dict[str, type[RichCastFactory]] = {
     name: obj
     for name, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass)
-    if issubclass(obj, RichCast) and obj is not RichCast
+    if issubclass(obj, RichCastFactory) and obj is not RichCastFactory
 }
 
 
 def get_renderable(
     _type: Literal["GithubComment", "GithubPRCard"], **kwargs: Any
-) -> RichCastFactory:
+) -> RichCast:
     return TYPE_BY_NAME[_type].make(**kwargs)

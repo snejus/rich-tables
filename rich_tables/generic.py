@@ -156,12 +156,6 @@ def _num(data: str | float) -> RenderableType:
 
 @flexitable.register
 @debug
-def _tuple(_: tuple[Any, ...]) -> RenderableType:
-    return HashableList()
-
-
-@flexitable.register
-@debug
 def _list(data: list[Any]) -> RenderableType:
     return flexitable(to_hashable(data))  # type: ignore[no-any-return]
 
