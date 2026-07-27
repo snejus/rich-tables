@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, Callable, Protocol, SupportsFloat, TypeVa
 import humanize
 import platformdirs
 from multimethod import multimethod
-from rich import box
+from rich import box, emoji
 from rich.align import Align, VerticalAlignMethod
 from rich.bar import Bar
 from rich.console import Console, RenderableType, RenderResult
@@ -397,7 +397,12 @@ def markdown(content: str, **kwargs: Any) -> Markdown:
     kwargs.setdefault("inline_code_theme", "nord-darker")
     kwargs.setdefault("justify", "left")
 
-    return Markdown(Pat.HTML_PARAGRAPH.sub("", content), **kwargs)
+    content = (
+        content.replace(":rofl:", ":rolling_on_the_floor_laughing:")
+        .replace("[x]", "☑ ")
+        .replace("[ ]", "☐ ")
+    )
+    return Markdown(emoji.Emoji.replace(Pat.HTML_PARAGRAPH.sub("", content)), **kwargs)
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
@@ -406,8 +411,6 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
     ):
         kwargs["title"] = m[1]
         content = content.replace(m[0], "")
-
-    content = content.replace("- [x]", "* :ballot_box_with_check:")
 
     return border_panel(markdown(content), **kwargs)
 
