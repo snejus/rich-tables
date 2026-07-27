@@ -2,14 +2,33 @@ from __future__ import annotations
 
 import inspect
 import sys
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Protocol, runtime_checkable
+from dataclasses import dataclass
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    NamedTuple,
+    Protocol,
+    TypedDict,
+    runtime_checkable,
+)
 
 from rich import box
 from rich.console import RichCast
 from typing_extensions import Self
 
-from .fields import get_val
-from .utils import md_panel
+from .fields import FIELDS_MAP, get_val
+from .utils import (
+    border_panel,
+    format_with_color_on_black,
+    human_dt,
+    link,
+    list_table,
+    md_panel,
+    new_table,
+    simple_panel,
+    wrap,
+)
 
 if TYPE_CHECKING:
     from rich.console import ConsoleRenderable
@@ -47,6 +66,7 @@ class GithubComment(NamedTuple):
     body: str
     author: str
     created_at: str
+    url: str
     state: Literal["CHANGES_REQUESTED", "APPROVED", "COMMENTED"]
     reactions: list[GithubReaction]
 
@@ -56,9 +76,11 @@ class GithubComment(NamedTuple):
         return cls(*args, **kwargs)
 
     def __rich__(self) -> ConsoleRenderable:
+        created = link(get_val(self, "created_at"), self.url)
+        author = get_val(self, "author")
         return md_panel(
             self.body,
-            title=" ".join(get_val(self, f) for f in ["author", "created_at"]),
+            title=f"{author} {created}",
             subtitle=" ".join(map(str, self.reactions)),
             border_style={
                 "APPROVED": "green",
@@ -69,12 +91,117 @@ class GithubComment(NamedTuple):
         )
 
 
+class GithubLabel(TypedDict):
+    name: str
+    color: str
+
+
+class IssueReference(TypedDict):
+    number: int
+    title: str
+
+
+@dataclass
+class GithubPRCard(RichCastFactory):
+    url: str
+    title: str
+    author: str
+    state: str
+    body: str
+    additions: int
+    deletions: int
+    labels: list[GithubLabel]
+    created_at: str
+    updated_at: str
+    reactions: list[GithubReaction]
+    last_comment: GithubComment | None
+    closingIssuesReferences: list[IssueReference]
+
+    @classmethod
+    def make(cls, *args: Any, **kwargs: Any) -> Self:
+        raw_lc = kwargs.pop("last_comment", None)
+        kwargs["last_comment"] = GithubComment.make(**raw_lc) if raw_lc else None
+        kwargs["reactions"] = [
+            GithubReaction.make(**r) for r in kwargs.get("reactions", [])
+        ]
+        kwargs.setdefault("additions", 0)
+        kwargs.setdefault("deletions", 0)
+        return cls(*args, **kwargs)
+
+    @staticmethod
+    def _border(state: str) -> str:
+        for emoji, colour in {
+            "⏳": "green",
+            "✅": "bright_green",
+            "⛔": "red",
+            "❔": "yellow",
+        }.items():
+            if emoji in state:
+                return colour
+        return "dim"
+
+    def __rich__(self) -> ConsoleRenderable:
+        additions = f"+{self.additions}" if self.additions else ""
+        deletions = f"-{self.deletions}" if self.deletions else ""
+
+        meta = new_table(
+            rows=[
+                [wrap("state", "dim"), self.state],
+                [
+                    wrap("churn", "dim"),
+                    wrap(additions, "b green") + " " + wrap(deletions, "b red"),
+                ],
+                [wrap("opened", "dim"), human_dt(self.created_at)],
+                [wrap("updated", "dim"), human_dt(self.updated_at)],
+                [
+                    wrap("labels", "dim"),
+                    FIELDS_MAP["labels"](self.labels)
+                    if self.labels
+                    else wrap("—", "dim"),
+                ],
+                [wrap("body", "dim"), md_panel(self.body)],
+            ],
+            show_header=False,
+            highlight=False,
+            box=box.SIMPLE,
+            expand=False,
+            padding=(0, 1),
+        )
+        body = list_table(
+            [
+                meta,
+                simple_panel(
+                    self.last_comment or wrap("no comments yet", "dim"),
+                    title="last comment",
+                    border_style="dim",
+                ),
+            ],
+            padding=(0, 0, 1, 0),
+        )
+        card_title = " ".join(
+            [
+                wrap(self.title, "b white"),
+                wrap("by", "dim"),
+                format_with_color_on_black(self.author),
+            ]
+        )
+        return border_panel(
+            body,
+            title=card_title,
+            title_align="left",
+            border_style=self._border(self.state),
+            subtitle=link(self.url, self.url),
+        )
+
+
 TYPE_BY_NAME: dict[str, type[RichCastFactory]] = {
     name: obj
     for name, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass)
-    if issubclass(obj, RichCast) and obj is not RichCast
+    if issubclass(obj, RichCastFactory) and obj is not RichCastFactory
 }
 
 
-def get_renderable(_type: Literal["GithubComment"], **kwargs: Any) -> RichCastFactory:
+def get_renderable(
+    _type: Literal["GithubComment", "GithubPRCard"], **kwargs: Any
+) -> RichCast:
     return TYPE_BY_NAME[_type].make(**kwargs)

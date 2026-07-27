@@ -13,7 +13,6 @@ from typing import (
     Any,
     Literal,
     Protocol,
-    Union,
     get_args,
     get_origin,
     get_type_hints,
@@ -27,13 +26,12 @@ from .generic import flexitable
 from .types import GithubReaction, get_renderable
 from .utils import (
     border_panel,
-    console,
     fmt_time,
     format_with_color,
     format_with_color_on_black,
     human_dt,
+    link,
     list_table,
-    md_panel,
     new_table,
     predictably_random_color,
     simple_panel,
@@ -46,7 +44,7 @@ from .utils import (
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Mapping
 
-    from rich.console import ConsoleRenderable, RenderableType
+    from rich.console import RenderableType
     from rich.panel import Panel
     from rich.syntax import Syntax
     from rich.table import Table
@@ -85,21 +83,6 @@ def fmt_add_del(added: int, deleted: int) -> list[str]:
     additions = f"+{added}" if added else ""
     deletions = f"-{deleted}" if deleted else ""
     return [b_green(additions.rjust(5)), b_red(deletions.rjust(3))]
-
-
-def gh_md_panel(body: str, *args: Any, **kwargs: Any) -> Panel:
-    return md_panel(
-        body,
-        # console.render_str(
-        #     body.replace(":rofl:", ":rolling_on_the_floor_laughing:").replace(
-        #         ":ballot_box_with_check:", "☑ "
-        #     ),
-        #     highlight=False,
-        #     markup=False,
-        # ).markup,
-        *args,
-        **kwargs,
-    )
 
 
 COLOR_BY_STATE = defaultdict(
@@ -203,10 +186,12 @@ class Entity:
 @dataclass
 class Commit(Entity):
     additions: int
-    deletions: int
+    author: str
     committedDate: str
+    deletions: int
     message: str
     statusCheckRollup: str
+    url: str
 
     @property
     def diff(self) -> list[str]:
@@ -216,9 +201,10 @@ class Commit(Entity):
     def parts(self) -> list[str]:
         return [
             *self.diff,
+            get_val(self, "author"),
             get_val(self, "statusCheckRollup"),
             get_val(self, "message"),
-            get_val(self, "committedDate"),
+            link(get_val(self, "committedDate"), self.url),
         ]
 
 
@@ -234,7 +220,7 @@ class PanelMixin(Entity):
         return " ".join(get_val(self, f) for f in fields)
 
     @property
-    def panel(self) -> Panel:
+    def panel(self) -> RenderableType:
         raise NotImplementedError
 
 
@@ -248,6 +234,7 @@ class Content(CreatedPanelMixin):
     createdAt: str
     author: str
     body: str
+    url: str
 
     @property
     def created_at(self) -> str:
@@ -269,11 +256,12 @@ class Comment(Content):
         return self.body
 
     @property
-    def panel(self) -> ConsoleRenderable:
+    def panel(self) -> RenderableType:
         return get_renderable(
             "GithubComment",
             author=self.author,
             created_at=self.created_at,
+            url=self.url,
             reactions=self.reactions,
             state=self.get_state(),
             body=self.get_body(),
@@ -284,12 +272,12 @@ class Comment(Content):
 class DiffHunk(Entity):
     diffHunk: str = field(repr=False)
     line: int  # line number in the file
-    position: Union[int, None]  # position in the diff hunk, if applicable
+    position: int | None  # position in the diff hunk, if applicable
     startLine: int  # line number in the file
     # as above but before the diff hunk was changed
     originalLine: int
     originalPosition: int
-    originalStartLine: Union[int, None]
+    originalStartLine: int | None
 
     @cached_property
     def focus_start(self) -> int:
@@ -418,10 +406,7 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
         else:
             content = ""
         return border_panel(
-            content,
-            highlight=False,
-            border_style=self.border_color,
-            title=self.title,
+            content, highlight=False, border_style=self.border_color, title=self.title
         )
 
 
@@ -489,7 +474,7 @@ class Issue(Entity):
 
     @property
     def fmt(self) -> str:
-        return f"{self.title} {self.url}"
+        return link(wrap(self.title, "b"), self.url)
 
 
 @dataclass
@@ -555,8 +540,14 @@ class PullRequestTable(PullRequest):
         return super().make(kwargs)
 
     @property
+    def diff(self) -> str:
+        return " ".join(fmt_add_del(self.additions, self.deletions))
+
+    @property
     def name(self) -> str:
-        return wrap(f"{wrap(f'#{self.number}', 'dim')} {self.title}", "b white")
+        return wrap(
+            f"{wrap(link(f'#{self.number}', self.url), 'dim')} {self.title}", "b white"
+        )
 
     @property
     def repo(self) -> str:
@@ -574,6 +565,7 @@ class PullRequestTable(PullRequest):
     def info(self) -> Panel:
         fields = (
             "author",
+            "diff",
             "dates",
             "headRefName",
             "participants",
@@ -584,7 +576,7 @@ class PullRequestTable(PullRequest):
         field_rows = flexitable(pairs)
         return border_panel(
             new_table(
-                rows=[[field_rows], [gh_md_panel(self.body)], [self.files_commits]]
+                rows=[[field_rows], [get_val(self, "body")], [self.files_commits]]
             ),
             title=f"{self.name} @ {self.repo}",
             box=box.DOUBLE_EDGE,
@@ -622,14 +614,14 @@ class PullRequestTable(PullRequest):
         return [*self.reviews, *self.comments]
 
     @property
-    def panels(self) -> Iterable[Panel]:
+    def panels(self) -> Iterable[RenderableType]:
         for content in sorted(self.timestamped_contents, key=lambda c: c.created):
             yield content.panel
 
 
 def pulls_table(
     data: list[Mapping[str, Any]], **kwargs: Any
-) -> Iterable[str | ConsoleRenderable]:
+) -> Iterable[RenderableType]:
     FIELDS_MAP.update(PR_FIELDS_MAP)
 
     pr = {**data[0], "verbose": kwargs.get("verbose", False)}

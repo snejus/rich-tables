@@ -1,0 +1,221 @@
+{
+  "the_rest": [
+    {
+      "_type": "GithubPRCard",
+      "url": "https://github.com/beetbox/beets/pull/6783",
+      "author": "gaoflow",
+      "title": "Fix update with plugin media flex fields",
+      "body": "## Summary\n- avoid treating flexible attributes passed to Model.store(fields=...) as fixed table columns\n- add a dbcore regression test for storing a flexattr included in fields\n- add an update command regression test for plugin-added media fields\n- add a changelog note for #5580\n\nFixes #5580.\n\n## Tests\n- `poe test test/test_dbcore.py test/ui/commands/test_update.py`\n- `poe lint`\n- `poe check-format`\n",
+      "state": "[b green]⏳[/]",
+      "reactions": [],
+      "additions": 37,
+      "deletions": 1,
+      "labels": [],
+      "closingIssuesReferences": [
+        {
+          "number": 5580,
+          "title": "Update mediafields regression"
+        }
+      ],
+      "created_at": "2026-06-27T08:52:43Z",
+      "updated_at": "2026-07-27T20:14:05Z",
+      "last_comment": {
+        "author": "snejus",
+        "created_at": "2026-07-27T20:05:59Z",
+        "body": "Lovely, thanks for this. Note CI will fail because you will need to move your changelog note under **Unreleased** section since I've just released a new version of beets.",
+        "reactions": [],
+        "url": "https://github.com/beetbox/beets/pull/6783#pullrequestreview-4791056795",
+        "state": "APPROVED"
+      }
+    },
+    {
+      "_type": "GithubPRCard",
+      "url": "https://github.com/beetbox/beets/pull/6797",
+      "author": "augboz",
+      "title": "Detach stdin when running badfiles checker commands",
+      "body": "Closes #6750.\n\nThe `badfiles` checker commands (`mp3val`, `flac`, custom) are non-interactive, but `run_command` launched them with the parent's stdin still attached to the controlling terminal. A checker can leave the TTY in a modified state (e.g. echo disabled), so after `beet bad` the terminal stops echoing typed input until `reset`/`stty sane`.\n\n**Fix:** pass `stdin=DEVNULL` to `check_output` so checkers can't read from or modify the terminal.\n\n**Note on verification:** the symptom is terminal-state-specific and I couldn't reproduce it on my (Windows) machine, but the root cause is clear from the code path. I've added a regression test asserting `run_command` calls `check_output` with `stdin=DEVNULL`, and a changelog entry.",
+      "state": "❔",
+      "reactions": [
+        {
+          "content": "THUMBS_UP",
+          "author": "chatgpt-codex-connector[bot]"
+        }
+      ],
+      "additions": 28,
+      "deletions": 2,
+      "labels": [
+        {
+          "name": "badfiles",
+          "color": "0E8A16"
+        }
+      ],
+      "closingIssuesReferences": [
+        {
+          "number": 6750,
+          "title": "Unable to see terminal input after beet bad"
+        }
+      ],
+      "created_at": "2026-06-28T14:30:39Z",
+      "updated_at": "2026-06-28T21:19:25Z",
+      "last_comment": null
+    },
+    {
+      "_type": "GithubPRCard",
+      "url": "https://github.com/beetbox/beets/pull/6812",
+      "author": "Kidus5168",
+      "title": "test(convert): cover never_convert_lossy_files in playlist entry tests",
+      "body": "## Summary\n\nAdd a `never_convert_lossy_files` parametrize case to `test_playlist_entry` in the convert plugin tests.\n\nThis verifies that when `never_convert_lossy_files=True` prevents transcoding of a lossy file, the generated playlist entry correctly keeps the original file extension rather than replacing it with the target format extension.\n\n## Test plan\n\n- `poetry run pytest test/plugins/test_convert.py -k playlist -v` — all 7 tests pass",
+      "state": "[b green]⏳[/]",
+      "reactions": [],
+      "additions": 17,
+      "deletions": 6,
+      "labels": [],
+      "closingIssuesReferences": [],
+      "created_at": "2026-07-01T04:17:45Z",
+      "updated_at": "2026-07-16T10:36:17Z",
+      "last_comment": {
+        "author": "snejus",
+        "created_at": "2026-07-16T10:36:11Z",
+        "body": "Remove conditionals from both of these lines and set the values unconditionally",
+        "reactions": [],
+        "url": "https://github.com/beetbox/beets/pull/6812#discussion_r3594680781",
+        "state": "COMMENTED"
+      }
+    },
+    {
+      "_type": "GithubPRCard",
+      "url": "https://github.com/beetbox/beets/pull/6821",
+      "author": "artpelling",
+      "title": "Fix 6784",
+      "body": "## Description\r\n\r\nFixes #6784 .  <!-- Insert issue number here if applicable. -->\r\n\r\nI (and others) encountered an issue where playlist queries returned empty results. At first, I thought it was because I had playlist in extended m3u format. I found that the line skipping mechanism did not work correctly because the playlist file is read as bytestrings and the comparator used regular strings.\r\n\r\nFixing that did not help (the previously unskipped lines were simply not found but did not break the search) and I then found #6784. I think the issue there is that different path normalizations are used in `beets ls` and `playlist.py`.\r\n\r\n## To Do\r\n\r\n- [ ] Documentation. (If you've added a new command-line flag, for example, find the appropriate page under `docs/` to describe it.)\r\n- [ ] Changelog. (Add an entry to `docs/changelog.rst` to the bottom of one of the lists near the top of the document.)\r\n- [ ] Tests. (Very much encouraged but not strictly required.)\r\n",
+      "state": "[b dim][/]",
+      "reactions": [],
+      "additions": 8,
+      "deletions": 4,
+      "labels": [],
+      "closingIssuesReferences": [
+        {
+          "number": 6784,
+          "title": "The playlist plugin is not returning any results"
+        }
+      ],
+      "created_at": "2026-07-09T07:04:48Z",
+      "updated_at": "2026-07-10T17:20:15Z",
+      "last_comment": {
+        "author": "snejus",
+        "created_at": "2026-07-10T17:20:15Z",
+        "body": "The fix under #6792 looks good to me - so feel free to incorporate it here!",
+        "reactions": [],
+        "url": "https://github.com/beetbox/beets/pull/6821#issuecomment-4937799013",
+        "state": "COMMENTED"
+      }
+    },
+    {
+      "_type": "GithubPRCard",
+      "url": "https://github.com/beetbox/beets/pull/6865",
+      "author": "snejus",
+      "title": "use pathlib in tests: migrate most tests to pathlib",
+      "body": "- This PR continues the test suite's move from mixed string/bytes path handling to `pathlib.Path`-based filesystem usage.\n- The main architectural change is that shared test helpers now produce `Path` objects directly, especially `TestHelper.create_mediafile_fixture`, so tests can use one consistent path model end-to-end.\n- Tests are updated to prefer higher-level path APIs like `item.filepath` and `album.art_filepath` instead of raw `item.path` bytes, reducing manual conversions and direct `os.path` usage.\n- Supporting utilities were adjusted where needed, such as allowing `beets.util.mkdirall` to accept `Path` inputs, so existing filesystem helpers still work during the transition.\n\n- High-level impact:\n  - makes path handling in tests more consistent and readable\n  - reduces bytes/string/path conversion noise\n  - aligns tests with the newer object-level path interfaces already exposed by the app\n  - lowers the chance of platform-specific path bugs, especially around encoding and separator handling\n\n- In practice, this is mostly a test infrastructure cleanup and API alignment change. It should not change product behavior, but it makes future path-related test updates simpler and safer.\n\nFixes #6807\n\nThe rest of tests require refactoring of associated source code.\n",
+      "state": "[b green]⏳[/]",
+      "reactions": [],
+      "additions": 315,
+      "deletions": 405,
+      "labels": [],
+      "closingIssuesReferences": [
+        {
+          "number": 6807,
+          "title": "Refactor tests to use `pathlib.Path`"
+        }
+      ],
+      "created_at": "2026-07-21T17:58:20Z",
+      "updated_at": "2026-07-27T19:53:02Z",
+      "last_comment": {
+        "author": "snejus",
+        "created_at": "2026-07-27T19:25:36Z",
+        "body": "I'm using `self.temp_path` which gets cleaned up in the teardown.",
+        "reactions": [],
+        "url": "https://github.com/beetbox/beets/pull/6865#discussion_r3660282802",
+        "state": "COMMENTED"
+      }
+    },
+    {
+      "_type": "GithubPRCard",
+      "url": "https://github.com/beetbox/beets/pull/6880",
+      "author": "snejus",
+      "title": "util: remove `prefix` parameter from `syspath`",
+      "body": "Simplified `syspath` because `syspath(path, prefix=False)` == `os.fsdecode(path)`.\n",
+      "state": "❔",
+      "reactions": [],
+      "additions": 13,
+      "deletions": 25,
+      "labels": [],
+      "closingIssuesReferences": [],
+      "created_at": "2026-07-27T19:52:31Z",
+      "updated_at": "2026-07-27T19:58:18Z",
+      "last_comment": null
+    }
+  ],
+  "need_my_response": [
+    {
+      "_type": "GithubPRCard",
+      "url": "https://github.com/beetbox/beets/pull/6834",
+      "author": "eyupcanakman",
+      "title": "library: skip saving files with unchanged tags",
+      "body": "## Description\n\nFixes #6529.\n\n`Item.write()` called `mediafile.save()` whether or not the tags it was about to write differed from the ones already in the file. `beet modify --write` on a field that only the database keeps, `data_source` for instance, gave the file a new modification time without changing a single tag, and tools that sync the library copied it again for nothing.\n\nThe tags the write is about to touch are now read back from the file, compared with the ones already there, and the save is skipped when they match.\n\nComparing what the file reads back, rather than what the database holds, keeps a file that cannot store a value exactly, such as one carrying a replaygain peak, from looking changed on every write. Images stay out of the comparison, since a write that carries one replaces the whole list of them.\n\n`beet write --force` still rewrites. So does a file written with the `id3v23` option, and so does one whose tags still need converting to the default ID3v2.4, since saving is what converts them either way.\n\n## To Do\n\n- [x] Documentation. (The `modify` command, the `id3v23` option, the mtime policy in the library docs, the `write` and `after_write` events, and the importadded plugin.)\n- [x] Changelog\n- [x] Tests\n",
+      "state": "❔",
+      "reactions": [],
+      "additions": 305,
+      "deletions": 19,
+      "labels": [],
+      "closingIssuesReferences": [
+        {
+          "number": 6529,
+          "title": "Leave files untouched when changes only affect the database"
+        }
+      ],
+      "created_at": "2026-07-13T21:59:36Z",
+      "updated_at": "2026-07-16T17:00:46Z",
+      "last_comment": {
+        "author": "eyupcanakman",
+        "created_at": "2026-07-16T16:51:43Z",
+        "body": "Rebased onto master and the docs check is fixed. Both bot comments were right, fixed in the new commits along with two more cases they led me to.\n",
+        "reactions": [],
+        "url": "https://github.com/beetbox/beets/pull/6834#issuecomment-4994449453",
+        "state": "COMMENTED"
+      }
+    },
+    {
+      "_type": "GithubPRCard",
+      "url": "https://github.com/beetbox/beets/pull/6864",
+      "author": "SAY-5",
+      "title": "lyrics: treat missing lyrics body as empty text instead of crashing",
+      "body": "## Description\n\nFixes #6860.\n\n`beet lyrics` crashes with `AttributeError: 'NoneType' object has no attribute 'splitlines'` on tracks that have no stored lyrics when `force: yes` is set. `Lyrics.from_item()` passes `item.lyrics` straight into the `text` field, and `item.lyrics` is `None` for a track without lyrics. The first access of `existing_lyrics.synced` then reaches `_split_lines`, which calls `self.text.splitlines()` on `None`.\n\nThis normalizes a `None` body to an empty string in `Lyrics.__post_init__` (and widens the field annotation to `str | None` to match what `from_item` already feeds it), so the value object behaves like an empty lyrics set rather than crashing.\n\n## To Do\n\n- [x] Documentation. (If you've added a new command-line flag, for example, find the appropriate page under `docs/` to describe it.)\n- [x] Changelog. (Add an entry to `docs/changelog.rst` to the bottom of one of the lists near the top of the document.)\n- [x] Tests. (Very much encouraged but not strictly required.)\n",
+      "state": "⛔",
+      "reactions": [],
+      "additions": 25,
+      "deletions": 3,
+      "labels": [
+        {
+          "name": "lyrics",
+          "color": "B60205"
+        }
+      ],
+      "closingIssuesReferences": [
+        {
+          "number": 6860,
+          "title": "Lyrics plugin sometimes crushes"
+        }
+      ],
+      "created_at": "2026-07-20T17:40:10Z",
+      "updated_at": "2026-07-27T21:30:24Z",
+      "last_comment": {
+        "author": "SAY-5",
+        "created_at": "2026-07-27T21:24:50Z",
+        "body": "Sure, added in b253c2a.",
+        "reactions": [],
+        "url": "https://github.com/beetbox/beets/pull/6864#discussion_r3661010347",
+        "state": "COMMENTED"
+      }
+    }
+  ]
+}

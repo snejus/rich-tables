@@ -2,15 +2,13 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from collections.abc import Iterable, MutableMapping
+from collections.abc import Callable, Iterable, MutableMapping
 from datetime import datetime, timezone
 from functools import singledispatch
 from itertools import islice
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, TypeVar
+from typing import Any, SupportsFloat, TypeVar
 
-from multimethod import multidispatch
 from rich.console import ConsoleRenderable, RenderableType
-from rich.panel import Panel
 from rich.text import Text
 
 from .diff import pretty_diff
@@ -20,6 +18,7 @@ from .utils import (
     HashableDict,
     HashableList,
     JSONDict,
+    MyText,
     border_panel,
     duration2human,
     fmt_time,
@@ -28,7 +27,6 @@ from .utils import (
     format_with_color_on_black,
     get_country,
     human_dt,
-    markdown,
     md_panel,
     progress_bar,
     simple_panel,
@@ -38,10 +36,6 @@ from .utils import (
     timestamp2timestr,
     wrap,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
-
 
 MATCH_COUNT_HEADER = re.compile(r"duration|(?:_sum$|(?<![a-z])count$)")
 MAX_BPM_COLOR = (("green", 135), ("yellow", 165), ("red", 400))
@@ -79,7 +73,6 @@ def add_count_bars(
             subcount = item[subcount_key]
             count_val = f"{subcount}/{count}"
 
-        # item.pop(count_key, None)
         item[new_count_key] = count_val
         item[bar_key] = progress_bar(
             end=subcount, width=max_value, size=count, inverse=inverse
@@ -102,30 +95,6 @@ def add_count_bars(
 TD = TypeVar("TD", bound=dict[str, Any])
 
 
-@multidispatch
-def comment_panel(content: str | TD, **kwargs) -> Panel:
-    raise NotImplementedError
-
-
-@comment_panel.register
-def _comment_panel_str(content: str, **kwargs) -> Panel:
-    if m := re.match(r"\[title\](.+?)\[/title\]\s+", content):
-        kwargs["title"] = m[1]
-        content = content.replace(m[0], "")
-
-    content = content.replace("- [x]", "* :ballot_box_with_check:")
-
-    return border_panel(markdown(content), **kwargs)
-
-
-@comment_panel.register
-def _comment_panel_dict(content: TD, **kwargs) -> Panel:
-    body = content.pop("body")
-    title = " ".join(_get_val(v, k) for k, v in content.items())
-
-    return comment_panel(body, title=title)
-
-
 FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     lambda: str,
     diff=lambda x: pretty_diff(*x),
@@ -143,7 +112,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     author=lambda x: (
         format_with_color_on_black(x)
         if isinstance(x, (str, list, HashableList, tuple, set))
-        else x
+        else ""
     ),
     labels=lambda x: (
         wrap(" ".join(wrap(y["name"], f"#{y['color']}") for y in x), "b")
@@ -152,7 +121,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if isinstance(x, str)
         else ""
         if x is None
-        else x
+        else str(x)
     ),
     since=lambda x: (
         x
@@ -165,7 +134,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     bpm=lambda x: (
         wrap(str(x), next(c for c, m in MAX_BPM_COLOR if x < m))
         if isinstance(x, int)
-        else x
+        else ""
     ),
     length=timestamp2timestr,
     tracktotal=lambda x: (
@@ -179,17 +148,8 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     hidden=lambda x: ":shit: " if x == 1 else "",
     keywords=format_with_color_on_black,
     ingr=lambda x: simple_panel(format_with_color(x)),
-    # members=lambda x: " ".join(
-    #     wrap(wrap(a, clr), f"on {clr}")
-    #     for a in x
-    #     if (
-    #         clr := predictably_random_color(
-    #             "".join(chr(int(a[i : i + 3])) for i in range(0, len(a), 3))
-    #         )
-    #     )
-    # ),
     released=lambda x: x.replace("-00", "") if isinstance(x, str) else str(x),
-    duration=lambda x: duration2human(x) if isinstance(x, (int, float)) else x,
+    duration=lambda x: str(duration2human(x) if isinstance(x, SupportsFloat) else x),
     plays=lambda x: wrap(x, BOLD_GREEN),
     skips=lambda x: wrap(x, BOLD_RED),
     new=lambda x: (
@@ -202,9 +162,9 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
         if name == "blocks"
         else wrap(name, BOLD_RED)
         if name == "is blocked by"
-        else name
+        else str(name)
     ),
-    code=lambda x: syntax(x, "python") if isinstance(x, str) else x,
+    code=lambda x: syntax(x, "python") if isinstance(x, str) else "",
     context=lambda x: syntax(x, "python"),
     python=lambda x: syntax(x, "python"),
     CreatedBy=lambda x: syntax(x.replace(";", "\n"), "sh"),
@@ -216,10 +176,9 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     snippet=lambda x: border_panel(syntax(x, "python", indent_guides=True)),
     query=lambda x: Text(x, style="bold"),
     sql=lambda x: sql_syntax("---\n\n" + x.replace(r"\[", "[")),
-    # created_at=lambda x: f"[white]{x.replace('T', ' ').replace('Z', '')}[/]",
-    comment=comment_panel,
     parent_id=format_with_color_on_black,
     slug=format_with_color_on_black,
+    url=lambda x: MyText(x, style=f"cyan dim bold link {x}"),
 )
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     format_with_color: (
@@ -255,6 +214,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "event",
         "from",
         "full_name",
+        "genres",
         "group_source",
         "issuetype",
         "kind",
@@ -279,6 +239,7 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "table",
         "to",
         "tables",
+        "tags",
         "test",
         "ticker",
         "type",
@@ -287,12 +248,13 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "client",
         "env",
     ),
-    split_with_color: ("genre", "genres", "Interests"),
+    split_with_color: ("genre", "Interests"),
     human_dt: (
         "added",
         "committedDate",
         "created",
         "created_at",
+        "createdAt",
         "due",
         "done_date",
         "start",
@@ -311,10 +273,10 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     ),
     md_panel: (
         "answer",
+        "body",
         "covers",
         "covered_by",
         "benefits",
-        "body",
         "bodyHTML",
         "comments",
         "creditText",
@@ -359,10 +321,10 @@ def get_val(obj: JSONDict | object, field: str) -> Any:
 
 @get_val.register(dict)
 @get_val.register(HashableDict)
-def _(obj: dict | HashableDict, field: str) -> Any:  # type: ignore[type-arg]
+def _(obj: JSONDict | HashableDict, field: str) -> RenderableType:
     return _get_val(obj.get(field), field)
 
 
 @get_val.register
-def _(obj: object, field: str) -> Any:
+def _(obj: object, field: str) -> RenderableType:
     return _get_val(getattr(obj, field, None), field)

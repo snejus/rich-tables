@@ -1,124 +1,124 @@
 {
-  "PROJECT-607 UI - Add something to UI": [
+  "PROJECT-145 Patch something": [
     {
-      "change_date": "2023-04-05",
-      "change_time": "13:03:49",
-      "new": 1,
-      "author": "Author",
-      "field": "pr",
-      "before": {
-        "count": 1,
-        "lastUpdated": "2023-03-21T09:55:25.000+0000",
-        "stateCount": 1,
-        "state": "OPEN",
-        "dataType": "pullrequest",
-        "open": true
-      },
-      "after": {
-        "count": 1,
-        "lastUpdated": "2024-04-05T09:54:55.000+0000",
-        "stateCount": 1,
-        "state": "MERGED",
-        "dataType": "pullrequest",
-        "open": false
-      },
-      "diff": ""
-    }
-  ],
-  "PROJECT-589 Do something on Django": [
-    {
-      "change_date": "2023-04-05",
-      "change_time": "13:05:34",
-      "new": 1,
-      "author": "author.1",
-      "field": "assignee",
+      "after": "Ranked higher",
+      "author": "some.other-author",
       "before": "",
-      "after": "Other Author",
-      "diff": ""
+      "change_date": "2023-04-05",
+      "change_time": "13:13:39",
+      "diff": "",
+      "field": "Rank",
+      "new": 1
+    },
+    {
+      "after": "Sprint 11",
+      "author": "some.other-author",
+      "before": "",
+      "change_date": "2023-04-05",
+      "change_time": "13:13:39",
+      "diff": "",
+      "field": "Sprint",
+      "new": 1
+    },
+    {
+      "after": "In Review",
+      "author": "some.other-author",
+      "before": "In Progress",
+      "change_date": "2023-04-05",
+      "change_time": "13:21:39",
+      "diff": "",
+      "field": "status",
+      "new": 1
+    },
+    {
+      "after": "some.other-author",
+      "author": "some.other-author",
+      "before": "",
+      "change_date": "2023-04-05",
+      "change_time": "13:21:42",
+      "diff": "",
+      "field": "assignee",
+      "new": 1
+    },
+    {
+      "after": "3",
+      "author": "some.other-author",
+      "before": "",
+      "change_date": "2023-04-05",
+      "change_time": "13:21:49",
+      "diff": "",
+      "field": "Story Points",
+      "new": 1
+    },
+    {
+      "after": "2",
+      "author": "some.other-author",
+      "before": "3",
+      "change_date": "2023-04-05",
+      "change_time": "13:21:55",
+      "diff": "",
+      "field": "Story Points",
+      "new": 1
     }
   ],
   "PROJECT-581 Fix Bug": [
     {
+      "after": "30125543 ,3018960 ,3018961 ,3018962 ,3018963 ,3018964 ,3018965 ,3018966 /8051534513",
+      "author": "Other Author",
+      "before": "30125543 ,3018960 ,3018961 ,3018962 ,3018963 ,3018964 ,3018965 ,3018966 /30125482",
       "change_date": "2023-04-05",
       "change_time": "13:46:18",
-      "new": 1,
-      "author": "Other Author",
+      "diff": "",
       "field": "description",
-      "before": "30125543 ,3018960 ,3018961 ,3018962 ,3018963 ,3018964 ,3018965 ,3018966 /30125482",
-      "after": "30125543 ,3018960 ,3018961 ,3018962 ,3018963 ,3018964 ,3018965 ,3018966 /8051534513",
-      "diff": ""
+      "new": 1
     },
     {
+      "after": "30125543 ,3018960 ,3018961 ,3018962 ,3018963 ,3018964 ,3018965 ,3018966 /8051534513, 8051525422, 8051530875",
+      "author": "Other Author",
+      "before": "30125543 ,3018960 ,3018961 ,3018962 ,3018963 ,3018964 ,3018965 ,3018966 /8051534513",
       "change_date": "2023-04-05",
       "change_time": "13:46:28",
-      "new": 1,
-      "author": "Other Author",
+      "diff": "",
       "field": "description",
-      "before": "30125543 ,3018960 ,3018961 ,3018962 ,3018963 ,3018964 ,3018965 ,3018966 /8051534513",
-      "after": "30125543 ,3018960 ,3018961 ,3018962 ,3018963 ,3018964 ,3018965 ,3018966 /8051534513, 8051525422, 8051530875",
-      "diff": ""
+      "new": 1
     }
   ],
-  "PROJECT-145 Patch something": [
+  "PROJECT-589 Do something on Django": [
     {
-      "change_date": "2023-04-05",
-      "change_time": "13:13:39",
-      "new": 1,
-      "author": "some.other-author",
-      "field": "Rank",
+      "after": "Other Author",
+      "author": "author.1",
       "before": "",
-      "after": "Ranked higher",
-      "diff": ""
-    },
-    {
       "change_date": "2023-04-05",
-      "change_time": "13:13:39",
-      "new": 1,
-      "author": "some.other-author",
-      "field": "Sprint",
-      "before": "",
-      "after": "Sprint 11",
-      "diff": ""
-    },
-    {
-      "change_date": "2023-04-05",
-      "change_time": "13:21:39",
-      "new": 1,
-      "author": "some.other-author",
-      "field": "status",
-      "before": "In Progress",
-      "after": "In Review",
-      "diff": ""
-    },
-    {
-      "change_date": "2023-04-05",
-      "change_time": "13:21:42",
-      "new": 1,
-      "author": "some.other-author",
+      "change_time": "13:05:34",
+      "diff": "",
       "field": "assignee",
-      "before": "",
-      "after": "some.other-author",
-      "diff": ""
-    },
+      "new": 1
+    }
+  ],
+  "PROJECT-607 UI - Add something to UI": [
     {
+      "after": {
+        "count": 1,
+        "dataType": "pullrequest",
+        "lastUpdated": "2024-04-05T09:54:55.000+0000",
+        "open": false,
+        "state": "MERGED",
+        "stateCount": 1
+      },
+      "author": "Author",
+      "before": {
+        "count": 1,
+        "dataType": "pullrequest",
+        "lastUpdated": "2023-03-21T09:55:25.000+0000",
+        "open": true,
+        "state": "OPEN",
+        "stateCount": 1
+      },
       "change_date": "2023-04-05",
-      "change_time": "13:21:49",
-      "new": 1,
-      "author": "some.other-author",
-      "field": "Story Points",
-      "before": "",
-      "after": "3",
-      "diff": ""
-    },
-    {
-      "change_date": "2023-04-05",
-      "change_time": "13:21:55",
-      "new": 1,
-      "author": "some.other-author",
-      "field": "Story Points",
-      "before": "3",
-      "after": "2",
-      "diff": ""
+      "change_time": "13:03:49",
+      "diff": "",
+      "field": "pr",
+      "new": 1
     }
   ]
 }

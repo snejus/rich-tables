@@ -4,19 +4,19 @@ import colorsys
 import random
 import re
 from collections import UserDict, UserList
-from collections.abc import Hashable, Iterable, Sequence
+from collections.abc import Callable, Hashable, Iterable
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from itertools import groupby
 from math import copysign
 from re import Match
-from typing import TYPE_CHECKING, Any, Callable, Protocol, SupportsFloat, TypeVar
+from typing import TYPE_CHECKING, Any, Protocol, SupportsFloat, TypeVar
 
 import humanize
 import platformdirs
 from multimethod import multimethod
-from rich import box
+from rich import box, emoji
 from rich.align import Align, VerticalAlignMethod
 from rich.bar import Bar
 from rich.console import Console, RenderableType, RenderResult
@@ -45,9 +45,13 @@ else:
 JSONDict = dict[str, Any]
 
 
+class MyText(Text):
+    def __hash__(self) -> int:
+        return hash(id(self._text))
+
+
 class HashableDict(UserDict[KT, VT]):
-    def __init__(self, dict: dict[KT, VT] | None = None, /, **kwargs) -> None:
-        # super().__init__({k: v for k, v in (dict or {}).items() if v != []}, **kwargs)
+    def __init__(self, dict: dict[KT, VT] | None = None, /, **kwargs: Any) -> None:  # noqa: A002
         super().__init__({k: v for k, v in (dict or {}).items()}, **kwargs)
 
     def __hash__(self) -> int:
@@ -72,7 +76,7 @@ def to_hashable(value: Hashable) -> Hashable:
 @to_hashable.register
 def _(value: list[T]) -> Hashable:
     if not value:
-        return tuple()
+        return ()
     return HashableList([to_hashable(v) for v in value])
 
 
@@ -142,6 +146,10 @@ def format_string(text: str) -> str:
 
 def wrap(text: str, tag: str) -> str:
     return f"[{tag}]{format_string(str(text))}[/{tag}]"
+
+
+def link(text: str, link: str) -> str:
+    return f"[link={link}]{text}[/link]"
 
 
 def duration2human(duration: SupportsFloat) -> str | SupportsFloat:
@@ -288,7 +296,7 @@ def new_table(
     kwargs.setdefault("title_justify", "left")
     kwargs.setdefault("style", "default")
     kwargs.setdefault("border_style", "default")
-    kwargs.setdefault("overflow", "fold")
+    kwargs.setdefault("overflow", "ellipsis")
 
     table = NewTable(*headers, **kwargs)
     if rows:
@@ -301,7 +309,7 @@ def list_table(items: Iterable[RenderableType], **kwargs: Any) -> NewTable:
 
 
 def _randint() -> int:
-    return random.randint(50, 205)
+    return random.randint(50, 205)  # noqa: S311
 
 
 def adjust_color_intensity(
@@ -338,12 +346,9 @@ def split_with_color(text: str) -> str:
     return " ".join(_format_with_color(x) for x in sorted(Pat.SPLIT_PAT.split(text)))
 
 
-def format_with_color(items: Any) -> Any:
+def format_with_color(items: Any) -> str:
     if isinstance(items, str):
         items = [items]
-
-    if not isinstance(items, Sequence):
-        return items
 
     return " ".join(_format_with_color(str(x)) for x in items)
 
@@ -391,7 +396,12 @@ def markdown(content: str, **kwargs: Any) -> Markdown:
     kwargs.setdefault("inline_code_theme", "nord-darker")
     kwargs.setdefault("justify", "left")
 
-    return Markdown(Pat.HTML_PARAGRAPH.sub("", content), **kwargs)
+    content = (
+        content.replace(":rofl:", ":rolling_on_the_floor_laughing:")
+        .replace("[x]", "☑ ")
+        .replace("[ ]", "☐ ")
+    )
+    return Markdown(emoji.Emoji.replace(Pat.HTML_PARAGRAPH.sub("", content)), **kwargs)
 
 
 def md_panel(content: str, **kwargs: Any) -> Panel:
@@ -400,8 +410,6 @@ def md_panel(content: str, **kwargs: Any) -> Panel:
     ):
         kwargs["title"] = m[1]
         content = content.replace(m[0], "")
-
-    content = content.replace("- [x]", "* :ballot_box_with_check:")
 
     return border_panel(markdown(content), **kwargs)
 
@@ -470,7 +478,7 @@ def timestamp2timestr(timestamp: str | float | None) -> str:
 
 @lru_cache
 def get_colors_and_periods() -> list[tuple[Color, int, int]]:
-    from coloraide import Color
+    from coloraide import Color  # noqa: PLC0415
 
     return [
         (c.filter("contrast", 0.5), *p)
@@ -507,8 +515,6 @@ def get_td_color(seconds: float) -> str:
 
 
 def human_dt(timestamp: str | float) -> str:
-    if not isinstance(timestamp, (str, float, int)):
-        return timestamp
     try:
         dt = timestamp2datetime(timestamp)
     except ValueError:
@@ -529,7 +535,7 @@ def syntax(*args: Any, **kwargs: Any) -> Syntax:
 
 
 def sql_syntax(sql_string: str) -> Syntax:
-    import sqlparse
+    import sqlparse  # noqa: PLC0415
 
     return syntax(
         sqlparse.format(

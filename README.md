@@ -83,10 +83,6 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/emails.svg)
 
-### Hello
-
-![image](svgs/hello.svg)
-
 ### Hue
 
 ![image](svgs/hue.svg)
@@ -111,6 +107,10 @@ deal with a huge diff with a lot of unrelated changes.
 
 ![image](svgs/object_arrays.svg)
 
+### Open prs
+
+![image](svgs/open_prs.svg)
+
 ### Pr
 
 ![image](svgs/pr.svg)
@@ -118,10 +118,6 @@ deal with a huge diff with a lot of unrelated changes.
 ### Simple JSON
 
 ![image](svgs/simple_json.svg)
-
-### Simple nested object
-
-![image](svgs/simple_nested_object.svg)
 
 ### Sql
 

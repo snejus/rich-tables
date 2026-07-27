@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from rich.bar import Bar
 from rich.columns import Columns
-from typing_extensions import Literal, NotRequired, TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 from .fields import get_val
 from .utils import border_panel, new_table, sortgroup_by, wrap
@@ -111,8 +111,7 @@ class Event:
     @staticmethod
     def get_datetime(date_obj: Datetime) -> datetime:
         date = date_obj.get("dateTime") or date_obj.get("date") or ""
-        dt = datetime.fromisoformat(date.strip("Z"))
-        return dt
+        return datetime.fromisoformat(date.strip("Z"))
 
     def get_periods(self) -> list[Period]:
         diff = self.end - self.start
@@ -156,11 +155,7 @@ def get_legend(events: list[Event]) -> RenderableType:
         wrap(f" {c} ", f"b black on {clr}") for c, clr in calendar_and_color
     )
     return Columns(
-        colored_calendars,
-        title="Calendars",
-        expand=True,
-        equal=True,
-        align="center",
+        colored_calendars, title="Calendars", expand=True, equal=True, align="center"
     )
 
 
