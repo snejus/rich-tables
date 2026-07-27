@@ -1,29 +1,4 @@
 {
-  "before": {
-    "album": null,
-    "albumtype": "single",
-    "albumtypes": ["single", "album"],
-    "artist": "Matriark",
-    "catalognum": "mt004",
-    "comments": "mt004\n\nmastering by alexander salomonsen\n\n\nI'm very happy to announce Andrea's debut track. <3",
-    "composer": "",
-    "composer_sort": null,
-    "country": "SE",
-    "data_source": "bandcamp",
-    "day": 9,
-    "item_added": ["a"],
-    "item_removed": ["a", "b"],
-    "label": "Megatech Industries",
-    "length": 421,
-    "media": "Vinyl",
-    "month": 11,
-    "release_track_id": null,
-    "style": null,
-    "title": "Arangel",
-    "year": 2020,
-    "object": null,
-    "empty": []
-  },
   "after": {
     "album": "",
     "albumtype": "single",
@@ -36,23 +11,61 @@
     "country": "SE",
     "data_source": "bandcamp",
     "day": 9,
-    "item_added": ["a", "b"],
-    "item_removed": ["a"],
+    "empty": [
+      "not",
+      "empty"
+    ],
+    "item_added": [
+      "a",
+      "b"
+    ],
+    "item_removed": [
+      "a"
+    ],
     "label": "Megatech Industries",
     "length": 451,
     "media": "Digital Media",
     "month": 11,
+    "object": {
+      "text": "ggggggggggggggggggggggggggggggggggggggggggggggggggggggggg text",
+      "with": "some lonnggggggggggggggggggggggggggggggggggggggggggggggggggggg "
+    },
     "release_track_id": null,
     "style": null,
     "title": "Arangel",
-    "year": 2020,
-    "object": {
-      "with": "some lonnggggggggggggggggggggggggggggggggggggggggggggggggggggg ",
-      "text": "ggggggggggggggggggggggggggggggggggggggggggggggggggggggggg text"
-    },
-    "empty": [
-      "not",
-      "empty"
-    ]
+    "year": 2020
+  },
+  "before": {
+    "album": null,
+    "albumtype": "single",
+    "albumtypes": [
+      "single",
+      "album"
+    ],
+    "artist": "Matriark",
+    "catalognum": "mt004",
+    "comments": "mt004\n\nmastering by alexander salomonsen\n\n\nI'm very happy to announce Andrea's debut track. <3",
+    "composer": "",
+    "composer_sort": null,
+    "country": "SE",
+    "data_source": "bandcamp",
+    "day": 9,
+    "empty": [],
+    "item_added": [
+      "a"
+    ],
+    "item_removed": [
+      "a",
+      "b"
+    ],
+    "label": "Megatech Industries",
+    "length": 421,
+    "media": "Vinyl",
+    "month": 11,
+    "object": null,
+    "release_track_id": null,
+    "style": null,
+    "title": "Arangel",
+    "year": 2020
   }
 }

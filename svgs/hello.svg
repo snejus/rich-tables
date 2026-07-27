@@ -19,43 +19,40 @@
         font-weight: 700;
     }
 
-    .terminal-2342142509-matrix {
+    .terminal-62194055-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-2342142509-title {
+    .terminal-62194055-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-2342142509-r1 { fill: #c5c8c6;font-weight: bold }
-.terminal-2342142509-r2 { fill: #c5c8c6 }
-.terminal-2342142509-r3 { fill: #8cbe4e;font-weight: bold }
+    
     </style>
 
     <defs>
-    <clipPath id="terminal-2342142509-clip-terminal">
+    <clipPath id="terminal-62194055-clip-terminal">
       <rect x="0" y="0" width="1902.1999999999998" height="23.4" />
     </clipPath>
     
     </defs>
 
-    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1920" height="72.4" rx="8"/><text class="terminal-2342142509-title" fill="#c5c8c6" text-anchor="middle" x="960" y="27">Rich</text>
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1920" height="72.4" rx="8"/><text class="terminal-62194055-title" fill="#c5c8c6" text-anchor="middle" x="960" y="27">Rich</text>
             <g transform="translate(26,22)">
             <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
             <circle cx="22" cy="0" r="7" fill="#febc2e"/>
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-2342142509-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#terminal-62194055-clip-terminal)">
     
-    <g class="terminal-2342142509-matrix">
-    <text class="terminal-2342142509-r1" x="0" y="20" textLength="48.8" clip-path="url(#terminal-2342142509-line-0)">test</text><text class="terminal-2342142509-r2" x="48.8" y="20" textLength="24.4" clip-path="url(#terminal-2342142509-line-0)">:&#160;</text><text class="terminal-2342142509-r3" x="73.2" y="20" textLength="61" clip-path="url(#terminal-2342142509-line-0)">hello</text><text class="terminal-2342142509-r2" x="1903.2" y="20" textLength="12.2" clip-path="url(#terminal-2342142509-line-0)">
-</text>
+    <g class="terminal-62194055-matrix">
+    
     </g>
     </g>
 </svg>

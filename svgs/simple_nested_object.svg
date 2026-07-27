@@ -19,56 +19,40 @@
         font-weight: 700;
     }
 
-    .terminal-2268514946-matrix {
+    .terminal-62194055-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-2268514946-title {
+    .terminal-62194055-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-2268514946-r1 { fill: #c5c8c6;font-weight: bold }
-.terminal-2268514946-r2 { fill: #c5c8c6 }
-.terminal-2268514946-r3 { fill: #9e3447;font-weight: bold }
-.terminal-2268514946-r4 { fill: #6dabbb;font-weight: bold }
-.terminal-2268514946-r5 { fill: #333a3a;font-weight: bold }
-.terminal-2268514946-r6 { fill: #c69467;font-weight: bold }
-.terminal-2268514946-r7 { fill: #a79691;font-weight: bold }
-.terminal-2268514946-r8 { fill: #88376f;font-weight: bold }
-.terminal-2268514946-r9 { fill: #8bb4b5;font-weight: bold }
-.terminal-2268514946-r10 { fill: #903664;font-weight: bold }
-.terminal-2268514946-r11 { fill: #9c724d;font-weight: bold }
-.terminal-2268514946-r12 { fill: #a3beb5;font-weight: bold }
-.terminal-2268514946-r13 { fill: #516b72;font-weight: bold }
-.terminal-2268514946-r14 { fill: #43937e;font-weight: bold }
-.terminal-2268514946-r15 { fill: #7f46c1;font-weight: bold }
-.terminal-2268514946-r16 { fill: #8b93b1;font-weight: bold }
+    
     </style>
 
     <defs>
-    <clipPath id="terminal-2268514946-clip-terminal">
+    <clipPath id="terminal-62194055-clip-terminal">
       <rect x="0" y="0" width="1902.1999999999998" height="23.4" />
     </clipPath>
     
     </defs>
 
-    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1920" height="72.4" rx="8"/><text class="terminal-2268514946-title" fill="#c5c8c6" text-anchor="middle" x="960" y="27">Rich</text>
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1920" height="72.4" rx="8"/><text class="terminal-62194055-title" fill="#c5c8c6" text-anchor="middle" x="960" y="27">Rich</text>
             <g transform="translate(26,22)">
             <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
             <circle cx="22" cy="0" r="7" fill="#febc2e"/>
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-2268514946-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#terminal-62194055-clip-terminal)">
     
-    <g class="terminal-2268514946-matrix">
-    <text class="terminal-2268514946-r1" x="0" y="20" textLength="48.8" clip-path="url(#terminal-2268514946-line-0)">user</text><text class="terminal-2268514946-r2" x="48.8" y="20" textLength="24.4" clip-path="url(#terminal-2268514946-line-0)">:&#160;</text><text class="terminal-2268514946-r3" x="73.2" y="20" textLength="48.8" clip-path="url(#terminal-2268514946-line-0)">name</text><text class="terminal-2268514946-r4" x="134.2" y="20" textLength="36.6" clip-path="url(#terminal-2268514946-line-0)">age</text><text class="terminal-2268514946-r5" x="183" y="20" textLength="122" clip-path="url(#terminal-2268514946-line-0)">subscriber</text><text class="terminal-2268514946-r6" x="317.2" y="20" textLength="97.6" clip-path="url(#terminal-2268514946-line-0)">realname</text><text class="terminal-2268514946-r7" x="427" y="20" textLength="109.8" clip-path="url(#terminal-2268514946-line-0)">bootstrap</text><text class="terminal-2268514946-r8" x="549" y="20" textLength="109.8" clip-path="url(#terminal-2268514946-line-0)">playcount</text><text class="terminal-2268514946-r9" x="671" y="20" textLength="146.4" clip-path="url(#terminal-2268514946-line-0)">artist_count</text><text class="terminal-2268514946-r10" x="829.6" y="20" textLength="109.8" clip-path="url(#terminal-2268514946-line-0)">playlists</text><text class="terminal-2268514946-r11" x="951.6" y="20" textLength="134.2" clip-path="url(#terminal-2268514946-line-0)">track_count</text><text class="terminal-2268514946-r12" x="1098" y="20" textLength="134.2" clip-path="url(#terminal-2268514946-line-0)">album_count</text><text class="terminal-2268514946-r13" x="1244.4" y="20" textLength="122" clip-path="url(#terminal-2268514946-line-0)">registered</text><text class="terminal-2268514946-r14" x="1378.6" y="20" textLength="85.4" clip-path="url(#terminal-2268514946-line-0)">country</text><text class="terminal-2268514946-r15" x="1476.2" y="20" textLength="73.2" clip-path="url(#terminal-2268514946-line-0)">gender</text><text class="terminal-2268514946-r16" x="1561.6" y="20" textLength="48.8" clip-path="url(#terminal-2268514946-line-0)">type</text><text class="terminal-2268514946-r2" x="1903.2" y="20" textLength="12.2" clip-path="url(#terminal-2268514946-line-0)">
-</text>
+    <g class="terminal-62194055-matrix">
+    
     </g>
     </g>
 </svg>
