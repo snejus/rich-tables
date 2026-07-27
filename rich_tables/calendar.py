@@ -156,11 +156,7 @@ def get_legend(events: list[Event]) -> RenderableType:
         wrap(f" {c} ", f"b black on {clr}") for c, clr in calendar_and_color
     )
     return Columns(
-        colored_calendars,
-        title="Calendars",
-        expand=True,
-        equal=True,
-        align="center",
+        colored_calendars, title="Calendars", expand=True, equal=True, align="center"
     )
 
 

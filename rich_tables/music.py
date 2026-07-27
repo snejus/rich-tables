@@ -199,7 +199,7 @@ def album_panel(tracks: list[JSONDict]) -> Panel:
         vertical_parts.append(NewLine())
     vertical_parts.append(
         new_table(
-            rows=[[album_info_table(album), tracks_table(tracks, track_fields, album)]],
+            rows=[[album_info_table(album), tracks_table(tracks, track_fields, album)]]
         )
     )
 

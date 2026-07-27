@@ -410,10 +410,7 @@ class ReviewThread(CreatedPanelMixin, ResolvedMixin):
         else:
             content = ""
         return border_panel(
-            content,
-            highlight=False,
-            border_style=self.border_color,
-            title=self.title,
+            content, highlight=False, border_style=self.border_color, title=self.title
         )
 
 

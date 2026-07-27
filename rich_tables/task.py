@@ -130,12 +130,14 @@ fields_map: JSONDict = {
     "created": human_dt,
     "start": human_dt,
     "priority": lambda x: "[b]([red]![/])[/]" if x == "H" else "",
-    "annotations": lambda ann: new_tree(
-        (f"[b]{human_dt(a['created'])}[/]: [i]{a['description']}[/]" for a in ann),
-        "Annotations",
-    )
-    if ann
-    else None,
+    "annotations": lambda ann: (
+        new_tree(
+            (f"[b]{human_dt(a['created'])}[/]: [i]{a['description']}[/]" for a in ann),
+            "Annotations",
+        )
+        if ann
+        else None
+    ),
 }
 
 
