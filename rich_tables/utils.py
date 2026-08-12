@@ -400,6 +400,7 @@ def markdown(content: str, **kwargs: Any) -> Markdown:
         content.replace(":rofl:", ":rolling_on_the_floor_laughing:")
         .replace("[x]", "☑ ")
         .replace("[ ]", "☐ ")
+        .replace("upside_down_face", "upside-down_face")
     )
     return Markdown(emoji.Emoji.replace(Pat.HTML_PARAGRAPH.sub("", content)), **kwargs)
 
