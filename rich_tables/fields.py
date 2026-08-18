@@ -179,6 +179,7 @@ FIELDS_MAP: MutableMapping[str, Callable[..., RenderableType]] = defaultdict(
     parent_id=format_with_color_on_black,
     slug=format_with_color_on_black,
     url=lambda x: MyText(x, style=f"cyan dim bold link {x}"),
+    genres=lambda x: format_with_color(x, sep="\n"),
 )
 fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
     format_with_color: (
@@ -214,7 +215,6 @@ fields_by_func: dict[Callable[..., RenderableType], Iterable[str]] = {
         "event",
         "from",
         "full_name",
-        "genres",
         "group_source",
         "issuetype",
         "kind",

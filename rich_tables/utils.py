@@ -346,11 +346,11 @@ def split_with_color(text: str) -> str:
     return " ".join(_format_with_color(x) for x in sorted(Pat.SPLIT_PAT.split(text)))
 
 
-def format_with_color(items: Any) -> str:
+def format_with_color(items: Any, sep: str = " ") -> str:
     if isinstance(items, str):
         items = [items]
 
-    return " ".join(_format_with_color(str(x)) for x in items)
+    return sep.join(_format_with_color(str(x)) for x in items)
 
 
 def format_with_color_on_black(items: str | Iterable[str]) -> str:
